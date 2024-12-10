@@ -55,22 +55,24 @@ public class BuildingInteraction : MonoBehaviour
         }
     }
 
-    // Trigger detection for entering the building's area
-    private void OnTriggerEnter2D(Collider2D other)
-    {
-        if (other.CompareTag("Player"))
-        {
-            isPlayerInRange = true;
-        }
-    }
 
-    // Trigger detection for leaving the building's area
-    private void OnTriggerExit2D(Collider2D other)
+private void OnTriggerEnter2D(Collider2D other)
+{
+    if (other.CompareTag("Player"))
     {
-        if (other.CompareTag("Player"))
-        {
-            isPlayerInRange = false;
-            dialogPanel.SetActive(false); // Hide dialog when player walks away
-        }
+        isPlayerInRange = true;
+        Debug.Log("in range");
     }
+}
+
+private void OnTriggerExit2D(Collider2D other)
+{
+    if (other.CompareTag("Player") )
+    {
+        isPlayerInRange = false;
+        Debug.Log("out of range");
+        dialogPanel.SetActive(false); // Hide dialog when player walks away
+    }
+}
+
 }
