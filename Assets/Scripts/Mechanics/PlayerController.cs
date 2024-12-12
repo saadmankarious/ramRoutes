@@ -42,6 +42,48 @@ namespace Platformer.Mechanics
 
         public Bounds Bounds => collider2d.bounds;
 
+        public Transform holdPoint; // The point where the trash will be held (attach an empty GameObject to player)
+        public float pickUpRange = 1.0f; // How close player must be to pick up trash
+        public KeyCode interactKey = KeyCode.C; // Key to pick up and drop trash
+
+        private GameObject heldTrash = null; // Reference to the trash object the player is holding
+
+        void TryPickUpTrash()
+        {
+            // Detect trash in the player's range using Physics2D.OverlapCircle
+            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, pickUpRange);
+            foreach (Collider2D hit in hits)
+            {
+                if (hit.CompareTag("Trash"))
+                {
+                    heldTrash = hit.gameObject;
+                    heldTrash.GetComponent<Rigidbody2D>().isKinematic = true; // So it doesn't fall
+                    heldTrash.GetComponent<Collider2D>().enabled = false; // Disable collisions
+                    Debug.Log("Picked up " + heldTrash.name);
+                    return;
+                }
+            }
+        }
+
+        void DropTrash()
+        {
+            // Drop the trash at the player's position
+            if (heldTrash != null)
+            {
+                heldTrash.GetComponent<Rigidbody2D>().isKinematic = false; // Reactivate physics
+                heldTrash.GetComponent<Collider2D>().enabled = true; // Re-enable collisions
+                heldTrash = null;
+                Debug.Log("Dropped the trash");
+            }
+        }
+
+        // Visualize the pick-up range in the Scene view
+        private void OnDrawGizmosSelected()
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(transform.position, pickUpRange);
+        }
+    
         void Awake()
         {
             health = GetComponent<Health>();
@@ -53,6 +95,27 @@ namespace Platformer.Mechanics
 
         protected override void Update()
         {
+              // Check if player presses the interact key
+            if (Input.GetKeyDown(interactKey))
+            {
+                if (heldTrash == null)
+                {
+                    // Try to pick up trash
+                    TryPickUpTrash();
+                }
+                else
+                {
+                    // Drop the trash if already holding it
+                    DropTrash();
+                }
+            }
+
+            // If player is holding trash, keep it at the hold position
+            if (heldTrash != null)
+            {
+                heldTrash.transform.position = holdPoint.position;
+            }
+
             if (controlEnabled)
             {
                 move.x = Input.GetAxis("Horizontal");
