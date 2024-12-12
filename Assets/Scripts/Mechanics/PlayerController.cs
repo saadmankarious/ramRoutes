@@ -54,7 +54,7 @@ namespace Platformer.Mechanics
             Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, pickUpRange);
             foreach (Collider2D hit in hits)
             {
-                if (hit.CompareTag("Trash"))
+                if (hit.CompareTag("Trash") || hit.CompareTag("Recyclable"))
                 {
                     heldTrash = hit.gameObject;
                     heldTrash.GetComponent<Rigidbody2D>().isKinematic = true; // So it doesn't fall

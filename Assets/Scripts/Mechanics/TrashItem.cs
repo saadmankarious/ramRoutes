@@ -7,7 +7,7 @@ public class TrashItem : MonoBehaviour
     void Start()
     {
         // Set tag to "Trash" so player can identify it
-        gameObject.tag = "Trash";
+        // gameObject.tag = "Trash";
     }
 
     void OnTriggerEnter2D(Collider2D other)

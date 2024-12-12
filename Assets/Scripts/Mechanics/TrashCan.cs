@@ -1,12 +1,19 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI; // Required for UI manipulation
 
 public class TrashCan : MonoBehaviour
 {
     public int trashCount = 0; // Count of how many trash pieces have been dropped
+    public int recyclableCount = 0; // Count of how many trash pieces have been dropped
+
     public GameObject trashCanGuard; // The hidden object that becomes visible
     public float guardMoveUpDistance = 0.5f; // How much the guard moves up
     public float guardMoveSpeed = 2f; // How fast the guard moves up
+
+    public GameObject dialogPanel; // The panel where dialog is displayed
+    public Text dialogText; // The text field to show the dialog
+    public float dialogDisplayTime = 2f; // How long the dialog stays visible
 
     private Vector3 guardOriginalPosition; // Store original position for reset
 
@@ -18,6 +25,11 @@ public class TrashCan : MonoBehaviour
             guardOriginalPosition = trashCanGuard.transform.position;
             trashCanGuard.SetActive(false); // Hide guard at start
         }
+
+        if (dialogPanel != null)
+        {
+            dialogPanel.SetActive(false); // Hide dialog at start
+        }
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -26,15 +38,24 @@ public class TrashCan : MonoBehaviour
         {
             trashCount++;
             Debug.Log("Trash added to trash can. Total: " + trashCount);
-
-            // Activate and move the trash can guard
+            Destroy(other.gameObject); // Destroy the trash object
+        }
+         if (other.CompareTag("Recyclable"))
+        {
+            recyclableCount++;
+            Debug.Log("Trash recyclable to reycle can. Total: " + recyclableCount);
+            // Show dialog with message
+            if (dialogPanel != null && dialogText != null)
+            {
+                ShowDialog("You suck!");
+            }
             if (trashCanGuard != null)
             {
                 trashCanGuard.SetActive(true); // Make the guard visible
                 StartCoroutine(MoveGuardUpAndDown()); // Smoothly move it up and down
             }
-
             Destroy(other.gameObject); // Destroy the trash object
+
         }
     }
 
@@ -45,8 +66,8 @@ public class TrashCan : MonoBehaviour
         while (Vector3.Distance(trashCanGuard.transform.position, targetPosition) > 0.01f)
         {
             trashCanGuard.transform.position = Vector3.MoveTowards(
-                trashCanGuard.transform.position, 
-                targetPosition, 
+                trashCanGuard.transform.position,
+                targetPosition,
                 guardMoveSpeed * Time.deltaTime
             );
             yield return null; // Wait for the next frame
@@ -59,14 +80,31 @@ public class TrashCan : MonoBehaviour
         while (Vector3.Distance(trashCanGuard.transform.position, guardOriginalPosition) > 0.01f)
         {
             trashCanGuard.transform.position = Vector3.MoveTowards(
-                trashCanGuard.transform.position, 
-                guardOriginalPosition, 
+                trashCanGuard.transform.position,
+                guardOriginalPosition,
                 guardMoveSpeed * Time.deltaTime
             );
             yield return null; // Wait for the next frame
         }
 
         // Optional: Hide the guard after it returns to its original position
-        trashCanGuard.SetActive(false); 
+        trashCanGuard.SetActive(false);
+    }
+
+    void ShowDialog(string message)
+    {
+        if (dialogPanel != null && dialogText != null)
+        {
+            dialogText.text = message;
+            dialogPanel.SetActive(true); // Show the dialog panel
+            StopAllCoroutines(); // Stop any previous dialog hiding coroutine
+            StartCoroutine(HideDialogAfterDelay());
+        }
+    }
+
+    IEnumerator HideDialogAfterDelay()
+    {
+        yield return new WaitForSeconds(dialogDisplayTime);
+        dialogPanel.SetActive(false); // Hide the dialog after the delay
     }
 }
