@@ -5,6 +5,11 @@ using Platformer.Gameplay;
 using static Platformer.Core.Simulation;
 using Platformer.Model;
 using Platformer.Core;
+using System;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
 
 namespace Platformer.Mechanics
 {
@@ -17,6 +22,11 @@ namespace Platformer.Mechanics
         public AudioClip jumpAudio;
         public AudioClip respawnAudio;
         public AudioClip ouchAudio;
+        private UdpClient udpClient;
+        private Thread receiveThread;
+        private bool isRunning = true;
+
+        public int port = 5005; // Match this with your Python script
 
         /// <summary>
         /// Max horizontal speed of the player.
@@ -29,8 +39,10 @@ namespace Platformer.Mechanics
 
         public JumpState jumpState = JumpState.Grounded;
         private bool stopJump;
-        /*internal new*/ public Collider2D collider2d;
-        /*internal new*/ public AudioSource audioSource;
+        /*internal new*/
+        public Collider2D collider2d;
+        /*internal new*/
+        public AudioSource audioSource;
         public Health health;
         public bool controlEnabled = true;
 
@@ -47,6 +59,76 @@ namespace Platformer.Mechanics
         public KeyCode interactKey = KeyCode.C; // Key to pick up and drop trash
 
         private GameObject heldTrash = null; // Reference to the trash object the player is holding
+
+        void Start()
+        {
+            StartUDPServer();
+        }
+
+
+        void OnApplicationQuit()
+        {
+            StopUDPServer();
+        }
+
+        private void StartUDPServer()
+        {
+            udpClient = new UdpClient(port);
+            receiveThread = new Thread(new ThreadStart(ReceiveData));
+            receiveThread.IsBackground = true;
+            receiveThread.Start();
+            Debug.Log("UDP server started on port " + port);
+        }
+
+        private void StopUDPServer()
+        {
+            isRunning = false;
+
+            if (udpClient != null)
+            {
+                udpClient.Close();
+            }
+
+            if (receiveThread != null && receiveThread.IsAlive)
+            {
+                receiveThread.Join();
+            }
+        }
+
+        private void ReceiveData()
+        {
+            try
+            {
+                while (isRunning)
+                {
+                    IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, port);
+                    byte[] data = udpClient.Receive(ref remoteEndPoint);
+
+                    // Convert byte data to string
+                    string message = Encoding.UTF8.GetString(data);
+                    Debug.Log("Received message: " + message);
+
+                    // Process the message (if needed)
+                    ProcessMessage(message);
+                }
+            }
+            catch (SocketException e)
+            {
+                if (isRunning)
+                {
+                    Debug.LogError("Socket exception: " + e.Message);
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Exception: " + e.Message);
+            }
+        }
+
+        private void ProcessMessage(string message)
+        {
+            // Add your message handling logic here
+        }
 
         void TryPickUpTrash()
         {
@@ -83,7 +165,7 @@ namespace Platformer.Mechanics
             Gizmos.color = Color.yellow;
             Gizmos.DrawWireSphere(transform.position, pickUpRange);
         }
-    
+
         void Awake()
         {
             health = GetComponent<Health>();
@@ -95,7 +177,7 @@ namespace Platformer.Mechanics
 
         protected override void Update()
         {
-              // Check if player presses the interact key
+            // Check if player presses the interact key
             if (Input.GetKeyDown(interactKey))
             {
                 if (heldTrash == null)
