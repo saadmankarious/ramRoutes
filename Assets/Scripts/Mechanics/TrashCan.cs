@@ -9,12 +9,15 @@ public class TrashCan : MonoBehaviour
 
     public GameObject trashCanGuard; // The hidden object that becomes visible
     public float guardMoveUpDistance = 0.5f; // How much the guard moves up
-    public float guardMoveSpeed = 2f; // How fast the guard moves up
+    private float guardMoveSpeed = 2f; // How fast the guard moves up
 
     public GameObject dialogPanel; // The panel where dialog is displayed
     public Text dialogText; // The text field to show the dialog
-    public float dialogDisplayTime = 2f; // How long the dialog stays visible
+    public Text trashCountText; // The text field to show the dialog
+    public Text bottleCountText; // The text field to show the dialog
 
+    public float dialogDisplayTime = 2f; // How long the dialog stays visible
+    public bool isRecycling = false;
     private Vector3 guardOriginalPosition; // Store original position for reset
 
     void Start()
@@ -37,25 +40,31 @@ public class TrashCan : MonoBehaviour
         if (other.CompareTag("Trash"))
         {
             trashCount++;
-            Debug.Log("Trash added to trash can. Total: " + trashCount);
-            Destroy(other.gameObject); // Destroy the trash object
-        }
-         if (other.CompareTag("Recyclable"))
-        {
-            recyclableCount++;
-            Debug.Log("Trash recyclable to reycle can. Total: " + recyclableCount);
-            // Show dialog with message
-            if (dialogPanel != null && dialogText != null)
-            {
-                ShowDialog("You suck!");
-            }
-            if (trashCanGuard != null)
-            {
-                trashCanGuard.SetActive(true); // Make the guard visible
-                StartCoroutine(MoveGuardUpAndDown()); // Smoothly move it up and down
-            }
             Destroy(other.gameObject); // Destroy the trash object
 
+            if(isRecycling)
+            {
+                ShowDialog("you just put trash in a recylcing bin", other);
+            }
+        }
+        if (other.CompareTag("Recyclable"))
+        {
+            recyclableCount++;
+            Destroy(other.gameObject); // Destroy the trash object
+            
+            if(!isRecycling)
+            {
+                ShowDialog("Water bottles should go to the recycle bin", other);
+            }            
+        }
+        updateCollectableCounts();
+    }
+
+    void updateCollectableCounts(){
+        if(trashCountText != null && bottleCountText != null)
+        {
+            trashCountText.text = trashCount + "/12";
+            bottleCountText.text = recyclableCount + "/12";
         }
     }
 
@@ -91,7 +100,7 @@ public class TrashCan : MonoBehaviour
         trashCanGuard.SetActive(false);
     }
 
-    void ShowDialog(string message)
+    void ShowDialog(string message, Collider2D other)
     {
         if (dialogPanel != null && dialogText != null)
         {
@@ -100,7 +109,15 @@ public class TrashCan : MonoBehaviour
             StopAllCoroutines(); // Stop any previous dialog hiding coroutine
             StartCoroutine(HideDialogAfterDelay());
         }
+        if (trashCanGuard != null)
+        {
+            trashCanGuard.SetActive(true); // Make the guard visible
+            StartCoroutine(MoveGuardUpAndDown()); // Smoothly move it up and down
+        }
+        Destroy(other.gameObject); // Destroy the trash object
+
     }
+
 
     IEnumerator HideDialogAfterDelay()
     {

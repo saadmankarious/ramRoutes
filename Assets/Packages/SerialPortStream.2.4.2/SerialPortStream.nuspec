@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>SerialPortStream</id>
+    <version>2.4.2</version>
+    <authors>Jason Curl</authors>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <license type="expression">MS-PL</license>
+    <licenseUrl>https://licenses.nuget.org/MS-PL</licenseUrl>
+    <projectUrl>https://github.com/jcurl/serialportstream</projectUrl>
+    <description>An independent implementation of System.IO.Ports.SerialPort and SerialStream for better reliability and maintainability. Version 3.x and later will be under the package name RJCP.SerialPortStream.</description>
+    <copyright>(C) Jason Curl, 2012-2024</copyright>
+    <repository type="git" commit="956636d3a76b5832a43dd1e00dc3545beb095ecd" />
+    <dependencies>
+      <group targetFramework=".NETFramework4.0" />
+      <group targetFramework=".NETFramework4.5" />
+      <group targetFramework=".NETStandard1.5">
+        <dependency id="Microsoft.Extensions.Logging.Abstractions" version="1.1.2" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.Win32.Registry" version="4.3.0" exclude="Build,Analyzers" />
+        <dependency id="NETStandard.Library" version="1.6.1" exclude="Build,Analyzers" />
+        <dependency id="System.Collections.Specialized" version="4.3.0" exclude="Build,Analyzers" />
+        <dependency id="System.Diagnostics.FileVersionInfo" version="4.3.0" exclude="Build,Analyzers" />
+        <dependency id="System.Diagnostics.TraceSource" version="4.3.0" exclude="Build,Analyzers" />
+        <dependency id="System.Threading.Overlapped" version="4.3.0" exclude="Build,Analyzers" />
+        <dependency id="System.Threading.Thread" version="4.3.0" exclude="Build,Analyzers" />
+        <dependency id="System.Threading.ThreadPool" version="4.3.0" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+    <frameworkAssemblies>
+      <frameworkAssembly assemblyName="Microsoft.CSharp" targetFramework=".NETFramework4.0, .NETFramework4.5" />
+      <frameworkAssembly assemblyName="System.Core" targetFramework=".NETFramework4.0, .NETFramework4.5" />
+      <frameworkAssembly assemblyName="System" targetFramework=".NETFramework4.0, .NETFramework4.5" />
+      <frameworkAssembly assemblyName="System.Management" targetFramework=".NETFramework4.0, .NETFramework4.5" />
+    </frameworkAssemblies>
+  </metadata>
+</package>

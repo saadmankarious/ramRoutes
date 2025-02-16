@@ -130,7 +130,7 @@ namespace Platformer.Mechanics
             // Add your message handling logic here
         }
 
-        void TryPickUpTrash()
+      void TryPickUpTrash()
         {
             // Detect trash in the player's range using Physics2D.OverlapCircle
             Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, pickUpRange);
@@ -139,7 +139,6 @@ namespace Platformer.Mechanics
                 if (hit.CompareTag("Trash") || hit.CompareTag("Recyclable"))
                 {
                     heldTrash = hit.gameObject;
-                    heldTrash.GetComponent<Rigidbody2D>().isKinematic = true; // So it doesn't fall
                     heldTrash.GetComponent<Collider2D>().enabled = false; // Disable collisions
                     Debug.Log("Picked up " + heldTrash.name);
                     return;
@@ -147,17 +146,18 @@ namespace Platformer.Mechanics
             }
         }
 
+
         void DropTrash()
         {
             // Drop the trash at the player's position
             if (heldTrash != null)
             {
-                heldTrash.GetComponent<Rigidbody2D>().isKinematic = false; // Reactivate physics
                 heldTrash.GetComponent<Collider2D>().enabled = true; // Re-enable collisions
                 heldTrash = null;
                 Debug.Log("Dropped the trash");
             }
         }
+
 
         // Visualize the pick-up range in the Scene view
         private void OnDrawGizmosSelected()
