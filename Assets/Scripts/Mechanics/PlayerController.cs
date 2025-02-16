@@ -25,7 +25,6 @@ namespace Platformer.Mechanics
         private UdpClient udpClient;
         private Thread receiveThread;
         private bool isRunning = true;
-        private ButtonState buttonState;
 
         public int port = 5005; // Match this with your Python script
 
@@ -128,14 +127,6 @@ namespace Platformer.Mechanics
 
         private void ProcessMessage(string message)
         {
-            if(message == "jump")
-            {
-                buttonState = ButtonState.Jump;
-            }
-            else if(message == "stop-jump")
-            {
-                buttonState = ButtonState.None;
-            }
             // Add your message handling logic here
         }
 
@@ -210,11 +201,9 @@ namespace Platformer.Mechanics
             if (controlEnabled)
             {
                 move.x = Input.GetAxis("Horizontal");
-                if (jumpState == JumpState.Grounded && buttonState == ButtonState.Jump )
-                {
-                    jumpState = JumpState.PrepareToJump;                
-                }
-                else if (buttonState == ButtonState.None)
+                if (jumpState == JumpState.Grounded && Input.GetButtonDown("Jump"))
+                    jumpState = JumpState.PrepareToJump;
+                else if (Input.GetButtonUp("Jump"))
                 {
                     stopJump = true;
                     Schedule<PlayerStopJump>().player = this;
@@ -292,11 +281,6 @@ namespace Platformer.Mechanics
             Jumping,
             InFlight,
             Landed
-        }
-        public enum ButtonState
-        {
-            None,
-            Jump
         }
     }
 }
