@@ -12,10 +12,10 @@ public class TrashItem : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("TrashCan"))
-        {
-            Debug.Log("Trash placed in trash can");
-            Destroy(gameObject); // Remove trash from the scene
-        }
+        // if (other.CompareTag("TrashCan"))
+        // {
+        //     Debug.Log("Trash placed in trash can");
+        //     Destroy(gameObject); // Remove trash from the scene
+        // }
     }
 }

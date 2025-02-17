@@ -147,16 +147,22 @@ namespace Platformer.Mechanics
         }
 
 
-        void DropTrash()
+     void DropTrash()
+    {
+        // Drop the trash slightly in front of the player
+        if (heldTrash != null)
         {
-            // Drop the trash at the player's position
-            if (heldTrash != null)
-            {
-                heldTrash.GetComponent<Collider2D>().enabled = true; // Re-enable collisions
-                heldTrash = null;
-                Debug.Log("Dropped the trash");
-            }
+            Vector2 dropOffset = new Vector2(0, 1.0f); // Adjust this for different drop positions
+            Vector2 dropPosition = (Vector2)transform.position + dropOffset;
+
+            heldTrash.transform.position = dropPosition; // Move trash slightly next to player
+            heldTrash.GetComponent<Collider2D>().enabled = true; // Re-enable collisions
+
+            Debug.Log("Dropped the trash at " + dropPosition);
+            heldTrash = null;
         }
+    }
+
 
 
         // Visualize the pick-up range in the Scene view

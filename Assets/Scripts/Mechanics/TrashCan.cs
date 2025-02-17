@@ -39,31 +39,42 @@ public class TrashCan : MonoBehaviour
     {
         if (other.CompareTag("Trash"))
         {
-            trashCount++;
-            Destroy(other.gameObject); // Destroy the trash object
-
+         
             if(isRecycling)
             {
-                ShowDialog("you just put trash in a recylcing bin", other);
+                ShowDialog("Wrong place.", other);
+            }else{
+                trashCount++;
+                Destroy(other.gameObject);
+                Debug.Log("trash count " + trashCount);
+                updateCollectableCounts(trashCount, -1);
             }
         }
+        
         if (other.CompareTag("Recyclable"))
         {
-            recyclableCount++;
-            Destroy(other.gameObject); // Destroy the trash object
-            
-            if(!isRecycling)
+            if(isRecycling)
             {
-                ShowDialog("Water bottles should go to the recycle bin", other);
-            }            
+               recyclableCount++;
+                Destroy(other.gameObject);
+                Debug.Log("bottle count " + recyclableCount);
+                updateCollectableCounts(-1, recyclableCount);
+
+            }  
+            else{
+                ShowDialog("Wrong place.", other);
+
+            }          
         }
-        updateCollectableCounts();
     }
 
-    void updateCollectableCounts(){
-        if(trashCountText != null && bottleCountText != null)
+    void updateCollectableCounts(int trashCount_, int recyclableCount_ ){
+        if(trashCount_ != -1)
         {
             trashCountText.text = trashCount + "/12";
+        }
+        if(recyclableCount_ != -1)
+        {
             bottleCountText.text = recyclableCount + "/12";
         }
     }
@@ -114,7 +125,6 @@ public class TrashCan : MonoBehaviour
             trashCanGuard.SetActive(true); // Make the guard visible
             StartCoroutine(MoveGuardUpAndDown()); // Smoothly move it up and down
         }
-        Destroy(other.gameObject); // Destroy the trash object
 
     }
 
