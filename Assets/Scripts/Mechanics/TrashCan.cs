@@ -6,6 +6,7 @@ public class TrashCan : MonoBehaviour
 {
     public int trashCount = 0; // Count of how many trash pieces have been dropped
     public int recyclableCount = 0; // Count of how many trash pieces have been dropped
+    public int treePlantedCount = 0; // Count of how many trash pieces have been dropped
 
     public GameObject trashCanGuard; // The hidden object that becomes visible
     public float guardMoveUpDistance = 0.5f; // How much the guard moves up
@@ -65,6 +66,13 @@ public class TrashCan : MonoBehaviour
                 ShowDialog("Wrong place.", other);
 
             }          
+        }
+
+        if (other.CompareTag("Sapling"))
+        {
+            treePlantedCount++;
+            Destroy(other.gameObject);
+            Debug.Log("trees planted " + treePlantedCount);           
         }
     }
 

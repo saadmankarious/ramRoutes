@@ -136,7 +136,7 @@ namespace Platformer.Mechanics
             Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, pickUpRange);
             foreach (Collider2D hit in hits)
             {
-                if (hit.CompareTag("Trash") || hit.CompareTag("Recyclable"))
+                if (hit.CompareTag("Trash") || hit.CompareTag("Recyclable") || hit.CompareTag("Sapling") )
                 {
                     heldTrash = hit.gameObject;
                     heldTrash.GetComponent<Collider2D>().enabled = false; // Disable collisions
