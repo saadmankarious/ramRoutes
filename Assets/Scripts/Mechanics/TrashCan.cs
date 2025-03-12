@@ -7,6 +7,8 @@ public class TrashCan : MonoBehaviour
     public int trashCount = 0; // Count of how many trash pieces have been dropped
     public int recyclableCount = 0; // Count of how many trash pieces have been dropped
     public int treePlantedCount = 0; // Count of how many trash pieces have been dropped
+    public Animator animator;
+    private bool planted;
 
     public GameObject trashCanGuard; // The hidden object that becomes visible
     public float guardMoveUpDistance = 0.5f; // How much the guard moves up
@@ -34,7 +36,11 @@ public class TrashCan : MonoBehaviour
         {
             dialogPanel.SetActive(false); // Hide dialog at start
         }
-    }
+    
+        // Initialize the Animator component attached to the same object
+        animator = GetComponent<Animator>();
+    
+}
 
     void OnTriggerEnter2D(Collider2D other)
     {
@@ -70,9 +76,22 @@ public class TrashCan : MonoBehaviour
 
         if (other.CompareTag("Sapling"))
         {
-            treePlantedCount++;
-            Destroy(other.gameObject);
-            Debug.Log("trees planted " + treePlantedCount);           
+           
+            if (animator != null && !planted)
+            { 
+                treePlantedCount++;
+                Destroy(other.gameObject);
+                Debug.Log("trees planted " + treePlantedCount);
+                animator.SetTrigger("plant");
+                planted = true;
+                ShowDialog("Good job!", other);
+
+            }
+            else 
+            {
+                ShowDialog("Cannot plant tree here.", other);
+            }
+
         }
     }
 
