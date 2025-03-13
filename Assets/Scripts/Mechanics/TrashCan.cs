@@ -18,6 +18,7 @@ public class TrashCan : MonoBehaviour
     public Text dialogText; // The text field to show the dialog
     public Text trashCountText; // The text field to show the dialog
     public Text bottleCountText; // The text field to show the dialog
+    public Text treeCountText; // The text field to show the dialog
 
     public float dialogDisplayTime = 2f; // How long the dialog stays visible
     public bool isRecycling = false;
@@ -85,6 +86,7 @@ public class TrashCan : MonoBehaviour
                 animator.SetTrigger("plant");
                 planted = true;
                 ShowDialog("Good job!", other);
+                treeCountText.text = treePlantedCount + "";
 
             }
             else 

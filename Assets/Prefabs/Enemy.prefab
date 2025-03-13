@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 2651140156555518892}
   - component: {fileID: 772289407653213039}
   - component: {fileID: 5843668731025413174}
+  - component: {fileID: 2985764509403717166}
   m_Layer: 13
   m_Name: Enemy
   m_TagString: Enemy
@@ -79,7 +80,7 @@ SpriteRenderer:
   m_SortingLayerID: 1907945055
   m_SortingLayer: 0
   m_SortingOrder: 5
-  m_Sprite: {fileID: -630959035, guid: ebe08c73fdea24c1e8381bdaab171f29, type: 3}
+  m_Sprite: {fileID: 1283012859, guid: b4446d66780f1aa4d84b0776f8be45d9, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -303,3 +304,20 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &2985764509403717166
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1661912868639658944}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f537d427db231c04abe517f12aa451d2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  objectToThrow: {fileID: 8900768446916657819, guid: d2872e939184c7240a53f88ffaeb4967,
+    type: 3}
+  throwForce: 150
+  throwInterval: 20
+  randomSpread: 15
