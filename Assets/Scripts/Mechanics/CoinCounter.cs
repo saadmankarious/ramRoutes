@@ -4,7 +4,6 @@ using Platformer.Gameplay; // For PlayerTokenCollision
 
 public class CoinCounter : MonoBehaviour
 {
-    [SerializeField] private Text coinCounterText; // Attach via Inspector
     private int coinCount = 0; // Number of coins collected
 
     void OnEnable()
@@ -23,9 +22,9 @@ public class CoinCounter : MonoBehaviour
     {
         // Increment the coin count
         coinCount++;
-        
+
         // Update the text on the UI to reflect the coin count
-        coinCounterText.text = coinCount+"";
+        GameManager.Instance.AddCoins(1);
 
         Debug.Log("Coins Collected: " + coinCount);
     }

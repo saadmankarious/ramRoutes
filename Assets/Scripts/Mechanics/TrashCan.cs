@@ -16,9 +16,6 @@ public class TrashCan : MonoBehaviour
 
     public GameObject dialogPanel; // The panel where dialog is displayed
     public Text dialogText; // The text field to show the dialog
-    public Text trashCountText; // The text field to show the dialog
-    public Text bottleCountText; // The text field to show the dialog
-    public Text treeCountText; // The text field to show the dialog
 
     public float dialogDisplayTime = 2f; // How long the dialog stays visible
     public bool isRecycling = false;
@@ -55,7 +52,7 @@ public class TrashCan : MonoBehaviour
                 trashCount++;
                 Destroy(other.gameObject);
                 Debug.Log("trash count " + trashCount);
-                updateCollectableCounts(trashCount, -1);
+                GameManager.Instance.AddTrash(1);
             }
         }
         
@@ -66,10 +63,11 @@ public class TrashCan : MonoBehaviour
                recyclableCount++;
                 Destroy(other.gameObject);
                 Debug.Log("bottle count " + recyclableCount);
-                updateCollectableCounts(-1, recyclableCount);
+                GameManager.Instance.AddBottles(1);
 
-            }  
-            else{
+            }
+            else
+            {
                 ShowDialog("Wrong place.", other);
 
             }          
@@ -86,7 +84,7 @@ public class TrashCan : MonoBehaviour
                 animator.SetTrigger("plant");
                 planted = true;
                 ShowDialog("Good job!", other);
-                treeCountText.text = treePlantedCount + "";
+                GameManager.Instance.PlantTree();
 
             }
             else 
@@ -97,16 +95,6 @@ public class TrashCan : MonoBehaviour
         }
     }
 
-    void updateCollectableCounts(int trashCount_, int recyclableCount_ ){
-        if(trashCount_ != -1)
-        {
-            trashCountText.text = trashCount + "/12";
-        }
-        if(recyclableCount_ != -1)
-        {
-            bottleCountText.text = recyclableCount + "/12";
-        }
-    }
 
     IEnumerator MoveGuardUpAndDown()
     {
