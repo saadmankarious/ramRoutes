@@ -507,9 +507,6 @@ MonoBehaviour:
   guardMoveUpDistance: 0.8
   dialogPanel: {fileID: 0}
   dialogText: {fileID: 0}
-  trashCountText: {fileID: 0}
-  bottleCountText: {fileID: 0}
-  treeCountText: {fileID: 0}
   dialogDisplayTime: 2
   isRecycling: 0
 --- !u!61 &34206804
@@ -3847,7 +3844,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -321.35297, y: -116.626144}
+  m_AnchoredPosition: {x: -321.35, y: 135}
   m_SizeDelta: {x: -642.7078, y: -445.5749}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &403309917
@@ -20460,9 +20457,6 @@ MonoBehaviour:
   guardMoveUpDistance: 0.5
   dialogPanel: {fileID: 403309915}
   dialogText: {fileID: 1927216146}
-  trashCountText: {fileID: 0}
-  bottleCountText: {fileID: 0}
-  treeCountText: {fileID: 990013997}
   dialogDisplayTime: 2
   isRecycling: 0
 --- !u!61 &558057118
@@ -20953,7 +20947,7 @@ GameObject:
   - component: {fileID: 643514516}
   - component: {fileID: 643514515}
   m_Layer: 5
-  m_Name: Text (Legacy)
+  m_Name: coins count
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -20975,7 +20969,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -330, y: 0}
+  m_AnchoredPosition: {x: -352.29016, y: 0}
   m_SizeDelta: {x: 36.3803, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &643514515
@@ -21011,7 +21005,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 0
+  m_Text: 00
 --- !u!222 &643514516
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -21030,7 +21024,7 @@ GameObject:
   m_Component:
   - component: {fileID: 649208862}
   m_Layer: 0
-  m_Name: Tres
+  m_Name: Trees
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -22216,7 +22210,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -289.4, y: 0}
+  m_AnchoredPosition: {x: -319.4, y: 0}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &803579416
@@ -22297,7 +22291,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -167.6, y: 0}
+  m_AnchoredPosition: {x: -229, y: 0}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &813663261
@@ -22542,7 +22536,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 76.8, y: 0}
+  m_AnchoredPosition: {x: -20, y: 0}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &817255627
@@ -23352,8 +23346,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 28.2, y: 0}
-  m_SizeDelta: {x: 72.4284, y: 30}
+  m_AnchoredPosition: {x: -54.2, y: 0}
+  m_SizeDelta: {x: 35.7287, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &990013997
 MonoBehaviour:
@@ -23388,7 +23382,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 0/4
+  m_Text: 00
 --- !u!222 &990013998
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -24411,9 +24405,6 @@ MonoBehaviour:
   guardMoveUpDistance: 0.8
   dialogPanel: {fileID: 0}
   dialogText: {fileID: 0}
-  trashCountText: {fileID: 1909503940}
-  bottleCountText: {fileID: 0}
-  treeCountText: {fileID: 0}
   dialogDisplayTime: 2
   isRecycling: 0
 --- !u!61 &1146925528
@@ -25617,9 +25608,6 @@ MonoBehaviour:
   guardMoveUpDistance: 0.5
   dialogPanel: {fileID: 403309915}
   dialogText: {fileID: 1927216146}
-  trashCountText: {fileID: 0}
-  bottleCountText: {fileID: 0}
-  treeCountText: {fileID: 990013997}
   dialogDisplayTime: 2
   isRecycling: 0
 --- !u!61 &1230190830
@@ -25795,9 +25783,6 @@ MonoBehaviour:
   guardMoveUpDistance: 0.5
   dialogPanel: {fileID: 403309915}
   dialogText: {fileID: 1927216146}
-  trashCountText: {fileID: 0}
-  bottleCountText: {fileID: 0}
-  treeCountText: {fileID: 990013997}
   dialogDisplayTime: 2
   isRecycling: 0
 --- !u!61 &1240379829
@@ -25932,6 +25917,85 @@ Transform:
   - {fileID: 1240379826}
   m_Father: {fileID: 649208862}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1291952064
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1291952067}
+  - component: {fileID: 1291952066}
+  - component: {fileID: 1291952065}
+  m_Layer: 5
+  m_Name: game level
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1291952065
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1291952064}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 0.88550174, b: 0, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_FontData:
+    m_Font: {fileID: 12800000, guid: 85329bcbbd70849fe84d3c83c4d31210, type: 3}
+    m_FontSize: 16
+    m_FontStyle: 0
+    m_BestFit: 0
+    m_MinSize: 1
+    m_MaxSize: 40
+    m_Alignment: 4
+    m_AlignByGeometry: 0
+    m_RichText: 1
+    m_HorizontalOverflow: 0
+    m_VerticalOverflow: 0
+    m_LineSpacing: 1
+  m_Text: 'Trial 1: Tree Planting'
+--- !u!222 &1291952066
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1291952064}
+  m_CullTransparentMesh: 1
+--- !u!224 &1291952067
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1291952064}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1499820068}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 278.62, y: 0}
+  m_SizeDelta: {x: 225, y: 30}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!4 &1293736725 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4336014659519773128, guid: d2872e939184c7240a53f88ffaeb4967,
@@ -27059,6 +27123,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 643514514}
+  - {fileID: 1291952067}
   - {fileID: 1909503939}
   - {fileID: 1783297009}
   - {fileID: 803579415}
@@ -27891,9 +27956,6 @@ MonoBehaviour:
   guardMoveUpDistance: 0.5
   dialogPanel: {fileID: 403309915}
   dialogText: {fileID: 1927216146}
-  trashCountText: {fileID: 0}
-  bottleCountText: {fileID: 0}
-  treeCountText: {fileID: 990013997}
   dialogDisplayTime: 2
   isRecycling: 0
 --- !u!61 &1705039861
@@ -28488,7 +28550,89 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a8d6e8f65703a41c897738b80be2807e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  coinCounterText: {fileID: 643514515}
+--- !u!1 &1756591684
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1756591687}
+  - component: {fileID: 1756591686}
+  - component: {fileID: 1756591685}
+  - component: {fileID: 1756591688}
+  m_Layer: 0
+  m_Name: Game Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1756591685
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1756591684}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8f19106532f056841a83f84b0e8e9459, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  coinsText: {fileID: 643514515}
+  trashText: {fileID: 1909503940}
+  bottlesText: {fileID: 1783297010}
+  treesText: {fileID: 990013997}
+  levelText: {fileID: 1291952065}
+--- !u!114 &1756591686
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1756591684}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77a35653ec97e0d42a3a7f77e58dc129, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  coinsCollected: 0
+  trashCollected: 0
+  bottlesCollected: 0
+  treesPlanted: 0
+  gameLevel: 0
+--- !u!4 &1756591687
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1756591684}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 70.91704, y: 2.4663014, z: -0.11047404}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1756591688
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1756591684}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53ddcbfba62bc9244a7b0d10a5f2d6c8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  xAxis: 0
+  yAxis: 0
+  buttonA: 0
 --- !u!1001 &1757278097
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -28743,8 +28887,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -101.3, y: 0}
-  m_SizeDelta: {x: 72.4284, y: 30}
+  m_AnchoredPosition: {x: -154, y: 0}
+  m_SizeDelta: {x: 36.3959, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1783297010
 MonoBehaviour:
@@ -28779,7 +28923,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 0/12
+  m_Text: 00
 --- !u!222 &1783297011
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -29011,9 +29155,6 @@ MonoBehaviour:
   guardMoveUpDistance: 0.7
   dialogPanel: {fileID: 0}
   dialogText: {fileID: 0}
-  trashCountText: {fileID: 0}
-  bottleCountText: {fileID: 0}
-  treeCountText: {fileID: 0}
   dialogDisplayTime: 2
   isRecycling: 1
 --- !u!212 &1819147700
@@ -29187,7 +29328,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -43.7, y: 0}
+  m_AnchoredPosition: {x: -119.8, y: 0}
   m_SizeDelta: {x: 20, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1831814652
@@ -29712,8 +29853,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -223.5, y: 0}
-  m_SizeDelta: {x: 73.39, y: 30}
+  m_AnchoredPosition: {x: -255.2, y: 0}
+  m_SizeDelta: {x: 38.0248, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1909503940
 MonoBehaviour:
@@ -29748,7 +29889,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 0/12
+  m_Text: 00
 --- !u!222 &1909503941
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -31377,7 +31518,7 @@ PrefabInstance:
     - target: {fileID: 1658460978237467174, guid: f158aa2be3df6489185ef721f6fd79c1,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.592
+      value: -0.4
       objectReference: {fileID: 0}
     - target: {fileID: 1658460978237467174, guid: f158aa2be3df6489185ef721f6fd79c1,
         type: 3}
@@ -31667,6 +31808,7 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1754240608}
+  - {fileID: 1756591687}
   - {fileID: 318776226}
   - {fileID: 519420032}
   - {fileID: 30668787}

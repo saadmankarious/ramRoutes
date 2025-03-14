@@ -35,6 +35,6 @@ public class UIManager : MonoBehaviour
         treesText.text = "" + GameManager.Instance.treesPlanted;
 
         // Display both level and trial name
-        levelText.text = "Level: " + GameManager.Instance.gameLevel + " - " + GetTrialName(GameManager.Instance.gameLevel);
+        levelText.text =  GameManager.Instance.gameLevel + " - " + GetTrialName(GameManager.Instance.gameLevel);
     }
 }
