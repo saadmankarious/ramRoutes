@@ -13,35 +13,32 @@ using System.Threading;
 
 namespace Platformer.Mechanics
 {
-    /// <summary>
-    /// This is the main class used to implement control of the player.
-    /// It is a superset of the AnimationController class, but is inlined to allow for any kind of customisation.
-    /// </summary>
     public class PlayerController : KinematicObject
     {
+        // Singleton instance
+        public static PlayerController Instance { get; private set; }
+
+        // Audio clips
         public AudioClip jumpAudio;
         public AudioClip respawnAudio;
         public AudioClip ouchAudio;
-        private UdpClient udpClient;
-        private Thread receiveThread;
+
+        // Server variables
+        private TcpListener server;
+        private Thread serverThread;
         private bool isRunning = true;
 
-        public int port = 5005; // Match this with your Python script
+        public int port = 5005;
 
-        /// <summary>
         /// Max horizontal speed of the player.
-        /// </summary>
         public float maxSpeed = 7;
-        /// <summary>
         /// Initial jump velocity at the start of a jump.
-        /// </summary>
         public float jumpTakeOffSpeed = 7;
 
         public JumpState jumpState = JumpState.Grounded;
         private bool stopJump;
-        /*internal new*/
+
         public Collider2D collider2d;
-        /*internal new*/
         public AudioSource audioSource;
         public Health health;
         public bool controlEnabled = true;
@@ -54,90 +51,131 @@ namespace Platformer.Mechanics
 
         public Bounds Bounds => collider2d.bounds;
 
-        public Transform holdPoint; // The point where the trash will be held (attach an empty GameObject to player)
-        public float pickUpRange = 1.0f; // How close player must be to pick up trash
-        public KeyCode interactKey = KeyCode.C; // Key to pick up and drop trash
+        public Transform holdPoint;
+        public float pickUpRange = 1.0f;
+        public KeyCode interactKey = KeyCode.C;
 
-        private GameObject heldTrash = null; // Reference to the trash object the player is holding
-
-      void TryPickUpTrash()
-        {
-            // Detect trash in the player's range using Physics2D.OverlapCircle
-            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, pickUpRange);
-            foreach (Collider2D hit in hits)
-            {
-                if (hit.CompareTag("Trash") || hit.CompareTag("Recyclable") || hit.CompareTag("Sapling") )
-                {
-                    heldTrash = hit.gameObject;
-                    heldTrash.GetComponent<Collider2D>().enabled = false; // Disable collisions
-                    Debug.Log("Picked up " + heldTrash.name);
-                    return;
-                }
-            }
-        }
-
-
-     void DropTrash()
-    {
-        // Drop the trash slightly in front of the player
-        if (heldTrash != null)
-        {
-            Vector2 dropOffset = new Vector2(0, 1.0f); // Adjust this for different drop positions
-            Vector2 dropPosition = (Vector2)transform.position + dropOffset;
-
-            heldTrash.transform.position = dropPosition; // Move trash slightly next to player
-            heldTrash.GetComponent<Collider2D>().enabled = true; // Re-enable collisions
-
-            Debug.Log("Dropped the trash at " + dropPosition);
-            heldTrash = null;
-        }
-    }
-
-
-
-        // Visualize the pick-up range in the Scene view
-        private void OnDrawGizmosSelected()
-        {
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(transform.position, pickUpRange);
-        }
+        private GameObject heldTrash = null;
+        private bool pickupCommandFromServer = false;
+        private bool moveCommandFromServer = false;
+        private float moveDirectionFromServer = 0;
 
         void Awake()
         {
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
+
             health = GetComponent<Health>();
             audioSource = GetComponent<AudioSource>();
             collider2d = GetComponent<Collider2D>();
             spriteRenderer = GetComponent<SpriteRenderer>();
             animator = GetComponent<Animator>();
+
+            StartServer();
         }
 
-        protected override void Update()
+        void StartServer()
         {
-            // Check if player presses the interact key
-            if (Input.GetKeyDown(interactKey))
+            serverThread = new Thread(ServerLoop);
+            serverThread.IsBackground = true;
+            serverThread.Start();
+            Debug.Log($"Server started on port {port}");
+        }
+
+        void ServerLoop()
+        {
+            try
+            {
+                server = new TcpListener(IPAddress.Any, port);
+                server.Start();
+
+                while (isRunning)
+                {
+                    using (TcpClient client = server.AcceptTcpClient())
+                    using (NetworkStream stream = client.GetStream())
+                    {
+                        byte[] buffer = new byte[1024];
+                        int bytesRead = stream.Read(buffer, 0, buffer.Length);
+                        string message = Encoding.UTF8.GetString(buffer, 0, bytesRead).Trim();
+
+                        if (!string.IsNullOrEmpty(message))
+                        {
+                            Debug.Log($"Received: {message}");
+                            HandleServerInput(message);
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Server Error: {e.Message}");
+            }
+        }
+
+        void HandleServerInput(string input)
+        {
+            string[] parts = input.Split(':');
+            if (parts.Length == 2)
+            {
+                string command = parts[0].ToUpper();
+                string value = parts[1];
+
+                switch (command)
+                {
+                    case "MOVE":
+                        if (float.TryParse(value, out float direction))
+                        {
+                            moveDirectionFromServer = direction;
+                            moveCommandFromServer = true;
+                        }
+                        break;
+
+                    case "JUMP":
+                        jump = true;
+                        break;
+
+                    case "PICKUP":
+                        pickupCommandFromServer = true;
+                        break;
+
+                    case "DROP":
+                        DropTrash();
+                        break;
+
+                    default:
+                        Debug.Log($"Unknown command: {command}");
+                        break;
+                }
+            }
+        }
+
+        void Update()
+        {
+            // Handle pickup from keyboard or server
+            if (Input.GetKeyDown(interactKey) || pickupCommandFromServer)
             {
                 if (heldTrash == null)
                 {
-                    // Try to pick up trash
                     TryPickUpTrash();
                 }
                 else
                 {
-                    // Drop the trash if already holding it
                     DropTrash();
                 }
+                pickupCommandFromServer = false; // Reset flag after handling
             }
 
-            // If player is holding trash, keep it at the hold position
-            if (heldTrash != null)
-            {
-                heldTrash.transform.position = holdPoint.position;
-            }
-
+            // Handle movement from keyboard or server
             if (controlEnabled)
             {
-                move.x = Input.GetAxis("Horizontal");
-                if (jumpState == JumpState.Grounded && Input.GetButtonDown("Jump"))
+                move.x = Input.GetAxis("Horizontal") != 0 ? Input.GetAxis("Horizontal") : moveDirectionFromServer;
+                if (jumpState == JumpState.Grounded && (Input.GetButtonDown("Jump") || jump))
                     jumpState = JumpState.PrepareToJump;
                 else if (Input.GetButtonUp("Jump"))
                 {
@@ -149,8 +187,44 @@ namespace Platformer.Mechanics
             {
                 move.x = 0;
             }
+
+            if (heldTrash != null)
+            {
+                heldTrash.transform.position = holdPoint.position;
+            }
+
             UpdateJumpState();
             base.Update();
+        }
+
+        void TryPickUpTrash()
+        {
+            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, pickUpRange);
+            foreach (Collider2D hit in hits)
+            {
+                if (hit.CompareTag("Trash") || hit.CompareTag("Recyclable") || hit.CompareTag("Sapling"))
+                {
+                    heldTrash = hit.gameObject;
+                    heldTrash.GetComponent<Collider2D>().enabled = false;
+                    Debug.Log("Picked up " + heldTrash.name);
+                    return;
+                }
+            }
+        }
+
+        void DropTrash()
+        {
+            if (heldTrash != null)
+            {
+                Vector2 dropOffset = new Vector2(0, 1.0f);
+                Vector2 dropPosition = (Vector2)transform.position + dropOffset;
+
+                heldTrash.transform.position = dropPosition;
+                heldTrash.GetComponent<Collider2D>().enabled = true;
+
+                Debug.Log("Dropped the trash at " + dropPosition);
+                heldTrash = null;
+            }
         }
 
         void UpdateJumpState()
@@ -208,6 +282,13 @@ namespace Platformer.Mechanics
             animator.SetFloat("velocityX", Mathf.Abs(velocity.x) / maxSpeed);
 
             targetVelocity = move * maxSpeed;
+        }
+
+        void OnDestroy()
+        {
+            isRunning = false;
+            server?.Stop();
+            serverThread?.Abort();
         }
 
         public enum JumpState
