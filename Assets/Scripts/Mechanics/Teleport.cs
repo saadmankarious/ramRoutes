@@ -1,4 +1,6 @@
 using UnityEngine;
+using Cinemachine;
+using System.Collections;
 
 public class Teleport : MonoBehaviour
 {
@@ -7,22 +9,24 @@ public class Teleport : MonoBehaviour
     public AudioClip teleportSound; // Sound effect for teleportation
     public KeyCode teleportButton = KeyCode.T; // The button to press for teleportation
     public GameObject player; // Reference to the player GameObject
+    public float teleportDelay = 1f; // Delay before teleporting (in seconds)
+    public CinemachineImpulseSource impulseSource; // Reference to the Cinemachine Impulse Source
 
     private void Update()
     {
         // Check if the teleport button is pressed
         if (Input.GetKeyDown(teleportButton))
         {
-            TeleportPlayer(player); // Teleport the player
+            StartCoroutine(TeleportWithDelay()); // Start the teleportation process with a delay
         }
     }
 
-    private void TeleportPlayer(GameObject player)
+    private IEnumerator TeleportWithDelay()
     {
         if (player == null)
         {
             Debug.LogError("Player reference is not set!");
-            return;
+            yield break;
         }
 
         // Play teleport effect (particles) at the current location
@@ -36,6 +40,16 @@ public class Teleport : MonoBehaviour
         {
             AudioSource.PlayClipAtPoint(teleportSound, player.transform.position);
         }
+
+        // Shake the camera using Cinemachine Impulse
+        if (impulseSource != null)
+        {
+            impulseSource.GenerateImpulse();
+            Debug.Log("generated impulse");
+        }
+
+        // Wait for the specified delay
+        yield return new WaitForSeconds(teleportDelay);
 
         // Teleport the player to the target location
         player.transform.position = targetLocation.position;
