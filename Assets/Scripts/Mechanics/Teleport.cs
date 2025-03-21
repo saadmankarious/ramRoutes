@@ -11,6 +11,7 @@ public class Teleport : MonoBehaviour
     public GameObject player; // Reference to the player GameObject
     public float teleportDelay = 1f; // Delay before teleporting (in seconds)
     public CinemachineImpulseSource impulseSource; // Reference to the Cinemachine Impulse Source
+    public SwitchConfiner switchConfiner;
 
     private void Update()
     {
@@ -28,6 +29,8 @@ public class Teleport : MonoBehaviour
             Debug.LogError("Player reference is not set!");
             yield break;
         }
+
+        switchConfiner.SwitchToNextConfiner();
 
         // Play teleport effect (particles) at the current location
         if (teleportEffect != null)
