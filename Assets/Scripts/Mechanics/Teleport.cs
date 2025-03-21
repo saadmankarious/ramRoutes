@@ -30,7 +30,9 @@ public class Teleport : MonoBehaviour
             yield break;
         }
 
-        switchConfiner.SwitchToNextConfiner();
+        int switchIndex = GetNextConfinerIndex();
+       
+        switchConfiner.SwitchToConfiner(switchIndex);
 
         // Play teleport effect (particles) at the current location
         if (teleportEffect != null)
@@ -56,11 +58,32 @@ public class Teleport : MonoBehaviour
 
         // Teleport the player to the target location
         player.transform.position = targetLocation.position;
-
+        Debug.Log("teleported to location " + targetLocation.position);
         // Play teleport effect at the new location
         if (teleportEffect != null)
         {
             Instantiate(teleportEffect, targetLocation.position, Quaternion.identity);
         }
+    }
+
+    private int GetNextConfinerIndex()
+    {
+        int switchIndex = 0;
+        switch (teleportButton)
+        {
+            case KeyCode.I:
+                switchIndex = 0;
+                break;
+            case KeyCode.E:
+                switchIndex = 1;
+                break;
+            case KeyCode.G:
+                switchIndex = 2;
+                break;
+            case KeyCode.C:
+                switchIndex = 3;
+                break;
+        }
+        return switchIndex;
     }
 }
