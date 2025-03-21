@@ -53,7 +53,7 @@ namespace Platformer.Mechanics
 
         public Transform holdPoint;
         public float pickUpRange = 1.0f;
-        public KeyCode interactKey = KeyCode.C;
+        public KeyCode interactKey = KeyCode.S;
 
         private GameObject heldTrash = null;
         private bool pickupCommandFromServer = false;
