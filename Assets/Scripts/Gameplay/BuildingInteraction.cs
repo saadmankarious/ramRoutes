@@ -8,7 +8,7 @@ public class BuildingInteraction : MonoBehaviour
     public GameObject dialogPanel; // The panel where the text will be displayed
     public Text dialogText; // The text field to show the dialogue
     public string[] dialogLines; // Array to store the information displayed
-    public KeyCode interactKey = KeyCode.E; // Key used to interact with buildings
+    public KeyCode interactKey = KeyCode.J; // Key used to interact with buildings
 
     private bool isPlayerInRange = false; // Is the player in range of a building
     private int currentLineIndex = 0; // Keeps track of which part of the dialog is being displayed
