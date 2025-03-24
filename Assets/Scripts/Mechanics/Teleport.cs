@@ -7,23 +7,44 @@ public class Teleport : MonoBehaviour
     public Transform targetLocation; // The location to teleport to
     public ParticleSystem teleportEffect; // Particle effect for teleportation
     public AudioClip teleportSound; // Sound effect for teleportation
-    public KeyCode teleportButton = KeyCode.T; // The button to press for teleportation
+    private KeyCode teleportButton = KeyCode.T; // The button to press for teleportation
     public GameObject player; // Reference to the player GameObject
     public float teleportDelay = 1f; // Delay before teleporting (in seconds)
     public CinemachineImpulseSource impulseSource; // Reference to the Cinemachine Impulse Source
     public SwitchConfiner switchConfiner;
 
+    private enum Stations {Io, Calliston, Ganymede, Europa}; 
+    [SerializeField] private Stations teleportStation;
+    private Stations? currentCollidedStation;
+
     private void Update()
     {
         // Check if the teleport button is pressed
-        if (Input.GetKeyDown(teleportButton))
+        if (Input.GetKeyDown(teleportButton) && currentCollidedStation != null)
         {
             StartCoroutine(TeleportWithDelay()); // Start the teleportation process with a delay
         }
     }
 
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if(other.CompareTag("Player")){
+            Debug.Log("Player collided with " +teleportStation );
+            currentCollidedStation = teleportStation;
+        }
+    }
+
+      void OnTriggerExit2D(Collider2D other)
+    {
+        if(other.CompareTag("Player")){
+            Debug.Log("Player leaving " + teleportStation);
+            currentCollidedStation = null;
+        }
+    }
+
     private IEnumerator TeleportWithDelay()
     {
+        Debug.Log("teleporting to location " + targetLocation);
         if (player == null)
         {
             Debug.LogError("Player reference is not set!");
@@ -69,18 +90,18 @@ public class Teleport : MonoBehaviour
     private int GetNextConfinerIndex()
     {
         int switchIndex = 0;
-        switch (teleportButton)
+        switch (teleportStation)
         {
-            case KeyCode.I:
+            case Stations.Io:
                 switchIndex = 0;
                 break;
-            case KeyCode.E:
+            case Stations.Europa:
                 switchIndex = 1;
                 break;
-            case KeyCode.G:
+            case Stations.Ganymede:
                 switchIndex = 2;
                 break;
-            case KeyCode.C:
+            case Stations.Calliston:
                 switchIndex = 3;
                 break;
         }
