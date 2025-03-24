@@ -1,6 +1,7 @@
 using UnityEngine;
 using Cinemachine;
 using System.Collections;
+using UnityEngine.UI; // Required for UI manipulation
 
 public class Teleport : MonoBehaviour
 {
@@ -12,6 +13,8 @@ public class Teleport : MonoBehaviour
     public float teleportDelay = 1f; // Delay before teleporting (in seconds)
     public CinemachineImpulseSource impulseSource; // Reference to the Cinemachine Impulse Source
     public SwitchConfiner switchConfiner;
+    public GameObject dialogPanel; // The panel where dialog is displayed
+    public Text dialogText; // The text field to show the dialog
 
     private enum Stations {Io, Calliston, Ganymede, Europa}; 
     [SerializeField] private Stations teleportStation;
@@ -31,6 +34,8 @@ public class Teleport : MonoBehaviour
         if(other.CompareTag("Player")){
             Debug.Log("Player collided with " +teleportStation );
             currentCollidedStation = teleportStation;
+            ShowDialog("You are now on " + teleportStation + ". Hit T to time travel!", other);
+
         }
     }
 
@@ -39,6 +44,7 @@ public class Teleport : MonoBehaviour
         if(other.CompareTag("Player")){
             Debug.Log("Player leaving " + teleportStation);
             currentCollidedStation = null;
+            HideDialog();
         }
     }
 
@@ -106,5 +112,25 @@ public class Teleport : MonoBehaviour
                 break;
         }
         return switchIndex;
+    }
+
+    void ShowDialog(string message, Collider2D other)
+    {
+        if (dialogPanel != null && dialogText != null)
+        {
+            dialogText.text = message;
+            dialogPanel.SetActive(true); // Show the dialog panel
+            StartCoroutine(HideDialogAfterDelay());
+        }
+    }
+
+    void HideDialog()
+    {
+        dialogPanel.SetActive(false); // Show the dialog panel
+    }
+     IEnumerator HideDialogAfterDelay()
+    {
+        yield return new WaitForSeconds(3f);
+        dialogPanel.SetActive(false); // Hide the dialog after the delay
     }
 }
