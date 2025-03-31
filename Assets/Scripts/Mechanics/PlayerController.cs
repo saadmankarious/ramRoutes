@@ -10,6 +10,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using Cinemachine;
 
 namespace Platformer.Mechanics
 {
@@ -60,7 +61,20 @@ namespace Platformer.Mechanics
         private bool moveCommandFromServer = false;
         private float moveDirectionFromServer = 0;
 
-        void Awake()
+private CinemachineConfiner confiner;
+private Collider2D boundary;
+
+        void Start()
+        {
+            confiner = FindObjectOfType<CinemachineVirtualCamera>().GetComponent<CinemachineConfiner>();
+            if (confiner == null)
+            {
+                Debug.LogError("No CinemachineConfiner found on virtual camera!");
+            }
+            boundary = confiner?.m_BoundingShape2D;
+
+        }
+            void Awake()
         {
             if (Instance == null)
             {
@@ -155,47 +169,85 @@ namespace Platformer.Mechanics
             }
         }
 
-        void Update()
+void Update()
+{
+    // Handle pickup from keyboard or server (unchanged)
+    if (Input.GetKeyDown(interactKey) || pickupCommandFromServer)
+    {
+        if (heldTrash == null)
         {
-            // Handle pickup from keyboard or server
-            if (Input.GetKeyDown(interactKey) || pickupCommandFromServer)
-            {
-                if (heldTrash == null)
-                {
-                    TryPickUpTrash();
-                }
-                else
-                {
-                    DropTrash();
-                }
-                pickupCommandFromServer = false; // Reset flag after handling
-            }
+            TryPickUpTrash();
+        }
+        else
+        {
+            DropTrash();
+        }
+        pickupCommandFromServer = false;
+    }
 
-            // Handle movement from keyboard or server
-            if (controlEnabled)
+    // Handle movement from keyboard or server
+    if (controlEnabled)
+    {
+        float inputX = Input.GetAxis("Horizontal") != 0 ? Input.GetAxis("Horizontal") : moveDirectionFromServer;
+        
+        // Calculate movement vector
+        Vector2 movement = new Vector2(inputX * maxSpeed * Time.deltaTime, 0);
+        
+        // Only apply movement if within bounds
+        if (boundary != null)
+        {
+            Debug.Log("non null boundary");
+
+            Vector2 newPosition = (Vector2)transform.position + movement;
+            
+            if (boundary.OverlapPoint(newPosition))
             {
-                move.x = Input.GetAxis("Horizontal") != 0 ? Input.GetAxis("Horizontal") : moveDirectionFromServer;
-                if (jumpState == JumpState.Grounded && (Input.GetButtonDown("Jump") || jump))
-                    jumpState = JumpState.PrepareToJump;
-                else if (Input.GetButtonUp("Jump"))
-                {
-                    stopJump = true;
-                    Schedule<PlayerStopJump>().player = this;
-                }
+                move.x = inputX; // Allow movement
+                Debug.Log("overlaping now");
             }
             else
             {
-                move.x = 0;
+                // Optional: Try sliding along walls
+                Vector2 edgePosition = boundary.ClosestPoint(newPosition);
+                if (Mathf.Abs(edgePosition.x - transform.position.x) > 0.05f)
+                {
+                    move.x = inputX * 0.3f; // Reduced speed when sliding
+                }
+                else
+                {
+                    move.x = 0; // Stop completely when directly against wall
+                }
             }
-
-            if (heldTrash != null)
-            {
-                heldTrash.transform.position = holdPoint.position;
-            }
-
-            UpdateJumpState();
-            base.Update();
         }
+        else
+        {
+            Debug.Log("null boundary");
+            move.x = inputX; // Fallback if no boundary
+        }
+
+        // Jump handling (unchanged)
+        if (jumpState == JumpState.Grounded && (Input.GetButtonDown("Jump") || jump))
+            jumpState = JumpState.PrepareToJump;
+        else if (Input.GetButtonUp("Jump"))
+        {
+            stopJump = true;
+            Schedule<PlayerStopJump>().player = this;
+        }
+    }
+    else
+    {
+        move.x = 0;
+    }
+
+    // Held trash position (unchanged)
+    if (heldTrash != null)
+    {
+        heldTrash.transform.position = holdPoint.position;
+    }
+
+    UpdateJumpState();
+    base.Update();
+}
 
         void TryPickUpTrash()
         {
