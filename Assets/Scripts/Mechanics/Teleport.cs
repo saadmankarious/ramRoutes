@@ -15,33 +15,62 @@ public class Teleport : MonoBehaviour
     public SwitchConfiner switchConfiner;
     public GameObject dialogPanel; // The panel where dialog is displayed
     public Text dialogText; // The text field to show the dialog
+    [Range(0f, 1f)] public float inactiveAlpha = 0.5f; // Transparency level when inactive
 
     private enum Stations {Io, Calliston, Ganymede, Europa}; 
     [SerializeField] private Stations teleportStation;
     private Stations? currentCollidedStation;
+
+    public bool active = false; // Initialize as inactive
+    private SpriteRenderer spriteRenderer;
+    private Color activeColor;
+    private Color inactiveColor;
+
+    private void Start()
+    {
+        // Get the SpriteRenderer component
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer != null)
+        {
+            activeColor = spriteRenderer.color;
+            inactiveColor = new Color(activeColor.r, activeColor.g, activeColor.b, inactiveAlpha);
+            UpdateVisualState();
+        }
+    }
 
     private void Update()
     {
         // Check if the teleport button is pressed
         if (Input.GetKeyDown(teleportButton) && currentCollidedStation != null)
         {
-            StartCoroutine(TeleportWithDelay()); // Start the teleportation process with a delay
+            if (active)
+            {
+                StartCoroutine(TeleportWithDelay()); // Start the teleportation process with a delay
+            }
+            else
+            {
+                ShowDialog("This teleport station is currently inactive!", player.GetComponent<Collider2D>());
+            }
         }
     }
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        if(other.CompareTag("Player")){
-            Debug.Log("Player collided with " +teleportStation );
+        if(other.CompareTag("Player"))
+        {
+            Debug.Log("Player collided with " + teleportStation);
             currentCollidedStation = teleportStation;
-            ShowDialog("You are now on " + teleportStation + ". Hit T to time travel!", other);
-
+            string statusMessage = active ? 
+                "You are now on " + teleportStation + ". Hit T to time travel!" :
+                "This teleport station is currently inactive.";
+            ShowDialog(statusMessage, other);
         }
     }
 
-      void OnTriggerExit2D(Collider2D other)
+    void OnTriggerExit2D(Collider2D other)
     {
-        if(other.CompareTag("Player")){
+        if(other.CompareTag("Player"))
+        {
             Debug.Log("Player leaving " + teleportStation);
             currentCollidedStation = null;
             HideDialog();
@@ -126,11 +155,31 @@ public class Teleport : MonoBehaviour
 
     void HideDialog()
     {
-        dialogPanel.SetActive(false); // Show the dialog panel
+        if (dialogPanel != null)
+        {
+            dialogPanel.SetActive(false); // Hide the dialog panel
+        }
     }
-     IEnumerator HideDialogAfterDelay()
+
+    IEnumerator HideDialogAfterDelay()
     {
         yield return new WaitForSeconds(3f);
-        dialogPanel.SetActive(false); // Hide the dialog after the delay
+        HideDialog();
+    }
+
+    // Update the visual state based on active status
+    private void UpdateVisualState()
+    {
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.color = active ? activeColor : inactiveColor;
+        }
+    }
+
+    // Public method to change active state
+    public void SetActiveState(bool isActive)
+    {
+        active = isActive;
+        UpdateVisualState();
     }
 }

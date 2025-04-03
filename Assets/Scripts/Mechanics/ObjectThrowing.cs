@@ -7,7 +7,7 @@ public class ObjectThrower : MonoBehaviour
     public float throwForce = 1000f; // Increased throw force
     public float spawnDistance = 2f; // Distance to spawn object in front of thrower
     public float randomSpread = 10f; // Random variation in throw angle
-    private float throwInterval = 5f; // Fixed time to 4 seconds
+    private float throwInterval = 10f; // Fixed time to 4 seconds
 
     private void Start()
     {
