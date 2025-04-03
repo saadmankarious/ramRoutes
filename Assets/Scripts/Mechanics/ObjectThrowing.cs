@@ -3,11 +3,11 @@ using UnityEngine;
 
 public class ObjectThrower : MonoBehaviour
 {
-    public GameObject objectToThrow; // Object prefab to throw
-    public float throwForce = 1000f; // Increased throw force
-    public float spawnDistance = 2f; // Distance to spawn object in front of thrower
-    public float randomSpread = 10f; // Random variation in throw angle
-    private float throwInterval = 10f; // Fixed time to 4 seconds
+    public GameObject[] objectsToThrow; // Array of object prefabs to throw
+    public float throwForce = 1000f;
+    public float spawnDistance = 2f;
+    public float randomSpread = 10f;
+    public float throwInterval = 1f;
 
     private void Start()
     {
@@ -19,22 +19,21 @@ public class ObjectThrower : MonoBehaviour
         while (true)
         {
             ThrowObject();
-            yield return new WaitForSeconds(throwInterval); // Fixed at 4 seconds
+            yield return new WaitForSeconds(throwInterval);
         }
     }
 
     void ThrowObject()
     {
-        if (objectToThrow != null)
+        if (objectsToThrow.Length > 0)
         {
-            // Spawn the object in front of the thrower to prevent self-collision
+            GameObject objectToThrow = objectsToThrow[Random.Range(0, objectsToThrow.Length)];
             Vector3 spawnPosition = transform.position + transform.forward * spawnDistance;
 
             GameObject thrownObject = Instantiate(objectToThrow, spawnPosition, transform.rotation);
             Rigidbody rb = thrownObject.GetComponent<Rigidbody>();
             if (rb != null)
             {
-                // Add random variation to the throw direction
                 Vector3 randomDirection = transform.forward +
                     new Vector3(
                         Random.Range(-randomSpread, randomSpread),
@@ -42,7 +41,6 @@ public class ObjectThrower : MonoBehaviour
                         Random.Range(-randomSpread, randomSpread)
                     ).normalized;
 
-                // Apply a strong force in the throw direction
                 rb.AddForce(randomDirection * throwForce, ForceMode.Impulse);
             }
         }

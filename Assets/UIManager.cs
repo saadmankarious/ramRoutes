@@ -13,7 +13,9 @@ public class UIManager : MonoBehaviour
     public Text dialogText;
     
     [SerializeField] private float typingSpeed = 0.3f; // Speed (lower = faster)
-    private Coroutine typingCoroutine; // To track the current typing coroutine
+    [SerializeField] private float objectiveRepeatTime = 90f; // Show objective every 90 seconds
+    private Coroutine typingCoroutine;
+    private Coroutine objectiveRepeatCoroutine;
 
     private string GetTrialName(int level)
     {
@@ -24,6 +26,46 @@ public class UIManager : MonoBehaviour
             case 2: return "Trial 3: xxx";
             case 3: return "Trial 4: yyyy";
             default: return "Sorting Trash";
+        }
+    }
+
+    private void Start()
+    {
+        // Show immediately at start
+        ShowObjective();
+        
+        // Start repeating every 90 seconds
+        objectiveRepeatCoroutine = StartCoroutine(RepeatObjective());
+    }
+
+    // Repeats the objective message every 90 seconds
+    private IEnumerator RepeatObjective()
+    {
+        while (true) // Infinite loop (safe because of yield)
+        {
+            yield return new WaitForSeconds(objectiveRepeatTime);
+            ShowObjective();
+        }
+    }
+
+    // Shows the objective message
+    private void ShowObjective()
+    {
+        string objectiveMessage = GetCurrentObjectiveMessage();
+        ShowDialog(objectiveMessage, 20f); // Show for 20 seconds
+    }
+
+    // Returns the objective message based on current level
+    private string GetCurrentObjectiveMessage()
+    {
+        int level = GameManager.Instance.gameLevel;
+        switch (level)
+        {
+            case 0: return "Objective—Sort 20 pieces of trash and 20 pieces of recycling.";
+            case 1: return "Objective—Plant 15 trees across the city.";
+            case 2: return "Objective—Complete the water conservation trial.";
+            case 3: return "Objective—Reduce carbon emissions by 50%.";
+            default: return "Complete the current trial objectives.";
         }
     }
 
@@ -75,15 +117,19 @@ public class UIManager : MonoBehaviour
     private void Update()
     {
         coinsText.text = "" + GameManager.Instance.coinsCollected;
-        trashText.text = "" + GameManager.Instance.trashCollected;
-        bottlesText.text = "" + GameManager.Instance.bottlesCollected;
+        trashText.text = "" + GameManager.Instance.trashCollected + "/" + 10;
+        bottlesText.text = "" + GameManager.Instance.bottlesCollected  + "/" + 10;
         treesText.text = "" + GameManager.Instance.treesPlanted;
 
         levelText.text = (GameManager.Instance.gameLevel + 1) + " - " + GetTrialName(GameManager.Instance.gameLevel);
     }
 
-    private void Start()
+    private void OnDestroy()
     {
-        ShowDialog("Objective--sort trash produced by CEOs in the level into appropriate locations.", 20f);
+        // Clean up coroutines if the object is destroyed
+        if (typingCoroutine != null)
+            StopCoroutine(typingCoroutine);
+        if (objectiveRepeatCoroutine != null)
+            StopCoroutine(objectiveRepeatCoroutine);
     }
 }
