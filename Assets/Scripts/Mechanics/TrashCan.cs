@@ -44,33 +44,50 @@ public class TrashCan : MonoBehaviour
     {
         if (other.CompareTag("Trash"))
         {
-         
             if(isRecycling)
             {
                 ShowDialog("Wrong place.", other);
-            }else{
+            }else if(trashCount < 10)
+            {
                 trashCount++;
                 Destroy(other.gameObject);
-                Debug.Log("trash count " + trashCount);
                 GameManager.Instance.AddTrash(1);
+                ShowDialog("Good job!", other);
+            }
+            else if (recyclableCount == 10)
+            {
+                //celebrate completing trash
+                 trashCount++;
+                Destroy(other.gameObject);
+                GameManager.Instance.AddTrash(1);
+                ShowDialog("Good job! Now you've collected all needed trash", other);
+            }
+            else{
+                ShowDialog("You collected enough trash!", other);
             }
         }
         
         if (other.CompareTag("Recyclable"))
         {
-            if(isRecycling)
-            {
-               recyclableCount++;
-                Destroy(other.gameObject);
-                Debug.Log("bottle count " + recyclableCount);
-                GameManager.Instance.AddBottles(1);
-
-            }
-            else
+            if(!isRecycling)
             {
                 ShowDialog("Wrong place.", other);
-
-            }          
+            }
+            else if(recyclableCount < 10)
+            {
+                recyclableCount++;
+                Destroy(other.gameObject);
+                GameManager.Instance.AddBottles(1);
+                ShowDialog("Good job!", other);
+            }
+            else if(recyclableCount == 10)
+            {
+                //celebrate completing recycling
+                recyclableCount++;
+                Destroy(other.gameObject);
+                GameManager.Instance.AddBottles(1);
+                ShowDialog("Good job! Now you've collected all needed recycled items.", other);
+            }        
         }
 
         if (other.CompareTag("Sapling"))
