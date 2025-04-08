@@ -196,14 +196,11 @@ void Update()
         // Only apply movement if within bounds
         if (boundary != null)
         {
-            Debug.Log("non null boundary");
-
             Vector2 newPosition = (Vector2)transform.position + movement;
             
             if (boundary.OverlapPoint(newPosition))
             {
                 move.x = inputX; // Allow movement
-                Debug.Log("overlaping now");
             }
             else
             {
@@ -221,7 +218,6 @@ void Update()
         }
         else
         {
-            Debug.Log("null boundary");
             move.x = inputX; // Fallback if no boundary
         }
 
@@ -258,7 +254,6 @@ void Update()
                 {
                     heldTrash = hit.gameObject;
                     heldTrash.GetComponent<Collider2D>().enabled = false;
-                    Debug.Log("Picked up " + heldTrash.name);
                     return;
                 }
             }
@@ -274,7 +269,6 @@ void Update()
                 heldTrash.transform.position = dropPosition;
                 heldTrash.GetComponent<Collider2D>().enabled = true;
 
-                Debug.Log("Dropped the trash at " + dropPosition);
                 heldTrash = null;
             }
         }
