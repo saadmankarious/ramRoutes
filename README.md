@@ -122,3 +122,41 @@ else
     }
 }
 ```
+
+
+
+## Beta Release
+### Improve Play UI
+Added stats that track progress towards finishing the game including indicator of current trial and knowldge points. I also adde directions to remind player of mission objective.
+
+### Spaceship
+I finalized implementation of spaceship feature including animation and navigation. Upon hitting the E key, the spaceship finds the player location and moves towards it. The player gets picked up autmatically by the space ship before ascending to space. The spaceship then waits for player's inputs to move along the X axis.
+
+## Project Organization
+All assets for creating the game are included under the Assets folder. Scripts are organized under the Assets/Scripts subfolder. The game has three Scenes, LevelFall (containing all 4 trials), Landing, and Onboarding.
+
+## Challenges
+After pitching the game to a couple people, I realzied the objective of the game is not clear to the player at the beginning of the game. I consulted with my parter to see ways to fix this. We decided to enhance the UI and add extra elements to resolve this issue. 
+
+We also worked on setting fixed objectives for each trial. For example to pass trial one, 20 pieces of trash need to be collected.
+
+## Interesting Code
+```csharp
+private IEnumerator TypeText(string message, float activeFor)
+ {
+     dialogText.text = ""; // Clear previous text
+     
+     foreach (char letter in message.ToCharArray())
+     {
+         dialogText.text += letter; // Add one character at a time
+         yield return new WaitForSeconds(typingSpeed); // Pause between letters
+     }
+     
+     // Auto-hide after delay (if activeFor > 0)
+     if (activeFor > 0)
+     {
+         yield return new WaitForSeconds(activeFor);
+         HideDialog();
+     }
+ }
+```
