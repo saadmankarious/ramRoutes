@@ -171,15 +171,11 @@ public class UIManager : MonoBehaviour
         {
             timeUpMenu.SetActive(true);
         }
-
-        // Update timer display to show 00:00
         timerText.text = "00:00";
 
-        // Pause the game or handle time up logic
         Time.timeScale = 0f; // This pauses the game
     }
 
-    // Repeats the objective message every 90 seconds
     private IEnumerator RepeatObjective()
     {
         while (true) // Infinite loop (safe because of yield)
@@ -288,7 +284,6 @@ public class UIManager : MonoBehaviour
             timerText.color = Color.white;
         }
 
-        // Restart the coroutines
         if (objectiveRepeatCoroutine != null)
         {
             StopCoroutine(objectiveRepeatCoroutine);
@@ -301,49 +296,34 @@ public class UIManager : MonoBehaviour
         objectiveRepeatCoroutine = StartCoroutine(RepeatObjective());
         timerCoroutine = StartCoroutine(CountdownTimer());
 
-        // Reset game state (you might want to move this to GameManager)
         GameManager.Instance.ResetLevel();
         
         CleanUpLevelObjects();
 
-        // Show the objective again
         ShowObjective();
     }
 
     public void ExitTrial()
     {
-        // 1. Unpause the game first (important for scene transitions)
         Time.timeScale = 1f;
 
-        // 2. Clean up all spawned objects
         CleanUpLevelObjects();
 
-        // 3. Stop all coroutines to prevent memory leaks
         if (typingCoroutine != null) StopCoroutine(typingCoroutine);
         if (objectiveRepeatCoroutine != null) StopCoroutine(objectiveRepeatCoroutine);
         if (timerCoroutine != null) StopCoroutine(timerCoroutine);
 
-        // 4. Reset game state (optional - depends on your needs)
         GameManager.Instance.ResetTemporaryState();
 
-        // 5. Load the Landing level
         SceneManager.LoadScene("Landing");
     }
 
-    // Enhanced cleanup function (shared with RetryLevel)
     private void CleanUpLevelObjects()
     {
-        // Option 2: Destroy by tags (alternative approach)
-        /*
-        DestroyAllWithTag("Trash");
-        DestroyAllWithTag("Bottle");
-        DestroyAllWithTag("Tree");
-        */
         DestroyAllWithTag("Trash");
         DestroyAllWithTag("Recyclable");
     }
 
-    // Helper function for tag-based cleanup
     private void DestroyAllWithTag(string tag)
     {
         GameObject[] objects = GameObject.FindGameObjectsWithTag(tag);
