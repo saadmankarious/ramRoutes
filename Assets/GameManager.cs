@@ -10,7 +10,19 @@ public class GameManager : MonoBehaviour
     public int treesPlanted;
 
     public int gameLevel; // 1 = Level 1, 2 = Level 2, etc.
+    private bool trialCompleted = false;
 
+    private void CheckTrialCompletion()
+    {
+        if (trialCompleted) return;
+
+        // Example completion condition
+        if (trashCollected >= 1 && bottlesCollected >= 1)
+        {
+            trialCompleted = true;
+            FindObjectOfType<UIManager>().OnTrialComplete.Invoke();
+        }
+    }
     private void Awake()
     {
         if (Instance == null)
@@ -35,12 +47,16 @@ public class GameManager : MonoBehaviour
     {
         trashCollected += amount;
         Debug.Log("Trash Collected: " + trashCollected);
+        CheckTrialCompletion();
+
     }
 
     public void AddBottles(int amount)
     {
         bottlesCollected += amount;
         Debug.Log("Bottles Collected: " + bottlesCollected);
+        CheckTrialCompletion();
+
     }
 
     public void PlantTree()
@@ -63,5 +79,15 @@ public void ResetLevel()
     bottlesCollected = 0;
     treesPlanted = 0;
     // Add any other reset logic needed for your game
+}
+
+public void ResetTemporaryState()
+{
+    // Reset only temporary variables while preserving permanent progress
+    coinsCollected = 0;
+    trashCollected = 0;
+    bottlesCollected = 0;
+    treesPlanted = 0;
+    // Don't reset gameLevel if you want to maintain progression
 }
 }
