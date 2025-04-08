@@ -54,4 +54,14 @@ public class GameManager : MonoBehaviour
         gameLevel = level;
         Debug.Log("Game Level: " + gameLevel);
     }
+
+    // In GameManager.cs
+public void ResetLevel()
+{
+    coinsCollected = 0;
+    trashCollected = 0;
+    bottlesCollected = 0;
+    treesPlanted = 0;
+    // Add any other reset logic needed for your game
+}
 }
