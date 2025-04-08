@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using UnityEngine.SceneManagement;
+using UnityEngine.Events; // Needed for UnityEvent
 
 public class UIManager : MonoBehaviour
 {
@@ -22,6 +24,12 @@ public class UIManager : MonoBehaviour
     private Coroutine timerCoroutine;
     private float currentTime;
 
+    public GameObject trialCompleteMenu; // New panel for completed trials
+    
+    // Event that can be subscribed to from other classes
+    public UnityEvent OnTrialComplete = new UnityEvent();
+
+ 
     private string GetTrialName(int level)
     {
         switch (level)
@@ -33,12 +41,11 @@ public class UIManager : MonoBehaviour
             default: return "Sorting Trash";
         }
     }
-
-    private void Start()
+   private void Start()
     {
         // Initialize timer
         currentTime = levelDuration;
-        UpdateTimerDisplay(); // Update the timer display immediately
+        UpdateTimerDisplay();
 
         // Show immediately at start
         ShowObjective();
@@ -48,6 +55,70 @@ public class UIManager : MonoBehaviour
 
         // Start the countdown timer
         timerCoroutine = StartCoroutine(CountdownTimer());
+        
+        // Subscribe to the trial complete event
+        OnTrialComplete.AddListener(CompleteTrial);
+    }
+
+    // New function to handle trial completion
+    public void CompleteTrial()
+    {
+        // Stop all coroutines
+        if (typingCoroutine != null) StopCoroutine(typingCoroutine);
+        if (objectiveRepeatCoroutine != null) StopCoroutine(objectiveRepeatCoroutine);
+        if (timerCoroutine != null) StopCoroutine(timerCoroutine);
+
+        // Show the trial complete menu
+        if (trialCompleteMenu != null)
+        {
+            trialCompleteMenu.SetActive(true);
+        }
+
+        // Pause the game
+        Time.timeScale = 0f;
+    }
+
+    // New function to continue to next trial
+    public void ContinueToNextTrial()
+    {
+        // Unpause the game
+        Time.timeScale = 1f;
+        
+        // Hide the complete menu
+        if (trialCompleteMenu != null)
+        {
+            trialCompleteMenu.SetActive(false);
+        }
+
+        // Reset the timer
+        currentTime = levelDuration;
+        UpdateTimerDisplay();
+        timerText.color = Color.white;
+
+        // Restart coroutines
+        objectiveRepeatCoroutine = StartCoroutine(RepeatObjective());
+        timerCoroutine = StartCoroutine(CountdownTimer());
+
+        // Increment level (you might want to move this to GameManager)
+        GameManager.Instance.gameLevel++;
+        
+        // Show new objective
+        ShowObjective();
+    }
+
+    // Modified OnDestroy to clean up event
+    private void OnDestroy()
+    {
+        // Clean up coroutines
+        if (typingCoroutine != null) StopCoroutine(typingCoroutine);
+        if (objectiveRepeatCoroutine != null) StopCoroutine(objectiveRepeatCoroutine);
+        if (timerCoroutine != null) StopCoroutine(timerCoroutine);
+
+        // Remove event listeners
+        OnTrialComplete.RemoveAllListeners();
+
+        // Resume time scale
+        Time.timeScale = 1f;
     }
 
     // Countdown timer coroutine
@@ -194,19 +265,7 @@ public class UIManager : MonoBehaviour
         levelText.text = (GameManager.Instance.gameLevel + 1) + " - " + GetTrialName(GameManager.Instance.gameLevel);
     }
 
-    private void OnDestroy()
-    {
-        // Clean up coroutines if the object is destroyed
-        if (typingCoroutine != null)
-            StopCoroutine(typingCoroutine);
-        if (objectiveRepeatCoroutine != null)
-            StopCoroutine(objectiveRepeatCoroutine);
-        if (timerCoroutine != null)
-            StopCoroutine(timerCoroutine);
 
-        // Make sure to resume time scale if this object is destroyed
-        Time.timeScale = 1f;
-    }
 
     public void RetryLevel()
     {
@@ -244,8 +303,53 @@ public class UIManager : MonoBehaviour
 
         // Reset game state (you might want to move this to GameManager)
         GameManager.Instance.ResetLevel();
+        
+        CleanUpLevelObjects();
 
         // Show the objective again
         ShowObjective();
+    }
+
+    public void ExitTrial()
+    {
+        // 1. Unpause the game first (important for scene transitions)
+        Time.timeScale = 1f;
+
+        // 2. Clean up all spawned objects
+        CleanUpLevelObjects();
+
+        // 3. Stop all coroutines to prevent memory leaks
+        if (typingCoroutine != null) StopCoroutine(typingCoroutine);
+        if (objectiveRepeatCoroutine != null) StopCoroutine(objectiveRepeatCoroutine);
+        if (timerCoroutine != null) StopCoroutine(timerCoroutine);
+
+        // 4. Reset game state (optional - depends on your needs)
+        GameManager.Instance.ResetTemporaryState();
+
+        // 5. Load the Landing level
+        SceneManager.LoadScene("Landing");
+    }
+
+    // Enhanced cleanup function (shared with RetryLevel)
+    private void CleanUpLevelObjects()
+    {
+        // Option 2: Destroy by tags (alternative approach)
+        /*
+        DestroyAllWithTag("Trash");
+        DestroyAllWithTag("Bottle");
+        DestroyAllWithTag("Tree");
+        */
+        DestroyAllWithTag("Trash");
+        DestroyAllWithTag("Recyclable");
+    }
+
+    // Helper function for tag-based cleanup
+    private void DestroyAllWithTag(string tag)
+    {
+        GameObject[] objects = GameObject.FindGameObjectsWithTag(tag);
+        foreach (GameObject obj in objects)
+        {
+            Destroy(obj);
+        }
     }
 }
