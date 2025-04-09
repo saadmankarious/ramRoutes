@@ -6,7 +6,7 @@ public class GameTrial
     [Header("Trial Info")]
     public string trialName;
     public int trialNumber;
-    public float timeLimit; // In seconds
+    public float timeLimit;
     
     [Header("Objectives")]
     public int targetCoins;
@@ -15,13 +15,17 @@ public class GameTrial
     public int targetRecycling;
     
     [Header("Current Progress")]
-    [SerializeField] private int currentCoins;
-    [SerializeField] private int currentTrees;
-    [SerializeField] private int currentTrash;
-    [SerializeField] private int currentRecycling;
+    [SerializeField] private int _currentCoins;
+    [SerializeField] private int _currentTrees;
+    [SerializeField] private int _currentTrash;
+    [SerializeField] private int _currentRecycling;
     
-    // Completion state
-    private bool isCompleted;
+    // Public properties for read access
+    public int currentCoins => _currentCoins;
+    public int currentTrees => _currentTrees;
+    public int currentTrash => _currentTrash;
+    public int currentRecycling => _currentRecycling;
+    public bool isCompleted { get; private set; }
     
     // Events
     public System.Action OnTrialComplete;
@@ -29,10 +33,10 @@ public class GameTrial
 
     public void Initialize()
     {
-        currentCoins = 0;
-        currentTrees = 0;
-        currentTrash = 0;
-        currentRecycling = 0;
+        _currentCoins = 0;
+        _currentTrees = 0;
+        _currentTrash = 0;
+        _currentRecycling = 0;
         isCompleted = false;
     }
 
@@ -40,7 +44,7 @@ public class GameTrial
     public void AddCoins(int amount)
     {
         if (isCompleted) return;
-        currentCoins = Mathf.Min(currentCoins + amount, targetCoins);
+        _currentCoins = Mathf.Min(_currentCoins + amount, targetCoins);
         CheckCompletion();
         OnObjectiveProgress?.Invoke();
     }
@@ -48,7 +52,7 @@ public class GameTrial
     public void AddTrees(int amount)
     {
         if (isCompleted) return;
-        currentTrees = Mathf.Min(currentTrees + amount, targetTrees);
+        _currentTrees = Mathf.Min(_currentTrees + amount, targetTrees);
         CheckCompletion();
         OnObjectiveProgress?.Invoke();
     }
@@ -56,7 +60,7 @@ public class GameTrial
     public void AddTrash(int amount)
     {
         if (isCompleted) return;
-        currentTrash = Mathf.Min(currentTrash + amount, targetTrash);
+        _currentTrash = Mathf.Min(_currentTrash + amount, targetTrash);
         CheckCompletion();
         OnObjectiveProgress?.Invoke();
     }
@@ -64,7 +68,7 @@ public class GameTrial
     public void AddRecycling(int amount)
     {
         if (isCompleted) return;
-        currentRecycling = Mathf.Min(currentRecycling + amount, targetRecycling);
+        _currentRecycling = Mathf.Min(_currentRecycling + amount, targetRecycling);
         CheckCompletion();
         OnObjectiveProgress?.Invoke();
     }
@@ -82,10 +86,10 @@ public class GameTrial
 
     private bool AllObjectivesMet()
     {
-        return currentCoins >= targetCoins &&
-               currentTrees >= targetTrees &&
-               currentTrash >= targetTrash &&
-               currentRecycling >= targetRecycling;
+        return _currentCoins >= targetCoins &&
+               _currentTrees >= targetTrees &&
+               _currentTrash >= targetTrash &&
+               _currentRecycling >= targetRecycling;
     }
     #endregion
 
@@ -93,17 +97,17 @@ public class GameTrial
     public float GetOverallProgress()
     {
         float totalPossible = targetCoins + targetTrees + targetTrash + targetRecycling;
-        float currentTotal = currentCoins + currentTrees + currentTrash + currentRecycling;
+        float currentTotal = _currentCoins + _currentTrees + _currentTrash + _currentRecycling;
         return totalPossible > 0 ? currentTotal / totalPossible : 0;
     }
 
     public string GetProgressReport()
     {
         return $"{trialName} Progress:\n" +
-               $"- Coins: {currentCoins}/{targetCoins}\n" +
-               $"- Trees: {currentTrees}/{targetTrees}\n" +
-               $"- Trash: {currentTrash}/{targetTrash}\n" +
-               $"- Recycling: {currentRecycling}/{targetRecycling}";
+               $"- Coins: {_currentCoins}/{targetCoins}\n" +
+               $"- Trees: {_currentTrees}/{targetTrees}\n" +
+               $"- Trash: {_currentTrash}/{targetTrash}\n" +
+               $"- Recycling: {_currentRecycling}/{targetRecycling}";
     }
     #endregion
 
@@ -114,11 +118,6 @@ public class GameTrial
         int minutes = Mathf.FloorToInt(timeLeft / 60f);
         int seconds = Mathf.FloorToInt(timeLeft % 60f);
         return $"{minutes:00}:{seconds:00}";
-    }
-
-    public float GetTimeProgress(float currentTime)
-    {
-        return Mathf.Clamp01(currentTime / timeLimit);
     }
     #endregion
 }

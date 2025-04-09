@@ -1,34 +1,21 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Instance;
+    public static GameManager Instance { get; private set; }
 
-    public int coinsCollected;
-    public int trashCollected;
-    public int bottlesCollected;
-    public int treesPlanted;
+    public GameTrial currentTrial;
+    public List<GameTrial> allTrials = new List<GameTrial>();
+    public int gameLevel = 0;
 
-    public int gameLevel; // 1 = Level 1, 2 = Level 2, etc.
-    private bool trialCompleted = false;
-
-    private void CheckTrialCompletion()
-    {
-        if (trialCompleted) return;
-
-        // Example completion condition
-        if (trashCollected >= 1 && bottlesCollected >= 1)
-        {
-            trialCompleted = true;
-            FindObjectOfType<UIManager>().OnTrialComplete.Invoke();
-        }
-    }
     private void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // Keeps GameManager across scenes
+            DontDestroyOnLoad(gameObject);
+            InitializeTrials();
         }
         else
         {
@@ -36,58 +23,83 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // Methods to update state
+    private void InitializeTrials()
+    {
+        allTrials.Add(new GameTrial()
+        {
+            trialName = "Trial 1: Sorting Trash",
+            trialNumber = 0,
+            timeLimit = 60f,
+            targetTrash = 1,
+            targetRecycling = 1
+        });
+
+        allTrials.Add(new GameTrial()
+        {
+            trialName = "Trial 2: Tree Planting",
+            trialNumber = 1,
+            timeLimit = 60f,
+            targetTrees = 15
+        });
+
+        LoadTrial(gameLevel);
+    }
+
+    public void LoadTrial(int levelIndex)
+    {
+        if (levelIndex >= 0 && levelIndex < allTrials.Count)
+        {
+            currentTrial = allTrials[levelIndex];
+            currentTrial.Initialize();
+            currentTrial.OnTrialComplete += HandleTrialComplete;
+        }
+    }
+
+    private void HandleTrialComplete()
+    {
+        UIManager.Instance.OnTrialComplete.Invoke();
+    }
+
     public void AddCoins(int amount)
     {
-        coinsCollected += amount;
-        Debug.Log("Coins Collected: " + coinsCollected);
+        currentTrial.AddCoins(amount);
+        Debug.Log($"Coins Collected: {currentTrial.currentCoins}/{currentTrial.targetCoins}");
     }
 
     public void AddTrash(int amount)
     {
-        trashCollected += amount;
-        Debug.Log("Trash Collected: " + trashCollected);
-        CheckTrialCompletion();
-
+        currentTrial.AddTrash(amount);
+        Debug.Log($"Trash Collected: {currentTrial.currentTrash}/{currentTrial.targetTrash}");
     }
 
     public void AddBottles(int amount)
     {
-        bottlesCollected += amount;
-        Debug.Log("Bottles Collected: " + bottlesCollected);
-        CheckTrialCompletion();
-
+        currentTrial.AddRecycling(amount);
+        Debug.Log($"Recycling Collected: {currentTrial.currentRecycling}/{currentTrial.targetRecycling}");
     }
 
     public void PlantTree()
     {
-        treesPlanted++;
-        Debug.Log("Trees Planted: " + treesPlanted);
+        currentTrial.AddTrees(1);
+        Debug.Log($"Trees Planted: {currentTrial.currentTrees}/{currentTrial.targetTrees}");
     }
 
     public void SetGameLevel(int level)
     {
         gameLevel = level;
-        Debug.Log("Game Level: " + gameLevel);
+        LoadTrial(gameLevel);
+        Debug.Log($"Loaded Trial: {currentTrial.trialName}");
     }
 
-    // In GameManager.cs
-public void ResetLevel()
-{
-    coinsCollected = 0;
-    trashCollected = 0;
-    bottlesCollected = 0;
-    treesPlanted = 0;
-    // Add any other reset logic needed for your game
-}
+    public void ResetLevel()
+    {
+        currentTrial.Initialize();
+        Debug.Log($"Reset Trial: {currentTrial.trialName}");
+    }
 
-public void ResetTemporaryState()
-{
-    // Reset only temporary variables while preserving permanent progress
-    coinsCollected = 0;
-    trashCollected = 0;
-    bottlesCollected = 0;
-    treesPlanted = 0;
-    // Don't reset gameLevel if you want to maintain progression
-}
+    public void ResetTemporaryState()
+    {
+        currentTrial.Initialize();
+        Debug.Log($"Reset Temporary State for: {currentTrial.trialName}");
+    }
 }
