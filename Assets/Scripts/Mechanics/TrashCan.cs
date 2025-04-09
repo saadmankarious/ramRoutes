@@ -92,7 +92,6 @@ public class TrashCan : MonoBehaviour
 
         if (other.CompareTag("Sapling"))
         {
-           
             if (animator != null && !planted)
             { 
                 treePlantedCount++;

@@ -61,8 +61,8 @@ namespace Platformer.Mechanics
         private bool moveCommandFromServer = false;
         private float moveDirectionFromServer = 0;
 
-private CinemachineConfiner confiner;
-private Collider2D boundary;
+    private CinemachineConfiner confiner;
+    private Collider2D boundary;
 
         void Start()
         {
