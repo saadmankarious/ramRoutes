@@ -29,7 +29,7 @@ public class GameManager : MonoBehaviour
         {
             trialName = "Trial 1: Sorting Trash",
             trialNumber = 0,
-            timeLimit = 60f,
+            timeLimit = 180f,
             targetTrash = 1,
             targetRecycling = 1
         });

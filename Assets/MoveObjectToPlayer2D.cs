@@ -9,6 +9,8 @@ public class FinalSpaceshipControl : MonoBehaviour
     public float alignmentThreshold = 0.1f;
     public float flightSpeed = 8f;
     public float dropDistance = 1f;
+    public float boundaryPadding = .1f;
+    public Collider2D confiner;
 
     [Header("Animation Settings")]
     public Animator spaceshipAnimator;
@@ -24,9 +26,9 @@ public class FinalSpaceshipControl : MonoBehaviour
         Idle, 
         MovingToPlayerX, 
         MovingToPlayerY, 
-        AscendingToOriginY,  // Moves up to space altitude
-        PlayerControlling,   // Player can fly horizontally
-        DroppingPlayer       // Player exits
+        AscendingToOriginY,
+        PlayerControlling,
+        DroppingPlayer
     }
     private MovementPhase currentPhase = MovementPhase.Idle;
     
@@ -35,6 +37,7 @@ public class FinalSpaceshipControl : MonoBehaviour
     private Rigidbody2D playerRb;
     private Rigidbody2D spaceshipRb;
     private float horizontalInput;
+    private float verticalInput;
     private bool wasMovingLastFrame = false;
     private Vector2 dropStartPosition;
 
@@ -61,8 +64,6 @@ public class FinalSpaceshipControl : MonoBehaviour
         if (playerRb == null)
         {
             playerRb = gameObject.AddComponent<Rigidbody2D>();
-            playerRb.gravityScale = 0;
-            playerRb.constraints = RigidbodyConstraints2D.FreezeRotation;
         }
 
         if (playerSprite == null)
@@ -126,7 +127,7 @@ public class FinalSpaceshipControl : MonoBehaviour
         if (spaceshipAnimator == null) return;
 
         bool isMoving = currentPhase == MovementPhase.PlayerControlling && 
-                      Mathf.Abs(horizontalInput) > 0.1f;
+                      (Mathf.Abs(horizontalInput) > 0.1f || Mathf.Abs(verticalInput) > 0.1f);
 
         if (isMoving != wasMovingLastFrame)
         {
@@ -234,7 +235,6 @@ public class FinalSpaceshipControl : MonoBehaviour
             playerRb.simulated = true;
             currentPhase = MovementPhase.Idle;
             
-            // Stop the spaceship but leave it at current position
             if (spaceshipRb != null)
             {
                 spaceshipRb.velocity = Vector2.zero;
@@ -245,8 +245,24 @@ public class FinalSpaceshipControl : MonoBehaviour
     private void ControlSpaceshipMovement()
     {
         horizontalInput = Input.GetAxis("Horizontal");
-        Vector2 velocity = new Vector2(horizontalInput * flightSpeed, 0);
-        spaceshipRb.velocity = velocity;
+        verticalInput = Input.GetAxis("Vertical");
+        Vector2 velocity = new Vector2(horizontalInput * flightSpeed, verticalInput * flightSpeed);
+        
+        Vector2 nextPosition = spaceshipRb.position + velocity * Time.deltaTime;
+        Bounds bounds = confiner.bounds;
+        
+        if (nextPosition.x > bounds.min.x + boundaryPadding && 
+            nextPosition.x < bounds.max.x - boundaryPadding &&
+            nextPosition.y > bounds.min.y + boundaryPadding && 
+            nextPosition.y < bounds.max.y - boundaryPadding)
+        {
+            spaceshipRb.velocity = velocity;
+        }
+        else
+        {
+            spaceshipRb.velocity = Vector2.zero;
+        }
+        
         transform.localPosition = playerOffset;
     }
 
