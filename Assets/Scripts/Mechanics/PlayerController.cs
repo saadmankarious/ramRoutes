@@ -250,7 +250,7 @@ void Update()
             Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, pickUpRange);
             foreach (Collider2D hit in hits)
             {
-                if (hit.CompareTag("Trash") || hit.CompareTag("Recyclable") || hit.CompareTag("Sapling"))
+                if (hit.CompareTag("Trash") || hit.CompareTag("Recyclable") || hit.CompareTag("Sapling") || hit.CompareTag("Eagle"))
                 {
                     heldTrash = hit.gameObject;
                     heldTrash.GetComponent<Collider2D>().enabled = false;
