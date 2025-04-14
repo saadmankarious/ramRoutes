@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: bb74675ad76ac42d38a519d3ecb6fa77
+guid: 6f16e230f8391461fa39207fcda4779c
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -48,7 +48,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 12
+  spritePixelsToUnits: 32
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -110,53 +110,11 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: eagle idle_0
+      name: Star_0
       rect:
         serializedVersion: 2
         x: 1
         y: 1
-        width: 23
-        height: 17
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: df2300b90a8154c8eb638a27d6807168
-      internalID: 2044359218
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: eagle idle_1
-      rect:
-        serializedVersion: 2
-        x: 25
-        y: 2
-        width: 23
-        height: 17
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: a3c1e156c7d48446aa579b3ab8be6fef
-      internalID: -1323924121
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: eagle idle_2
-      rect:
-        serializedVersion: 2
-        x: 53
-        y: 2
         width: 15
         height: 16
       alignment: 0
@@ -166,20 +124,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: b86d8d6e6416f42d8864891b793b46d3
-      internalID: -1602108402
+      spriteID: 61737772a66b446a88f9027dacc52985
+      internalID: 934595766
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: eagle idle_3
+      name: Star_1
       rect:
         serializedVersion: 2
-        x: 77
-        y: 1
-        width: 15
-        height: 17
+        x: 19
+        y: 2
+        width: 13
+        height: 14
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -187,8 +145,29 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: fef74e24bfc1349079e8aec5f430ea9a
-      internalID: -213697812
+      spriteID: 5ffd93742f3ea42d4ab8c2bbb26e99c3
+      internalID: 661976204
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Star_2
+      rect:
+        serializedVersion: 2
+        x: 37
+        y: 3
+        width: 11
+        height: 12
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3627af6edd147456d8c157430c86ef70
+      internalID: 1814584787
       vertices: []
       indices: 
       edges: []
@@ -204,10 +183,9 @@ TextureImporter:
     weights: []
     secondaryTextures: []
     nameFileIdTable:
-      eagle idle_0: 2044359218
-      eagle idle_1: -1323924121
-      eagle idle_2: -1602108402
-      eagle idle_3: -213697812
+      Star_0: 934595766
+      Star_1: 661976204
+      Star_2: 1814584787
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
