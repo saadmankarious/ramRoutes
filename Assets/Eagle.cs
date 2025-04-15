@@ -33,7 +33,17 @@ public class Eagle : MonoBehaviour
 
             Debug.Log("watering the tree + " + filled);
             animator.SetTrigger("cupUnFilling");
-            
+            Animator otherAnimator = other.GetComponent<Animator>();
+            if (otherAnimator != null)
+            {
+                otherAnimator.SetTrigger("growTree");
+                GameManager.Instance.WaterTree();
+
+            }
+            else
+            {
+                Debug.LogError("No Animator component found on the TreeSpot object");
+            }            
         }
     }
 

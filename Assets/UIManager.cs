@@ -10,6 +10,9 @@ public class UIManager : MonoBehaviour
 
     [Header("UI References")]
     public Text coinsText;
+       public ParticleSystem teleportEffect; // Particle effect for teleportation
+    public float padding = 2f; // Optional: Keeps effects from spawning at edges
+
     public Text trashText;
     public Text bottlesText;
     public Text treesText;
@@ -48,7 +51,7 @@ public class UIManager : MonoBehaviour
 
     private void Start()
     {
-        OnTrialComplete.AddListener(CompleteTrial);
+        OnTrialComplete.AddListener(() => StartCoroutine(CompleteTrial()));
         OnTimeExpired.AddListener(TimeUp);
         StartTrial();
     }
@@ -107,8 +110,19 @@ public class UIManager : MonoBehaviour
         Time.timeScale = 0f;
     }
 
-    public void CompleteTrial()
+    public IEnumerator CompleteTrial()
     {
+        yield return new WaitForSeconds(2f);
+        if (teleportEffect != null)
+        {
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null)
+            {
+                CelebrationEffect();
+            }
+        }
+        yield return new WaitForSeconds(2f);
+
         timerRunning = false;
         StopAllCoroutines();
         trialCompleteMenu.SetActive(true);
@@ -192,7 +206,7 @@ public class UIManager : MonoBehaviour
         coinsText.text = $"{trial.currentCoins}/{trial.targetCoins}";
         trashText.text = $"{trial.currentTrash}/{trial.targetTrash}";
         bottlesText.text = $"{trial.currentRecycling}/{trial.targetRecycling}";
-        treesText.text = $"{trial.currentTrees}/{trial.targetTrees}";
+        treesText.text = $"{trial.currentTreesPlanted}/{trial.targetTreesPlanted}";
         levelText.text = trial.trialName;
     }
 
@@ -223,5 +237,27 @@ public class UIManager : MonoBehaviour
         OnTrialComplete.RemoveAllListeners();
         OnTimeExpired.RemoveAllListeners();
         Time.timeScale = 1f;
+    }
+
+     void CelebrationEffect()
+    {
+        // Get screen corners in world coordinates
+        Vector2 bottomLeft = Camera.main.ViewportToWorldPoint(new Vector2(0, 0));
+        Vector2 topRight = Camera.main.ViewportToWorldPoint(new Vector2(1, 1));
+
+        // Apply padding (optional)
+        bottomLeft += new Vector2(padding, padding);
+        topRight -= new Vector2(padding, padding);
+
+        // Random position within screen bounds
+        for (int i = 0; i < 13; i++)
+        {
+            Vector2 spawnPos = new Vector2(
+                Random.Range(bottomLeft.x, topRight.x),
+                Random.Range(bottomLeft.y, topRight.y)
+            );
+        Transform effectsParent = new GameObject("CelebrationEffects").transform;
+        Instantiate(teleportEffect, spawnPos, Quaternion.identity, effectsParent);
+        }
     }
 }

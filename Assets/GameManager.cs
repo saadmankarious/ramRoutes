@@ -28,6 +28,7 @@ public class GameManager : MonoBehaviour
         allTrials.Add(new GameTrial()
         {
             trialName = "Trial 1: Sorting Trash",
+            trialObjective = "Sort 10 trash and 10 recycled items.",
             trialNumber = 0,
             timeLimit = 180f,
             targetTrash = 1,
@@ -37,9 +38,18 @@ public class GameManager : MonoBehaviour
         allTrials.Add(new GameTrial()
         {
             trialName = "Trial 2: Tree Planting",
+            trialObjective = "Plant four trees of Jupyter.",
+            trialNumber = 1,
+            timeLimit = 240f,
+            targetTreesPlanted = 1
+        });
+        allTrials.Add(new GameTrial()
+        {
+            trialName = "Trial 3: Watering the Trees",
+            trialObjective = "Water four trees of Jupyter.",
             trialNumber = 1,
             timeLimit = 60f,
-            targetTrees = 15
+            targetTreesWatered = 1
         });
 
         LoadTrial(gameLevel);
@@ -81,7 +91,12 @@ public class GameManager : MonoBehaviour
     public void PlantTree()
     {
         currentTrial.AddTrees(1);
-        Debug.Log($"Trees Planted: {currentTrial.currentTrees}/{currentTrial.targetTrees}");
+        Debug.Log($"Trees Planted: {currentTrial.currentTreesPlanted}/{currentTrial.targetTreesPlanted}");
+    }
+    public void WaterTree()
+    {
+        currentTrial.WaterTrees(1);
+        Debug.Log($"Trees watered: {currentTrial.currentTreesWatered}/{currentTrial.targetTreesWatered}");
     }
 
     public void SetGameLevel(int level)
