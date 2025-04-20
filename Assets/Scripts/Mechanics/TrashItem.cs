@@ -6,6 +6,7 @@ public class TrashItem : MonoBehaviour
 {
 
      private Animator animator;
+     public string name;
 
     void Start()
     {
