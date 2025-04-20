@@ -245,33 +245,66 @@ void Update()
     base.Update();
 }
 
-        void TryPickUpTrash()
+void TryPickUpTrash()
+{
+    Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, pickUpRange);
+    foreach (Collider2D hit in hits)
+    {
+        if (hit.CompareTag("Trash") || hit.CompareTag("Recyclable") || 
+           hit.CompareTag("Sapling") || hit.CompareTag("Eagle"))
         {
-            Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, pickUpRange);
-            foreach (Collider2D hit in hits)
+            TrashItem trashComponent = hit.GetComponent<TrashItem>();
+            if (trashComponent != null)
             {
-                if (hit.CompareTag("Trash") || hit.CompareTag("Recyclable") || hit.CompareTag("Sapling") || hit.CompareTag("Eagle"))
+                string itemName = trashComponent.name;
+                Debug.Log($"Picked up: {itemName}");
+                
+                heldTrash = hit.gameObject;
+                heldTrash.GetComponent<Collider2D>().enabled = false;
+                
+                // Update UI Manager's held item text
+                if (UIManager.Instance != null)
                 {
-                    heldTrash = hit.gameObject;
-                    heldTrash.GetComponent<Collider2D>().enabled = false;
-                    return;
+                    UIManager.Instance.heldItem.text = itemName;
                 }
+                else
+                {
+                    Debug.LogWarning("UIManager instance not found");
+                }
+                
+                return;
             }
-        }
-
-        void DropTrash()
-        {
-            if (heldTrash != null)
+            else
             {
-                Vector2 dropOffset = new Vector2(0, 1.0f);
-                Vector2 dropPosition = (Vector2)transform.position + dropOffset;
-
-                heldTrash.transform.position = dropPosition;
-                heldTrash.GetComponent<Collider2D>().enabled = true;
-
-                heldTrash = null;
+                Debug.LogWarning("Picked up object has Trash tag but no TrashItem component", hit.gameObject);
             }
         }
+    }
+}
+
+     void DropTrash()
+{
+    if (heldTrash != null)
+    {
+        Vector2 dropOffset = new Vector2(0, 1.0f);
+        Vector2 dropPosition = (Vector2)transform.position + dropOffset;
+
+        heldTrash.transform.position = dropPosition;
+        heldTrash.GetComponent<Collider2D>().enabled = true;
+
+        // Clear the held item text in UI
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.heldItem.text = "";
+        }
+        else
+        {
+            Debug.LogWarning("UIManager instance not found when trying to clear held item text");
+        }
+
+        heldTrash = null;
+    }
+}
 
         void UpdateJumpState()
         {

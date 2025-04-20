@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System.Collections;
 using UnityEngine.SceneManagement;
 using UnityEngine.Events;
+using System.Linq;
 
 public class UIManager : MonoBehaviour
 {
@@ -18,6 +19,7 @@ public class UIManager : MonoBehaviour
     public Text treesText;
     public Text levelText;
     public Text timerText;
+    public Text heldItem;
     public GameObject dialogPanel;
     public Text dialogText;
     public GameObject timeUpMenu;
@@ -63,26 +65,67 @@ public class UIManager : MonoBehaviour
     StartTrial();
 }
 
+// Add this helper method to your class
+private GameObject[] FindObjectsWithTagInactive(string tag)
+{
+    return Resources.FindObjectsOfTypeAll<GameObject>()
+                   .Where(go => go.CompareTag(tag)).ToArray();
+}
+
 private void StartTrial()
 {
-    // Double-check trial is ready
+    // Verify current trial first
     if (GameManager.Instance.currentTrial == null)
     {
         Debug.LogError("Cannot start trial - currentTrial is null!");
         return;
     }
 
+    ResetAllTrialObjects();
+    
+    int trialNumber = GameManager.Instance.currentTrial.trialNumber;
+    string trialTag = "Trial " + trialNumber;
+    Debug.Log($"Starting trial {trialNumber} (tag: '{trialTag}')");
+
+    // Find both active and inactive objects
+    GameObject[] trialObjects = FindObjectsWithTagInactive(trialTag);
+    Debug.Log($"Found {trialObjects.Length} objects for trial {trialNumber}");
+
+    foreach (GameObject o in trialObjects)
+    {
+        Debug.Log($"Activating: {o.name} (currently active: {o.activeSelf})");
+        o.SetActive(true);
+    }
+
     currentTime = 0f;
     timerRunning = true;
     UpdateTimerDisplay();
     
-    // Show objective after a small delay to ensure UI is ready
     StartCoroutine(ShowInitialObjective());
-    
     objectiveRepeatCoroutine = StartCoroutine(RepeatObjective());
     timerCoroutine = StartCoroutine(CountdownTimer());
 }
 
+private void ResetAllTrialObjects()
+{
+    Debug.Log("Resetting all trial objects");
+    
+    for (int i = 1; i <= 4; i++)
+    {
+        string tag = "Trial " + i;
+        GameObject[] objects = FindObjectsWithTagInactive(tag);
+        Debug.Log($"Found {objects.Length} objects with tag '{tag}'");
+
+        foreach (GameObject o in objects)
+        {
+            if (o.activeSelf)
+            {
+                Debug.Log($"Deactivating: {o.name}");
+                o.SetActive(false);
+            }
+        }
+    }
+}
 private IEnumerator ShowInitialObjective()
 {
     // Small delay to ensure all UI elements are ready

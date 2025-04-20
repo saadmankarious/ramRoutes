@@ -29,25 +29,25 @@ public class GameManager : MonoBehaviour
         {
             trialName = "Trial 1: Sorting Trash",
             trialObjective = "Sort 10 trash and 10 recycled items.",
-            trialNumber = 0,
+            trialNumber = 1,
             timeLimit = 300f,
-            targetTrash = 10,
-            targetRecycling = 10
+            targetTrash = 1,
+            targetRecycling = 1
         });
 
         allTrials.Add(new GameTrial()
         {
             trialName = "Trial 2: Tree Planting",
-            trialObjective = "Plant four trees of Jupyter.",
-            trialNumber = 1,
+            trialObjective = "Plant four trees of Jupiter. Sapling are located around Jupiter.",
+            trialNumber = 2,
             timeLimit = 360f,
             targetTreesPlanted = 4
         });
         allTrials.Add(new GameTrial()
         {
             trialName = "Trial 3: Fill my Cup",
-            trialObjective = "Water four trees of Jupyter. Use spaceship to travel.",
-            trialNumber = 2,
+            trialObjective = "Water four trees of Jupyter. Use Golden Eagle from Venus.",
+            trialNumber = 3,
             timeLimit = 240f,
             targetTreesWatered = 4
         });
@@ -56,7 +56,7 @@ public class GameManager : MonoBehaviour
         {
             trialName = "Trial 4: Deliver the Magic Box",
             trialObjective = "Take the magic box from Venus to Pluto",
-            trialNumber = 3,
+            trialNumber = 4,
             timeLimit = 240f,
         });
 
