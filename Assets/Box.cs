@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using System;
 
 public class Box : MonoBehaviour
 {
@@ -9,6 +10,7 @@ public class Box : MonoBehaviour
    public GameObject panelToShow;
  public Button yesButton;
     public Button noButton;
+    public static event Action OnBoxOpened;  // Static makes it accessible globally (optional)
 
     public UnityEvent onGameEnd; // Event to be called when game should end
 
@@ -44,12 +46,9 @@ public class Box : MonoBehaviour
 
     IEnumerator ShowPanelAfterAnimation()
     {
-        yield return new WaitForSeconds(animator.GetCurrentAnimatorStateInfo(0).length);
-
-        if (panelToShow != null)
-        {
-            panelToShow.SetActive(true);
-        }
+         yield return new WaitForSeconds(3);
+        panelToShow.SetActive(true); // replace with your actual panel referen
+        Debug.Log("panel to show "+ panelToShow);
     }
 
     private void OnYesClicked()
@@ -66,13 +65,15 @@ public class Box : MonoBehaviour
 
     private void EndGame()
     {
-        onGameEnd.Invoke();
-
-        // Optional: Hide the panel when game ends
         if (panelToShow != null)
         {
             panelToShow.SetActive(false);
         }
+        
+        // animator.SetTrigger("ramDeath")
+        OnBoxOpened?.Invoke();  // 🚀 Fire the event!
+
+
     }
 
     private IEnumerator EndGameAfterDelay(float delay)

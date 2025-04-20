@@ -25,7 +25,7 @@ public class UIManager : MonoBehaviour
 
     [Header("Timing Settings")]
     [SerializeField] private float typingSpeed = 0.3f;
-    [SerializeField] private float objectiveRepeatTime = 90f;
+    [SerializeField] private float objectiveRepeatTime = 60;
     private float currentTime;
     private bool timerRunning;
 
@@ -49,22 +49,46 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    private void Start()
+  private IEnumerator Start()
+{
+    // Wait for GameManager to fully initialize
+    while (GameManager.Instance == null || GameManager.Instance.currentTrial == null)
     {
-        OnTrialComplete.AddListener(() => StartCoroutine(CompleteTrial()));
-        OnTimeExpired.AddListener(TimeUp);
-        StartTrial();
+        yield return null;
     }
 
-    private void StartTrial()
+    // Now safe to setup listeners and start trial
+    OnTrialComplete.AddListener(() => StartCoroutine(CompleteTrial()));
+    OnTimeExpired.AddListener(TimeUp);
+    StartTrial();
+}
+
+private void StartTrial()
+{
+    // Double-check trial is ready
+    if (GameManager.Instance.currentTrial == null)
     {
-        currentTime = 0f; // Start from 0 for countdown
-        timerRunning = true;
-        UpdateTimerDisplay();
-        ShowObjective();
-        objectiveRepeatCoroutine = StartCoroutine(RepeatObjective());
-        timerCoroutine = StartCoroutine(CountdownTimer());
+        Debug.LogError("Cannot start trial - currentTrial is null!");
+        return;
     }
+
+    currentTime = 0f;
+    timerRunning = true;
+    UpdateTimerDisplay();
+    
+    // Show objective after a small delay to ensure UI is ready
+    StartCoroutine(ShowInitialObjective());
+    
+    objectiveRepeatCoroutine = StartCoroutine(RepeatObjective());
+    timerCoroutine = StartCoroutine(CountdownTimer());
+}
+
+private IEnumerator ShowInitialObjective()
+{
+    // Small delay to ensure all UI elements are ready
+    yield return new WaitForSeconds(0.5f);
+    ShowObjective();
+}
 
     private IEnumerator CountdownTimer()
     {
@@ -166,13 +190,15 @@ public class UIManager : MonoBehaviour
     private void ShowObjective()
     {
         string objectiveMessage = GameManager.Instance.currentTrial.GetProgressReport();
-        ShowDialog(objectiveMessage, 20f);
+        ShowDialog(objectiveMessage, 10f);
     }
 
-    public void ShowDialog(string message, float activeFor = 3f)
+    public void ShowDialog(string message, float activeFor)
     {
         if (dialogPanel != null && dialogText != null)
         {
+                    Debug.Log("showing dialoge" + message);
+
             dialogPanel.SetActive(true);
             if (typingCoroutine != null) StopCoroutine(typingCoroutine);
             typingCoroutine = StartCoroutine(TypeText(message, activeFor));
