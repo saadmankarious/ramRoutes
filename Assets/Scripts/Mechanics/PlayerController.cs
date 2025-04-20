@@ -345,5 +345,25 @@ void Update()
             InFlight,
             Landed
         }
+
+
+    //  void OnEnable()
+    // {
+    //     Box.OnBoxOpened += HandleBoxOpened;
+    // }
+
+    // void OnDisable()
+    // {
+    //     Box.OnBoxOpened -= HandleBoxOpened;
+    // }
+
+    // void HandleBoxOpened()
+    // {
+    //     Debug.Log("The box was opened! Let's do something!");
+    //     // Do something like show UI, enable next level, etc.
+    // }
+
     }
+
+
 }

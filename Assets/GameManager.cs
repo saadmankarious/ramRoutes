@@ -30,9 +30,9 @@ public class GameManager : MonoBehaviour
             trialName = "Trial 1: Sorting Trash",
             trialObjective = "Sort 10 trash and 10 recycled items.",
             trialNumber = 0,
-            timeLimit = 180f,
-            targetTrash = 1,
-            targetRecycling = 1
+            timeLimit = 300f,
+            targetTrash = 10,
+            targetRecycling = 10
         });
 
         allTrials.Add(new GameTrial()
@@ -40,17 +40,26 @@ public class GameManager : MonoBehaviour
             trialName = "Trial 2: Tree Planting",
             trialObjective = "Plant four trees of Jupyter.",
             trialNumber = 1,
-            timeLimit = 240f,
-            targetTreesPlanted = 1
+            timeLimit = 360f,
+            targetTreesPlanted = 4
         });
         allTrials.Add(new GameTrial()
         {
-            trialName = "Trial 3: Watering the Trees",
-            trialObjective = "Water four trees of Jupyter.",
-            trialNumber = 1,
-            timeLimit = 60f,
-            targetTreesWatered = 1
+            trialName = "Trial 3: Fill my Cup",
+            trialObjective = "Water four trees of Jupyter. Use spaceship to travel.",
+            trialNumber = 2,
+            timeLimit = 240f,
+            targetTreesWatered = 4
         });
+
+        allTrials.Add(new GameTrial()
+        {
+            trialName = "Trial 4: Deliver the Magic Box",
+            trialObjective = "Take the magic box from Venus to Pluto",
+            trialNumber = 3,
+            timeLimit = 240f,
+        });
+
 
         LoadTrial(gameLevel);
     }
