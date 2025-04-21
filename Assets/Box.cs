@@ -23,16 +23,16 @@ public class Box : MonoBehaviour
             panelToShow.SetActive(false);
         }
 
-        // Setup button listeners
-        if (yesButton != null)
-        {
-            yesButton.onClick.AddListener(OnYesClicked);
-        }
+        // // Setup button listeners
+        // if (yesButton != null)
+        // {
+        //     yesButton.onClick.AddListener(OnYesClicked);
+        // }
 
-        if (noButton != null)
-        {
-            noButton.onClick.AddListener(OnNoClicked);
-        }
+        // if (noButton != null)
+        // {
+        //     noButton.onClick.AddListener(OnNoClicked);
+        // }
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -51,14 +51,15 @@ public class Box : MonoBehaviour
         Debug.Log("panel to show "+ panelToShow);
     }
 
-    private void OnYesClicked()
+    public void OnYesClicked()
     {
         // Immediately end the game when Yes is clicked
         EndGame();
     }
 
-    private void OnNoClicked()
+    public void OnNoClicked()
     {
+        Debug.Log("no clicked");
         // Wait 2 seconds then end the game when No is clicked
         StartCoroutine(EndGameAfterDelay(2f));
     }

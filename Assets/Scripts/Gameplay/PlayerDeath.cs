@@ -29,7 +29,7 @@ namespace Platformer.Gameplay
                     player.audioSource.PlayOneShot(player.ouchAudio);
                 player.animator.SetTrigger("hurt");
                 player.animator.SetBool("dead", true);
-                Simulation.Schedule<PlayerSpawn>(2);
+                //Simulation.Schedule<PlayerSpawn>(2);
             }
         }
     }

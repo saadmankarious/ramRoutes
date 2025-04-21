@@ -24,6 +24,7 @@ public class UIManager : MonoBehaviour
     public GameObject timeUpMenu;
     public GameObject trialCompleteMenu;
 
+    public GameObject endGamePanel;
     [Header("Timing Settings")]
     [SerializeField] private float typingSpeed = 0.3f;
     [SerializeField] private float objectiveRepeatTime = 60;
@@ -86,19 +87,46 @@ public class UIManager : MonoBehaviour
             return;
         }
 
-        ResetAllTrialObjects();
         
         int trialNumber = GameManager.Instance.currentTrial.trialNumber;
-        string trialTag = "Trial " + trialNumber;
-        Debug.Log($"Starting trial {trialNumber} (tag: '{trialTag}')");
-
-        GameObject[] trialObjects = FindObjectsWithTagInactive(trialTag);
-        Debug.Log($"Found {trialObjects.Length} objects for trial {trialNumber}");
-
-        foreach (GameObject o in trialObjects)
+        switch (trialNumber)
         {
-            o.SetActive(true);
+            case 1:
+                ShowObjectsWithTag("CEO");
+
+                HideObjectsWithTag("Spaceship");
+                HideObjectsWithTag("TreeSpot");
+                HideObjectsWithTag("Box");
+                HideObjectsWithTag("Eagle");
+                break;
+
+            case 2:
+                ShowObjectsWithTag("Spaceship");
+                ShowObjectsWithTag("TreeSpot");
+                HideObjectsWithTag("CEO");
+
+                HideObjectsWithTag("Box");
+                HideObjectsWithTag("Eagle");
+                break;
+
+            case 3:
+                ShowObjectsWithTag("Eagle");
+                
+                HideObjectsWithTag("Box");
+
+                break;
+
+            case 4:
+                ShowObjectsWithTag("Box");
+
+                HideObjectsWithTag("Eagle");
+                break;
+
+            default:
+                Debug.LogWarning("Unknown trial number: " + trialNumber);
+                break;
         }
+
 
         currentTime = 0f;
         timerRunning = true;
@@ -109,13 +137,36 @@ public class UIManager : MonoBehaviour
         timerCoroutine = StartCoroutine(CountdownTimer());
     }
 
+    private void ShowObjectsWithTag(string tag)
+{
+    GameObject[] objs = Resources.FindObjectsOfTypeAll<GameObject>()
+        .Where(go => go.CompareTag(tag) && go.hideFlags == HideFlags.None && go.scene.IsValid()).ToArray();
+
+    foreach (GameObject obj in objs)
+    {
+        obj.SetActive(true);
+    }
+}
+
+private void HideObjectsWithTag(string tag)
+{
+    GameObject[] objs = Resources.FindObjectsOfTypeAll<GameObject>()
+        .Where(go => go.CompareTag(tag) && go.hideFlags == HideFlags.None && go.scene.IsValid()).ToArray();
+
+    foreach (GameObject obj in objs)
+    {
+        obj.SetActive(false);
+    }
+}
+
+
     private GameObject[] FindObjectsWithTagInactive(string tag)
     {
         return Resources.FindObjectsOfTypeAll<GameObject>()
                        .Where(go => go.CompareTag(tag)).ToArray();
     }
 
-    private void ResetAllTrialObjects()
+    private void ResetAllTrialObjects(string exceptTrial)
     {
         for (int i = 1; i <= 4; i++)
         {
@@ -125,7 +176,12 @@ public class UIManager : MonoBehaviour
             {
                 if (o.activeSelf)
                 {
+                    if(o.tag != exceptTrial)
+                    {
                     o.SetActive(false);
+                    }else{
+                        o.SetActive(true);
+                    }
                 }
             }
         }
@@ -290,15 +346,6 @@ public class UIManager : MonoBehaviour
         timeUpMenu.SetActive(false);
         GameManager.Instance.ResetLevel();
         StartTrial();
-    }
-
-    public void ExitTrial()
-    {
-        Time.timeScale = 1f;
-        CleanUpLevelObjects();
-        StopAllCoroutines();
-        GameManager.Instance.ResetTemporaryState();
-        SceneManager.LoadScene("Landing");
     }
 
     private void CleanUpLevelObjects()
