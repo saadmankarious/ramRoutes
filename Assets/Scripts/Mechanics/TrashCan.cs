@@ -1,44 +1,52 @@
 using System.Collections;
 using UnityEngine;
-using UnityEngine.UI; // Required for UI manipulation
+using UnityEngine.UI;
 
 public class TrashCan : MonoBehaviour
 {
-    public int trashCount = 0; // Count of how many trash pieces have been dropped
-    public int recyclableCount = 0; // Count of how many trash pieces have been dropped
-    public int treePlantedCount = 0; // Count of how many trash pieces have been dropped
+    public int trashCount = 0;
+    public int recyclableCount = 0;
+    public int treePlantedCount = 0;
     public Animator animator;
     private bool planted;
 
-    public GameObject trashCanGuard; // The hidden object that becomes visible
-    public float guardMoveUpDistance = 0.5f; // How much the guard moves up
-    private float guardMoveSpeed = 2f; // How fast the guard moves up
+    public GameObject trashCanGuard;
+    public float guardMoveUpDistance = 0.5f;
+    private float guardMoveSpeed = 2f;
 
-    public GameObject dialogPanel; // The panel where dialog is displayed
-    public Text dialogText; // The text field to show the dialog
-
-    public float dialogDisplayTime = 2f; // How long the dialog stays visible
+    public GameObject dialogPanel;
+    public Text dialogText;
+    public float dialogDisplayTime = 2f;
     public bool isRecycling = false;
-    private Vector3 guardOriginalPosition; // Store original position for reset
+    private Vector3 guardOriginalPosition;
+
+    [Header("Audio Settings")]
+    public AudioSource audioSource;
+    public AudioClip successClip;
+    public AudioClip wrongPlaceClip;
+    public AudioClip completionClip;
 
     void Start()
     {
         if (trashCanGuard != null)
         {
-            // Store the original position of the guard
             guardOriginalPosition = trashCanGuard.transform.position;
-            trashCanGuard.SetActive(false); // Hide guard at start
+            trashCanGuard.SetActive(false);
         }
 
         if (dialogPanel != null)
         {
-            dialogPanel.SetActive(false); // Hide dialog at start
+            dialogPanel.SetActive(false);
         }
     
-        // Initialize the Animator component attached to the same object
         animator = GetComponent<Animator>();
-    
-}
+
+        // Ensure we have an AudioSource component
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+        }
+    }
 
     void OnTriggerEnter2D(Collider2D other)
     {
@@ -46,23 +54,27 @@ public class TrashCan : MonoBehaviour
         {
             if(isRecycling)
             {
+                PlaySound(wrongPlaceClip);
                 ShowDialog("Wrong place.", other);
-            }else if(trashCount < 10)
+            }
+            else if(trashCount < 10)
             {
                 trashCount++;
                 Destroy(other.gameObject);
                 GameManager.Instance.AddTrash(1);
+                PlaySound(successClip);
                 ShowDialog("Good job!", other);
             }
             else if (recyclableCount == 10)
             {
-                //celebrate completing trash
-                 trashCount++;
+                trashCount++;
                 Destroy(other.gameObject);
                 GameManager.Instance.AddTrash(1);
+                PlaySound(completionClip);
                 ShowDialog("Good job! Now you've collected all needed trash", other);
             }
-            else{
+            else
+            {
                 ShowDialog("You collected enough trash!", other);
             }
         }
@@ -71,6 +83,7 @@ public class TrashCan : MonoBehaviour
         {
             if(!isRecycling)
             {
+                PlaySound(wrongPlaceClip);
                 ShowDialog("Wrong place.", other);
             }
             else if(recyclableCount < 10)
@@ -78,14 +91,15 @@ public class TrashCan : MonoBehaviour
                 recyclableCount++;
                 Destroy(other.gameObject);
                 GameManager.Instance.AddBottles(1);
+                PlaySound(successClip);
                 ShowDialog("Good job!", other);
             }
             else if(recyclableCount == 10)
             {
-                //celebrate completing recycling
                 recyclableCount++;
                 Destroy(other.gameObject);
                 GameManager.Instance.AddBottles(1);
+                PlaySound(completionClip);
                 ShowDialog("Good job! Now you've collected all needed recycled items.", other);
             }        
         }
@@ -96,25 +110,30 @@ public class TrashCan : MonoBehaviour
             { 
                 treePlantedCount++;
                 Destroy(other.gameObject);
-                Debug.Log("trees planted " + treePlantedCount);
                 animator.SetTrigger("plant");
                 planted = true;
+                PlaySound(successClip);
                 ShowDialog("Good job!", other);
                 GameManager.Instance.PlantTree();
-
             }
             else 
             {
+                PlaySound(wrongPlaceClip);
                 ShowDialog("Cannot plant tree here.", other);
             }
-
         }
     }
 
+    private void PlaySound(AudioClip clip)
+    {
+        if (audioSource != null && clip != null)
+        {
+            audioSource.PlayOneShot(clip);
+        }
+    }
 
     IEnumerator MoveGuardUpAndDown()
     {
-        // Move the guard up
         Vector3 targetPosition = guardOriginalPosition + new Vector3(0, guardMoveUpDistance, 0);
         while (Vector3.Distance(trashCanGuard.transform.position, targetPosition) > 0.01f)
         {
@@ -123,13 +142,11 @@ public class TrashCan : MonoBehaviour
                 targetPosition,
                 guardMoveSpeed * Time.deltaTime
             );
-            yield return null; // Wait for the next frame
+            yield return null;
         }
 
-        // Wait for 2 seconds
         yield return new WaitForSeconds(2f);
 
-        // Move the guard back to the original position
         while (Vector3.Distance(trashCanGuard.transform.position, guardOriginalPosition) > 0.01f)
         {
             trashCanGuard.transform.position = Vector3.MoveTowards(
@@ -137,10 +154,9 @@ public class TrashCan : MonoBehaviour
                 guardOriginalPosition,
                 guardMoveSpeed * Time.deltaTime
             );
-            yield return null; // Wait for the next frame
+            yield return null;
         }
 
-        // Optional: Hide the guard after it returns to its original position
         trashCanGuard.SetActive(false);
     }
 
@@ -149,22 +165,20 @@ public class TrashCan : MonoBehaviour
         if (dialogPanel != null && dialogText != null)
         {
             dialogText.text = message;
-            dialogPanel.SetActive(true); // Show the dialog panel
-            StopAllCoroutines(); // Stop any previous dialog hiding coroutine
+            dialogPanel.SetActive(true);
+            StopAllCoroutines();
             StartCoroutine(HideDialogAfterDelay());
         }
         if (trashCanGuard != null)
         {
-            trashCanGuard.SetActive(true); // Make the guard visible
-            StartCoroutine(MoveGuardUpAndDown()); // Smoothly move it up and down
+            trashCanGuard.SetActive(true);
+            StartCoroutine(MoveGuardUpAndDown());
         }
-
     }
-
 
     IEnumerator HideDialogAfterDelay()
     {
         yield return new WaitForSeconds(dialogDisplayTime);
-        dialogPanel.SetActive(false); // Hide the dialog after the delay
+        dialogPanel.SetActive(false);
     }
 }

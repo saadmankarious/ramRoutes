@@ -11,9 +11,8 @@ public class UIManager : MonoBehaviour
 
     [Header("UI References")]
     public Text coinsText;
-       public ParticleSystem teleportEffect; // Particle effect for teleportation
-    public float padding = 2f; // Optional: Keeps effects from spawning at edges
-
+    public ParticleSystem teleportEffect;
+    public float padding = 2f;
     public Text trashText;
     public Text bottlesText;
     public Text treesText;
@@ -30,6 +29,17 @@ public class UIManager : MonoBehaviour
     [SerializeField] private float objectiveRepeatTime = 60;
     private float currentTime;
     private bool timerRunning;
+
+    [Header("Audio Settings")]
+    public AudioSource audioSource;
+    public AudioClip trialCompleteSound;
+    public AudioClip typingTickSound;
+    public AudioClip timeExpiredSound;
+
+    [Header("Typing Sound Settings")]
+    [SerializeField] private float typingSoundInterval = 0.15f;
+    private float lastTypingSoundTime;
+    [SerializeField] private float typingSoundVolume = 0.3f;
 
     [Header("Events")]
     public UnityEvent OnTrialComplete = new UnityEvent();
@@ -49,89 +59,83 @@ public class UIManager : MonoBehaviour
         {
             Destroy(gameObject);
         }
-    }
 
-  private IEnumerator Start()
-{
-    // Wait for GameManager to fully initialize
-    while (GameManager.Instance == null || GameManager.Instance.currentTrial == null)
-    {
-        yield return null;
-    }
-
-    // Now safe to setup listeners and start trial
-    OnTrialComplete.AddListener(() => StartCoroutine(CompleteTrial()));
-    OnTimeExpired.AddListener(TimeUp);
-    StartTrial();
-}
-
-// Add this helper method to your class
-private GameObject[] FindObjectsWithTagInactive(string tag)
-{
-    return Resources.FindObjectsOfTypeAll<GameObject>()
-                   .Where(go => go.CompareTag(tag)).ToArray();
-}
-
-private void StartTrial()
-{
-    // Verify current trial first
-    if (GameManager.Instance.currentTrial == null)
-    {
-        Debug.LogError("Cannot start trial - currentTrial is null!");
-        return;
-    }
-
-    ResetAllTrialObjects();
-    
-    int trialNumber = GameManager.Instance.currentTrial.trialNumber;
-    string trialTag = "Trial " + trialNumber;
-    Debug.Log($"Starting trial {trialNumber} (tag: '{trialTag}')");
-
-    // Find both active and inactive objects
-    GameObject[] trialObjects = FindObjectsWithTagInactive(trialTag);
-    Debug.Log($"Found {trialObjects.Length} objects for trial {trialNumber}");
-
-    foreach (GameObject o in trialObjects)
-    {
-        Debug.Log($"Activating: {o.name} (currently active: {o.activeSelf})");
-        o.SetActive(true);
-    }
-
-    currentTime = 0f;
-    timerRunning = true;
-    UpdateTimerDisplay();
-    
-    StartCoroutine(ShowInitialObjective());
-    objectiveRepeatCoroutine = StartCoroutine(RepeatObjective());
-    timerCoroutine = StartCoroutine(CountdownTimer());
-}
-
-private void ResetAllTrialObjects()
-{
-    Debug.Log("Resetting all trial objects");
-    
-    for (int i = 1; i <= 4; i++)
-    {
-        string tag = "Trial " + i;
-        GameObject[] objects = FindObjectsWithTagInactive(tag);
-        Debug.Log($"Found {objects.Length} objects with tag '{tag}'");
-
-        foreach (GameObject o in objects)
+        if (audioSource == null)
         {
-            if (o.activeSelf)
+            audioSource = gameObject.AddComponent<AudioSource>();
+        }
+    }
+
+    private IEnumerator Start()
+    {
+        while (GameManager.Instance == null || GameManager.Instance.currentTrial == null)
+        {
+            yield return null;
+        }
+
+        OnTrialComplete.AddListener(() => StartCoroutine(CompleteTrial()));
+        OnTimeExpired.AddListener(TimeUp);
+        StartTrial();
+    }
+
+    private void StartTrial()
+    {
+        if (GameManager.Instance.currentTrial == null)
+        {
+            Debug.LogError("Cannot start trial - currentTrial is null!");
+            return;
+        }
+
+        ResetAllTrialObjects();
+        
+        int trialNumber = GameManager.Instance.currentTrial.trialNumber;
+        string trialTag = "Trial " + trialNumber;
+        Debug.Log($"Starting trial {trialNumber} (tag: '{trialTag}')");
+
+        GameObject[] trialObjects = FindObjectsWithTagInactive(trialTag);
+        Debug.Log($"Found {trialObjects.Length} objects for trial {trialNumber}");
+
+        foreach (GameObject o in trialObjects)
+        {
+            o.SetActive(true);
+        }
+
+        currentTime = 0f;
+        timerRunning = true;
+        UpdateTimerDisplay();
+        
+        StartCoroutine(ShowInitialObjective());
+        objectiveRepeatCoroutine = StartCoroutine(RepeatObjective());
+        timerCoroutine = StartCoroutine(CountdownTimer());
+    }
+
+    private GameObject[] FindObjectsWithTagInactive(string tag)
+    {
+        return Resources.FindObjectsOfTypeAll<GameObject>()
+                       .Where(go => go.CompareTag(tag)).ToArray();
+    }
+
+    private void ResetAllTrialObjects()
+    {
+        for (int i = 1; i <= 4; i++)
+        {
+            string tag = "Trial " + i;
+            GameObject[] objects = FindObjectsWithTagInactive(tag);
+            foreach (GameObject o in objects)
             {
-                Debug.Log($"Deactivating: {o.name}");
-                o.SetActive(false);
+                if (o.activeSelf)
+                {
+                    o.SetActive(false);
+                }
             }
         }
     }
-}
-private IEnumerator ShowInitialObjective()
-{
-    // Small delay to ensure all UI elements are ready
-    yield return new WaitForSeconds(0.5f);
-    ShowObjective();
-}
+
+    private IEnumerator ShowInitialObjective()
+    {
+        yield return new WaitForSeconds(0.5f);
+        ShowObjective();
+    }
 
     private IEnumerator CountdownTimer()
     {
@@ -141,7 +145,6 @@ private IEnumerator ShowInitialObjective()
             currentTime += 1f;
             UpdateTimerDisplay();
 
-            // Flash red when 30 seconds remain
             float timeRemaining = GameManager.Instance.currentTrial.timeLimit - currentTime;
             if (timeRemaining <= 30f)
             {
@@ -175,6 +178,7 @@ private IEnumerator ShowInitialObjective()
         timeUpMenu.SetActive(true);
         timerText.text = "00:00";
         Time.timeScale = 0f;
+        PlaySound(timeExpiredSound);
     }
 
     public IEnumerator CompleteTrial()
@@ -188,12 +192,88 @@ private IEnumerator ShowInitialObjective()
                 CelebrationEffect();
             }
         }
+        
+        PlaySound(trialCompleteSound);
         yield return new WaitForSeconds(2f);
 
         timerRunning = false;
         StopAllCoroutines();
         trialCompleteMenu.SetActive(true);
         Time.timeScale = 0f;
+    }
+
+    private void PlaySound(AudioClip clip)
+    {
+        if (audioSource != null && clip != null)
+        {
+            float volume = clip == typingTickSound ? typingSoundVolume : 1f;
+            audioSource.PlayOneShot(clip, volume);
+        }
+    }
+
+    private IEnumerator TypeText(string message, float activeFor)
+    {
+        dialogText.text = "";
+        lastTypingSoundTime = 0f;
+        
+        foreach (char letter in message.ToCharArray())
+        {
+            dialogText.text += letter;
+            
+            if (Time.time - lastTypingSoundTime >= typingSoundInterval)
+            {
+                PlaySound(typingTickSound);
+                lastTypingSoundTime = Time.time;
+            }
+            
+            yield return new WaitForSeconds(typingSpeed);
+        }
+
+        if (activeFor > 0)
+        {
+            yield return new WaitForSeconds(activeFor);
+            HideDialog();
+        }
+    }
+
+    public void ShowDialog(string message, float activeFor)
+    {
+        if (dialogPanel != null && dialogText != null)
+        {
+            dialogPanel.SetActive(true);
+            if (typingCoroutine != null) StopCoroutine(typingCoroutine);
+            typingCoroutine = StartCoroutine(TypeText(message, activeFor));
+        }
+    }
+
+    private void HideDialog()
+    {
+        dialogPanel?.SetActive(false);
+    }
+
+    private IEnumerator RepeatObjective()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(objectiveRepeatTime);
+            ShowObjective();
+        }
+    }
+
+    private void ShowObjective()
+    {
+        string objectiveMessage = GameManager.Instance.currentTrial.GetProgressReport();
+        ShowDialog(objectiveMessage, 10f);
+    }
+
+    private void Update()
+    {
+        var trial = GameManager.Instance.currentTrial;
+        coinsText.text = $"{trial.currentCoins}/{trial.targetCoins}";
+        trashText.text = $"{trial.currentTrash}/{trial.targetTrash}";
+        bottlesText.text = $"{trial.currentRecycling}/{trial.targetRecycling}";
+        treesText.text = $"{trial.currentTreesPlanted}/{trial.targetTreesPlanted}";
+        levelText.text = trial.trialName;
     }
 
     public void ContinueToNextTrial()
@@ -219,64 +299,6 @@ private IEnumerator ShowInitialObjective()
         StopAllCoroutines();
         GameManager.Instance.ResetTemporaryState();
         SceneManager.LoadScene("Landing");
-    }
-
-    private IEnumerator RepeatObjective()
-    {
-        while (true)
-        {
-            yield return new WaitForSeconds(objectiveRepeatTime);
-            ShowObjective();
-        }
-    }
-
-    private void ShowObjective()
-    {
-        string objectiveMessage = GameManager.Instance.currentTrial.GetProgressReport();
-        ShowDialog(objectiveMessage, 10f);
-    }
-
-    public void ShowDialog(string message, float activeFor)
-    {
-        if (dialogPanel != null && dialogText != null)
-        {
-                    Debug.Log("showing dialoge" + message);
-
-            dialogPanel.SetActive(true);
-            if (typingCoroutine != null) StopCoroutine(typingCoroutine);
-            typingCoroutine = StartCoroutine(TypeText(message, activeFor));
-        }
-    }
-
-    private IEnumerator TypeText(string message, float activeFor)
-    {
-        dialogText.text = "";
-        foreach (char letter in message.ToCharArray())
-        {
-            dialogText.text += letter;
-            yield return new WaitForSeconds(typingSpeed);
-        }
-
-        if (activeFor > 0)
-        {
-            yield return new WaitForSeconds(activeFor);
-            HideDialog();
-        }
-    }
-
-    private void HideDialog()
-    {
-        dialogPanel?.SetActive(false);
-    }
-
-    private void Update()
-    {
-        var trial = GameManager.Instance.currentTrial;
-        coinsText.text = $"{trial.currentCoins}/{trial.targetCoins}";
-        trashText.text = $"{trial.currentTrash}/{trial.targetTrash}";
-        bottlesText.text = $"{trial.currentRecycling}/{trial.targetRecycling}";
-        treesText.text = $"{trial.currentTreesPlanted}/{trial.targetTreesPlanted}";
-        levelText.text = trial.trialName;
     }
 
     private void CleanUpLevelObjects()
@@ -308,25 +330,22 @@ private IEnumerator ShowInitialObjective()
         Time.timeScale = 1f;
     }
 
-     void CelebrationEffect()
+    void CelebrationEffect()
     {
-        // Get screen corners in world coordinates
         Vector2 bottomLeft = Camera.main.ViewportToWorldPoint(new Vector2(0, 0));
         Vector2 topRight = Camera.main.ViewportToWorldPoint(new Vector2(1, 1));
 
-        // Apply padding (optional)
         bottomLeft += new Vector2(padding, padding);
         topRight -= new Vector2(padding, padding);
 
-        // Random position within screen bounds
+        Transform effectsParent = new GameObject("CelebrationEffects").transform;
         for (int i = 0; i < 13; i++)
         {
             Vector2 spawnPos = new Vector2(
                 Random.Range(bottomLeft.x, topRight.x),
                 Random.Range(bottomLeft.y, topRight.y)
             );
-        Transform effectsParent = new GameObject("CelebrationEffects").transform;
-        Instantiate(teleportEffect, spawnPos, Quaternion.identity, effectsParent);
+            Instantiate(teleportEffect, spawnPos, Quaternion.identity, effectsParent);
         }
     }
 }
