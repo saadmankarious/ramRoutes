@@ -255,7 +255,7 @@ void TryPickUpTrash()
     foreach (Collider2D hit in hits)
     {
         if (hit.CompareTag("Trash") || hit.CompareTag("Recyclable") || 
-           hit.CompareTag("Sapling") || hit.CompareTag("Eagle"))
+           hit.CompareTag("Sapling") || hit.CompareTag("Eagle") || hit.CompareTag("Box")  )
         {
             TrashItem trashComponent = hit.GetComponent<TrashItem>();
             if (trashComponent != null)
@@ -394,12 +394,23 @@ void TryPickUpTrash()
 
     }
 
-    private IEnumerator LeaveAfterDelay()
-    {
-        yield return new WaitForSeconds(3f);
-        SceneManager.LoadScene("Landing");
+ private IEnumerator LeaveAfterDelay()
+{
+    yield return new WaitForSeconds(3f);
 
+    PlayerPrefs.DeleteAll();
+
+    foreach (GameObject obj in GameObject.FindObjectsOfType<GameObject>())
+    {
+        if (obj.scene.name == null) Destroy(obj);
     }
+
+    Resources.UnloadUnusedAssets();
+    System.GC.Collect();
+
+    SceneManager.LoadScene("Landing");
+}
+
 
     }
 
