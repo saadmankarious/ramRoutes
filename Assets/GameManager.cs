@@ -14,7 +14,6 @@ public class GameManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
             InitializeTrials();
         }
         else
@@ -28,11 +27,11 @@ public class GameManager : MonoBehaviour
         allTrials.Add(new GameTrial()
         {
             trialName = "Trial 1: Sorting Trash",
-            trialObjective = "Sort 10 trash and 10 recycled items.",
+            trialObjective = "Sort 10 trash and 10 recycled items. To save time, look for different CEOs around the level.",
             trialNumber = 1,
             timeLimit = 300f,
-            targetTrash = 1,
-            targetRecycling = 1
+            targetTrash = 10,
+            targetRecycling = 10
         });
 
         allTrials.Add(new GameTrial()
@@ -41,21 +40,21 @@ public class GameManager : MonoBehaviour
             trialObjective = "We need to do reparation after damage CEOs caused. Interact with building using V key to find Saplings to plant.",
             trialNumber = 2,
             timeLimit = 360f,
-            targetTreesPlanted = 1
+            targetTreesPlanted = 4
         });
         allTrials.Add(new GameTrial()
         {
             trialName = "Trial 3: Fill my Cup",
-            trialObjective = "Water four trees of Jupyter. Use Golden Eagle from Venus.",
+            trialObjective = "Water four you planted trees using  Golden Eagle from Venus. Use spaceship to reach Venus using 'E' Key",
             trialNumber = 3,
             timeLimit = 240f,
-            targetTreesWatered = 1
+            targetTreesWatered = 4
         });
 
         allTrials.Add(new GameTrial()
         {
             trialName = "Trial 4: Deliver the Magic Box",
-            trialObjective = "Take the magic box from Venus to Pluto",
+            trialObjective = "Take the magic box from Venus to Pluto. Use spaceship.",
             trialNumber = 4,
             timeLimit = 240f,
         });

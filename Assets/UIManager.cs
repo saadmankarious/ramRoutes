@@ -325,7 +325,7 @@ private void HideObjectsWithTag(string tag)
     private void Update()
     {
         var trial = GameManager.Instance.currentTrial;
-        coinsText.text = $"{trial.currentCoins}/{trial.targetCoins}";
+        coinsText.text = $"{trial.currentCoins}";
         trashText.text = $"{trial.currentTrash}/{trial.targetTrash}";
         bottlesText.text = $"{trial.currentRecycling}/{trial.targetRecycling}";
         treesText.text = $"{trial.currentTreesPlanted}/{trial.targetTreesPlanted}";
