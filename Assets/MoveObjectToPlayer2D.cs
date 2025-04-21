@@ -72,12 +72,15 @@ public class FinalSpaceshipControl : MonoBehaviour
         }
     }
 
-    void Update()
-    {
-        HandleInput();
-        UpdateMovement();
-        UpdateAnimation();
-    }
+  void Update()
+{
+    int trial = GameManager.Instance.currentTrial.trialNumber;
+    if (trial != 3 && trial != 4) return;
+
+    HandleInput();
+    UpdateMovement();
+    UpdateAnimation();
+}
 
     private void HandleInput()
     {

@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &8900768446916657819
+--- !u!1 &5638119740413968204
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,40 +8,40 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4336014659519773128}
-  - component: {fileID: 5031473332624870829}
-  - component: {fileID: 6301235656527814382}
-  - component: {fileID: 7476707938815621809}
-  - component: {fileID: 767801042281206702}
+  - component: {fileID: 2855228749842005206}
+  - component: {fileID: 2437979449322732941}
+  - component: {fileID: 4586919122272595852}
+  - component: {fileID: 3086431021820890475}
+  - component: {fileID: 1739487035887405049}
   m_Layer: 3
-  m_Name: bottle 2
-  m_TagString: Recyclable
+  m_Name: Sapling
+  m_TagString: Sapling
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4336014659519773128
+--- !u!4 &2855228749842005206
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8900768446916657819}
+  m_GameObject: {fileID: 5638119740413968204}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -181.55, y: 11.647, z: -0.5}
-  m_LocalScale: {x: 1.479, y: 1.4072, z: 1}
+  m_LocalPosition: {x: -18.98, y: 16.15, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!212 &5031473332624870829
+--- !u!212 &2437979449322732941
 SpriteRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8900768446916657819}
+  m_GameObject: {fileID: 5638119740413968204}
   m_Enabled: 1
   m_CastShadows: 0
   m_ReceiveShadows: 0
@@ -75,33 +75,46 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 4
-  m_Sprite: {fileID: 21300000, guid: aa0274a0072224f9bae0a1a01ef6fbcc, type: 3}
+  m_SortingOrder: 3
+  m_Sprite: {fileID: 21300000, guid: e5deeb41d1d4046d49269c2adca771f5, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 0.53125, y: 0.6875}
+  m_Size: {x: 0.2, y: 0.41}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!50 &6301235656527814382
+--- !u!114 &4586919122272595852
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5638119740413968204}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb459bd9f27874db291e8fb1e9371f98, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  name: Tree Sapling
+--- !u!50 &3086431021820890475
 Rigidbody2D:
   serializedVersion: 4
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8900768446916657819}
+  m_GameObject: {fileID: 5638119740413968204}
   m_BodyType: 0
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
-  m_Mass: 0.04
-  m_LinearDrag: 1.13
-  m_AngularDrag: 0.09
+  m_Mass: 1
+  m_LinearDrag: 0
+  m_AngularDrag: 0.05
   m_GravityScale: 1
   m_Material: {fileID: 0}
   m_IncludeLayers:
@@ -114,13 +127,13 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 0
---- !u!61 &7476707938815621809
+--- !u!61 &1739487035887405049
 BoxCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8900768446916657819}
+  m_GameObject: {fileID: 5638119740413968204}
   m_Enabled: 1
   m_Density: 1
   m_Material: {fileID: 0}
@@ -146,29 +159,16 @@ BoxCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.009507451, y: 0.000000014901161}
+  m_Offset: {x: 0, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 0.33333334, y: 0.33333334}
-    newSize: {x: 0.53125, y: 0.6875}
+    oldSize: {x: 0.8333333, y: 1.7083334}
+    newSize: {x: 0.2, y: 0.41}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 0.22067341, y: 0.23450431}
+  m_Size: {x: 0.8333333, y: 1.7083334}
   m_EdgeRadius: 0
---- !u!114 &767801042281206702
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8900768446916657819}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bb459bd9f27874db291e8fb1e9371f98, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  name: Can

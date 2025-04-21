@@ -11,6 +11,8 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using Cinemachine;
+using UnityEngine.SceneManagement;
+using System.Collections;
 
 namespace Platformer.Mechanics
 {
@@ -76,6 +78,8 @@ namespace Platformer.Mechanics
         }
             void Awake()
         {
+            Box.OnBoxOpened += HandleBoxOpened;
+
             if (Instance == null)
             {
                 Instance = this;
@@ -380,21 +384,22 @@ void TryPickUpTrash()
         }
 
 
-    //  void OnEnable()
-    // {
-    //     Box.OnBoxOpened += HandleBoxOpened;
-    // }
+    void HandleBoxOpened()
+    {
+        Debug.Log("The box was opened! Let's do something!");
+        // Do something like show UI, enable next level, etc.
+        Schedule<PlayerDeath>();
+        StartCoroutine(LeaveAfterDelay());
+        UIManager.Instance.endGamePanel.SetActive(true);
 
-    // void OnDisable()
-    // {
-    //     Box.OnBoxOpened -= HandleBoxOpened;
-    // }
+    }
 
-    // void HandleBoxOpened()
-    // {
-    //     Debug.Log("The box was opened! Let's do something!");
-    //     // Do something like show UI, enable next level, etc.
-    // }
+    private IEnumerator LeaveAfterDelay()
+    {
+        yield return new WaitForSeconds(3f);
+        SceneManager.LoadScene("Landing");
+
+    }
 
     }
 

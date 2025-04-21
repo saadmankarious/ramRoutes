@@ -38,10 +38,10 @@ public class GameManager : MonoBehaviour
         allTrials.Add(new GameTrial()
         {
             trialName = "Trial 2: Tree Planting",
-            trialObjective = "Plant four trees of Jupiter. Sapling are located around Jupiter.",
+            trialObjective = "We need to do reparation after damage CEOs caused. Interact with building using V key to find Saplings to plant.",
             trialNumber = 2,
             timeLimit = 360f,
-            targetTreesPlanted = 4
+            targetTreesPlanted = 1
         });
         allTrials.Add(new GameTrial()
         {
@@ -49,7 +49,7 @@ public class GameManager : MonoBehaviour
             trialObjective = "Water four trees of Jupyter. Use Golden Eagle from Venus.",
             trialNumber = 3,
             timeLimit = 240f,
-            targetTreesWatered = 4
+            targetTreesWatered = 1
         });
 
         allTrials.Add(new GameTrial()
