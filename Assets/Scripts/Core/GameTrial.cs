@@ -51,6 +51,8 @@ public class GameTrial
     {
         if (isCompleted) return;
         _currentCoins = Mathf.Min(_currentCoins + amount, targetCoins);
+                Debug.Log("addign coins in game trial " + _currentCoins);
+
         CheckCompletion();
         OnObjectiveProgress?.Invoke();
     }

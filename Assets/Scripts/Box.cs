@@ -54,14 +54,14 @@ public class Box : MonoBehaviour
     public void OnYesClicked()
     {
         // Immediately end the game when Yes is clicked
-        EndGame();
+        StartCoroutine(EndGameAfterDelay(2f));
     }
 
     public void OnNoClicked()
     {
         Debug.Log("no clicked");
         // Wait 2 seconds then end the game when No is clicked
-        StartCoroutine(EndGameAfterDelay(2f));
+        StartCoroutine(EndGameAfterDelay(4f));
     }
 
     private void EndGame()
