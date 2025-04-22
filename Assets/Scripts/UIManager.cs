@@ -98,12 +98,14 @@ public class UIManager : MonoBehaviour
                 HideObjectsWithTag("TreeSpot");
                 HideObjectsWithTag("Box");
                 HideObjectsWithTag("Eagle");
+                HideObjectsWithTag("Trial 2 UI");
                 break;
 
             case 2:
                 ShowObjectsWithTag("Spaceship");
-                ShowObjectsWithTag("TreeSpot");
                 HideObjectsWithTag("CEO");
+                ShowObjectsWithTag("Trial 2 UI");
+                ShowObjectsWithTag("TreeSpot");
 
                 HideObjectsWithTag("Box");
                 HideObjectsWithTag("Eagle");
@@ -111,15 +113,20 @@ public class UIManager : MonoBehaviour
 
             case 3:
                 ShowObjectsWithTag("Eagle");
-                
+                ShowObjectsWithTag("TreeSpot");
+
                 HideObjectsWithTag("Box");
+                HideObjectsWithTag("Trial 2 UI");
+
 
                 break;
 
             case 4:
                 ShowObjectsWithTag("Box");
+                ShowObjectsWithTag("Spaceship");
 
                 HideObjectsWithTag("Eagle");
+                HideObjectsWithTag("Trial 2 UI");
                 break;
 
             default:

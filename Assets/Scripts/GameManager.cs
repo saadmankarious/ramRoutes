@@ -27,9 +27,9 @@ public class GameManager : MonoBehaviour
         allTrials.Add(new GameTrial()
         {
             trialName = "Trial 1: Sorting Trash",
-            trialObjective = "Sort 10 trash and 10 recycled items. To save time, look for different CEOs around the level.",
+            trialObjective = "CEOs are trashing our campus. Recycle 10 trash and 10 recycle items. Look for different CEOs around the level.",
             trialNumber = 1,
-            timeLimit = 300f,
+            timeLimit = 330f,
             targetTrash = 10,
             targetRecycling = 10
         });
@@ -37,7 +37,7 @@ public class GameManager : MonoBehaviour
         allTrials.Add(new GameTrial()
         {
             trialName = "Trial 2: Tree Planting",
-            trialObjective = "We need to do reparation after damage CEOs caused. Interact with building using V key to find Saplings to plant.",
+            trialObjective = "Reparation is needed after damage CEOs caused. Plant trees in place of CEOs. Tree saplings are hidden in buidlings.",
             trialNumber = 2,
             timeLimit = 360f,
             targetTreesPlanted = 4
@@ -45,7 +45,7 @@ public class GameManager : MonoBehaviour
         allTrials.Add(new GameTrial()
         {
             trialName = "Trial 3: Fill my Cup",
-            trialObjective = "Water four you planted trees using  Golden Eagle from Venus. Use spaceship to reach Venus using 'E' Key",
+            trialObjective = "Water 4 trees you planted  using  Golden Eagle from Venus. ",
             trialNumber = 3,
             timeLimit = 240f,
             targetTreesWatered = 4
