@@ -1,58 +1,95 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 
 public class OnboardingManager : MonoBehaviour
 {
-    // Array to hold all onboarding panels
     public GameObject[] panels;
-
-    // Index of the currently active panel
+    public AudioSource backgroundMusic;
+    public AudioSource tickSound;
+    public float narrationSpeed = 1.0f;
+    
     private int currentPanelIndex = 0;
-
-    // Reference to the "Advance" button
     public Button advanceButton;
+    private Text[] panelTexts;
+    private Coroutine[] narrationCoroutines;
 
     private void Start()
     {
-        // Ensure only the first panel is active at the start
-        ShowPanel(currentPanelIndex);
+        panelTexts = new Text[panels.Length];
+        narrationCoroutines = new Coroutine[panels.Length];
+        
+        for (int i = 0; i < panels.Length; i++)
+        {
+            panelTexts[i] = panels[i].GetComponentInChildren<Text>();
+        }
 
-        // Add a listener to the "Advance" button
+        ShowPanel(currentPanelIndex);
+        
         if (advanceButton != null)
         {
             advanceButton.onClick.AddListener(AdvanceToNextPanel);
         }
+
+        if (backgroundMusic != null)
+        {
+            backgroundMusic.Play();
+        }
     }
 
-    // Method to show a specific panel
     private void ShowPanel(int index)
     {
-        // Deactivate all panels
         foreach (var panel in panels)
         {
             panel.SetActive(false);
         }
 
-        // Activate the panel at the specified index
         if (index >= 0 && index < panels.Length)
         {
             panels[index].SetActive(true);
+            
+            if (narrationCoroutines[index] != null)
+            {
+                StopCoroutine(narrationCoroutines[index]);
+            }
+            
+            if (panelTexts[index] != null)
+            {
+                narrationCoroutines[index] = StartCoroutine(NarrateText(panelTexts[index]));
+            }
         }
     }
 
-    // Method to advance to the next panel
+    private IEnumerator NarrateText(Text textComponent)
+    {
+        string fullText = textComponent.text;
+        textComponent.text = "";
+        
+        foreach (char c in fullText)
+        {
+            textComponent.text += c;
+            if (tickSound != null)
+            {
+                tickSound.Play();
+            }
+            yield return new WaitForSeconds(0.1f / narrationSpeed);
+        }
+    }
+
     private void AdvanceToNextPanel()
     {
-        // Increment the current panel index
         currentPanelIndex++;
-
-        // If we've reached the end of the panels, loop back to the first panel
+        
         if (currentPanelIndex >= panels.Length)
         {
-            currentPanelIndex = 0; // Loop back to the first panel
+            currentPanelIndex = 0;
         }
 
-        // Show the next panel
         ShowPanel(currentPanelIndex);
+    }
+
+    public void SetNarrationSpeed(float speed)
+    {
+        narrationSpeed = speed;
     }
 }
