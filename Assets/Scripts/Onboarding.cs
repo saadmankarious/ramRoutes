@@ -9,9 +9,11 @@ public class OnboardingManager : MonoBehaviour
     public AudioSource backgroundMusic;
     public AudioSource tickSound;
     public float narrationSpeed = 1.0f;
-    
+
     private int currentPanelIndex = 0;
     public Button advanceButton;
+    public Button playButton; // ✅ Added play button reference
+
     private Text[] panelTexts;
     private Coroutine[] narrationCoroutines;
 
@@ -64,17 +66,23 @@ public class OnboardingManager : MonoBehaviour
     {
         panelTexts = new Text[panels.Length];
         narrationCoroutines = new Coroutine[panels.Length];
-        
+
         for (int i = 0; i < panels.Length; i++)
         {
             panelTexts[i] = panels[i].GetComponentInChildren<Text>();
         }
 
         ShowPanel(currentPanelIndex);
-        
+
         if (advanceButton != null)
         {
             advanceButton.onClick.AddListener(AdvanceToNextPanel);
+        }
+
+        if (playButton != null)
+        {
+            playButton.gameObject.SetActive(false); // ✅ Hide Play button at start
+            playButton.onClick.AddListener(StartGame); // ✅ Assign click event
         }
 
         if (backgroundMusic != null)
@@ -101,15 +109,21 @@ public class OnboardingManager : MonoBehaviour
         if (index >= 0 && index < panels.Length)
         {
             panels[index].SetActive(true);
-            
+
             if (narrationCoroutines[index] != null)
             {
                 StopCoroutine(narrationCoroutines[index]);
             }
-            
+
             if (panelTexts[index] != null)
             {
                 narrationCoroutines[index] = StartCoroutine(NarrateText(panelTexts[index]));
+            }
+
+            // ✅ Show play button only on the last panel
+            if (playButton != null)
+            {
+                playButton.gameObject.SetActive(index == panels.Length - 1);
             }
         }
     }
@@ -118,7 +132,7 @@ public class OnboardingManager : MonoBehaviour
     {
         string fullText = textComponent.text;
         textComponent.text = "";
-        
+
         foreach (char c in fullText)
         {
             textComponent.text += c;
@@ -133,10 +147,10 @@ public class OnboardingManager : MonoBehaviour
     private void AdvanceToNextPanel()
     {
         currentPanelIndex++;
-        
+
         if (currentPanelIndex >= panels.Length)
         {
-            currentPanelIndex = 0;
+            currentPanelIndex = panels.Length - 1; // Don't wrap around
         }
 
         ShowPanel(currentPanelIndex);
@@ -145,5 +159,12 @@ public class OnboardingManager : MonoBehaviour
     public void SetNarrationSpeed(float speed)
     {
         narrationSpeed = speed;
+    }
+
+    // ✅ Load the LevelFall scene
+    public void StartGame()
+    {
+        Time.timeScale = 1f; // Just in case it was paused
+        SceneManager.LoadScene("LevelFall");
     }
 }
