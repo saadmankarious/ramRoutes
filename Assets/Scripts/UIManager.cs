@@ -23,6 +23,7 @@ public class UIManager : MonoBehaviour
     public Text dialogText;
     public GameObject timeUpMenu;
     public GameObject trialCompleteMenu;
+    public GameObject gamePauseMenu;
 
     public GameObject endGamePanel;
     [Header("Timing Settings")]
@@ -49,6 +50,50 @@ public class UIManager : MonoBehaviour
     private Coroutine typingCoroutine;
     private Coroutine objectiveRepeatCoroutine;
     private Coroutine timerCoroutine;
+
+    private bool isPaused = false;
+
+    // Call this to toggle pause menu
+    public void TogglePauseMenu()
+    {
+        if (isPaused)
+        {
+            ResumeGame();
+        }
+        else
+        {
+            PauseGame();
+        }
+    }
+
+    // Pauses the game and shows the menu
+    public void PauseGame()
+    {
+        Time.timeScale = 0f; // Stop the game
+        gamePauseMenu.SetActive(true);
+        isPaused = true;
+    }
+
+    // Resumes the game and hides the menu
+    public void ResumeGame()
+    {
+        Time.timeScale = 1f; // Resume the game
+        gamePauseMenu.SetActive(false);
+        isPaused = false;
+    }
+
+    // Hides the pause menu, resumes game if needed
+    public void hidePauseMenu()
+    {
+        ResumeGame();
+    }
+
+    // Exits to the landing scene, also resumes time
+    public void exitPlay()
+    {
+        Time.timeScale = 1f; // Just in case it was paused
+        SceneManager.LoadScene("Landing");
+    }
 
     private void Awake()
     {
@@ -337,6 +382,10 @@ private void HideObjectsWithTag(string tag)
         bottlesText.text = $"{trial.currentRecycling}/{trial.targetRecycling}";
         treesText.text = $"{trial.currentTreesPlanted}/{trial.targetTreesPlanted}";
         levelText.text = trial.trialName;
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            TogglePauseMenu();
+        }
     }
 
     public void ContinueToNextTrial()
@@ -401,5 +450,13 @@ private void HideObjectsWithTag(string tag)
             );
             Instantiate(teleportEffect, spawnPos, Quaternion.identity, effectsParent);
         }
+
+
     }
+
+
+
+
+
+
 }
