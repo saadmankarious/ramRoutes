@@ -85,4 +85,9 @@ public class LoginManager : MonoBehaviour
     {
         SceneManager.LoadScene("LevelFall");
     }
+
+    public void ViewOnboarding()
+    {
+        SceneManager.LoadScene("Onboarding");
+    }
 }

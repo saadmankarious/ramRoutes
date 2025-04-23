@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class OnboardingManager : MonoBehaviour
 {
@@ -13,6 +14,51 @@ public class OnboardingManager : MonoBehaviour
     public Button advanceButton;
     private Text[] panelTexts;
     private Coroutine[] narrationCoroutines;
+
+    private bool isPaused = false;
+    public GameObject gamePauseMenu;
+
+    // Call this to toggle pause menu
+    public void TogglePauseMenu()
+    {
+        if (isPaused)
+        {
+            ResumeGame();
+        }
+        else
+        {
+            PauseGame();
+        }
+    }
+
+    // Pauses the game and shows the menu
+    public void PauseGame()
+    {
+        Time.timeScale = 0f; // Stop the game
+        gamePauseMenu.SetActive(true);
+        isPaused = true;
+    }
+
+    // Resumes the game and hides the menu
+    public void ResumeGame()
+    {
+        Time.timeScale = 1f; // Resume the game
+        gamePauseMenu.SetActive(false);
+        isPaused = false;
+    }
+
+    // Hides the pause menu, resumes game if needed
+    public void hidePauseMenu()
+    {
+        ResumeGame();
+    }
+
+    // Exits to the landing scene, also resumes time
+    public void exitPlay()
+    {
+        Time.timeScale = 1f; // Just in case it was paused
+        SceneManager.LoadScene("Landing");
+    }
 
     private void Start()
     {
@@ -34,6 +80,14 @@ public class OnboardingManager : MonoBehaviour
         if (backgroundMusic != null)
         {
             backgroundMusic.Play();
+        }
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            TogglePauseMenu();
         }
     }
 
