@@ -1,13 +1,13 @@
 using System.Collections;
 using UnityEngine;
 
-public class ObjectThrower : MonoBehaviour
+public class ObjectThrower2D : MonoBehaviour
 {
-    public GameObject[] objectsToThrow; // Array of object prefabs to throw
-    public float throwForce = 1000f;
+    public GameObject[] objectsToThrow;
+    public float throwForce = 10f;
     public float spawnDistance = 2f;
-    public float randomSpread = 10f;
     public float throwInterval = 1f;
+    public float randomSpread = 0.2f;
 
     private void Start()
     {
@@ -27,21 +27,31 @@ public class ObjectThrower : MonoBehaviour
     {
         if (objectsToThrow.Length > 0)
         {
+            // Select random object
             GameObject objectToThrow = objectsToThrow[Random.Range(0, objectsToThrow.Length)];
-            Vector3 spawnPosition = transform.position + transform.forward * spawnDistance;
 
-            GameObject thrownObject = Instantiate(objectToThrow, spawnPosition, transform.rotation);
-            Rigidbody rb = thrownObject.GetComponent<Rigidbody>();
+            // Get random angle between 0 and 360 degrees
+            float randomAngle = Random.Range(0f, 360f);
+
+            // Calculate spawn position in random direction
+            Vector2 spawnDirection = new Vector2(Mathf.Cos(randomAngle * Mathf.Deg2Rad),
+                                                Mathf.Sin(randomAngle * Mathf.Deg2Rad));
+            Vector2 spawnPosition = (Vector2)transform.position + (spawnDirection * spawnDistance);
+
+            // Instantiate with 2D physics
+            GameObject thrownObject = Instantiate(objectToThrow, spawnPosition, Quaternion.identity);
+            Rigidbody2D rb = thrownObject.GetComponent<Rigidbody2D>();
+
             if (rb != null)
             {
-                Vector3 randomDirection = transform.forward +
-                    new Vector3(
-                        Random.Range(-randomSpread, randomSpread),
+                // Apply force in the same random direction with slight spread variation
+                Vector2 throwDirection = spawnDirection +
+                    new Vector2(
                         Random.Range(-randomSpread, randomSpread),
                         Random.Range(-randomSpread, randomSpread)
                     ).normalized;
 
-                rb.AddForce(randomDirection * throwForce, ForceMode.Impulse);
+                rb.AddForce(throwDirection.normalized * throwForce, ForceMode2D.Impulse);
             }
         }
     }

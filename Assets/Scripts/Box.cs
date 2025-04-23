@@ -54,22 +54,27 @@ public class Box : MonoBehaviour
     public void OnYesClicked()
     {
         // Immediately end the game when Yes is clicked
-        StartCoroutine(EndGameAfterDelay(2f));
+        if (panelToShow != null)
+        {
+            panelToShow.SetActive(false);
+        }
+        StartCoroutine(EndGameAfterDelay());
     }
 
     public void OnNoClicked()
     {
         Debug.Log("no clicked");
-        // Wait 2 seconds then end the game when No is clicked
-        StartCoroutine(EndGameAfterDelay(4f));
-    }
-
-    private void EndGame()
-    {
         if (panelToShow != null)
         {
             panelToShow.SetActive(false);
         }
+        // Wait 2 seconds then end the game when No is clicked
+        StartCoroutine(EndGameAfterDelay());
+    }
+
+    private void EndGame()
+    {
+      
         
         // animator.SetTrigger("ramDeath")
         OnBoxOpened?.Invoke();  // 🚀 Fire the event!
@@ -77,9 +82,13 @@ public class Box : MonoBehaviour
 
     }
 
-    private IEnumerator EndGameAfterDelay(float delay)
+    private IEnumerator EndGameAfterDelay()
     {
-        yield return new WaitForSeconds(delay);
+        UIManager.Instance.endGamePanel.SetActive(true);
+        yield return new WaitForSeconds(2f);
+        UIManager.Instance.endGamePanel.SetActive(false);
+        yield return new WaitForSeconds(2f);
+
         EndGame();
     }
 

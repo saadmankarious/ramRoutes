@@ -7,10 +7,6 @@ using UnityEngine.SceneManagement;
 
 namespace Platformer.Gameplay
 {
-    /// <summary>
-    /// Fired when the player has died.
-    /// </summary>
-    /// <typeparam name="PlayerDeath"></typeparam>
     public class PlayerDeath : Simulation.Event<PlayerDeath>
     {
         PlatformerModel model = Simulation.GetModel<PlatformerModel>();
@@ -23,17 +19,21 @@ namespace Platformer.Gameplay
                 player.health.Die();
                 model.virtualCamera.m_Follow = null;
                 model.virtualCamera.m_LookAt = null;
-                // player.collider.enabled = false;
                 player.controlEnabled = false;
 
                 if (player.audioSource && player.ouchAudio)
                     player.audioSource.PlayOneShot(player.ouchAudio);
                 player.animator.SetTrigger("hurt");
                 player.animator.SetBool("dead", true);
-    SceneManager.LoadScene("Landing");
 
-                //Simulation.Schedule<PlayerSpawn>(2);
+                player.StartCoroutine(ChangeSceneAfterDelay());
             }
+        }
+
+        private IEnumerator ChangeSceneAfterDelay()
+        {
+            yield return new WaitForSeconds(4f);
+            SceneManager.LoadScene("Landing");
         }
     }
 }
