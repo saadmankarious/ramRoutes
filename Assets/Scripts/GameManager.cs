@@ -27,7 +27,7 @@ public class GameManager : MonoBehaviour
         allTrials.Add(new GameTrial()
         {
             trialName = "Trial 1: Sorting Trash",
-            trialObjective = "CEOs are trashing our campus. Recycle 10 trash and 10 recycle items. Look for different CEOs around the level.",
+            trialObjective = "CEOs are trashing our campus. Recycle 10 trash and 10 recycle items. Step right on their head to kill them but don't miss!",
             trialNumber = 1,
             timeLimit = 330f,
             targetTrash = 10,
@@ -75,8 +75,22 @@ public class GameManager : MonoBehaviour
 
     private void HandleTrialComplete()
     {
+        if(currentTrial.trialNumber == 1)
+        {
+            RemoveObjectsWithTag("Trash");
+            RemoveObjectsWithTag("Recyclable");
+    
+        }
         UIManager.Instance.OnTrialComplete.Invoke();
     }
+
+void RemoveObjectsWithTag(string tag) {
+    GameObject[] objects = GameObject.FindGameObjectsWithTag(tag);
+    foreach (GameObject obj in objects) {
+        Destroy(obj);
+    }
+}
+
 
     public void AddCoins(int amount)
     {

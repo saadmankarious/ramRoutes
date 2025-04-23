@@ -25,6 +25,7 @@ public class TrashCan : MonoBehaviour
     public AudioClip successClip;
     public AudioClip wrongPlaceClip;
     public AudioClip completionClip;
+    [SerializeField] private float trashSoundVolume = 0.3f;
 
     void Start()
     {
@@ -48,8 +49,29 @@ public class TrashCan : MonoBehaviour
         }
     }
 
+    private bool playerInBound = false;
+
+    void OnTriggerExit2D(Collider2D other)
+    {
+         if(other.CompareTag("Player"))
+        {
+            Debug.Log("Player out of bounds");
+            playerInBound = false;
+        }  
+    }
+
     void OnTriggerEnter2D(Collider2D other)
     {
+       
+        if(other.CompareTag("Player"))
+        {
+            Debug.Log("Player in bounds");
+            playerInBound = true;
+        }
+        if(!playerInBound)
+            {
+                return;
+            }
         if (other.CompareTag("Trash"))
         {
             if(isRecycling)
@@ -128,7 +150,7 @@ public class TrashCan : MonoBehaviour
     {
         if (audioSource != null && clip != null)
         {
-            audioSource.PlayOneShot(clip);
+            audioSource.PlayOneShot(clip, trashSoundVolume);
         }
     }
 
