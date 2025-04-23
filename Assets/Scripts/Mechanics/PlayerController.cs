@@ -387,16 +387,16 @@ void TryPickUpTrash()
     void HandleBoxOpened()
     {
         Debug.Log("The box was opened! Let's do something!");
-        // Do something like show UI, enable next level, etc.
-        Schedule<PlayerDeath>();
-        StartCoroutine(LeaveAfterDelay());
-        UIManager.Instance.endGamePanel.SetActive(true);
+            // Do something like show UI, enable next level, etc.
+            Schedule<PlayerDeath>();
+
+            StartCoroutine(LeaveAfterDelay());
 
     }
 
  private IEnumerator LeaveAfterDelay()
 {
-    yield return new WaitForSeconds(3f);
+    yield return new WaitForSeconds(4f);
 
     PlayerPrefs.DeleteAll();
 
@@ -408,7 +408,6 @@ void TryPickUpTrash()
     Resources.UnloadUnusedAssets();
     System.GC.Collect();
 
-    SceneManager.LoadScene("Landing");
 }
 
 
