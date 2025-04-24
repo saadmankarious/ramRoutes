@@ -2,6 +2,7 @@ using UnityEngine;
 using Firebase;
 using Firebase.Firestore;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 [FirestoreData]
 public class GamePlay
@@ -73,6 +74,43 @@ public static async Task SaveTrialCompletion(string playerName, int coinsCollect
         await db.Collection("game-completions").AddAsync(gameplay);
     }
     catch (System.Exception ex) { Debug.LogError($"Failed to save completion: {ex.Message}"); }
+}
+public static async Task<List<T>> GetCollectionData<T>(string collectionName) where T : new()
+{
+    List<T> results = new List<T>();
+    
+    try
+    {
+        QuerySnapshot snapshot = await db.Collection(collectionName).GetSnapshotAsync();
+        
+        foreach (DocumentSnapshot document in snapshot.Documents)
+        {
+            if (document.Exists)
+            {
+                T item = document.ConvertTo<T>();
+                results.Add(item);
+            }
+        }
+        
+        Debug.Log($"Successfully retrieved {results.Count} items from {collectionName}");
+    }
+    catch (System.Exception ex)
+    {
+        Debug.LogError($"Failed to get {collectionName} data: {ex.Message}");
+    }
+    
+    return results;
+}
+
+// Specific methods for your types:
+public static async Task<List<GamePlay>> GetGameCompletions()
+{
+    return await GetCollectionData<GamePlay>("game-completions");
+}
+
+public static async Task<List<GameAttempt>> GetGameAttempts()
+{
+    return await GetCollectionData<GameAttempt>("game-attempts");
 }
 }
 

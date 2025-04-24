@@ -26,7 +26,8 @@ public class UIManager : MonoBehaviour
     public GameObject trialCompleteMenu;
     public GameObject gamePauseMenu;
 
-    public GameObject endGamePanel;
+    public GameObject endGamePanelNo;
+    public GameObject endGamePanelYes;
     [Header("Timing Settings")]
     [SerializeField] private float typingSpeed = 0.3f;
     [SerializeField] private float objectiveRepeatTime = 60;
