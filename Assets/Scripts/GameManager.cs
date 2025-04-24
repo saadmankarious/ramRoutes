@@ -95,7 +95,6 @@ void RemoveObjectsWithTag(string tag) {
     public void AddCoins(int amount)
     {
         currentTrial.AddCoins(amount);
-        Debug.Log($"Coins Collected: {currentTrial.currentCoins}/{currentTrial.targetCoins}");
     }
 
     public void AddTrash(int amount)
