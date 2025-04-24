@@ -1,89 +1,146 @@
 using Firebase.Auth;
 using UnityEngine;
 using UnityEngine.UI;
+using Firebase.Firestore;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
-
 public class LoginManager : MonoBehaviour
 {
+    [Header("Login UI")]
     public InputField emailInput;
     public InputField passwordInput;
     public Text statusText;
-    public GameObject loginPanel;  // Panel with login fields + button
-    public GameObject welcomePanel; // Panel to show after login
+    public GameObject loginPanel;
+    public GameObject welcomePanel;
     public Text welcomeText;
 
-    private bool isLoggedIn = false; // Flag to indicate login success
-    private string userEmail = ""; // Store the user's email for the welcome message
+    [Header("Attempts Scroll View")]
+    public ScrollRect attemptsScrollView;
+    public Transform attemptsContentParent;
+    public GameObject attemptTextPrefab;
+    public int maxAttemptsToShow = 20;
 
-    public void LoginUser()
+    private bool isLoggedIn = false;
+    private string userEmail = "";
+
+    private async void Start()
     {
-        // Debug.Log("Logging in user");
+        await FirestoreUtility.Initialize();
+        await LoadAndDisplayAttempts();
+        ConfigureScrollContent();
+    }
 
-        // string email = emailInput.text;
-        // string password = passwordInput.text;
+    private void ConfigureScrollContent()
+    {
+        // Ensure content has proper layout components
+        var layoutGroup = attemptsContentParent.GetComponent<VerticalLayoutGroup>();
+        if (layoutGroup == null)
+        {
+            layoutGroup = attemptsContentParent.gameObject.AddComponent<VerticalLayoutGroup>();
+            layoutGroup.padding = new RectOffset(20, 20, 10, 10);
+            layoutGroup.spacing = 15f;
+            layoutGroup.childAlignment = TextAnchor.MiddleCenter;
+            layoutGroup.childControlWidth = true;
+            layoutGroup.childControlHeight = false;
+        }
 
-        // FirebaseAuth.DefaultInstance.SignInWithEmailAndPasswordAsync(email, password).ContinueWith(task => {
-        //     if (task.IsCanceled)
-        //     {
-        //         Debug.LogError("Login canceled.");
-        //         statusText.text = "Login canceled.";
-        //         return;
-        //     }
-        //     if (task.IsFaulted)
-        //     {
-        //         Debug.LogError($"Login error, SAAD: {task.Exception}");
-        //         statusText.text = $"Login failed: {task.Exception.Message}";
-        //         return;
-        //     }
+        var sizeFitter = attemptsContentParent.GetComponent<ContentSizeFitter>();
+        if (sizeFitter == null)
+        {
+            sizeFitter = attemptsContentParent.gameObject.AddComponent<ContentSizeFitter>();
+            sizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            sizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+        }
 
-        //     // Extract the FirebaseUser from the AuthResult
-        //     FirebaseUser newUser = task.Result.User;
-        //     Debug.Log($"User logged in: {newUser.Email}");
+        // Configure scroll view
+        attemptsScrollView.horizontal = false;
+        attemptsScrollView.vertical = true;
+        attemptsScrollView.movementType = ScrollRect.MovementType.Clamped;
+    }
 
-        //     // Store the user's email and set the flag for login success
-        //     userEmail = newUser.Email;
-        //     isLoggedIn = true;
-        // });
-        Play();
+    private async Task LoadAndDisplayAttempts()
+    {
+        try
+        {
+            List<GameAttempt> attempts = await FirestoreUtility.GetGameAttempts();
+            DisplayAttempts(attempts);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Failed to load attempts: {e.Message}");
+        }
+    }
+
+    private void DisplayAttempts(List<GameAttempt> attempts)
+    {
+        // Clear existing items
+        foreach (Transform child in attemptsContentParent)
+        {
+            Destroy(child.gameObject);
+        }
+
+        // Show newest first and limit count
+        int displayCount = Mathf.Min(attempts.Count, maxAttemptsToShow);
+        for (int i = displayCount - 1; i >= 0; i--)
+        {
+            GameAttempt attempt = attempts[i];
+            GameObject attemptItem = Instantiate(attemptTextPrefab, attemptsContentParent);
+            
+            // Configure item layout
+            RectTransform itemRect = attemptItem.GetComponent<RectTransform>();
+            itemRect.pivot = new Vector2(0.5f, 0.5f);
+            itemRect.anchorMin = new Vector2(0.5f, 0.5f);
+            itemRect.anchorMax = new Vector2(0.5f, 0.5f);
+            
+            Text attemptText = attemptItem.GetComponent<Text>();
+            string formattedDate = attempt.Date.ToDateTime().ToString("MMM dd, HH:mm");
+            attemptText.text = $"{attempt.PlayerName} - {formattedDate}";
+            attemptText.alignment = TextAnchor.MiddleCenter;
+        }
+
+        // Force layout update
+        LayoutRebuilder.ForceRebuildLayoutImmediate(attemptsContentParent as RectTransform);
+        Canvas.ForceUpdateCanvases();
+        attemptsScrollView.verticalNormalizedPosition = 1f;
+    }
+
+    public async void Play()
+    {
+        string playerName = emailInput.text;
+        PlayerPrefs.SetString("PlayerName", playerName);
+        PlayerPrefs.Save();
+
+        try
+        {
+            await FirestoreUtility.SaveGameAttempt(playerName);
+            SceneManager.LoadScene("LevelFall");
+        }
+        catch
+        {
+            SceneManager.LoadScene("LevelFall");
+        }
     }
 
     public void LogoutUser()
     {
-        Debug.Log("Logging out user");
-
-        // Sign out the user
         FirebaseAuth.DefaultInstance.SignOut();
-
-        // Switch back to the login panel
         loginPanel.SetActive(true);
         welcomePanel.SetActive(false);
-
-        // Clear the email and password fields
         emailInput.text = "";
         passwordInput.text = "";
-
-        // Update status text
         statusText.text = "User logged out.";
     }
 
     private void Update()
     {
-        // Check the flag in the main thread and update the UI
         if (isLoggedIn)
         {
-            Debug.Log("Switching panels...");
             loginPanel.SetActive(false);
             welcomePanel.SetActive(true);
             welcomeText.text = $"Welcome, {userEmail}!";
-
-            // Reset the flag
             isLoggedIn = false;
         }
-    }
-
-    public void Play()
-    {
-        SceneManager.LoadScene("LevelFall");
     }
 
     public void ViewOnboarding()

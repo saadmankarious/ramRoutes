@@ -58,7 +58,7 @@ public class Box : MonoBehaviour
         {
             panelToShow.SetActive(false);
         }
-        StartCoroutine(EndGameAfterDelay());
+        StartCoroutine(EndGameAfterDelayYes());
     }
 
     public void OnNoClicked()
@@ -69,7 +69,7 @@ public class Box : MonoBehaviour
             panelToShow.SetActive(false);
         }
         // Wait 2 seconds then end the game when No is clicked
-        StartCoroutine(EndGameAfterDelay());
+        StartCoroutine(EndGameAfterDelayNo());
     }
 
     private void EndGame()
@@ -82,11 +82,20 @@ public class Box : MonoBehaviour
 
     }
 
-    private IEnumerator EndGameAfterDelay()
+    private IEnumerator EndGameAfterDelayNo()
     {
-        UIManager.Instance.endGamePanel.SetActive(true);
+        UIManager.Instance.endGamePanelNo.SetActive(true);
         yield return new WaitForSeconds(2f);
-        UIManager.Instance.endGamePanel.SetActive(false);
+        UIManager.Instance.endGamePanelNo.SetActive(false);
+        yield return new WaitForSeconds(2f);
+
+        EndGame();
+    }
+    private IEnumerator EndGameAfterDelayYes()
+    {
+        UIManager.Instance.endGamePanelYes.SetActive(true);
+        yield return new WaitForSeconds(2f);
+        UIManager.Instance.endGamePanelYes.SetActive(false);
         yield return new WaitForSeconds(2f);
 
         EndGame();
