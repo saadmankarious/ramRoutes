@@ -4,6 +4,7 @@ using System.Collections;
 using UnityEngine.SceneManagement;
 using UnityEngine.Events;
 using System.Linq;
+using System.Threading.Tasks;
 
 public class UIManager : MonoBehaviour
 {
@@ -25,7 +26,8 @@ public class UIManager : MonoBehaviour
     public GameObject trialCompleteMenu;
     public GameObject gamePauseMenu;
 
-    public GameObject endGamePanel;
+    public GameObject endGamePanelNo;
+    public GameObject endGamePanelYes;
     [Header("Timing Settings")]
     [SerializeField] private float typingSpeed = 0.3f;
     [SerializeField] private float objectiveRepeatTime = 60;
@@ -289,9 +291,14 @@ private void HideObjectsWithTag(string tag)
         PlaySound(timeExpiredSound);
     }
 
+
     public IEnumerator CompleteTrial()
     {
+        // Start the Firebase save but don't await it here
+        var saveTask = SaveProgressToFirebase();
+        
         yield return new WaitForSeconds(2f);
+        
         if (teleportEffect != null)
         {
             GameObject player = GameObject.FindGameObjectWithTag("Player");
@@ -304,12 +311,42 @@ private void HideObjectsWithTag(string tag)
         PlaySound(trialCompleteSound);
         yield return new WaitForSeconds(2f);
 
+        // Optional: Wait for the save to complete if needed
+        while (!saveTask.IsCompleted)
+            yield return null;
+            
+        if (saveTask.IsFaulted)
+            Debug.LogError("Save failed: " + saveTask.Exception);
+
         timerRunning = false;
         StopAllCoroutines();
         trialCompleteMenu.SetActive(true);
         Time.timeScale = 0f;
     }
 
+    // Separate async Task method for Firebase
+   private async Task SaveProgressToFirebase()
+{
+    try 
+    {
+        string playerName = PlayerPrefs.GetString("PlayerName", "");
+        if (string.IsNullOrEmpty(playerName))
+        {
+            playerName = "Player" + Random.Range(1000, 9999);
+            PlayerPrefs.SetString("PlayerName", playerName);
+            PlayerPrefs.Save();
+        }
+
+        int coins = GameManager.Instance.currentTrial.currentCoins;
+        int highestLevel = GameManager.Instance.currentTrial.trialNumber;
+        
+        await FirestoreUtility.SaveTrialCompletion(playerName, coins, highestLevel);
+    }
+    catch (System.Exception e)
+    {
+        Debug.LogError($"Firebase save error: {e.Message}");
+    }
+}
     private void PlaySound(AudioClip clip)
     {
         if (audioSource != null && clip != null)

@@ -30,8 +30,8 @@ public class GameManager : MonoBehaviour
             trialObjective = "CEOs are trashing our campus. Recycle 10 trash and 10 recycle items. Step right on their head to kill them but don't miss!",
             trialNumber = 1,
             timeLimit = 330f,
-            targetTrash = 10,
-            targetRecycling = 10
+            targetTrash = 1,
+            targetRecycling = 1
         });
 
         allTrials.Add(new GameTrial()
