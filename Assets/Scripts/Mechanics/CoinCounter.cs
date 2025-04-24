@@ -25,7 +25,5 @@ public class CoinCounter : MonoBehaviour
 
         // Update the text on the UI to reflect the coin count
         GameManager.Instance.AddCoins(1);
-
-        Debug.Log("Coins Collected: " + coinCount);
     }
 }

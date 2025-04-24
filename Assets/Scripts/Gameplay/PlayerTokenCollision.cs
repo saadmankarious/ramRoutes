@@ -21,8 +21,6 @@ namespace Platformer.Gameplay
 
         public override void Execute()
         {
-            Debug.Log("Coin collected");
-
             // Call the event and pass the instance of the current PlayerTokenCollision
             OnEvent?.Invoke(this);
             
