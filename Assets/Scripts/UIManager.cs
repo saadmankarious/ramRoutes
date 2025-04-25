@@ -149,7 +149,6 @@ public class UIManager : MonoBehaviour
                 break;
 
             case 2:
-                ShowObjectsWithTag("Spaceship");
                 HideObjectsWithTag("CEO");
                 ShowObjectsWithTag("Trial 2 UI");
                 ShowObjectsWithTag("TreeSpot");
@@ -161,6 +160,8 @@ public class UIManager : MonoBehaviour
             case 3:
                 ShowObjectsWithTag("Eagle");
                 ShowObjectsWithTag("TreeSpot");
+                ShowObjectsWithTag("Spaceship");
+
 
                 HideObjectsWithTag("Box");
                 HideObjectsWithTag("Trial 2 UI");
@@ -405,7 +406,7 @@ private void HideObjectsWithTag(string tag)
         }
     }
 
-    private void ShowObjective()
+    public void ShowObjective()
     {
         string objectiveMessage = GameManager.Instance.currentTrial.GetProgressReport();
         ShowDialog(objectiveMessage, 10f);
