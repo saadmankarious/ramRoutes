@@ -11,7 +11,7 @@ public class BuildingInteraction : MonoBehaviour
     public KeyCode interactKey = KeyCode.J;
     public GameObject saplingPrefab;
     public AudioClip rewardSound;
-
+    public bool isPlanet;
     [SerializeField] private bool hasSapling = false;
 
     private bool isPlayerInRange = false;
@@ -35,14 +35,14 @@ public class BuildingInteraction : MonoBehaviour
                 dialogPanel.SetActive(true);
                 currentLineIndex = 0;
                 extraLineShown = false;
-                ShowDialog();
+                ShowDialog(dialogLines[currentLineIndex]);
             }
             else
             {
                 currentLineIndex++;
                 if (currentLineIndex < dialogLines.Length)
                 {
-                    ShowDialog();
+                    ShowDialog(dialogLines[currentLineIndex]);
                 }
                 else if (hasSapling && !saplingSpawned &&  GameManager.Instance.currentTrial.trialNumber == 2 && !extraLineShown)
                 {
@@ -59,14 +59,24 @@ public class BuildingInteraction : MonoBehaviour
         }
     }
 
-    void ShowDialog()
+    void ShowDialog(string str)
     {
-        dialogText.text = dialogLines[currentLineIndex];
+        dialogText.text = str;
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player")) isPlayerInRange = true;
+        if (other.CompareTag("Player"))
+        {
+            isPlayerInRange = true;
+           
+        } 
+            if(other.CompareTag("Spaceship"))
+            {
+                dialogPanel.SetActive(true);
+                ShowDialog(dialogLines[0]);
+
+            }
     }
 
     private void OnTriggerExit2D(Collider2D other)
@@ -76,6 +86,11 @@ public class BuildingInteraction : MonoBehaviour
             isPlayerInRange = false;
             dialogPanel.SetActive(false);
         }
+        if(other.CompareTag("Spaceship"))
+            {
+                dialogPanel.SetActive(false);
+
+            }
     }
 
     private void SpawnSapling()
