@@ -16,7 +16,8 @@ public class UIManager : MonoBehaviour
     public float padding = 2f;
     public Text trashText;
     public Text bottlesText;
-    public Text treesText;
+    public Text treesPlantedText;
+    public Text treesWateredText;
     public Text levelText;
     public Text timerText;
     public Text heldItem;
@@ -146,6 +147,7 @@ public class UIManager : MonoBehaviour
                 HideObjectsWithTag("Box");
                 HideObjectsWithTag("Eagle");
                 HideObjectsWithTag("Trial 2 UI");
+                HideObjectsWithTag("Trial 3 UI");
                 break;
 
             case 2:
@@ -154,6 +156,7 @@ public class UIManager : MonoBehaviour
                 ShowObjectsWithTag("TreeSpot");
 
                 HideObjectsWithTag("Box");
+                HideObjectsWithTag("Trial 3 UI");
                 HideObjectsWithTag("Eagle");
                 break;
 
@@ -161,11 +164,11 @@ public class UIManager : MonoBehaviour
                 ShowObjectsWithTag("Eagle");
                 ShowObjectsWithTag("TreeSpot");
                 ShowObjectsWithTag("Spaceship");
+                ShowObjectsWithTag("Trial 3 UI");
 
 
                 HideObjectsWithTag("Box");
                 HideObjectsWithTag("Trial 2 UI");
-
 
                 break;
 
@@ -175,6 +178,7 @@ public class UIManager : MonoBehaviour
 
                 HideObjectsWithTag("Eagle");
                 HideObjectsWithTag("Trial 2 UI");
+                HideObjectsWithTag("Trial 3 UI");
                 break;
 
             default:
@@ -414,11 +418,12 @@ private void HideObjectsWithTag(string tag)
 
     private void Update()
     {
+
         var trial = GameManager.Instance.currentTrial;
-        coinsText.text = $"{trial.currentCoins}";
         trashText.text = $"{trial.currentTrash}/{trial.targetTrash}";
         bottlesText.text = $"{trial.currentRecycling}/{trial.targetRecycling}";
-        treesText.text = $"{trial.currentTreesPlanted}/{trial.targetTreesPlanted}";
+        treesPlantedText.text = $"{trial.currentTreesPlanted}/{trial.targetTreesPlanted}";
+        treesWateredText.text = $"{trial.currentTreesWatered}/{trial.targetTreesWatered}";
         levelText.text = trial.trialName;
         if (Input.GetKeyDown(KeyCode.Escape))
         {
