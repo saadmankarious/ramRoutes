@@ -40,7 +40,7 @@ public class GameManager : MonoBehaviour
             trialObjective = "Reparation is needed after damage CEOs caused. Plant trees in place of CEOs. Tree saplings are hidden in buidlings.",
             trialNumber = 2,
             timeLimit = 360f,
-            targetTreesPlanted = 4
+            targetTreesPlanted = 2
         });
         allTrials.Add(new GameTrial()
         {
@@ -48,7 +48,7 @@ public class GameManager : MonoBehaviour
             trialObjective = "Water 4 trees you planted  using  Golden Eagle from Venus. ",
             trialNumber = 3,
             timeLimit = 240f,
-            targetTreesWatered = 4
+            targetTreesWatered = 2
         });
 
         allTrials.Add(new GameTrial()
