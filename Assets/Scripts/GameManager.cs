@@ -27,7 +27,7 @@ public class GameManager : MonoBehaviour
         allTrials.Add(new GameTrial()
         {
             trialName = "Trial 1: Sorting Trash",
-            trialObjective = "CEOs are trashing our campus. Recycle 10 trash and 10 recycle items. Step right on their head to kill them but don't miss!",
+            trialObjective = "Collect and deposit 20 litter items using 'C'. ",
             trialNumber = 1,
             timeLimit = 330f,
             targetTrash = 1,
@@ -37,18 +37,18 @@ public class GameManager : MonoBehaviour
         allTrials.Add(new GameTrial()
         {
             trialName = "Trial 2: Tree Planting",
-            trialObjective = "Reparation is needed after damage CEOs caused. Plant trees in place of CEOs. Tree saplings are hidden in buidlings.",
+            trialObjective = "Interact with buidlings using 'V' to get saplings to plant.",
             trialNumber = 2,
             timeLimit = 360f,
-            targetTreesPlanted = 2
+            targetTreesPlanted = 1
         });
         allTrials.Add(new GameTrial()
         {
             trialName = "Trial 3: Fill my Cup",
-            trialObjective = "Water 4 trees you planted  using  Golden Eagle from Venus. ",
+            trialObjective = "Call spaceship using 'E' to find Earth/Gaia. Use the eagle by Gaia to water the trees you planted",
             trialNumber = 3,
             timeLimit = 240f,
-            targetTreesWatered = 2
+            targetTreesWatered = 1
         });
 
         allTrials.Add(new GameTrial()

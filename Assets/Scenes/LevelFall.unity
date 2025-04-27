@@ -44710,6 +44710,7 @@ GameObject:
   - component: {fileID: 710990160}
   - component: {fileID: 710990159}
   - component: {fileID: 710990158}
+  - component: {fileID: 710990162}
   m_Layer: 0
   m_Name: earth
   m_TagString: Untagged
@@ -44749,18 +44750,18 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.68223953, y: 0.35246563}
+  m_Offset: {x: 0.11540222, y: -0.47268343}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 8.333333, y: 8.333333}
+    oldSize: {x: 7.75, y: 8}
     newSize: {x: 6.25, y: 6.25}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 10.22361, y: 11.265186}
+  m_Size: {x: 8.628311, y: 12.915484}
   m_EdgeRadius: 0
 --- !u!114 &710990159
 MonoBehaviour:
@@ -44824,7 +44825,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 31ae6882d29c24d84a1ca9985bc7da32, type: 3}
+  m_Sprite: {fileID: -861958583, guid: f56734e600ba3438681f8356fe866f4b, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -44844,12 +44845,33 @@ Transform:
   m_GameObject: {fileID: 710990157}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 88.7, y: 14, z: 0.58401334}
+  m_LocalPosition: {x: 87.49, y: 13.95, z: 0.58401334}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 790228369}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!95 &710990162
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 710990157}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: a3fd9d31c135d4d5db8bb0cf0e4185fd, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!4 &712227173 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7839719535475958255, guid: 5293bf48903824695a56cc59f47b766a,
@@ -69736,6 +69758,7 @@ GameObject:
   - component: {fileID: 1199272892}
   - component: {fileID: 1199272891}
   - component: {fileID: 1199272890}
+  - component: {fileID: 1199272894}
   m_Layer: 0
   m_Name: venus
   m_TagString: Untagged
@@ -69775,18 +69798,18 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.08772135, y: 1.4300294}
+  m_Offset: {x: 0.30966663, y: 1.4300294}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 3.125, y: 3.125}
+    oldSize: {x: 2, y: 4}
     newSize: {x: 6.25, y: 6.25}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 7.5482817, y: 9.110059}
+  m_Size: {x: 4.2102504, y: 9.110059}
   m_EdgeRadius: 0
 --- !u!114 &1199272891
 MonoBehaviour:
@@ -69850,7 +69873,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: 5b55c09fdf1c54871930d39541bcad9b, type: 3}
+  m_Sprite: {fileID: -1946019248, guid: 8429958b860704d8bbd9f0a4bf15cf5b, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -69876,6 +69899,27 @@ Transform:
   m_Children: []
   m_Father: {fileID: 790228369}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!95 &1199272894
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1199272889}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 6a9f2173c5c66458baf6aaf74e552a80, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1001 &1200057484
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -99764,9 +99808,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86f4a4ae3a36547dd915a91ceebed970, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mainMenu: {fileID: 0}
-  gamePlayCanvasii: []
-  gameController: {fileID: 1754240607}
 --- !u!82 &1754240611
 AudioSource:
   m_ObjectHideFlags: 0
