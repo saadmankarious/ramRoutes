@@ -74,12 +74,21 @@ public class TrashCan : MonoBehaviour
             }
         if (other.CompareTag("Trash"))
         {
+           
             if(isRecycling)
             {
                 PlaySound(wrongPlaceClip);
                 ShowDialog("Wrong place.", other);
+            } else if (GameManager.Instance.currentTrial.currentTrash >= 9)
+            {
+                PlaySound(completionClip);
+                ShowDialog("All trash collected. Now collect and deposit all recycle items.", other);
+                  trashCount++;
+                Destroy(other.gameObject);
+                GameManager.Instance.AddTrash(1);
             }
-            else if(trashCount < 10)
+            
+            else if(trashCount < 4)
             {
                 trashCount++;
                 Destroy(other.gameObject);
@@ -87,17 +96,10 @@ public class TrashCan : MonoBehaviour
                 PlaySound(successClip);
                 ShowDialog("Good job!", other);
             }
-            else if (recyclableCount == 10)
-            {
-                trashCount++;
-                Destroy(other.gameObject);
-                GameManager.Instance.AddTrash(1);
-                PlaySound(completionClip);
-                ShowDialog("Good job! Now you've collected all needed trash", other);
-            }
+           
             else
             {
-                ShowDialog("You collected enough trash!", other);
+                ShowDialog("This bin is full. Use another one to deposit the remaining items.", other);
             }
         }
         
@@ -108,7 +110,7 @@ public class TrashCan : MonoBehaviour
                 PlaySound(wrongPlaceClip);
                 ShowDialog("Wrong place.", other);
             }
-            else if(recyclableCount < 10)
+            else if(recyclableCount < 4)
             {
                 recyclableCount++;
                 Destroy(other.gameObject);
@@ -123,7 +125,12 @@ public class TrashCan : MonoBehaviour
                 GameManager.Instance.AddBottles(1);
                 PlaySound(completionClip);
                 ShowDialog("Good job! Now you've collected all needed recycled items.", other);
-            }        
+            }
+            else
+            {
+                                ShowDialog("This bin is full. Use another one to deposit the remaining items.", other);
+
+            }       
         }
 
         if (other.CompareTag("Sapling"))
@@ -143,6 +150,11 @@ public class TrashCan : MonoBehaviour
                 PlaySound(wrongPlaceClip);
                 ShowDialog("Cannot plant tree here.", other);
             }
+        }
+
+        if(other.CompareTag("Spaceship") && GameManager.Instance.currentTrial.trialNumber == 3)
+        {
+            ShowDialog("Hit 'C' to water tree.", other);
         }
     }
 

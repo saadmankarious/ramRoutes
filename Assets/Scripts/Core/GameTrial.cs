@@ -118,12 +118,12 @@ public class GameTrial
 public string GetProgressReport() => string.Join("\n", 
     new[] {
         trialObjective + "..\n",
-        "Progress:",
-        targetCoins > 0 ? $"- Coins: {_currentCoins}/{targetCoins}" : null,
-        targetTreesPlanted > 0 ? $"- Trees: {_currentTreesPlanted}/{targetTreesPlanted}" : null,
-        targetTreesWatered > 0 ? $"- Trees Watered: {_currentTreesWatered}/{targetTreesWatered}" : null,
-        targetTrash > 0 ? $"- Trash: {_currentTrash}/{targetTrash}" : null,
-        targetRecycling > 0 ? $"- Recycling: {_currentRecycling}/{targetRecycling}" : null
+        // "Progress:",
+        // targetCoins > 0 ? $"- Coins: {_currentCoins}/{targetCoins}" : null,
+        // targetTreesPlanted > 0 ? $"- Trees: {_currentTreesPlanted}/{targetTreesPlanted}" : null,
+        // targetTreesWatered > 0 ? $"- Trees Watered: {_currentTreesWatered}/{targetTreesWatered}" : null,
+        // targetTrash > 0 ? $"- Trash: {_currentTrash}/{targetTrash}" : null,
+        // targetRecycling > 0 ? $"- Recycling: {_currentRecycling}/{targetRecycling}" : null
     }.Where(line => line != null)
 );
     #endregion

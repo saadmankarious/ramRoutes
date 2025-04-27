@@ -290,13 +290,18 @@ void TryPickUpTrash()
     }
 }
 
-     void DropTrash()
+void DropTrash()
 {
     if (heldTrash != null)
     {
-        Vector2 dropOffset = new Vector2(0, 1.0f);
+        // Determine the direction the player is facing
+        float direction = transform.localScale.x; // Positive for right, negative for left
+
+        // Set the drop offset based on the direction
+        Vector2 dropOffset = new Vector2(direction * .6f, 1.0f); // Adjust X offset based on direction
         Vector2 dropPosition = (Vector2)transform.position + dropOffset;
 
+        // Set the dropped trash item position and enable its collider
         heldTrash.transform.position = dropPosition;
         heldTrash.GetComponent<Collider2D>().enabled = true;
 
@@ -310,9 +315,11 @@ void TryPickUpTrash()
             Debug.LogWarning("UIManager instance not found when trying to clear held item text");
         }
 
+        // Nullify held trash
         heldTrash = null;
     }
 }
+
 
         void UpdateJumpState()
         {

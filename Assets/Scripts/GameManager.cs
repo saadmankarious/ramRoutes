@@ -27,11 +27,11 @@ public class GameManager : MonoBehaviour
         allTrials.Add(new GameTrial()
         {
             trialName = "Trial 1: Sorting Trash",
-            trialObjective = "Collect and deposit 20 litter items using 'C'. ",
+            trialObjective = "Collect and deposit 20 litter items using 'C' key. Navigate to the right to find more CEOs.",
             trialNumber = 1,
             timeLimit = 330f,
-            targetTrash = 1,
-            targetRecycling = 1
+            targetTrash = 10,
+            targetRecycling = 10
         });
 
         allTrials.Add(new GameTrial()
@@ -40,7 +40,7 @@ public class GameManager : MonoBehaviour
             trialObjective = "Interact with buidlings using 'V' to get saplings to plant.",
             trialNumber = 2,
             timeLimit = 360f,
-            targetTreesPlanted = 1
+            targetTreesPlanted = 4
         });
         allTrials.Add(new GameTrial()
         {
@@ -48,7 +48,7 @@ public class GameManager : MonoBehaviour
             trialObjective = "Call spaceship using 'E' to find Earth/Gaia. Use the eagle by Gaia to water the trees you planted",
             trialNumber = 3,
             timeLimit = 240f,
-            targetTreesWatered = 1
+            targetTreesWatered = 4
         });
 
         allTrials.Add(new GameTrial()
