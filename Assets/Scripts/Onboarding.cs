@@ -6,61 +6,29 @@ using UnityEngine.SceneManagement;
 public class OnboardingManager : MonoBehaviour
 {
     public GameObject[] panels;
-    public AudioSource backgroundMusic;
-    public AudioSource tickSound;
-    public float narrationSpeed = 1.0f;
+
+    // Audio
+    public AudioSource narrationAudioSource;
+    public AudioClip narrationClip;
+    public AudioSource sfxAudioSource;
+    public AudioClip tickClip;
+
+    // Settings
+    public float narrationTypingSpeed = 1.0f;
+    public float narrationVolume = 1.0f;
+    public float typingSoundInterval = 0.05f;
+
+    private float lastTypingSoundTime = 0f;
 
     private int currentPanelIndex = 0;
     public Button advanceButton;
-    public Button playButton; // ✅ Added play button reference
+    public Button playButton;
 
     private Text[] panelTexts;
     private Coroutine[] narrationCoroutines;
 
     private bool isPaused = false;
     public GameObject gamePauseMenu;
-
-    // Call this to toggle pause menu
-    public void TogglePauseMenu()
-    {
-        if (isPaused)
-        {
-            ResumeGame();
-        }
-        else
-        {
-            PauseGame();
-        }
-    }
-
-    // Pauses the game and shows the menu
-    public void PauseGame()
-    {
-        Time.timeScale = 0f; // Stop the game
-        gamePauseMenu.SetActive(true);
-        isPaused = true;
-    }
-
-    // Resumes the game and hides the menu
-    public void ResumeGame()
-    {
-        Time.timeScale = 1f; // Resume the game
-        gamePauseMenu.SetActive(false);
-        isPaused = false;
-    }
-
-    // Hides the pause menu, resumes game if needed
-    public void hidePauseMenu()
-    {
-        ResumeGame();
-    }
-
-    // Exits to the landing scene, also resumes time
-    public void exitPlay()
-    {
-        Time.timeScale = 1f; // Just in case it was paused
-        SceneManager.LoadScene("Landing");
-    }
 
     private void Start()
     {
@@ -75,19 +43,20 @@ public class OnboardingManager : MonoBehaviour
         ShowPanel(currentPanelIndex);
 
         if (advanceButton != null)
-        {
             advanceButton.onClick.AddListener(AdvanceToNextPanel);
-        }
 
         if (playButton != null)
         {
-            playButton.gameObject.SetActive(false); // ✅ Hide Play button at start
-            playButton.onClick.AddListener(StartGame); // ✅ Assign click event
+            playButton.gameObject.SetActive(false);
+            playButton.onClick.AddListener(StartGame);
         }
 
-        if (backgroundMusic != null)
+        if (narrationAudioSource != null && narrationClip != null)
         {
-            backgroundMusic.Play();
+            narrationAudioSource.clip = narrationClip;
+            narrationAudioSource.volume = narrationVolume;
+            narrationAudioSource.loop = true;
+            narrationAudioSource.Play();
         }
     }
 
@@ -101,6 +70,7 @@ public class OnboardingManager : MonoBehaviour
 
     private void ShowPanel(int index)
     {
+        // Hide all panels first
         foreach (var panel in panels)
         {
             panel.SetActive(false);
@@ -108,19 +78,21 @@ public class OnboardingManager : MonoBehaviour
 
         if (index >= 0 && index < panels.Length)
         {
+            // Show the current panel
             panels[index].SetActive(true);
 
+            // Stop any previously running narration coroutine
             if (narrationCoroutines[index] != null)
             {
                 StopCoroutine(narrationCoroutines[index]);
             }
 
+            // Start the narration coroutine for the current panel
             if (panelTexts[index] != null)
             {
                 narrationCoroutines[index] = StartCoroutine(NarrateText(panelTexts[index]));
             }
 
-            // ✅ Show play button only on the last panel
             if (playButton != null)
             {
                 playButton.gameObject.SetActive(index == panels.Length - 1);
@@ -133,38 +105,99 @@ public class OnboardingManager : MonoBehaviour
         string fullText = textComponent.text;
         textComponent.text = "";
 
+        lastTypingSoundTime = Time.time;
+
         foreach (char c in fullText)
         {
             textComponent.text += c;
-            if (tickSound != null)
+
+            // Play tick sound based on interval
+            if (sfxAudioSource != null && tickClip != null)
             {
-                tickSound.Play();
+                if (Time.time - lastTypingSoundTime >= typingSoundInterval)
+                {
+                    sfxAudioSource.PlayOneShot(tickClip);
+                    lastTypingSoundTime = Time.time;
+                }
             }
-            yield return new WaitForSeconds(0.1f / narrationSpeed);
+
+            yield return new WaitForSeconds(0.1f / narrationTypingSpeed);
         }
     }
 
     private void AdvanceToNextPanel()
     {
+        // Stop any previous tick sounds if switching panels quickly
+        if (sfxAudioSource.isPlaying)
+        {
+            sfxAudioSource.Stop();
+        }
+
         currentPanelIndex++;
 
+        // Circular behavior: if past the last panel, loop back to the first
         if (currentPanelIndex >= panels.Length)
         {
-            currentPanelIndex = panels.Length - 1; // Don't wrap around
+            currentPanelIndex = 0;
         }
 
         ShowPanel(currentPanelIndex);
     }
 
-    public void SetNarrationSpeed(float speed)
+    public void SetNarrationVolume(float volume)
     {
-        narrationSpeed = speed;
+        narrationVolume = volume;
+        if (narrationAudioSource != null)
+        {
+            narrationAudioSource.volume = volume;
+        }
     }
 
-    // ✅ Load the LevelFall scene
+    public void SetNarrationTypingSpeed(float speed)
+    {
+        narrationTypingSpeed = speed;
+    }
+
+    public void TogglePauseMenu()
+    {
+        if (isPaused)
+        {
+            ResumeGame();
+        }
+        else
+        {
+            PauseGame();
+        }
+    }
+
+    public void PauseGame()
+    {
+        Time.timeScale = 0f;
+        gamePauseMenu.SetActive(true);
+        isPaused = true;
+    }
+
+    public void ResumeGame()
+    {
+        Time.timeScale = 1f;
+        gamePauseMenu.SetActive(false);
+        isPaused = false;
+    }
+
+    public void hidePauseMenu()
+    {
+        ResumeGame();
+    }
+
+    public void exitPlay()
+    {
+        Time.timeScale = 1f;
+        SceneManager.LoadScene("Landing");
+    }
+
     public void StartGame()
     {
-        Time.timeScale = 1f; // Just in case it was paused
+        Time.timeScale = 1f;
         SceneManager.LoadScene("LevelFall");
     }
 }

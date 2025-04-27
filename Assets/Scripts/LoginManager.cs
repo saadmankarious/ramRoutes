@@ -1,4 +1,3 @@
-using Firebase.Auth;
 using UnityEngine;
 using UnityEngine.UI;
 using Firebase.Firestore;
@@ -37,12 +36,12 @@ public class LoginManager : MonoBehaviour
         var layoutGroup = attemptsContentParent.GetComponent<VerticalLayoutGroup>();
         if (layoutGroup == null)
         {
-            layoutGroup = attemptsContentParent.gameObject.AddComponent<VerticalLayoutGroup>();
-            layoutGroup.padding = new RectOffset(20, 20, 10, 10);
-            layoutGroup.spacing = 15f;
-            layoutGroup.childAlignment = TextAnchor.MiddleCenter;
-            layoutGroup.childControlWidth = true;
-            layoutGroup.childControlHeight = false;
+            // layoutGroup = attemptsContentParent.gameObject.AddComponent<VerticalLayoutGroup>();
+            // layoutGroup.padding = new RectOffset(20, 20, 10, 10);
+            // layoutGroup.spacing = 15f;
+            // layoutGroup.childAlignment = TextAnchor.MiddleCenter;
+            // layoutGroup.childControlWidth = true;
+            // layoutGroup.childControlHeight = false;
         }
 
         var sizeFitter = attemptsContentParent.GetComponent<ContentSizeFitter>();
@@ -63,7 +62,7 @@ public class LoginManager : MonoBehaviour
     {
         try
         {
-            List<GameAttempt> attempts = await FirestoreUtility.GetGameAttempts();
+            List<GamePlay> attempts = await FirestoreUtility.GetGameCompletions();
             DisplayAttempts(attempts);
         }
         catch (System.Exception e)
@@ -72,38 +71,51 @@ public class LoginManager : MonoBehaviour
         }
     }
 
-    private void DisplayAttempts(List<GameAttempt> attempts)
+ private void DisplayAttempts(List<GamePlay> attempts)
+{
+    // Clear existing items
+    foreach (Transform child in attemptsContentParent)
     {
-        // Clear existing items
-        foreach (Transform child in attemptsContentParent)
-        {
-            Destroy(child.gameObject);
-        }
-
-        // Show newest first and limit count
-        int displayCount = Mathf.Min(attempts.Count, maxAttemptsToShow);
-        for (int i = displayCount - 1; i >= 0; i--)
-        {
-            GameAttempt attempt = attempts[i];
-            GameObject attemptItem = Instantiate(attemptTextPrefab, attemptsContentParent);
-            
-            // Configure item layout
-            RectTransform itemRect = attemptItem.GetComponent<RectTransform>();
-            itemRect.pivot = new Vector2(0.5f, 0.5f);
-            itemRect.anchorMin = new Vector2(0.5f, 0.5f);
-            itemRect.anchorMax = new Vector2(0.5f, 0.5f);
-            
-            Text attemptText = attemptItem.GetComponent<Text>();
-            string formattedDate = attempt.Date.ToDateTime().ToString("MMM dd, HH:mm");
-            attemptText.text = $"{attempt.PlayerName} - {formattedDate}";
-            attemptText.alignment = TextAnchor.MiddleCenter;
-        }
-
-        // Force layout update
-        LayoutRebuilder.ForceRebuildLayoutImmediate(attemptsContentParent as RectTransform);
-        Canvas.ForceUpdateCanvases();
-        attemptsScrollView.verticalNormalizedPosition = 1f;
+        Destroy(child.gameObject);
     }
+
+    // Define achievement colors
+    Color[] achievementColors = new Color[4]
+    {
+        new Color(0.8f, 0.8f, 0.8f),    // Gray - Trial 1 (Basic)
+        new Color(0.2f, 0.8f, 0.2f),    // Green - Trial 2 (Good)
+        new Color(0.2f, 0.5f, 0.8f),    // Blue - Trial 3 (Great)
+        new Color(0.9f, 0.7f, 0.1f)     // Gold - Trial 4 (Excellent)
+    };
+
+    // Show newest first and limit count
+    int displayCount = Mathf.Min(attempts.Count, maxAttemptsToShow);
+    for (int i = displayCount - 1; i >= 0; i--)
+    {
+        GamePlay attempt = attempts[i];
+        GameObject attemptItem = Instantiate(attemptTextPrefab, attemptsContentParent);
+        
+        // Configure item layout
+        RectTransform itemRect = attemptItem.GetComponent<RectTransform>();
+        itemRect.pivot = new Vector2(0.5f, 0.5f);
+        itemRect.anchorMin = new Vector2(0.5f, 0.5f);
+        itemRect.anchorMax = new Vector2(0.5f, 0.5f);
+        
+        Text attemptText = attemptItem.GetComponent<Text>();
+        string formattedDate = attempt.DateCompleted.ToDateTime().ToString("MMM dd, HH:mm");
+        attemptText.text = $"{attempt.PlayerName} - Trial {attempt.TrialNumber}";
+        attemptText.alignment = TextAnchor.MiddleCenter;
+        
+        // Set color based on trial number (clamped between 1-4)
+        int colorIndex = Mathf.Clamp(attempt.TrialNumber, 1, 4) - 1;
+        attemptText.color = achievementColors[colorIndex];
+    }
+
+    // Force layout update
+    LayoutRebuilder.ForceRebuildLayoutImmediate(attemptsContentParent as RectTransform);
+    Canvas.ForceUpdateCanvases();
+    attemptsScrollView.verticalNormalizedPosition = 1f;
+}
 
     public async void Play()
     {
@@ -122,15 +134,6 @@ public class LoginManager : MonoBehaviour
         }
     }
 
-    public void LogoutUser()
-    {
-        FirebaseAuth.DefaultInstance.SignOut();
-        loginPanel.SetActive(true);
-        welcomePanel.SetActive(false);
-        emailInput.text = "";
-        passwordInput.text = "";
-        statusText.text = "User logged out.";
-    }
 
     private void Update()
     {

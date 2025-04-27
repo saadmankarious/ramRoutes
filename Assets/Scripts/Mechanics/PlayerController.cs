@@ -227,7 +227,11 @@ void Update()
 
         // Jump handling (unchanged)
         if (jumpState == JumpState.Grounded && (Input.GetButtonDown("Jump") || jump))
-            jumpState = JumpState.PrepareToJump;
+        {
+                        jumpState = JumpState.PrepareToJump;
+                        Debug.Log("jumping rn");
+
+        }
         else if (Input.GetButtonUp("Jump"))
         {
             stopJump = true;

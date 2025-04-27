@@ -69,7 +69,12 @@ public class BuildingInteraction : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             isPlayerInRange = true;
-           
+            if(!isPlanet && GameManager.Instance.currentTrial.trialNumber ==2)
+            {
+             ShowDialog("Hit V to interact");
+
+            }
+
         } 
             if(other.CompareTag("Spaceship"))
             {
