@@ -82366,6 +82366,7 @@ MonoBehaviour:
   name: Golden Eagle
   panel: {fileID: 1985457267}
   text: {fileID: 349864007}
+  replacementPrefab: {fileID: 0}
 --- !u!95 &1439511875
 Animator:
   serializedVersion: 5
@@ -89962,6 +89963,7 @@ MonoBehaviour:
   name: Pluto's Box
   panel: {fileID: 0}
   text: {fileID: 0}
+  replacementPrefab: {fileID: 0}
 --- !u!95 &1584488689
 Animator:
   serializedVersion: 5
@@ -121251,6 +121253,74 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 0}
   m_SourcePrefab: {fileID: 100100000, guid: fac82498eb80445ad9157b1d47709b4d, type: 3}
+--- !u!1001 &7574839680739547660
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 1164713608758375616, guid: 30eeb579b9a5e408aa5343583dc7a569,
+        type: 3}
+      propertyPath: m_Name
+      value: Violet_5
+      objectReference: {fileID: 0}
+    - target: {fileID: 2553687643847047417, guid: 30eeb579b9a5e408aa5343583dc7a569,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -2.813
+      objectReference: {fileID: 0}
+    - target: {fileID: 2553687643847047417, guid: 30eeb579b9a5e408aa5343583dc7a569,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.917
+      objectReference: {fileID: 0}
+    - target: {fileID: 2553687643847047417, guid: 30eeb579b9a5e408aa5343583dc7a569,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2553687643847047417, guid: 30eeb579b9a5e408aa5343583dc7a569,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2553687643847047417, guid: 30eeb579b9a5e408aa5343583dc7a569,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2553687643847047417, guid: 30eeb579b9a5e408aa5343583dc7a569,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2553687643847047417, guid: 30eeb579b9a5e408aa5343583dc7a569,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2553687643847047417, guid: 30eeb579b9a5e408aa5343583dc7a569,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2553687643847047417, guid: 30eeb579b9a5e408aa5343583dc7a569,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2553687643847047417, guid: 30eeb579b9a5e408aa5343583dc7a569,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 30eeb579b9a5e408aa5343583dc7a569, type: 3}
 --- !u!1001 &7755507617227728354
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -121337,3 +121407,4 @@ SceneRoots:
   - {fileID: 2008946232}
   - {fileID: 206105138}
   - {fileID: 387648059}
+  - {fileID: 7574839680739547660}
