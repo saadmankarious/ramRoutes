@@ -78,6 +78,8 @@ public class BuildingInteraction : MonoBehaviour
         } 
             if(other.CompareTag("Spaceship"))
             {
+                            isPlayerInRange = true;
+
                 dialogPanel.SetActive(true);
                 ShowDialog(dialogLines[0]);
 

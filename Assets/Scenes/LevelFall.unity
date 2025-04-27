@@ -10054,90 +10054,6 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 902974913}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &191937800
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 191937801}
-  - component: {fileID: 191937802}
-  m_Layer: 0
-  m_Name: background (1)
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &191937801
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 191937800}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -114.8, y: 7.3266, z: 0}
-  m_LocalScale: {x: 1, y: 1.640625, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1377441407}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!212 &191937802
-SpriteRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 191937800}
-  m_Enabled: 1
-  m_CastShadows: 0
-  m_ReceiveShadows: 0
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 0
-  m_RayTraceProcedural: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 0
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: -1
-  m_Sprite: {fileID: 21300000, guid: 0e756047883174d6aa57ab8e6eccc43d, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_FlipX: 0
-  m_FlipY: 0
-  m_DrawMode: 0
-  m_Size: {x: 93.772896, y: 37.5}
-  m_AdaptiveModeThreshold: 0.5
-  m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
-  m_SpriteSortPoint: 0
 --- !u!1001 &192808303
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -13244,7 +13160,7 @@ Transform:
   m_GameObject: {fileID: 256133113}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 146.4, y: -3.9, z: -0.48859674}
+  m_LocalPosition: {x: 111.7, y: -3.2, z: -0.48859674}
   m_LocalScale: {x: 0.42630267, y: 0.8366192, z: 0.836619}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -14145,8 +14061,8 @@ Transform:
   m_GameObject: {fileID: 278783728}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 83.76, y: -4.3, z: -2.7501276}
-  m_LocalScale: {x: 2.2816, y: 2.2816, z: 2.2816}
+  m_LocalPosition: {x: 84.7, y: 12.7, z: -2.7501276}
+  m_LocalScale: {x: 0.6805215, y: 0.6805215, z: 0.6805215}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1187746829}
@@ -16606,7 +16522,7 @@ MonoBehaviour:
   dialogText: {fileID: 349864007}
   dialogLines:
   - Neptune
-  interactKey: 101
+  interactKey: 118
   saplingPrefab: {fileID: 0}
   rewardSound: {fileID: 0}
   isPlanet: 1
@@ -17557,8 +17473,14 @@ MonoBehaviour:
   dialogPanel: {fileID: 1985457267}
   dialogText: {fileID: 349864007}
   dialogLines:
-  - Mars
-  interactKey: 101
+  - 'Mars is the Roman God of war. '
+  - 'Mars is a planet of superlatives: it has the highest mountain - 15 miles high,
+    and the longest valley - 3,000 miles long, of any planet in our Solar System.
+    Yet Mars is only half the size of Earth. '
+  - 'Global dust storms occasionally rage for months on Mars. '
+  - "How big would The Sun look like from Mars? Find Mars\u2019 plaque in real life
+    to find out! "
+  interactKey: 118
   saplingPrefab: {fileID: 0}
   rewardSound: {fileID: 0}
   isPlanet: 1
@@ -17624,8 +17546,8 @@ Transform:
   m_GameObject: {fileID: 349556571}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 68.1, y: 14.8, z: 0.58401334}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 90.55, y: 13.33, z: 0.58401334}
+  m_LocalScale: {x: 0.46967, y: 0.46967, z: 0.46967}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 790228369}
@@ -18210,7 +18132,7 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -0.64490795, y: -1.2444525}
+  m_Offset: {x: -0.01645279, y: 1.3591661}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -18221,7 +18143,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 23.818048, y: 19.807993}
+  m_Size: {x: 16.096977, y: 14.600756}
   m_EdgeRadius: 0
 --- !u!114 &357924231
 MonoBehaviour:
@@ -18239,7 +18161,7 @@ MonoBehaviour:
   dialogText: {fileID: 349864007}
   dialogLines:
   - Saturn
-  interactKey: 101
+  interactKey: 118
   saplingPrefab: {fileID: 0}
   rewardSound: {fileID: 0}
   isPlanet: 1
@@ -19889,7 +19811,21 @@ MonoBehaviour:
   dialogPanel: {fileID: 1985457267}
   dialogText: {fileID: 349864007}
   dialogLines:
-  - This is another cool building!
+  - 'The Platners lived here until 1937. It was then converted into a mortuary until
+    1963 when the house was purchased by Cornell to become the Music Practice House. '
+  - "In a Cornelian article published on D\xEDa de Los Muertos in 2004, a student
+    journalist for the school paper, Marc Myers, wrote an article where he recounts
+    his hunt for ghosts in the beautiful haunted house.  "
+  - "In the early 2020\u2019s, D\xEDa de Los Muertos was annually celebrated by Gente,
+    a club dedicated to the celebration and education of the culture of the Latinx
+    community. "
+  - "Led by their diligent president, Shirley Romero Carreron (\u201925), the club
+    has hosted a face painting event on the Orange Carpet along with a community
+    ofrenda. Students and community members are invited to learn more about D\xEDa
+    de Los Muertos."
+  - 'After the event, the ofrenda is moved to Allee Chapel where students are welcome
+    to celebrate and remember loved ones who have crossed over into the land of the
+    dead in the days following. '
   interactKey: 118
   saplingPrefab: {fileID: 0}
   rewardSound: {fileID: 0}
@@ -22809,8 +22745,8 @@ Transform:
   m_GameObject: {fileID: 435222241}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 114.3, y: -2.57, z: -2.7501276}
-  m_LocalScale: {x: 2.2816, y: 2.2816, z: 2.2816}
+  m_LocalPosition: {x: 131.4, y: 2.5100002, z: -2.7501276}
+  m_LocalScale: {x: 0.84865236, y: 0.84865236, z: 0.84865236}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1187746829}
@@ -24030,7 +23966,21 @@ MonoBehaviour:
   dialogPanel: {fileID: 1985457267}
   dialogText: {fileID: 349864007}
   dialogLines:
-  - This is another cool building!
+  - 'If you crossed the street at the crosswalk by the Scott Alumni Center and went
+    right at the fork in the sidewalk, you would arrive at Old Sem, which is also
+    right across from Cole Library. '
+  - 'If you crossed the street at the crosswalk by the Scott Alumni Center and went
+    right at the fork in the sidewalk, you would arrive at Old Sem, which is also
+    right across from Cole Library. '
+  - "\u201C\u2026the incident on October 17 was not just the take-over of a building
+    on a small college campus; it was, for them, a profoundly human involvement,
+    intended to dramatize the racial problem here at Cornell. "
+  - "Their articulate thought and obvious sincerity made it evident that they wanted
+    to transcend the difficulties caused by their means of protest and get on to
+    the business of dealing with the proposals which they presented to Cornell on
+    confrontation day\u2026"
+  - 'Read the full story and more online in the Community History Archive of Cornell
+    College! '
   interactKey: 118
   saplingPrefab: {fileID: 0}
   rewardSound: {fileID: 0}
@@ -26123,7 +26073,7 @@ Transform:
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -134.69356, y: -19.987803, z: -9.878205}
+  m_LocalPosition: {x: -134.69356, y: -19.538527, z: -9.878205}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -35921,26 +35871,6 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: -11, y: 8, z: 0}
-    second:
-      serializedVersion: 2
-      m_TileIndex: 10
-      m_TileSpriteIndex: 2
-      m_TileMatrixIndex: 0
-      m_TileColorIndex: 10
-      m_TileObjectToInstantiateIndex: 65535
-      dummyAlignment: 0
-      m_AllTileFlags: 1073741825
-  - first: {x: -10, y: 8, z: 0}
-    second:
-      serializedVersion: 2
-      m_TileIndex: 10
-      m_TileSpriteIndex: 2
-      m_TileMatrixIndex: 0
-      m_TileColorIndex: 10
-      m_TileObjectToInstantiateIndex: 65535
-      dummyAlignment: 0
-      m_AllTileFlags: 1073741825
   - first: {x: -140, y: 11, z: 0}
     second:
       serializedVersion: 2
@@ -36541,7 +36471,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 105, y: 13, z: 0}
+  - first: {x: 127, y: 13, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 10
@@ -36551,7 +36481,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 106, y: 13, z: 0}
+  - first: {x: 128, y: 13, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 10
@@ -36561,7 +36491,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 107, y: 13, z: 0}
+  - first: {x: 129, y: 13, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 10
@@ -36571,7 +36501,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 108, y: 13, z: 0}
+  - first: {x: 130, y: 13, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 10
@@ -36581,7 +36511,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 109, y: 13, z: 0}
+  - first: {x: 131, y: 13, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 10
@@ -36591,7 +36521,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 110, y: 13, z: 0}
+  - first: {x: 132, y: 13, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 10
@@ -36601,7 +36531,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 111, y: 13, z: 0}
+  - first: {x: 133, y: 13, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 10
@@ -36611,7 +36541,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 112, y: 13, z: 0}
+  - first: {x: 134, y: 13, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 10
@@ -36621,7 +36551,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 113, y: 13, z: 0}
+  - first: {x: 135, y: 13, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 10
@@ -36671,7 +36601,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 105, y: 14, z: 0}
+  - first: {x: 127, y: 14, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 3
@@ -36681,7 +36611,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 106, y: 14, z: 0}
+  - first: {x: 128, y: 14, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 5
@@ -36691,7 +36621,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 107, y: 14, z: 0}
+  - first: {x: 129, y: 14, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 5
@@ -36701,7 +36631,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 108, y: 14, z: 0}
+  - first: {x: 130, y: 14, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 5
@@ -36711,7 +36641,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 109, y: 14, z: 0}
+  - first: {x: 131, y: 14, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 5
@@ -36721,7 +36651,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 110, y: 14, z: 0}
+  - first: {x: 132, y: 14, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 5
@@ -36731,7 +36661,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 111, y: 14, z: 0}
+  - first: {x: 133, y: 14, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 5
@@ -36741,7 +36671,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 112, y: 14, z: 0}
+  - first: {x: 134, y: 14, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 5
@@ -36751,7 +36681,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 113, y: 14, z: 0}
+  - first: {x: 135, y: 14, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 7
@@ -36761,7 +36691,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 119, y: 14, z: 0}
+  - first: {x: 141, y: 14, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 4
@@ -36771,7 +36701,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 120, y: 14, z: 0}
+  - first: {x: 142, y: 14, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 8
@@ -36781,7 +36711,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 121, y: 14, z: 0}
+  - first: {x: 143, y: 14, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 8
@@ -36791,7 +36721,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 122, y: 14, z: 0}
+  - first: {x: 144, y: 14, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 8
@@ -36801,7 +36731,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 123, y: 14, z: 0}
+  - first: {x: 145, y: 14, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 8
@@ -36811,7 +36741,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 124, y: 14, z: 0}
+  - first: {x: 146, y: 14, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 8
@@ -36821,7 +36751,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 125, y: 14, z: 0}
+  - first: {x: 147, y: 14, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 8
@@ -36831,7 +36761,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 126, y: 14, z: 0}
+  - first: {x: 148, y: 14, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 8
@@ -36841,7 +36771,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 127, y: 14, z: 0}
+  - first: {x: 149, y: 14, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 8
@@ -36851,7 +36781,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 128, y: 14, z: 0}
+  - first: {x: 150, y: 14, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 9
@@ -36961,7 +36891,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 105, y: 15, z: 0}
+  - first: {x: 127, y: 15, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 2
@@ -36971,7 +36901,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 106, y: 15, z: 0}
+  - first: {x: 128, y: 15, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 1
@@ -36981,7 +36911,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 107, y: 15, z: 0}
+  - first: {x: 129, y: 15, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 1
@@ -36991,7 +36921,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 108, y: 15, z: 0}
+  - first: {x: 130, y: 15, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 1
@@ -37001,7 +36931,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 109, y: 15, z: 0}
+  - first: {x: 131, y: 15, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 1
@@ -37011,7 +36941,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 110, y: 15, z: 0}
+  - first: {x: 132, y: 15, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 1
@@ -37021,7 +36951,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 111, y: 15, z: 0}
+  - first: {x: 133, y: 15, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 1
@@ -37031,7 +36961,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 112, y: 15, z: 0}
+  - first: {x: 134, y: 15, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 1
@@ -37041,7 +36971,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 113, y: 15, z: 0}
+  - first: {x: 135, y: 15, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 6
@@ -37051,7 +36981,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 119, y: 15, z: 0}
+  - first: {x: 141, y: 15, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 2
@@ -37061,7 +36991,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 120, y: 15, z: 0}
+  - first: {x: 142, y: 15, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 1
@@ -37071,7 +37001,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 121, y: 15, z: 0}
+  - first: {x: 143, y: 15, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 1
@@ -37081,7 +37011,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 122, y: 15, z: 0}
+  - first: {x: 144, y: 15, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 1
@@ -37091,7 +37021,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 123, y: 15, z: 0}
+  - first: {x: 145, y: 15, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 1
@@ -37101,7 +37031,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 124, y: 15, z: 0}
+  - first: {x: 146, y: 15, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 1
@@ -37111,7 +37041,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 125, y: 15, z: 0}
+  - first: {x: 147, y: 15, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 1
@@ -37121,7 +37051,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 126, y: 15, z: 0}
+  - first: {x: 148, y: 15, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 1
@@ -37131,7 +37061,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 127, y: 15, z: 0}
+  - first: {x: 149, y: 15, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 1
@@ -37141,7 +37071,7 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
-  - first: {x: 128, y: 15, z: 0}
+  - first: {x: 150, y: 15, z: 0}
     second:
       serializedVersion: 2
       m_TileIndex: 6
@@ -37353,14 +37283,14 @@ Tilemap:
     m_Data: {fileID: 11400000, guid: a4019a9093867481f93e5b1261972341, type: 2}
   - m_RefCount: 9
     m_Data: {fileID: 11400000, guid: b1f4d7020e8c547c291221536f7d05f6, type: 2}
-  - m_RefCount: 335
+  - m_RefCount: 333
     m_Data: {fileID: 11400000, guid: c139c52f228174b74877fa45bd56d718, type: 2}
   m_TileSpriteArray:
   - m_RefCount: 0
     m_Data: {fileID: 0}
   - m_RefCount: 52
     m_Data: {fileID: 21300000, guid: bcb8a4a9c8b2f48b09623ed4c12ac1cb, type: 3}
-  - m_RefCount: 335
+  - m_RefCount: 333
     m_Data: {fileID: 21300000, guid: 5bf158a9d9ddf4d5dbf3c446fb6734c8, type: 3}
   - m_RefCount: 15
     m_Data: {fileID: 21300000, guid: 0f86c4854b32f4d46b6a05f6bbe57578, type: 3}
@@ -37381,7 +37311,7 @@ Tilemap:
   - m_RefCount: 9
     m_Data: {fileID: 21300000, guid: 47061c0719f2a486f806e945cc1be736, type: 3}
   m_TileMatrixArray:
-  - m_RefCount: 943
+  - m_RefCount: 941
     m_Data:
       e00: 1
       e01: 0
@@ -37438,7 +37368,7 @@ Tilemap:
     m_Data: {r: 0.8516297, g: 0.41704935, b: 0.41856748, a: 1}
   - m_RefCount: 0
     m_Data: {r: 0.83760196, g: 0.53773934, b: 0.57527906, a: 1}
-  - m_RefCount: 943
+  - m_RefCount: 941
     m_Data: {r: 1, g: 1, b: 1, a: 1}
   m_TileObjectToInstantiateArray: []
   m_AnimationFrameRate: 1
@@ -42023,8 +41953,8 @@ Transform:
   m_GameObject: {fileID: 649814739}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -98.9, y: 16.5, z: 0.58401334}
-  m_LocalScale: {x: 0.70832, y: 0.70832, z: 0.70832}
+  m_LocalPosition: {x: -98.975, y: 16.473, z: 0.58401334}
+  m_LocalScale: {x: 0.53927946, y: 0.53927946, z: 0.53927946}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 790228369}
@@ -42090,7 +42020,7 @@ MonoBehaviour:
   dialogText: {fileID: 349864007}
   dialogLines:
   - Uranus
-  interactKey: 101
+  interactKey: 118
   saplingPrefab: {fileID: 0}
   rewardSound: {fileID: 0}
   isPlanet: 1
@@ -43058,8 +42988,8 @@ Transform:
   m_GameObject: {fileID: 671227344}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.22031, z: 0}
-  m_LocalScale: {x: 1, y: 1.640625, z: 1}
+  m_LocalPosition: {x: -17.4, y: -0.22031, z: 0}
+  m_LocalScale: {x: 1.2375001, y: 1.640625, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1377441407}
@@ -44779,7 +44709,7 @@ MonoBehaviour:
   dialogText: {fileID: 349864007}
   dialogLines:
   - Gaia. Also known as Earth.
-  interactKey: 101
+  interactKey: 118
   saplingPrefab: {fileID: 0}
   rewardSound: {fileID: 0}
   isPlanet: 1
@@ -44845,7 +44775,7 @@ Transform:
   m_GameObject: {fileID: 710990157}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 87.49, y: 13.95, z: 0.58401334}
+  m_LocalPosition: {x: 109.2, y: 13.95, z: 0.58401334}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -49392,8 +49322,8 @@ Transform:
   m_GameObject: {fileID: 802712140}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 127, y: -3.4899998, z: -2.7501276}
-  m_LocalScale: {x: 2.2816, y: 2.2816, z: 2.2816}
+  m_LocalPosition: {x: 127.68, y: 3.0300002, z: -2.7501276}
+  m_LocalScale: {x: 0.90365666, y: 0.90365666, z: 0.90365666}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1187746829}
@@ -50249,8 +50179,8 @@ Transform:
   m_GameObject: {fileID: 813936798}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 100.04, y: -4.27, z: -2.7501276}
-  m_LocalScale: {x: 2.2816, y: 2.2816, z: 2.2816}
+  m_LocalPosition: {x: 103.6, y: 7.05, z: -2.7501276}
+  m_LocalScale: {x: 0.6714633, y: 0.6714633, z: 0.6714633}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1187746829}
@@ -52111,7 +52041,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4520396350849616, guid: 7d60c822c3f1b408ea7a00ecdb5e047a, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.94
+      value: 1.25
       objectReference: {fileID: 0}
     - target: {fileID: 4520396350849616, guid: 7d60c822c3f1b408ea7a00ecdb5e047a, type: 3}
       propertyPath: m_LocalPosition.z
@@ -53241,6 +53171,90 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5293bf48903824695a56cc59f47b766a, type: 3}
+--- !u!1 &852710796
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 852710797}
+  - component: {fileID: 852710798}
+  m_Layer: 0
+  m_Name: pharmacy (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &852710797
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 852710796}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 120.4, y: 4.33, z: -2.7501276}
+  m_LocalScale: {x: 0.6640522, y: 0.6640522, z: 0.6640522}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1187746829}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!212 &852710798
+SpriteRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 852710796}
+  m_Enabled: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 0
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_Sprite: {fileID: 21300000, guid: 4bc45983b67f744f787af67fd9c2abcc, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_FlipX: 0
+  m_FlipY: 0
+  m_DrawMode: 0
+  m_Size: {x: 1, y: 1}
+  m_AdaptiveModeThreshold: 0.5
+  m_SpriteTileMode: 0
+  m_WasSpriteAssigned: 1
+  m_MaskInteraction: 0
+  m_SpriteSortPoint: 0
 --- !u!1 &853646920
 GameObject:
   m_ObjectHideFlags: 0
@@ -55040,7 +55054,17 @@ MonoBehaviour:
   dialogText: {fileID: 349864007}
   dialogLines:
   - Jupiter
-  interactKey: 101
+  - 'Chief Roman God, '
+  - 'God of light, sky and weather. '
+  - 'There are at least 95 moons orbiting Jupiter, and astronomers keep finding more. '
+  - 'Some rotate opposite from others! '
+  - 'Jupiter contains two thirds of the matter of all the planets in our Solar System. '
+  - 'It is the largest planet and first of the Gas Giants. '
+  - 'The Great Red Spot is a storm created from a strong heat source bubbling up
+    gases from below. '
+  - "How many Earths could you fit in the width of this storm? Find Jupiter\u2019s
+    plaque in real life to find out! "
+  interactKey: 118
   saplingPrefab: {fileID: 0}
   rewardSound: {fileID: 0}
   isPlanet: 1
@@ -61255,8 +61279,8 @@ Transform:
   m_GameObject: {fileID: 1020123879}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -153.3, y: 14.8, z: 0.58401334}
-  m_LocalScale: {x: 0.77019, y: 0.77019, z: 0.77019}
+  m_LocalPosition: {x: -153.4, y: 12.1, z: 0.58401334}
+  m_LocalScale: {x: 0.39226288, y: 0.39226288, z: 0.39226288}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 790228369}
@@ -61293,7 +61317,7 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 1.2493694, y: -0.36190987}
+  m_Offset: {x: -2.018633, y: -2.5119133}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -61304,7 +61328,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 17.176746, y: 21.071087}
+  m_Size: {x: 35.40873, y: 31.2191}
   m_EdgeRadius: 0
 --- !u!114 &1020123882
 MonoBehaviour:
@@ -61322,7 +61346,23 @@ MonoBehaviour:
   dialogText: {fileID: 349864007}
   dialogLines:
   - Pluto
-  interactKey: 101
+  - 'God of the underworld. '
+  - 'Standing on Pluto at high noon, our Sun would appear to be a bright star in
+    the dark sky. '
+  - "Pluto used to be considered a planet but it was a topic of heated debate. Pluto\u2019s
+    status is now Minor Planet. "
+  - "Pluto used to be considered a planet but it was a topic of heated debate. Pluto\u2019s
+    status is now Minor Planet. "
+  - 'There are 5 minor planets in our Solar System: Pluto (with the largest diameter
+    of 1,476.8 miles), Eris, Haumea, Makemake, and little Ceres (with the smallest
+    diameter of 587.82 miles). '
+  - 'There are 5 minor planets in our Solar System: Pluto (with the largest diameter
+    of 1,476.8 miles), Eris, Haumea, Makemake, and little Ceres (with the smallest
+    diameter of 587.82 miles). '
+  - "How much farther would you have to travel to reach the next star, Proxima Centauri
+    (a tiny red dwarf star), in our Solar System from Pluto? Find Pluto\u2019s plaque
+    in real life to find out! "
+  interactKey: 118
   saplingPrefab: {fileID: 0}
   rewardSound: {fileID: 0}
   isPlanet: 1
@@ -68970,10 +69010,12 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1626263762}
+  - {fileID: 852710797}
   - {fileID: 802712142}
   - {fileID: 813936800}
   - {fileID: 435222243}
   - {fileID: 278783730}
+  - {fileID: 1696052759}
   - {fileID: 211162574}
   - {fileID: 1878086076}
   - {fileID: 250790943}
@@ -69827,7 +69869,18 @@ MonoBehaviour:
   dialogText: {fileID: 349864007}
   dialogLines:
   - Venus
-  interactKey: 101
+  - 'Venus is the Roman Goddess of love and beauty. '
+  - 'On Venus, The Sun rises in the west and sets in the east because its rotation
+    is opposite that of Earth. '
+  - 'At 467 degrees Celsius, the surface of Venus is hot enough to melt lead The
+    atmospheric pressure on Venus is approximately equal to that of water on Earth
+    at a depth of 914.4 meters. '
+  - 'Wind speeds on Venus often approach 370.149 kilometers per hour. '
+  - 'Wind speeds on Venus often approach 370.149 kilometers per hour. '
+  - 'Venus has no moons. '
+  - "How many earth days is one \u2018day\u2019 (planetary revolution) on Venus?
+    Find Venus\u2019s plaque in real life to find out! "
+  interactKey: 118
   saplingPrefab: {fileID: 0}
   rewardSound: {fileID: 0}
   isPlanet: 1
@@ -69893,7 +69946,7 @@ Transform:
   m_GameObject: {fileID: 1199272889}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 102.1, y: 12.65, z: 0.58401334}
+  m_LocalPosition: {x: 123.81, y: 12.65, z: 0.58401334}
   m_LocalScale: {x: 1.8439544, y: 1.8439544, z: 1.8439544}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -74253,8 +74306,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 55, y: 0.5}
-  m_SizeDelta: {x: 627.7003, y: 65}
+  m_AnchoredPosition: {x: 85.75493, y: 0.5}
+  m_SizeDelta: {x: 792.8495, y: 65}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!4 &1293114593 stripped
 Transform:
@@ -77617,7 +77670,7 @@ Transform:
   m_GameObject: {fileID: 1373257740}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -65.3, y: 5.9, z: -0.30289575}
+  m_LocalPosition: {x: -84.3, y: 3.5, z: -0.30289575}
   m_LocalScale: {x: 0.5186452, y: 0.5186453, z: 0.51864535}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -77892,7 +77945,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1548132959}
-  - {fileID: 191937801}
   - {fileID: 671227345}
   m_Father: {fileID: 1082779267}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -80983,7 +81035,7 @@ MonoBehaviour:
   dialogText: {fileID: 349864007}
   dialogLines:
   - Mercury
-  interactKey: 101
+  interactKey: 118
   saplingPrefab: {fileID: 0}
   rewardSound: {fileID: 0}
   isPlanet: 1
@@ -81049,7 +81101,7 @@ Transform:
   m_GameObject: {fileID: 1430952309}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 113.3, y: 12.4, z: 0.58401334}
+  m_LocalPosition: {x: 135.01001, y: 12.4, z: 0.58401334}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -81560,7 +81612,7 @@ Transform:
   m_GameObject: {fileID: 1439511872}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -37.59, y: -0, z: 0}
+  m_LocalPosition: {x: -17.42, y: -0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -89171,7 +89223,7 @@ Transform:
   m_GameObject: {fileID: 1584488685}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 241.19, y: 10.53, z: 1.2646567}
+  m_LocalPosition: {x: 262.32, y: 10.53, z: 1.2646567}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -90913,8 +90965,13 @@ MonoBehaviour:
   dialogPanel: {fileID: 1985457267}
   dialogText: {fileID: 349864007}
   dialogLines:
-  - Stoner house is house of international students.
-  - Stop by to experience some global food and culture.
+  - 'Stoner House is home to the InterCultural Life office, an organization on campus
+    that helps students from all walks of life connect with the community. '
+  - "Many groups at Cornell host events here\u2026 "
+  - "the annual BACO (Black Awareness Cultural Organization) Kick-Off Cook Out at
+    the beginning of the year includes fun yard games and a barbecue\u2026 "
+  - "ISA (International Student Association) hosts heart-warming potlucks around
+    the holidays when the weather outside is cold enough to knock your socks off\u2026 "
   interactKey: 118
   saplingPrefab: {fileID: 5638119740413968204, guid: b77002f8471b9456f8d0c3515e50e22c,
     type: 3}
@@ -92852,8 +92909,8 @@ Transform:
   m_GameObject: {fileID: 1626263760}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 138.3, y: -1.79, z: -2.7501276}
-  m_LocalScale: {x: 2.2816, y: 2.2816, z: 2.2816}
+  m_LocalPosition: {x: 124.19, y: 3.67, z: -2.7501276}
+  m_LocalScale: {x: 0.91467243, y: 0.91467243, z: 0.91467243}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1187746829}
@@ -96698,6 +96755,90 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5293bf48903824695a56cc59f47b766a, type: 3}
+--- !u!1 &1696052758
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1696052759}
+  - component: {fileID: 1696052760}
+  m_Layer: 0
+  m_Name: Visitor's house (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1696052759
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1696052758}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 79.5, y: 26.2, z: -2.7501276}
+  m_LocalScale: {x: 1.2447233, y: 1.2447233, z: 1.2447233}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1187746829}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!212 &1696052760
+SpriteRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1696052758}
+  m_Enabled: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 0
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_Sprite: {fileID: 382999044, guid: 942011916075f413e938e8db0af2e3ba, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_FlipX: 0
+  m_FlipY: 0
+  m_DrawMode: 0
+  m_Size: {x: 1, y: 1}
+  m_AdaptiveModeThreshold: 0.5
+  m_SpriteTileMode: 0
+  m_WasSpriteAssigned: 1
+  m_MaskInteraction: 0
+  m_SpriteSortPoint: 0
 --- !u!1001 &1697947673
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -99737,7 +99878,6 @@ GameObject:
   - component: {fileID: 1754240608}
   - component: {fileID: 1754240607}
   - component: {fileID: 1754240609}
-  - component: {fileID: 1754240610}
   - component: {fileID: 1754240611}
   - component: {fileID: 1754240612}
   - component: {fileID: 1754240614}
@@ -99796,18 +99936,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   frameRate: 12
   tokens: []
---- !u!114 &1754240610
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1754240606}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 86f4a4ae3a36547dd915a91ceebed970, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!82 &1754240611
 AudioSource:
   m_ObjectHideFlags: 0
@@ -100440,7 +100568,7 @@ MonoBehaviour:
   dialogText: {fileID: 349864007}
   dialogLines:
   - Planet
-  interactKey: 101
+  interactKey: 118
   saplingPrefab: {fileID: 0}
   rewardSound: {fileID: 0}
   isPlanet: 1
@@ -109107,7 +109235,16 @@ MonoBehaviour:
   dialogText: {fileID: 349864007}
   dialogLines:
   - The Sun!
-  interactKey: 101
+  - 'The luminous celestial body around which the planets revolve. '
+  - 'The Sun contains over 99.9% of the mass of the entire Solar System. '
+  - 'The Sun is currently 4.6 billion years old and is expected to shine for another
+    5 billion years. '
+  - "How long has it taken the particles of light from the Sun to enter your eye
+    today? How long did it take them to escape The Sun\u2019s core? Is it possible
+    to walk at the speed of light? F"
+  - "ind the Sun\u2019s plaque in real life to find out! "
+  - 'Mercury is about 71 meters to the left from here (west). '
+  interactKey: 118
   saplingPrefab: {fileID: 0}
   rewardSound: {fileID: 0}
   isPlanet: 1
@@ -109173,7 +109310,7 @@ Transform:
   m_GameObject: {fileID: 1925814354}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 128.2, y: 18.9, z: 0.58401334}
+  m_LocalPosition: {x: 149.91, y: 18.9, z: 0.58401334}
   m_LocalScale: {x: 0.74741757, y: 0.74741757, z: 0.74741757}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -110105,7 +110242,7 @@ Transform:
   m_GameObject: {fileID: 1946717923}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -134.69356, y: -19.987803, z: -9.878205}
+  m_LocalPosition: {x: -134.69356, y: -19.538527, z: -9.878205}
   m_LocalScale: {x: 1.3353828, y: 2.0979013, z: 1.141715}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -111194,7 +111331,7 @@ Transform:
   m_GameObject: {fileID: 1974186618}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 129.6, y: 3.8, z: -0.062607594}
+  m_LocalPosition: {x: 127.2, y: 3.8, z: -0.062607594}
   m_LocalScale: {x: 0.123651356, y: 0.2986423, z: 0.10720234}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -115106,7 +115243,7 @@ Transform:
   m_GameObject: {fileID: 2053773450}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -26.6, y: -2.9, z: -0.18214913}
+  m_LocalPosition: {x: -38.8, y: -2.7, z: -0.18214913}
   m_LocalScale: {x: 0.31189206, y: 0.31189203, z: 0.31189206}
   m_ConstrainProportionsScale: 0
   m_Children: []
