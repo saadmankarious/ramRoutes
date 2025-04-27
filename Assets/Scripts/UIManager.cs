@@ -425,10 +425,10 @@ private void HideObjectsWithTag(string tag)
         treesPlantedText.text = $"{trial.currentTreesPlanted}/{trial.targetTreesPlanted}";
         treesWateredText.text = $"{trial.currentTreesWatered}/{trial.targetTreesWatered}";
         levelText.text = trial.trialName;
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            TogglePauseMenu();
-        }
+        // if (Input.GetKeyDown(KeyCode.Escape))
+        // {
+        //     TogglePauseMenu();
+        // }
     }
 
     public void ContinueToNextTrial()
