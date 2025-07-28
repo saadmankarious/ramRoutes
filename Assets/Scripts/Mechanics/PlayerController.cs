@@ -51,6 +51,12 @@ namespace Platformer.Mechanics
         private CinemachineConfiner confiner;
         private Collider2D boundary;
 
+        // Mobile input variables
+        private bool mobileLeftPressed = false;
+        private bool mobileRightPressed = false;
+        private bool mobileJumpPressed = false;
+        private bool mobileInteractPressed = false;
+
         protected override void Start()
         {
             confiner = FindObjectOfType<CinemachineVirtualCamera>().GetComponent<CinemachineConfiner>();
@@ -81,7 +87,9 @@ namespace Platformer.Mechanics
 
         protected override void Update()
         {
-            if (Input.GetKeyDown(interactKey))
+            // Handle interaction input (keyboard + mobile)
+            bool interactInput = Input.GetKeyDown(interactKey) || mobileInteractPressed;
+            if (interactInput)
             {
                 if (heldTrash == null)
                 {
@@ -92,10 +100,23 @@ namespace Platformer.Mechanics
                     DropTrash();
                 }
             }
+            // Reset mobile interact input after processing
+            mobileInteractPressed = false;
 
             if (controlEnabled)
             {
-                float inputX =  Input.GetAxis("Horizontal");
+                // Combined input handling (keyboard + mobile)
+                float keyboardInputX = Input.GetAxis("Horizontal");
+                float mobileInputX = 0f;
+                
+                if (mobileLeftPressed)
+                    mobileInputX = -1f;
+                else if (mobileRightPressed)
+                    mobileInputX = 1f;
+                
+                // Use mobile input if pressed, otherwise use keyboard
+                float inputX = (mobileLeftPressed || mobileRightPressed) ? mobileInputX : keyboardInputX;
+                
                 Vector2 movement = new Vector2(inputX * maxSpeed * Time.deltaTime, 0);
                 if (boundary != null)
                 {
@@ -121,8 +142,10 @@ namespace Platformer.Mechanics
                 {
                     move.x = inputX;
                 }
-                // Jump handling - instant jump
-                if (jumpState == JumpState.Grounded && (Input.GetButtonDown("Jump") || jump))
+                
+                // Jump handling - keyboard + mobile input
+                bool jumpInput = Input.GetButtonDown("Jump") || mobileJumpPressed;
+                if (jumpState == JumpState.Grounded && (jumpInput || jump))
                 {
                     jumpState = JumpState.PrepareToJump;
                     Debug.Log("jumping rn");
@@ -133,6 +156,9 @@ namespace Platformer.Mechanics
                 move.x = 0;
             }
 
+            // Reset mobile jump input after processing
+            mobileJumpPressed = false;
+
             // Held trash position
             if (heldTrash != null)
             {
@@ -141,6 +167,37 @@ namespace Platformer.Mechanics
 
             UpdateJumpState();
             base.Update();
+        }
+
+        // Mobile input methods - call these from your UI buttons
+        public void OnMobileLeftPressed()
+        {
+            mobileLeftPressed = true;
+        }
+
+        public void OnMobileLeftReleased()
+        {
+            mobileLeftPressed = false;
+        }
+
+        public void OnMobileRightPressed()
+        {
+            mobileRightPressed = true;
+        }
+
+        public void OnMobileRightReleased()
+        {
+            mobileRightPressed = false;
+        }
+
+        public void OnMobileJumpPressed()
+        {
+            mobileJumpPressed = true;
+        }
+
+        public void OnMobileInteractPressed()
+        {
+            mobileInteractPressed = true;
         }
 
         void TryPickUpTrash()
