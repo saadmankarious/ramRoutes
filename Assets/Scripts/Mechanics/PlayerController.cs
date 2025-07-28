@@ -24,11 +24,7 @@ namespace Platformer.Mechanics
         public AudioClip respawnAudio;
         public AudioClip ouchAudio;
 
-        // Server variables
-        private TcpListener server;
-        private Thread serverThread;
         private bool isRunning = true;
-        public int port = 5005;
 
         // Movement variables
         public float maxSpeed = 7;
@@ -50,9 +46,6 @@ namespace Platformer.Mechanics
         public float pickUpRange = 1.0f;
         public KeyCode interactKey = KeyCode.S;
         private GameObject heldTrash = null;
-        private bool pickupCommandFromServer = false;
-        private bool moveCommandFromServer = false;
-        private float moveDirectionFromServer = 0;
 
         // Camera boundary
         private CinemachineConfiner confiner;
@@ -86,42 +79,9 @@ namespace Platformer.Mechanics
             animator = GetComponent<Animator>();
         }
 
-        void HandleServerInput(string input)
-        {
-            string[] parts = input.Split(':');
-            if (parts.Length == 2)
-            {
-                string command = parts[0].ToUpper();
-                string value = parts[1];
-                switch (command)
-                {
-                    case "MOVE":
-                        if (float.TryParse(value, out float direction))
-                        {
-                            moveDirectionFromServer = direction;
-                            moveCommandFromServer = true;
-                        }
-                        break;
-                    case "JUMP":
-                        jump = true;
-                        break;
-                    case "PICKUP":
-                        pickupCommandFromServer = true;
-                        break;
-                    case "DROP":
-                        DropTrash();
-                        break;
-                    default:
-                        Debug.Log($"Unknown command: {command}");
-                        break;
-                }
-            }
-        }
-
         protected override void Update()
         {
-            // Handle pickup from keyboard or server
-            if (Input.GetKeyDown(interactKey) || pickupCommandFromServer)
+            if (Input.GetKeyDown(interactKey))
             {
                 if (heldTrash == null)
                 {
@@ -131,13 +91,11 @@ namespace Platformer.Mechanics
                 {
                     DropTrash();
                 }
-                pickupCommandFromServer = false;
             }
 
-            // Handle movement from keyboard or server
             if (controlEnabled)
             {
-                float inputX = Input.GetAxis("Horizontal") != 0 ? Input.GetAxis("Horizontal") : moveDirectionFromServer;
+                float inputX =  Input.GetAxis("Horizontal");
                 Vector2 movement = new Vector2(inputX * maxSpeed * Time.deltaTime, 0);
                 if (boundary != null)
                 {
@@ -287,8 +245,6 @@ namespace Platformer.Mechanics
         void OnDestroy()
         {
             isRunning = false;
-            server?.Stop();
-            serverThread?.Abort();
         }
 
         public enum JumpState
