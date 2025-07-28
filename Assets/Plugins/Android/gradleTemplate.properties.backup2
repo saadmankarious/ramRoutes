@@ -1,0 +1,12 @@
+unityStreamingAssets=.unity3d**STREAMING_ASSETS**
+# Fix compileSdk warning
+android.suppressUnsupportedCompileSdk=35
+
+# Enable AndroidX & Jetifier (fixes dependency conflicts)
+android.useAndroidX=true
+android.enableJetifier=true
+
+# Fix duplicate DataStore classes
+android.jetifier.ignorelist=datastore-core-jvm
+distributionUrl=https\://services.gradle.org/distributions/gradle-8.0-bin.zip
+org.gradle.jvmargs=-Xmx4096m

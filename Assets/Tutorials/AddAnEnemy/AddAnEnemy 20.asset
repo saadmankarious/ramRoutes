@@ -60,14 +60,24 @@ MonoBehaviour:
     m_Untranslated: Drag the Prefab into the Scene
   m_Paragraphs:
     m_Items:
-    - m_Type: 7
+    - m_Type: 9
       Title:
         m_Untranslated: 
       Text:
         m_Untranslated: 
+      m_CodeSample: 
+      m_PostInstructionImage: {fileID: 0}
       m_Tutorial: {fileID: 0}
       m_Image: {fileID: 0}
+      m_VideoUrl: 
       m_Video: {fileID: 32900000, guid: 6f0ce9b5d31f44b9cbb3501409e8913f, type: 3}
+      m_Media:
+        m_ContentType: 1
+        m_Image: {fileID: 0}
+        m_VideoClip: {fileID: 32900000, guid: 6f0ce9b5d31f44b9cbb3501409e8913f, type: 3}
+        m_Url: 
+        m_AutoStart: 1
+        m_Loop: 1
       m_CriteriaCompletion: 0
       m_Criteria:
         m_Items: []
@@ -77,6 +87,7 @@ MonoBehaviour:
         - m_SelectorType: 1
           m_ViewType:
             m_TypeName: 
+          m_FocusEditorWindow: 0
           m_EditorWindowType:
             m_TypeName: UnityEditor.ProjectBrowser, UnityEditor.CoreModule, Version=0.0.0.0,
               Culture=neutral, PublicKeyToken=null
@@ -91,6 +102,7 @@ MonoBehaviour:
               m_Text: Enemy
               m_Image: {fileID: 0}
               m_Tooltip: 
+              m_TextWithWhitespace: 
             m_ControlName: 
             m_PropertyPath: 
             m_TargetType:
@@ -113,6 +125,7 @@ MonoBehaviour:
         - m_SelectorType: 1
           m_ViewType:
             m_TypeName: 
+          m_FocusEditorWindow: 0
           m_EditorWindowType:
             m_TypeName: UnityEditor.SceneView, UnityEditor.CoreModule, Version=0.0.0.0,
               Culture=neutral, PublicKeyToken=null
@@ -134,9 +147,19 @@ MonoBehaviour:
           Let\u2019s add a Hoverbot!\n\n<b>Prefabs</b> are templates for GameObjects
           with preset components. \n\nThey're stored as assets that you can simply
           drag into the Scene view."
+      m_CodeSample: 
+      m_PostInstructionImage: {fileID: 0}
       m_Tutorial: {fileID: 0}
       m_Image: {fileID: 0}
+      m_VideoUrl: 
       m_Video: {fileID: 0}
+      m_Media:
+        m_ContentType: 0
+        m_Image: {fileID: 0}
+        m_VideoClip: {fileID: 0}
+        m_Url: 
+        m_AutoStart: 1
+        m_Loop: 1
       m_CriteriaCompletion: 0
       m_Criteria:
         m_Items: []
@@ -157,9 +180,19 @@ MonoBehaviour:
 
           Select
           <b>Next</b> to continue.'
+      m_CodeSample: 
+      m_PostInstructionImage: {fileID: 0}
       m_Tutorial: {fileID: 0}
       m_Image: {fileID: 0}
+      m_VideoUrl: 
       m_Video: {fileID: 0}
+      m_Media:
+        m_ContentType: 0
+        m_Image: {fileID: 0}
+        m_VideoClip: {fileID: 0}
+        m_Url: 
+        m_AutoStart: 1
+        m_Loop: 1
       m_CriteriaCompletion: 0
       m_Criteria:
         m_Items:
@@ -196,6 +229,7 @@ MonoBehaviour:
   DoneButton:
     m_Untranslated: Done
   m_CompletedSound: {fileID: 8300000, guid: 93fbb109633e844259ea828442bda0cb, type: 3}
+  m_FaqEntries: []
   m_AutoAdvance: 0
   Showing:
     m_PersistentCalls:

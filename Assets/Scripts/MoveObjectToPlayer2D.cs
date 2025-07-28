@@ -240,7 +240,7 @@ public class FinalSpaceshipControl : MonoBehaviour
             
             if (spaceshipRb != null)
             {
-                spaceshipRb.velocity = Vector2.zero;
+                spaceshipRb.linearVelocity = Vector2.zero;
             }
         }
     }
@@ -259,11 +259,11 @@ public class FinalSpaceshipControl : MonoBehaviour
             nextPosition.y > bounds.min.y + boundaryPadding && 
             nextPosition.y < bounds.max.y - boundaryPadding)
         {
-            spaceshipRb.velocity = velocity;
+            spaceshipRb.linearVelocity = velocity;
         }
         else
         {
-            spaceshipRb.velocity = Vector2.zero;
+            spaceshipRb.linearVelocity = Vector2.zero;
         }
         
         transform.localPosition = playerOffset;
