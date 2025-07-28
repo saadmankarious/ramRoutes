@@ -1,0 +1,9 @@
+# Fix compileSdk warning
+android.suppressUnsupportedCompileSdk=35
+
+# Enable AndroidX & Jetifier (fixes dependency conflicts)
+android.useAndroidX=true
+android.enableJetifier=true
+
+# Fix duplicate DataStore classes
+android.jetifier.ignorelist=datastore-core-jvm

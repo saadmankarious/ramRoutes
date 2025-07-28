@@ -135,8 +135,18 @@ namespace Platformer.Mechanics
                 var count = body.Cast(move, contactFilter, hitBuffer, distance + shellRadius);
                 for (var i = 0; i < count; i++)
                 {
+                    var hitCollider = hitBuffer[i].collider;
+                    // Skip collision with trash objects
+                    if (hitCollider != null && (
+                        hitCollider.CompareTag("Trash") ||
+                        hitCollider.CompareTag("Recyclable") ||
+                        hitCollider.CompareTag("Sapling") ||
+                        hitCollider.CompareTag("Eagle") ||
+                        hitCollider.CompareTag("Box")))
+                    {
+                        continue;
+                    }
                     var currentNormal = hitBuffer[i].normal;
-
                     //is this surface flat enough to land on?
                     if (currentNormal.y > minGroundNormalY)
                     {
