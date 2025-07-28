@@ -26,7 +26,7 @@ public class TrashItem : MonoBehaviour
     {
         while (true)
         {
-            if (rb != null && rb.velocity.sqrMagnitude < 0.01f)
+            if (rb != null && rb.linearVelocity.sqrMagnitude < 0.01f)
             {
                 finalRestPosition = transform.position;
             }
