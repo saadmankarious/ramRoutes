@@ -171,8 +171,8 @@ CapsuleCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: -0.11}
-  m_Size: {x: 0.45, y: 0.09}
+  m_Offset: {x: -0.036884237, y: -0.014101367}
+  m_Size: {x: 1.0401443, y: 1.6155378}
   m_Direction: 0
 --- !u!114 &2651140156555518892
 MonoBehaviour:
@@ -316,8 +316,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f537d427db231c04abe517f12aa451d2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  objectToThrow: {fileID: 8900768446916657819, guid: d2872e939184c7240a53f88ffaeb4967,
-    type: 3}
+  objectsToThrow: []
   throwForce: 150
+  spawnDistance: 2
   throwInterval: 20
   randomSpread: 15
