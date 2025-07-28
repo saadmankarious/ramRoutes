@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 
 public class FinalSpaceshipControl : MonoBehaviour
 {
@@ -22,6 +23,9 @@ public class FinalSpaceshipControl : MonoBehaviour
     [Header("Offset Settings")]
     public Vector2 playerOffset = Vector2.zero;
 
+    [Header("Mobile Controls")]
+    public Button mobileActionButton;
+
     private enum MovementPhase { 
         Idle, 
         MovingToPlayerX, 
@@ -40,8 +44,16 @@ public class FinalSpaceshipControl : MonoBehaviour
     private float verticalInput;
     private bool wasMovingLastFrame = false;
     private Vector2 dropStartPosition;
+    private bool shouldBeActive = false;
 
     void Start()
+    {
+        InitializeComponents();
+        SetupMobileControls();
+        UpdateMobileButtonVisibility();
+    }
+
+    void InitializeComponents()
     {
         if (spaceship != null)
         {
@@ -72,28 +84,57 @@ public class FinalSpaceshipControl : MonoBehaviour
         }
     }
 
-  void Update()
-{
-    int trial = GameManager.Instance.currentTrial.trialNumber;
-    if (trial != 3 && trial != 4) return;
+    void SetupMobileControls()
+    {
+        if (mobileActionButton != null)
+        {
+            mobileActionButton.onClick.RemoveAllListeners();
+            mobileActionButton.onClick.AddListener(HandleActionInput);
+            UpdateMobileButtonVisibility();
+        }
+    }
 
-    HandleInput();
-    UpdateMovement();
-    UpdateAnimation();
-}
+    void Update()
+    {
+        int trial = GameManager.Instance.currentTrial.trialNumber;
+        shouldBeActive = (trial == 3 || trial == 4) && spaceship != null && spaceship.gameObject.activeInHierarchy;
+        
+        UpdateMobileButtonVisibility();
 
-    private void HandleInput()
+        if (!shouldBeActive) return;
+
+        HandleKeyboardInput();
+        UpdateMovement();
+        UpdateAnimation();
+    }
+
+    void UpdateMobileButtonVisibility()
+    {
+        if (mobileActionButton != null)
+        {
+            mobileActionButton.gameObject.SetActive(shouldBeActive);
+        }
+    }
+
+    private void HandleKeyboardInput()
     {
         if (Input.GetKeyDown(actionKey))
         {
-            if (currentPhase == MovementPhase.Idle)
-            {
-                currentPhase = MovementPhase.MovingToPlayerX;
-            }
-            else if (currentPhase == MovementPhase.PlayerControlling)
-            {
-                StartDroppingPlayer();
-            }
+            HandleActionInput();
+        }
+    }
+
+    private void HandleActionInput()
+    {
+        if (!shouldBeActive) return;
+
+        if (currentPhase == MovementPhase.Idle)
+        {
+            currentPhase = MovementPhase.MovingToPlayerX;
+        }
+        else if (currentPhase == MovementPhase.PlayerControlling)
+        {
+            StartDroppingPlayer();
         }
     }
 
