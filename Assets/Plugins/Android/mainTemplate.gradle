@@ -23,7 +23,6 @@ implementation 'com.google.firebase:firebase-firestore:26.0.0'
 // Android Resolver Exclusions Start
 android {
   packaging {
-      exclude ('/lib/arm64-v8a/*' + '*')
       exclude ('/lib/armeabi/*' + '*')
       exclude ('/lib/mips/*' + '*')
       exclude ('/lib/mips64/*' + '*')
