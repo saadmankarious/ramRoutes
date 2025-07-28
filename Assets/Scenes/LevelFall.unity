@@ -5335,6 +5335,171 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5293bf48903824695a56cc59f47b766a, type: 3}
+--- !u!1 &102393106
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 102393107}
+  - component: {fileID: 102393111}
+  - component: {fileID: 102393110}
+  - component: {fileID: 102393109}
+  - component: {fileID: 102393108}
+  m_Layer: 0
+  m_Name: Image (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &102393107
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 102393106}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 482067286}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 2, y: -41}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!212 &102393108
+SpriteRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 102393106}
+  m_Enabled: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 0
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_Sprite: {fileID: 21300000, guid: 484b35f6304e3c449887fbb04358ead2, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_FlipX: 0
+  m_FlipY: 0
+  m_DrawMode: 0
+  m_Size: {x: 3.1, y: 3.1}
+  m_AdaptiveModeThreshold: 0.5
+  m_SpriteTileMode: 0
+  m_WasSpriteAssigned: 1
+  m_MaskInteraction: 0
+  m_SpriteSortPoint: 0
+--- !u!114 &102393109
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 102393106}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0b148fe25e99eb48b9724523833bab1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Delegates:
+  - eventID: 2
+    callback:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 838423048}
+          m_TargetAssemblyTypeName: Platformer.Mechanics.PlayerController, Assembly-CSharp
+          m_MethodName: OnMobileInteractPressed
+          m_Mode: 1
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - eventID: 3
+    callback:
+      m_PersistentCalls:
+        m_Calls: []
+--- !u!114 &102393110
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 102393106}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: 3a846547ecbf4c642a9b6e8aa6cb77fa, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &102393111
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 102393106}
+  m_CullTransparentMesh: 1
 --- !u!4 &103409331 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7839719535475958255, guid: 5293bf48903824695a56cc59f47b766a,
@@ -9511,11 +9676,12 @@ MonoBehaviour:
   - This is one of Cornell's appartment building. You get to live here with people
     you choseif you are a senior.
   interactKey: 118
+  isPlanet: 0
+  hasSapling: 1
   saplingPrefab: {fileID: 5638119740413968204, guid: b77002f8471b9456f8d0c3515e50e22c,
     type: 3}
   rewardSound: {fileID: 8300000, guid: dab7626c0a3474a0aba894ac33d149e7, type: 3}
-  isPlanet: 0
-  hasSapling: 1
+  mobileInteractButton: {fileID: 1299654885}
 --- !u!82 &185559590
 AudioSource:
   m_ObjectHideFlags: 0
@@ -11020,11 +11186,12 @@ MonoBehaviour:
   - 'The four largest moons orbiting Jupiter were discovered by Galileo in 1610 via
     telescope, a recent invention of the time. '
   interactKey: 118
+  isPlanet: 0
+  hasSapling: 1
   saplingPrefab: {fileID: 5638119740413968204, guid: b77002f8471b9456f8d0c3515e50e22c,
     type: 3}
   rewardSound: {fileID: 8300000, guid: dab7626c0a3474a0aba894ac33d149e7, type: 3}
-  isPlanet: 0
-  hasSapling: 1
+  mobileInteractButton: {fileID: 1299654885}
 --- !u!82 &211162578
 AudioSource:
   m_ObjectHideFlags: 0
@@ -12971,10 +13138,11 @@ MonoBehaviour:
   - Luce house is a very cool building.
   - Luce house is a very cool building. Indeed!
   interactKey: 118
-  saplingPrefab: {fileID: 0}
-  rewardSound: {fileID: 0}
   isPlanet: 0
   hasSapling: 0
+  saplingPrefab: {fileID: 0}
+  rewardSound: {fileID: 0}
+  mobileInteractButton: {fileID: 1299654885}
 --- !u!61 &250790946
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -16802,10 +16970,11 @@ MonoBehaviour:
   dialogLines:
   - Neptune
   interactKey: 118
-  saplingPrefab: {fileID: 0}
-  rewardSound: {fileID: 0}
   isPlanet: 1
   hasSapling: 0
+  saplingPrefab: {fileID: 0}
+  rewardSound: {fileID: 0}
+  mobileInteractButton: {fileID: 0}
 --- !u!212 &330630505
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -17764,10 +17933,11 @@ MonoBehaviour:
   - "How big would The Sun look like from Mars? Find Mars\u2019 plaque in real life
     to find out! "
   interactKey: 118
-  saplingPrefab: {fileID: 0}
-  rewardSound: {fileID: 0}
   isPlanet: 1
   hasSapling: 0
+  saplingPrefab: {fileID: 0}
+  rewardSound: {fileID: 0}
+  mobileInteractButton: {fileID: 0}
 --- !u!212 &349556574
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -18449,10 +18619,11 @@ MonoBehaviour:
   dialogLines:
   - Saturn
   interactKey: 118
-  saplingPrefab: {fileID: 0}
-  rewardSound: {fileID: 0}
   isPlanet: 1
   hasSapling: 0
+  saplingPrefab: {fileID: 0}
+  rewardSound: {fileID: 0}
+  mobileInteractButton: {fileID: 0}
 --- !u!212 &357924232
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -20119,10 +20290,11 @@ MonoBehaviour:
     to celebrate and remember loved ones who have crossed over into the land of the
     dead in the days following. '
   interactKey: 118
-  saplingPrefab: {fileID: 0}
-  rewardSound: {fileID: 0}
   isPlanet: 0
   hasSapling: 0
+  saplingPrefab: {fileID: 0}
+  rewardSound: {fileID: 0}
+  mobileInteractButton: {fileID: 1299654885}
 --- !u!61 &383230083
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -24120,6 +24292,83 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1697963896}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &482067285
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 482067286}
+  - component: {fileID: 482067288}
+  - component: {fileID: 482067287}
+  m_Layer: 0
+  m_Name: Panel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &482067286
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 482067285}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1299654880}
+  - {fileID: 102393107}
+  m_Father: {fileID: 543864026}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 985, y: -12.211487}
+  m_SizeDelta: {x: -2044.3143, y: -782.7727}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &482067287
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 482067285}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 0}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &482067288
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 482067285}
+  m_CullTransparentMesh: 1
 --- !u!1 &482445604
 GameObject:
   m_ObjectHideFlags: 0
@@ -24280,11 +24529,12 @@ MonoBehaviour:
   - 'Read the full story and more online in the Community History Archive of Cornell
     College! '
   interactKey: 118
+  isPlanet: 0
+  hasSapling: 1
   saplingPrefab: {fileID: 5638119740413968204, guid: b77002f8471b9456f8d0c3515e50e22c,
     type: 3}
   rewardSound: {fileID: 8300000, guid: dab7626c0a3474a0aba894ac33d149e7, type: 3}
-  isPlanet: 0
-  hasSapling: 1
+  mobileInteractButton: {fileID: 1299654885}
 --- !u!61 &482850235
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -27656,6 +27906,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1435281094}
+  - {fileID: 482067286}
   m_Father: {fileID: 2050128707}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -39209,10 +39460,11 @@ MonoBehaviour:
   dialogLines:
   - Uranus
   interactKey: 118
-  saplingPrefab: {fileID: 0}
-  rewardSound: {fileID: 0}
   isPlanet: 1
   hasSapling: 0
+  saplingPrefab: {fileID: 0}
+  rewardSound: {fileID: 0}
+  mobileInteractButton: {fileID: 0}
 --- !u!212 &649814743
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -41905,10 +42157,11 @@ MonoBehaviour:
   dialogLines:
   - Gaia. Also known as Earth.
   interactKey: 118
-  saplingPrefab: {fileID: 0}
-  rewardSound: {fileID: 0}
   isPlanet: 1
   hasSapling: 0
+  saplingPrefab: {fileID: 0}
+  rewardSound: {fileID: 0}
+  mobileInteractButton: {fileID: 0}
 --- !u!212 &710990160
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -52475,10 +52728,11 @@ MonoBehaviour:
   - "How many Earths could you fit in the width of this storm? Find Jupiter\u2019s
     plaque in real life to find out! "
   interactKey: 118
-  saplingPrefab: {fileID: 0}
-  rewardSound: {fileID: 0}
   isPlanet: 1
   hasSapling: 0
+  saplingPrefab: {fileID: 0}
+  rewardSound: {fileID: 0}
+  mobileInteractButton: {fileID: 0}
 --- !u!61 &894906768
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -58896,10 +59150,11 @@ MonoBehaviour:
     (a tiny red dwarf star), in our Solar System from Pluto? Find Pluto\u2019s plaque
     in real life to find out! "
   interactKey: 118
-  saplingPrefab: {fileID: 0}
-  rewardSound: {fileID: 0}
   isPlanet: 1
   hasSapling: 0
+  saplingPrefab: {fileID: 0}
+  rewardSound: {fileID: 0}
+  mobileInteractButton: {fileID: 0}
 --- !u!212 &1020123883
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -60860,10 +61115,11 @@ MonoBehaviour:
   dialogLines:
   - This is just a random building on 1st street.
   interactKey: 118
-  saplingPrefab: {fileID: 0}
-  rewardSound: {fileID: 0}
   isPlanet: 0
   hasSapling: 0
+  saplingPrefab: {fileID: 0}
+  rewardSound: {fileID: 0}
+  mobileInteractButton: {fileID: 1299654885}
 --- !u!1001 &1046314845
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -67772,10 +68028,11 @@ MonoBehaviour:
   - "How many earth days is one \u2018day\u2019 (planetary revolution) on Venus?
     Find Venus\u2019s plaque in real life to find out! "
   interactKey: 118
-  saplingPrefab: {fileID: 0}
-  rewardSound: {fileID: 0}
   isPlanet: 1
   hasSapling: 0
+  saplingPrefab: {fileID: 0}
+  rewardSound: {fileID: 0}
+  mobileInteractButton: {fileID: 0}
 --- !u!212 &1199272892
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -72479,6 +72736,126 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1860182177}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1299654879
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1299654880}
+  - component: {fileID: 1299654884}
+  - component: {fileID: 1299654883}
+  - component: {fileID: 1299654885}
+  m_Layer: 0
+  m_Name: Image
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1299654880
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299654879}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 482067286}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 2, y: 64}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1299654883
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299654879}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 21300000, guid: ecc88c440288c2d4c8a5d87ad1445c99, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1299654884
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299654879}
+  m_CullTransparentMesh: 1
+--- !u!114 &1299654885
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1299654879}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Navigation:
+    m_Mode: 3
+    m_WrapAround: 0
+    m_SelectOnUp: {fileID: 0}
+    m_SelectOnDown: {fileID: 0}
+    m_SelectOnLeft: {fileID: 0}
+    m_SelectOnRight: {fileID: 0}
+  m_Transition: 1
+  m_Colors:
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
+    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
+    m_DisabledColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 0.5019608}
+    m_ColorMultiplier: 1
+    m_FadeDuration: 0.1
+  m_SpriteState:
+    m_HighlightedSprite: {fileID: 0}
+    m_PressedSprite: {fileID: 0}
+    m_SelectedSprite: {fileID: 0}
+    m_DisabledSprite: {fileID: 0}
+  m_AnimationTriggers:
+    m_NormalTrigger: Normal
+    m_HighlightedTrigger: Highlighted
+    m_PressedTrigger: Pressed
+    m_SelectedTrigger: Selected
+    m_DisabledTrigger: Disabled
+  m_Interactable: 1
+  m_TargetGraphic: {fileID: 1299654883}
+  m_OnClick:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1001 &1300599174
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -79211,10 +79588,11 @@ MonoBehaviour:
   dialogLines:
   - Mercury
   interactKey: 118
-  saplingPrefab: {fileID: 0}
-  rewardSound: {fileID: 0}
   isPlanet: 1
   hasSapling: 0
+  saplingPrefab: {fileID: 0}
+  rewardSound: {fileID: 0}
+  mobileInteractButton: {fileID: 0}
 --- !u!212 &1430952312
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -89251,11 +89629,12 @@ MonoBehaviour:
   - "ISA (International Student Association) hosts heart-warming potlucks around
     the holidays when the weather outside is cold enough to knock your socks off\u2026 "
   interactKey: 118
+  isPlanet: 0
+  hasSapling: 1
   saplingPrefab: {fileID: 5638119740413968204, guid: b77002f8471b9456f8d0c3515e50e22c,
     type: 3}
   rewardSound: {fileID: 8300000, guid: dab7626c0a3474a0aba894ac33d149e7, type: 3}
-  isPlanet: 0
-  hasSapling: 1
+  mobileInteractButton: {fileID: 1299654885}
 --- !u!61 &1602936572
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -95353,10 +95732,11 @@ MonoBehaviour:
   dialogLines:
   - Water tower
   interactKey: 118
-  saplingPrefab: {fileID: 0}
-  rewardSound: {fileID: 0}
   isPlanet: 0
   hasSapling: 0
+  saplingPrefab: {fileID: 0}
+  rewardSound: {fileID: 0}
+  mobileInteractButton: {fileID: 1299654885}
 --- !u!1001 &1697947673
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -99094,10 +99474,11 @@ MonoBehaviour:
   dialogLines:
   - Planet
   interactKey: 118
-  saplingPrefab: {fileID: 0}
-  rewardSound: {fileID: 0}
   isPlanet: 1
   hasSapling: 0
+  saplingPrefab: {fileID: 0}
+  rewardSound: {fileID: 0}
+  mobileInteractButton: {fileID: 0}
 --- !u!212 &1764938290
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -104568,11 +104949,12 @@ MonoBehaviour:
   - it was then converted into a mortuary until 1963 when the house was purchased
     by Cornell to become Music Practice House.
   interactKey: 118
+  isPlanet: 0
+  hasSapling: 1
   saplingPrefab: {fileID: 5638119740413968204, guid: b77002f8471b9456f8d0c3515e50e22c,
     type: 3}
   rewardSound: {fileID: 8300000, guid: dab7626c0a3474a0aba894ac33d149e7, type: 3}
-  isPlanet: 0
-  hasSapling: 1
+  mobileInteractButton: {fileID: 1299654885}
 --- !u!61 &1878086079
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -107785,10 +108167,11 @@ MonoBehaviour:
   - "ind the Sun\u2019s plaque in real life to find out! "
   - 'Mercury is about 71 meters to the left from here (west). '
   interactKey: 118
-  saplingPrefab: {fileID: 0}
-  rewardSound: {fileID: 0}
   isPlanet: 1
   hasSapling: 0
+  saplingPrefab: {fileID: 0}
+  rewardSound: {fileID: 0}
+  mobileInteractButton: {fileID: 0}
 --- !u!212 &1925814357
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -110783,10 +111166,11 @@ MonoBehaviour:
   dialogLines:
   - This is another cool building!
   interactKey: 101
-  saplingPrefab: {fileID: 0}
-  rewardSound: {fileID: 0}
   isPlanet: 0
   hasSapling: 0
+  saplingPrefab: {fileID: 0}
+  rewardSound: {fileID: 0}
+  mobileInteractButton: {fileID: 1299654885}
 --- !u!61 &1991620626
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -116601,10 +116985,11 @@ MonoBehaviour:
   dialogLines:
   - Just the other half of the building.
   interactKey: 118
-  saplingPrefab: {fileID: 0}
-  rewardSound: {fileID: 0}
   isPlanet: 0
   hasSapling: 0
+  saplingPrefab: {fileID: 0}
+  rewardSound: {fileID: 0}
+  mobileInteractButton: {fileID: 0}
 --- !u!61 &2108330825
 BoxCollider2D:
   m_ObjectHideFlags: 0

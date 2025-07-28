@@ -1,109 +1,166 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 
 public class BuildingInteraction : MonoBehaviour
 {
-    public GameObject dialogPanel;
-    public Text dialogText;
-    public string[] dialogLines;
-    public KeyCode interactKey = KeyCode.J;
-    public GameObject saplingPrefab;
-    public AudioClip rewardSound;
-    public bool isPlanet;
+    // Serialized Fields
+    [Header("Dialog Settings")]
+    [SerializeField] private GameObject dialogPanel;
+    [SerializeField] private Text dialogText;
+    [SerializeField] private string[] dialogLines;
+    
+    [Header("Interaction Settings")]
+    [SerializeField] private KeyCode interactKey = KeyCode.J;
+    [SerializeField] private bool isPlanet = false;
     [SerializeField] private bool hasSapling = false;
+    
+    [Header("Reward Settings")]
+    [SerializeField] private GameObject saplingPrefab;
+    [SerializeField] private AudioClip rewardSound;
+    
+    [Header("Mobile Controls")]
+    [SerializeField] private Button mobileInteractButton;
 
+    // Private Variables
     private bool isPlayerInRange = false;
     private int currentLineIndex = 0;
     private bool saplingSpawned = false;
     private bool extraLineShown = false;
     private AudioSource audioSource;
+    private bool dialogActive = false;
 
-    void Start()
+    void Awake()
     {
-        dialogPanel.SetActive(false);
+        // Initialize components
         audioSource = GetComponent<AudioSource>();
+        
+        // Set initial state
+        dialogPanel.SetActive(false);
+        
+        // Setup mobile button if it exists
+        if (mobileInteractButton != null)
+        {
+            mobileInteractButton.onClick.AddListener(HandleMobileInteraction);
+            mobileInteractButton.gameObject.SetActive(false);
+        }
     }
 
     void Update()
     {
+        // Handle keyboard input
         if (isPlayerInRange && Input.GetKeyDown(interactKey))
         {
-            if (!dialogPanel.activeInHierarchy)
-            {
-                dialogPanel.SetActive(true);
-                currentLineIndex = 0;
-                extraLineShown = false;
-                ShowDialog(dialogLines[currentLineIndex]);
-            }
-            else
-            {
-                currentLineIndex++;
-                if (currentLineIndex < dialogLines.Length)
-                {
-                    ShowDialog(dialogLines[currentLineIndex]);
-                }
-                else if (hasSapling && !saplingSpawned &&  GameManager.Instance.currentTrial.trialNumber == 2 && !extraLineShown)
-                {
-                    dialogText.text = "You received a sapling!";
-                    SpawnSapling();
-                    saplingSpawned = true;
-                    extraLineShown = true;
-                }
-                else
-                {
-                    dialogPanel.SetActive(false);
-                }
-            }
+            HandleInteraction();
         }
     }
 
-    void ShowDialog(string str)
+    // Combined handler for both mobile and PC interactions
+    private void HandleInteraction()
     {
-        dialogText.text = str;
+        if (!dialogActive)
+        {
+            StartDialog();
+        }
+        else
+        {
+            AdvanceDialog();
+        }
+    }
+
+    // Mobile-specific interaction handler
+    private void HandleMobileInteraction()
+    {
+        if (isPlayerInRange)
+        {
+            HandleInteraction();
+        }
+    }
+
+    private void StartDialog()
+    {
+        dialogActive = true;
+        dialogPanel.SetActive(true);
+        currentLineIndex = 0;
+        extraLineShown = false;
+        dialogText.text = dialogLines[currentLineIndex];
+    }
+
+    private void AdvanceDialog()
+    {
+        currentLineIndex++;
+        
+        if (currentLineIndex < dialogLines.Length)
+        {
+            dialogText.text = dialogLines[currentLineIndex];
+        }
+        else if (hasSapling && !saplingSpawned && 
+                GameManager.Instance.currentTrial.trialNumber == 2 && 
+                !extraLineShown)
+        {
+            GiveSaplingReward();
+        }
+        else
+        {
+            CloseDialog();
+        }
+    }
+
+    private void GiveSaplingReward()
+    {
+        dialogText.text = "You received a sapling!";
+        SpawnSapling();
+        saplingSpawned = true;
+        extraLineShown = true;
+    }
+
+    private void CloseDialog()
+    {
+        dialogActive = false;
+        dialogPanel.SetActive(false);
+        
+        if (mobileInteractButton != null)
+        {
+            mobileInteractButton.gameObject.SetActive(false);
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("Player") || other.CompareTag("Spaceship"))
         {
             isPlayerInRange = true;
-            if(!isPlanet && GameManager.Instance.currentTrial.trialNumber ==2)
+            
+            if (mobileInteractButton != null)
             {
-             ShowDialog("Hit V to interact");
-
+                mobileInteractButton.gameObject.SetActive(true);
             }
-
-        } 
-            if(other.CompareTag("Spaceship"))
+            
+            if (!isPlanet && other.CompareTag("Player") && 
+                GameManager.Instance.currentTrial.trialNumber == 2)
             {
-                            isPlayerInRange = true;
-
-                dialogPanel.SetActive(true);
-                ShowDialog(dialogLines[0]);
-
+                dialogText.text = "Press J to interact";
             }
+        }
     }
 
     private void OnTriggerExit2D(Collider2D other)
     {
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("Player") || other.CompareTag("Spaceship"))
         {
             isPlayerInRange = false;
-            dialogPanel.SetActive(false);
+            CloseDialog();
         }
-        if(other.CompareTag("Spaceship"))
-            {
-                dialogPanel.SetActive(false);
-
-            }
     }
 
     private void SpawnSapling()
     {
         Vector3 spawnPosition = transform.position + transform.right * 1.5f;
         Instantiate(saplingPrefab, spawnPosition, Quaternion.identity);
-        if (rewardSound && audioSource) audioSource.PlayOneShot(rewardSound);
+        
+        if (rewardSound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(rewardSound);
+        }
     }
 }
