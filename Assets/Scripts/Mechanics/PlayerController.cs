@@ -102,11 +102,6 @@ namespace Platformer.Mechanics
 
         void Update()
         {
-            if (IsSteppingOnPaintedTile())
-            {
-                Debug.Log("Player is stepping on a painted tile!");
-                // Add your logic here for what happens when on painted tile
-            }
             if (!controlEnabled)
             {
                 moveInput = Vector2.zero;
@@ -148,6 +143,24 @@ namespace Platformer.Mechanics
                 if (mobileUpPressed) inputY = 1f;
             }
 
+            // Prevent diagonal movement by prioritizing the dominant axis
+            if (Mathf.Abs(inputX) > Mathf.Abs(inputY))
+            {
+                inputY = 0f; // Only horizontal movement
+            }
+            else if (Mathf.Abs(inputY) > Mathf.Abs(inputX))
+            {
+                inputX = 0f; // Only vertical movement
+            }
+            else
+            {
+                // If equal input magnitude (like both at 1), default to horizontal movement
+                if (inputX != 0f || inputY != 0f)
+                {
+                    inputY = 0f;
+                }
+            }
+
             moveInput = new Vector2(inputX, inputY).normalized;
 
             // Update animations
@@ -175,33 +188,12 @@ namespace Platformer.Mechanics
 
             if (isOnTile)
             {
-                timeOffTile = 0f;
-                wasOnTileLastFrame = true;
                 rb.linearVelocity = moveInput * moveSpeed;
             }
             else
             {
-                if (wasOnTileLastFrame)
-                {
-                    // Just stepped off a tile, start grace period
-                    timeOffTile += Time.fixedDeltaTime;
-                    if (timeOffTile < offTileGracePeriod)
-                    {
-                        rb.linearVelocity = moveInput * moveSpeed;
-                    }
-                    else
-                    {
-                        rb.linearVelocity = Vector2.zero;
-                    }
-                }
-                else
-                {
-                    rb.linearVelocity = Vector2.zero;
-                }
+                rb.linearVelocity = Vector2.zero;
             }
-
-
-            wasOnTileLastFrame = isOnTile;
         }
 
         // Mobile input methods
