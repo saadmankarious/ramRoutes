@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Data.SqlClient;
 
 public class BuildingInteraction : MonoBehaviour
 {
@@ -29,6 +30,9 @@ public class BuildingInteraction : MonoBehaviour
     private bool extraLineShown = false;
     private AudioSource audioSource;
     private bool dialogActive = false;
+    public bool activated = false;
+    private bool lastActivated = false;
+    public string buildingName;
 
     void Awake()
     {
@@ -46,6 +50,16 @@ public class BuildingInteraction : MonoBehaviour
         }
     }
 
+    void OnEnable()
+    {
+        BuildingProximityDetector.OnApproachBuilding += HandleApproachBuilding;
+    }
+
+    void OnDisable()
+    {
+        BuildingProximityDetector.OnApproachBuilding -= HandleApproachBuilding;
+    }
+
     void Update()
     {
         // Handle keyboard input
@@ -53,6 +67,28 @@ public class BuildingInteraction : MonoBehaviour
         {
             HandleInteraction();
         }
+
+        if (activated && !lastActivated)
+        {
+            var sr = GetComponent<SpriteRenderer>();
+            if (sr != null)
+            {
+                var c = sr.color;
+                c.a = 0.5f;
+                sr.color = c;
+            }
+        }
+        else if (!activated && lastActivated)
+        {
+            var sr = GetComponent<SpriteRenderer>();
+            if (sr != null)
+            {
+                var c = sr.color;
+                c.a = 1f;
+                sr.color = c;
+            }
+        }
+        lastActivated = activated;
     }
 
     // Combined handler for both mobile and PC interactions
@@ -161,6 +197,15 @@ public class BuildingInteraction : MonoBehaviour
         if (rewardSound != null && audioSource != null)
         {
             audioSource.PlayOneShot(rewardSound);
+        }
+    }
+
+    private void HandleApproachBuilding(BuildingProximityDetector.Building building)
+    {
+        if (building.name == buildingName)
+        {
+            Debug.Log("Activating building: " + building.name);
+            activated = true;
         }
     }
 }

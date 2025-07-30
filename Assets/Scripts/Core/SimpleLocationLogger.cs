@@ -22,6 +22,10 @@ public class BuildingProximityDetector : MonoBehaviour
     private Building closestBuilding;
     private float distanceToBuilding;
 
+    public delegate void BuildingEvent(Building building);
+    public static event BuildingEvent OnApproachBuilding;
+    public static event BuildingEvent OnEnterBuilding;
+
     void Start()
     {
         if (buildings.Length == 0)
@@ -187,12 +191,14 @@ public class BuildingProximityDetector : MonoBehaviour
     void OnBuildingEntered(Building building)
     {
         Debug.Log($"ENTERED BUILDING: {building.name} (Distance: {distanceToBuilding:F2}m)");
+        OnEnterBuilding?.Invoke(building);
         // Trigger your building entry logic here
     }
 
     void OnBuildingApproached(Building building)
     {
         Debug.Log($"APPROACHING BUILDING: {building.name} (Distance: {distanceToBuilding:F2}m)");
+        OnApproachBuilding?.Invoke(building);
         // Trigger your approach logic here
     }
 
