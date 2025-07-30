@@ -132,7 +132,7 @@ public class BuildingInteraction : MonoBehaviour
     {
         if (!dialogActive)
         {
-            StartDialog();
+            ShowDialog(dialogLines[currentLineIndex]);
         }
         else
         {
@@ -158,16 +158,25 @@ public class BuildingInteraction : MonoBehaviour
         dialogText.text = dialogLines[currentLineIndex];
     }
 
+    private void ShowDialog(string message)
+    {
+          dialogActive = true;
+        dialogPanel.SetActive(true);
+        currentLineIndex = 0;
+        extraLineShown = false;
+        dialogText.text = message;
+    }
+
     private void AdvanceDialog()
     {
         currentLineIndex++;
-        
+
         if (currentLineIndex < dialogLines.Length)
         {
             dialogText.text = dialogLines[currentLineIndex];
         }
-        else if (hasSapling && !saplingSpawned && 
-                GameManager.Instance.currentTrial.trialNumber == 2 && 
+        else if (hasSapling && !saplingSpawned &&
+                GameManager.Instance.currentTrial.trialNumber == 2 &&
                 !extraLineShown)
         {
             GiveSaplingReward();
@@ -242,6 +251,7 @@ public class BuildingInteraction : MonoBehaviour
         {
             Debug.Log("Activating building: " + building.name);
             activated = true;
+            ShowDialog("Unocked building " + building.name);
         }
     }
 }

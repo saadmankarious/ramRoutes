@@ -16,6 +16,7 @@ public class BuildingProximityDetector : MonoBehaviour
     [SerializeField] private Building[] buildings = new Building[2];
     [SerializeField] private float updateInterval = 1f;
     [SerializeField] private bool showDebugInfo = true;
+    [SerializeField] private Canvas locationDisabledCanvas;
 
     private LocationServiceStatus locationStatus;
     private string currentStatus = "Initializing...";
@@ -243,6 +244,27 @@ public class BuildingProximityDetector : MonoBehaviour
             GUI.Label(new Rect(10, 50, 1000, 100), 
                 $"GPS: {loc.latitude:F6}, {loc.longitude:F6}\n" +
                 $"Accuracy: {loc.horizontalAccuracy:F1}m");
+        }
+    }
+
+    void Update()
+    {
+        if (locationDisabledCanvas != null)
+        {
+            bool locationEnabled = Input.location.isEnabledByUser && Input.location.status != LocationServiceStatus.Failed;
+            locationDisabledCanvas.gameObject.SetActive(!locationEnabled);
+            if (!locationEnabled)
+            {
+                if (Time.timeScale != 0) Time.timeScale = 0; // Pause game
+            }
+            else
+            {
+                if (Time.timeScale != 1) Time.timeScale = 1; // Resume game
+                if (locationEnabled && !Input.location.isEnabledByUser)
+                {
+                    Input.location.Start(5f, 5f);
+                }
+            }
         }
     }
 }
