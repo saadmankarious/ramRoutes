@@ -23,6 +23,10 @@ public class BuildingInteraction : MonoBehaviour
     [Header("Mobile Controls")]
     [SerializeField] private Button mobileInteractButton;
 
+    [Header("Inactive Display")]
+    [SerializeField] private GameObject inactivePrefab;
+    [SerializeField] private Material lockedMaterial;
+
     // Private Variables
     private bool isPlayerInRange = false;
     private int currentLineIndex = 0;
@@ -33,6 +37,9 @@ public class BuildingInteraction : MonoBehaviour
     public bool activated = false;
     private bool lastActivated = false;
     public string buildingName;
+    private GameObject inactiveInstance;
+    private Material originalMaterial;
+    private SpriteRenderer sr;
 
     void Awake()
     {
@@ -47,6 +54,23 @@ public class BuildingInteraction : MonoBehaviour
         {
             mobileInteractButton.onClick.AddListener(HandleMobileInteraction);
             mobileInteractButton.gameObject.SetActive(false);
+        }
+
+        sr = GetComponent<SpriteRenderer>();
+        if (sr != null)
+        {
+            originalMaterial = sr.material;
+        }
+    }
+
+    void Start()
+    {
+        if (inactivePrefab != null)
+        {
+            Vector3 spawnPos = transform.position;
+            spawnPos.z = -1f;
+            inactiveInstance = Instantiate(inactivePrefab, spawnPos, Quaternion.identity, transform);
+            inactiveInstance.SetActive(true);
         }
     }
 
@@ -70,25 +94,37 @@ public class BuildingInteraction : MonoBehaviour
 
         if (activated && !lastActivated)
         {
-            var sr = GetComponent<SpriteRenderer>();
-            if (sr != null)
-            {
-                var c = sr.color;
-                c.a = 0.5f;
-                sr.color = c;
-            }
+            var c = sr.color;
+            c.a = 0.5f;
+            sr.color = c;
         }
         else if (!activated && lastActivated)
         {
-            var sr = GetComponent<SpriteRenderer>();
-            if (sr != null)
+            var c = sr.color;
+            c.a = 1f;
+            sr.color = c;
+        }
+        lastActivated = activated;
+
+        if (inactiveInstance != null)
+        {
+            inactiveInstance.SetActive(!activated);
+        }
+
+        if (sr != null)
+        {
+            if (!activated && lockedMaterial != null)
             {
+                sr.material = lockedMaterial;
+            }
+            else if (activated && originalMaterial != null)
+            {
+                sr.material = originalMaterial;
                 var c = sr.color;
                 c.a = 1f;
                 sr.color = c;
             }
         }
-        lastActivated = activated;
     }
 
     // Combined handler for both mobile and PC interactions
