@@ -1,0 +1,52 @@
+plugins {
+    id("com.android.library") // Direct plugin application
+}
+// In your plugin's build.gradle
+plugins {
+    id 'maven-publish'
+}
+
+publishing {
+    publications {
+        aar(MavenPublication) {
+            groupId 'com.edgoanalytics'
+            artifactId 'geofencing'
+            version '1.0'
+            artifact("$buildDir/outputs/aar/geofencing-plugin-release.aar")
+        }
+    }
+}
+android {
+    namespace 'com.edgoanalytics.ramroutes.plugin'
+    compileSdk 36
+
+    defaultConfig {
+        minSdk 23
+        targetSdk 36
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+}
+
+dependencies {
+    implementation libs.play.services.location
+
+    implementation libs.appcompat
+    implementation libs.material
+    testImplementation libs.junit
+    androidTestImplementation libs.ext.junit
+    androidTestImplementation libs.espresso.core
+}
