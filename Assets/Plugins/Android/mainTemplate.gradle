@@ -3,8 +3,15 @@ apply from: '../shared/keepUnitySymbols.gradle'
 **APPLY_PLUGINS**
 
 dependencies {
+        // Geofencing Plugin - Modified implementation
+    implementation(name: 'geofencing-plugin', ext: 'aar') {
+        transitive = true
+        exclude group: 'com.google.android.gms', module: 'play-services-basement'
+    }
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-
+ implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
+    
 // Android Resolver Dependencies Start
     implementation 'com.google.android.gms:play-services-base:18.7.2' // Assets/Firebase/Editor/AppDependencies.xml:17
     implementation 'com.google.firebase:firebase-analytics:23.0.0' // Assets/Firebase/Editor/MessagingDependencies.xml:15
