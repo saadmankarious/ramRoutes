@@ -3,6 +3,7 @@ using Platformer.Gameplay;
 using static Platformer.Core.Simulation;
 using Platformer.Model;
 using System.Collections;
+using UnityEngine.Tilemaps;
 
 namespace Platformer.Mechanics
 {
@@ -40,6 +41,44 @@ namespace Platformer.Mechanics
         private bool mobileUpPressed = false;
         private bool mobileDownPressed = false;
         private bool mobileInteractPressed = false;
+        public Tilemap paintedTilemap; // Assign in inspector - the tilemap with painted areas
+
+        // Add this function to your PlayerController class
+        private bool IsSteppingOnPaintedTile()
+        {
+            if (paintedTilemap == null) return false;
+
+            // Get player's position and movement direction
+            Vector3 playerWorldPos = transform.position;
+            playerWorldPos.z = 0f;
+            Vector3Int cellPosition = paintedTilemap.WorldToCell(playerWorldPos);
+
+            // Check current tile first (must always be valid)
+            if (paintedTilemap.GetTile(cellPosition) == null)
+                return false;
+
+            // If not moving, only check current tile
+            if (moveInput.magnitude < 0.1f)
+                return true;
+
+            // Predict next tile based on movement direction
+            Vector3Int predictedCell = cellPosition;
+
+            // Get primary movement direction (prioritize horizontal for 4-way movement)
+            if (Mathf.Abs(moveInput.x) > Mathf.Abs(moveInput.y))
+            {
+                predictedCell.x += moveInput.x > 0 ? 1 : -1;
+            }
+            else if (moveInput.y != 0)
+            {
+                predictedCell.y += moveInput.y > 0 ? 1 : -1;
+            }
+
+            // Check if predicted tile is painted
+            return paintedTilemap.GetTile(predictedCell) != null;
+        }
+
+
 
         void Awake()
         {
@@ -52,7 +91,7 @@ namespace Platformer.Mechanics
             {
                 Destroy(gameObject);
             }
-            
+
             rb = GetComponent<Rigidbody2D>();
             health = GetComponent<Health>();
             audioSource = GetComponent<AudioSource>();
@@ -63,6 +102,11 @@ namespace Platformer.Mechanics
 
         void Update()
         {
+            if (IsSteppingOnPaintedTile())
+            {
+                Debug.Log("Player is stepping on a painted tile!");
+                // Add your logic here for what happens when on painted tile
+            }
             if (!controlEnabled)
             {
                 moveInput = Vector2.zero;
@@ -121,17 +165,43 @@ namespace Platformer.Mechanics
                 heldTrash.transform.position = holdPoint.position;
             }
         }
+        [SerializeField] private float offTileGracePeriod = 0.5f; // Time allowed off tiles before stopping
+        private float timeOffTile = 0f;
+        private bool wasOnTileLastFrame = true;
 
         void FixedUpdate()
         {
-            if (controlEnabled)
+            bool isOnTile = IsSteppingOnPaintedTile();
+
+            if (isOnTile)
             {
+                timeOffTile = 0f;
+                wasOnTileLastFrame = true;
                 rb.linearVelocity = moveInput * moveSpeed;
             }
             else
             {
-                rb.linearVelocity = Vector2.zero;
+                if (wasOnTileLastFrame)
+                {
+                    // Just stepped off a tile, start grace period
+                    timeOffTile += Time.fixedDeltaTime;
+                    if (timeOffTile < offTileGracePeriod)
+                    {
+                        rb.linearVelocity = moveInput * moveSpeed;
+                    }
+                    else
+                    {
+                        rb.linearVelocity = Vector2.zero;
+                    }
+                }
+                else
+                {
+                    rb.linearVelocity = Vector2.zero;
+                }
             }
+
+
+            wasOnTileLastFrame = isOnTile;
         }
 
         // Mobile input methods
