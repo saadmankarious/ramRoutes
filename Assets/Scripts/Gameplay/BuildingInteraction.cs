@@ -34,6 +34,9 @@ public class BuildingInteraction : MonoBehaviour
     [SerializeField] private GameObject buildingUnlockedPanel;
     [SerializeField] private Button closeUnlockedPanelButton;
 
+    [Header("Debug")]
+    [SerializeField] private bool showUnlockedPanelOnStart = true;
+
     // Private Variables
     private bool isPlayerInRange = false;
     private int currentLineIndex = 0;
@@ -47,6 +50,10 @@ public class BuildingInteraction : MonoBehaviour
     private GameObject inactiveInstance;
     private Material originalMaterial;
     private SpriteRenderer sr;
+
+    public ScrollRect usersScrollView;
+    public Transform usersContentParent;
+    public GameObject userPrefab;
 
     void Awake()
     {
@@ -87,6 +94,12 @@ public class BuildingInteraction : MonoBehaviour
         if (closeUnlockedPanelButton != null && buildingUnlockedPanel != null)
         {
             closeUnlockedPanelButton.onClick.AddListener(() => buildingUnlockedPanel.SetActive(false));
+        }
+
+        if (showUnlockedPanelOnStart && buildingUnlockedPanel != null)
+        {
+            buildingUnlockedPanel.SetActive(true);
+            DisplayUsersWhoUnlocked();
         }
     }
 
@@ -312,12 +325,14 @@ public class BuildingInteraction : MonoBehaviour
             if (buildingUnlockedPanel != null)
             {
                 buildingUnlockedPanel.SetActive(true);
+                DisplayUsersWhoUnlocked();
                 // Panel will be hidden by button click
             }
 
             // Save unlock event to Firestore
             var record = new UnlockedBuildingRecord(
                 userId,
+                FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.DisplayName : "Unknown User",
                 System.DateTime.UtcNow,
                 buildingName,
                 buildingName,
@@ -326,4 +341,45 @@ public class BuildingInteraction : MonoBehaviour
             await service.SaveUnlockedBuildingAsync(record);
         }
     }
+
+ public async void DisplayUsersWhoUnlocked()
+{
+    // Clear previous entries
+    foreach (Transform child in usersContentParent)
+    {
+        Destroy(child.gameObject);
+    }
+
+    var service = new UnlockedBuildingService();
+    var unlockedList = await service.RetrieveUnlockedBuildings();
+    var usersForBuilding = unlockedList.FindAll(b => b.buildingName == buildingName);
+    
+    foreach (var record in usersForBuilding)
+    {
+        // Instantiate the prefab
+        GameObject userGO = Instantiate(userPrefab, usersContentParent);
+        
+        // Get the Text component from a child object
+        Text userNameText = userGO.GetComponentInChildren<Text>(true); // 'true' to include inactive children
+        
+        if (userNameText != null)
+        {
+            Debug.Log($"Setting user text: userName={record.userName}, userId={record.userId}");
+            userNameText.text =  record.userId;
+            
+            // Optional: Adjust RectTransform if needed
+            RectTransform textRect = userNameText.GetComponent<RectTransform>();
+            if (textRect != null)
+            {
+                textRect.pivot = new Vector2(0.5f, 0.5f);
+                textRect.anchorMin = new Vector2(0.5f, 0.5f);
+                textRect.anchorMax = new Vector2(0.5f, 0.5f);
+            }
+        }
+        else
+        {
+            Debug.LogError("No Text component found in prefab or its children!");
+        }
+    }
+}
 }

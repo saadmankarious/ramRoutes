@@ -93,7 +93,8 @@ namespace RamRoutes.Services
                             buildingPosition = new Vector3(x, y, z);
                         }
                     }
-                    buildings.Add(new UnlockedBuildingRecord(userId, unlockTime, buildingId, buildingName, buildingPosition));
+                    string userName = data.ContainsKey("userName") ? data["userName"].ToString() : "";
+                    buildings.Add(new UnlockedBuildingRecord(userId, userName, unlockTime, buildingId, buildingName, buildingPosition));
                 }
                 // Save to local storage
                 string json = JsonUtility.ToJson(new UnlockedBuildingListWrapper { buildings = buildings });

@@ -31,6 +31,9 @@ public class BuildingProximityDetector : MonoBehaviour
 
     void Start()
     {
+        PlayerPrefs.DeleteKey("unlocked_buildings_cache");
+        PlayerPrefs.Save();
+        
         if (buildings.Length == 0)
         {
             buildings = new Building[2] {
@@ -269,9 +272,9 @@ public class BuildingProximityDetector : MonoBehaviour
             }
         }
 
-        if (simulateBuildingEntry && closestBuilding != null)
+        if (simulateBuildingEntry && buildings[3]!= null)
         {
-            OnBuildingEntered(closestBuilding);
+            OnBuildingEntered(buildings[3]);
             simulateBuildingEntry = false;
         }
     }
