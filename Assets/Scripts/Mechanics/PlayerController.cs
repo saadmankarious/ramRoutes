@@ -23,6 +23,7 @@ namespace Platformer.Mechanics
         public Health health;
         public bool controlEnabled = true;
         private Vector2 moveInput;
+        private Vector2 lastMoveDirection; // Store last movement direction for idle
         private Rigidbody2D rb;
         SpriteRenderer spriteRenderer;
         internal Animator animator;
@@ -159,23 +160,36 @@ namespace Platformer.Mechanics
                 {
                     inputY = 0f;
                 }
+            }            moveInput = new Vector2(inputX, inputY).normalized;
+
+            // Update animation parameters
+            if (moveInput.magnitude > 0.01f)
+            {
+                // Store direction when moving
+                lastMoveDirection = moveInput;
+                // Set movement animation parameters
+                animator.SetFloat("MoveX", moveInput.x);
+                animator.SetFloat("MoveY", moveInput.y);
+                animator.SetBool("idle", false);
+            }
+            else
+            {
+                // Use last direction for idle animation
+                animator.SetFloat("MoveX", lastMoveDirection.x);
+                animator.SetFloat("MoveY", lastMoveDirection.y);
+                animator.SetBool("idle", true);
             }
 
-            moveInput = new Vector2(inputX, inputY).normalized;
-
-            // Update animations
-            if (moveInput.x > 0.01f)
-                spriteRenderer.flipX = false;
-            else if (moveInput.x < -0.01f)
-                spriteRenderer.flipX = true;
-
-            animator.SetFloat("velocityX", Mathf.Abs(moveInput.x));
-            animator.SetFloat("velocityY", moveInput.y);
-
-            // Held trash position
+            // Handle held trash position
             if (heldTrash != null)
             {
                 heldTrash.transform.position = holdPoint.position;
+            }
+
+            // Update last move direction
+            if (moveInput.magnitude > 0.1f)
+            {
+                lastMoveDirection = moveInput;
             }
         }
         [SerializeField] private float offTileGracePeriod = 0.5f; // Time allowed off tiles before stopping
