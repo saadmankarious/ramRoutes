@@ -156,12 +156,12 @@ public class LoginManager : MonoBehaviour
         try
         {
             await FirestoreUtility.SaveGameAttempt(playerName);
-            SceneManager.LoadScene("LevelFall");
+            SceneManager.LoadScene("LevelRPG");
         }
         catch (System.Exception e)
         {
             Debug.LogError($"Failed to save attempt: {e.Message}");
-            SceneManager.LoadScene("LevelFall");
+            SceneManager.LoadScene("LevelRPG");
         }
     }
 

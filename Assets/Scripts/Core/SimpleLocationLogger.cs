@@ -18,6 +18,7 @@ public class BuildingProximityDetector : MonoBehaviour
     [SerializeField] private bool showDebugInfo = true;
     [SerializeField] private Canvas locationDisabledCanvas;
     [SerializeField] private bool simulateBuildingEntry = false;
+    [SerializeField] private bool simulateGpsEnabled = false;
 
     private LocationServiceStatus locationStatus;
     private string currentStatus = "Initializing...";
@@ -250,15 +251,9 @@ public class BuildingProximityDetector : MonoBehaviour
 
     void Update()
     {
-        if (simulateBuildingEntry && closestBuilding != null)
-        {
-            OnBuildingEntered(closestBuilding);
-            simulateBuildingEntry = false;
-        }
-
+        bool locationEnabled = (Input.location.isEnabledByUser || simulateGpsEnabled) && Input.location.status != LocationServiceStatus.Failed;
         if (locationDisabledCanvas != null)
         {
-            bool locationEnabled = Input.location.isEnabledByUser && Input.location.status != LocationServiceStatus.Failed;
             locationDisabledCanvas.gameObject.SetActive(!locationEnabled);
             if (!locationEnabled)
             {
@@ -272,6 +267,12 @@ public class BuildingProximityDetector : MonoBehaviour
                     Input.location.Start(5f, 5f);
                 }
             }
+        }
+
+        if (simulateBuildingEntry && closestBuilding != null)
+        {
+            OnBuildingEntered(closestBuilding);
+            simulateBuildingEntry = false;
         }
     }
 }

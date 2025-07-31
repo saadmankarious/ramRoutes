@@ -92,10 +92,11 @@ public class BuildingInteraction : MonoBehaviour
 
     private IEnumerator SetActiveIfEntered(UnlockedBuildingService service)
     {
+        string userId = FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.UserId : "unknown";
         var task = service.RetrieveUnlockedBuildings();
         while (!task.IsCompleted) yield return null;
         var enteredBuildings = task.Result;
-        if (enteredBuildings != null && enteredBuildings.Exists(b => b.buildingName == buildingName))
+        if (enteredBuildings != null && enteredBuildings.Exists(b => b.buildingName == buildingName && b.userId == userId))
         {
             activated = true;
             if (inactiveInstance != null) inactiveInstance.SetActive(false);
@@ -294,8 +295,9 @@ public class BuildingInteraction : MonoBehaviour
         {
             // Check if already entered
             var service = new UnlockedBuildingService();
+            string userId = FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.UserId : "unknown";
             var enteredBuildings = await service.RetrieveUnlockedBuildings();
-            bool alreadyEntered = enteredBuildings.Exists(b => b.buildingName == buildingName);
+            bool alreadyEntered = enteredBuildings.Exists(b => b.buildingName == buildingName && b.userId == userId);
             if (alreadyEntered)
             {
                 Debug.Log($"Building {buildingName} already entered. Skipping unlock logic.");
@@ -314,7 +316,6 @@ public class BuildingInteraction : MonoBehaviour
             }
 
             // Save unlock event to Firestore
-            string userId = FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.UserId : "unknown";
             var record = new UnlockedBuildingRecord(
                 userId,
                 System.DateTime.UtcNow,

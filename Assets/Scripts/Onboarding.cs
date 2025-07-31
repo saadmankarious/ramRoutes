@@ -198,6 +198,6 @@ public class OnboardingManager : MonoBehaviour
     public void StartGame()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene("LevelFall");
+        SceneManager.LoadScene("LevelRPG");
     }
 }

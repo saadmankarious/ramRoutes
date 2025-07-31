@@ -35,7 +35,7 @@ namespace RamRoutes.Services
             };
             try
             {
-                await db.Collection("unlocked_trials").AddAsync(docData);
+                await db.Collection("unlocked-trials").AddAsync(docData);
                 Debug.Log($"Unlocked building saved for user {record.userId} at {record.unlockTime}");
                 // Save locally
                 string json = PlayerPrefs.GetString("unlocked_buildings_cache", "");
@@ -73,7 +73,7 @@ namespace RamRoutes.Services
             bool loadedFromFirestore = false;
             try
             {
-                QuerySnapshot snapshot = await db.Collection("unlocked_trials").GetSnapshotAsync();
+                QuerySnapshot snapshot = await db.Collection("unlocked-trials").GetSnapshotAsync();
                 foreach (var doc in snapshot.Documents)
                 {
                     var data = doc.ToDictionary();
