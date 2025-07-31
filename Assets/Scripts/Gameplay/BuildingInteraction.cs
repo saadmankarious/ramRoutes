@@ -2,6 +2,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using System.Data.SqlClient;
+using RamRoutes.Model;
+using RamRoutes.Services;
+using Firebase.Auth;
 
 public class BuildingInteraction : MonoBehaviour
 {
@@ -10,16 +13,16 @@ public class BuildingInteraction : MonoBehaviour
     [SerializeField] private GameObject dialogPanel;
     [SerializeField] private Text dialogText;
     [SerializeField] private string[] dialogLines;
-    
+
     [Header("Interaction Settings")]
     [SerializeField] private KeyCode interactKey = KeyCode.J;
     [SerializeField] private bool isPlanet = false;
     [SerializeField] private bool hasSapling = false;
-    
+
     [Header("Reward Settings")]
     [SerializeField] private GameObject saplingPrefab;
     [SerializeField] private AudioClip rewardSound;
-    
+
     [Header("Mobile Controls")]
     [SerializeField] private Button mobileInteractButton;
 
@@ -45,10 +48,10 @@ public class BuildingInteraction : MonoBehaviour
     {
         // Initialize components
         audioSource = GetComponent<AudioSource>();
-        
+
         // Set initial state
         dialogPanel.SetActive(false);
-        
+
         // Setup mobile button if it exists
         if (mobileInteractButton != null)
         {
@@ -77,11 +80,15 @@ public class BuildingInteraction : MonoBehaviour
     void OnEnable()
     {
         BuildingProximityDetector.OnApproachBuilding += HandleApproachBuilding;
+        BuildingProximityDetector.OnEnterBuilding += HandleEnteringBuilding;
+
     }
 
     void OnDisable()
     {
-        BuildingProximityDetector.OnApproachBuilding -= HandleApproachBuilding;
+        BuildingProximityDetector.OnApproachBuilding -= HandleApproachBuilding; BuildingProximityDetector.OnEnterBuilding += HandleEnteringBuilding;
+        BuildingProximityDetector.OnEnterBuilding -= HandleEnteringBuilding;
+
     }
 
     void Update()
@@ -160,7 +167,7 @@ public class BuildingInteraction : MonoBehaviour
 
     private void ShowDialog(string message)
     {
-          dialogActive = true;
+        dialogActive = true;
         dialogPanel.SetActive(true);
         currentLineIndex = 0;
         extraLineShown = false;
@@ -199,7 +206,7 @@ public class BuildingInteraction : MonoBehaviour
     {
         dialogActive = false;
         dialogPanel.SetActive(false);
-        
+
         if (mobileInteractButton != null)
         {
             mobileInteractButton.gameObject.SetActive(false);
@@ -211,13 +218,13 @@ public class BuildingInteraction : MonoBehaviour
         if (other.CompareTag("Player") || other.CompareTag("Spaceship"))
         {
             isPlayerInRange = true;
-            
+
             if (mobileInteractButton != null)
             {
                 mobileInteractButton.gameObject.SetActive(true);
             }
-            
-            if (!isPlanet && other.CompareTag("Player") && 
+
+            if (!isPlanet && other.CompareTag("Player") &&
                 GameManager.Instance.currentTrial.trialNumber == 2)
             {
                 dialogText.text = "Press J to interact";
@@ -238,20 +245,37 @@ public class BuildingInteraction : MonoBehaviour
     {
         Vector3 spawnPosition = transform.position + transform.right * 1.5f;
         Instantiate(saplingPrefab, spawnPosition, Quaternion.identity);
-        
+
         if (rewardSound != null && audioSource != null)
         {
             audioSource.PlayOneShot(rewardSound);
         }
     }
 
-    private void HandleApproachBuilding(BuildingProximityDetector.Building building)
+    private async void HandleApproachBuilding(BuildingProximityDetector.Building building)
+    {
+        Debug.Log("Building Interaction:: Approaching building " + building.name);
+    }
+    
+        private async void HandleEnteringBuilding(BuildingProximityDetector.Building building)
     {
         if (building.name == buildingName)
         {
             Debug.Log("Activating building: " + building.name);
             activated = true;
             ShowDialog("Unocked building " + building.name);
+
+            // Save unlock event to Firestore
+            string userId = FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.UserId : "unknown";
+            var record = new UnlockedBuildingRecord(
+                userId,
+                System.DateTime.UtcNow,
+                buildingName,
+                buildingName,
+                transform.position
+            );
+            var service = new UnlockedBuildingService();
+            await service.SaveUnlockedBuildingAsync(record);
         }
     }
 }
