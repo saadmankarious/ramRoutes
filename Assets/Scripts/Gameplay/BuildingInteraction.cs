@@ -30,6 +30,10 @@ public class BuildingInteraction : MonoBehaviour
     [SerializeField] private GameObject inactivePrefab;
     [SerializeField] private Material lockedMaterial;
 
+    [Header("UI Panels")]
+    [SerializeField] private GameObject buildingUnlockedPanel;
+    [SerializeField] private Button closeUnlockedPanelButton;
+
     // Private Variables
     private bool isPlayerInRange = false;
     private int currentLineIndex = 0;
@@ -75,6 +79,34 @@ public class BuildingInteraction : MonoBehaviour
             inactiveInstance = Instantiate(inactivePrefab, spawnPos, Quaternion.identity, transform);
             inactiveInstance.SetActive(true);
         }
+
+        // Check if building has already been entered
+        var service = new UnlockedBuildingService();
+        StartCoroutine(SetActiveIfEntered(service));
+
+        if (closeUnlockedPanelButton != null && buildingUnlockedPanel != null)
+        {
+            closeUnlockedPanelButton.onClick.AddListener(() => buildingUnlockedPanel.SetActive(false));
+        }
+    }
+
+    private IEnumerator SetActiveIfEntered(UnlockedBuildingService service)
+    {
+        var task = service.RetrieveUnlockedBuildings();
+        while (!task.IsCompleted) yield return null;
+        var enteredBuildings = task.Result;
+        if (enteredBuildings != null && enteredBuildings.Exists(b => b.buildingName == buildingName))
+        {
+            activated = true;
+            if (inactiveInstance != null) inactiveInstance.SetActive(false);
+            if (sr != null && originalMaterial != null)
+            {
+                sr.material = originalMaterial;
+                var c = sr.color;
+                c.a = 1f;
+                sr.color = c;
+            }
+        }
     }
 
     void OnEnable()
@@ -86,9 +118,8 @@ public class BuildingInteraction : MonoBehaviour
 
     void OnDisable()
     {
-        BuildingProximityDetector.OnApproachBuilding -= HandleApproachBuilding; BuildingProximityDetector.OnEnterBuilding += HandleEnteringBuilding;
+        BuildingProximityDetector.OnApproachBuilding -= HandleApproachBuilding;
         BuildingProximityDetector.OnEnterBuilding -= HandleEnteringBuilding;
-
     }
 
     void Update()
@@ -252,18 +283,35 @@ public class BuildingInteraction : MonoBehaviour
         }
     }
 
-    private async void HandleApproachBuilding(BuildingProximityDetector.Building building)
+    private void HandleApproachBuilding(BuildingProximityDetector.Building building)
     {
         Debug.Log("Building Interaction:: Approaching building " + building.name);
     }
     
-        private async void HandleEnteringBuilding(BuildingProximityDetector.Building building)
+    private async void HandleEnteringBuilding(BuildingProximityDetector.Building building)
     {
         if (building.name == buildingName)
         {
+            // Check if already entered
+            var service = new UnlockedBuildingService();
+            var enteredBuildings = await service.RetrieveUnlockedBuildings();
+            bool alreadyEntered = enteredBuildings.Exists(b => b.buildingName == buildingName);
+            if (alreadyEntered)
+            {
+                Debug.Log($"Building {buildingName} already entered. Skipping unlock logic.");
+                return;
+            }
+
             Debug.Log("Activating building: " + building.name);
             activated = true;
             ShowDialog("Unocked building " + building.name);
+
+            // Show unlocked panel
+            if (buildingUnlockedPanel != null)
+            {
+                buildingUnlockedPanel.SetActive(true);
+                // Panel will be hidden by button click
+            }
 
             // Save unlock event to Firestore
             string userId = FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.UserId : "unknown";
@@ -274,7 +322,6 @@ public class BuildingInteraction : MonoBehaviour
                 buildingName,
                 transform.position
             );
-            var service = new UnlockedBuildingService();
             await service.SaveUnlockedBuildingAsync(record);
         }
     }

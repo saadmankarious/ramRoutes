@@ -17,6 +17,7 @@ public class BuildingProximityDetector : MonoBehaviour
     [SerializeField] private float updateInterval = 1f;
     [SerializeField] private bool showDebugInfo = true;
     [SerializeField] private Canvas locationDisabledCanvas;
+    [SerializeField] private bool simulateBuildingEntry = false;
 
     private LocationServiceStatus locationStatus;
     private string currentStatus = "Initializing...";
@@ -249,6 +250,12 @@ public class BuildingProximityDetector : MonoBehaviour
 
     void Update()
     {
+        if (simulateBuildingEntry && closestBuilding != null)
+        {
+            OnBuildingEntered(closestBuilding);
+            simulateBuildingEntry = false;
+        }
+
         if (locationDisabledCanvas != null)
         {
             bool locationEnabled = Input.location.isEnabledByUser && Input.location.status != LocationServiceStatus.Failed;
