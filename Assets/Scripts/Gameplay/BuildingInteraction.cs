@@ -54,6 +54,8 @@ public class BuildingInteraction : MonoBehaviour
     public ScrollRect usersScrollView;
     public Transform usersContentParent;
     public GameObject userPrefab;
+    public GameObject usersWhoUnlockedPanel;
+
 
     void Awake()
     {
@@ -301,7 +303,7 @@ public class BuildingInteraction : MonoBehaviour
     {
         Debug.Log("Building Interaction:: Approaching building " + building.name);
     }
-    
+
     private async void HandleEnteringBuilding(BuildingProximityDetector.Building building)
     {
         if (building.name == buildingName)
@@ -319,7 +321,6 @@ public class BuildingInteraction : MonoBehaviour
 
             Debug.Log("Activating building: " + building.name);
             activated = true;
-            ShowDialog("Unocked building " + building.name);
 
             // Show unlocked panel
             if (buildingUnlockedPanel != null)
@@ -345,44 +346,47 @@ public class BuildingInteraction : MonoBehaviour
         }
     }
 
- public async void DisplayUsersWhoUnlocked()
-{
-    // Clear previous entries
-    foreach (Transform child in usersContentParent)
+    public async void DisplayUsersWhoUnlocked()
     {
-        Destroy(child.gameObject);
-    }
-
-    var service = new UnlockedBuildingService();
-    var unlockedList = await service.RetrieveUnlockedBuildings();
-    var usersForBuilding = unlockedList.FindAll(b => b.buildingName == buildingName);
-    
-    foreach (var record in usersForBuilding)
-    {
-        // Instantiate the prefab
-        GameObject userGO = Instantiate(userPrefab, usersContentParent);
-        
-        // Get the Text component from a child object
-        Text userNameText = userGO.GetComponentInChildren<Text>(true); // 'true' to include inactive children
-        
-        if (userNameText != null)
+        // Clear previous entries
+        foreach (Transform child in usersContentParent)
         {
-            Debug.Log($"Setting user text: userName={record.userName}, userId={record.userId}");
-            userNameText.text =  record.userName;
-            
-            // Optional: Adjust RectTransform if needed
-            RectTransform textRect = userNameText.GetComponent<RectTransform>();
-            if (textRect != null)
+            Destroy(child.gameObject);
+        }
+
+        var service = new UnlockedBuildingService();
+        var unlockedList = await service.RetrieveUnlockedBuildings();
+        var usersForBuilding = unlockedList.FindAll(b => b.buildingName == buildingName);
+        if (usersForBuilding.Count == 0)
+        {
+            usersWhoUnlockedPanel.gameObject.SetActive(false);
+        }
+        foreach (var record in usersForBuilding)
+        {
+            // Instantiate the prefab
+            GameObject userGO = Instantiate(userPrefab, usersContentParent);
+
+            // Get the Text component from a child object
+            Text userNameText = userGO.GetComponentInChildren<Text>(true); // 'true' to include inactive children
+
+            if (userNameText != null)
             {
-                textRect.pivot = new Vector2(0.5f, 0.5f);
-                textRect.anchorMin = new Vector2(0.5f, 0.5f);
-                textRect.anchorMax = new Vector2(0.5f, 0.5f);
+                Debug.Log($"Setting user text: userName={record.userName}, userId={record.userId}");
+                userNameText.text = record.userName;
+
+                // Optional: Adjust RectTransform if needed
+                RectTransform textRect = userNameText.GetComponent<RectTransform>();
+                if (textRect != null)
+                {
+                    textRect.pivot = new Vector2(0.5f, 0.5f);
+                    textRect.anchorMin = new Vector2(0.5f, 0.5f);
+                    textRect.anchorMax = new Vector2(0.5f, 0.5f);
+                }
+            }
+            else
+            {
+                Debug.LogError("No Text component found in prefab or its children!");
             }
         }
-        else
-        {
-            Debug.LogError("No Text component found in prefab or its children!");
-        }
     }
-}
 }

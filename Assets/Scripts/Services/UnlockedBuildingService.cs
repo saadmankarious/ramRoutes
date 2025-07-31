@@ -24,6 +24,8 @@ namespace RamRoutes.Services
                 { "userId", record.userId },
                 { "unlockTime", record.unlockTime.ToString("o") },
                 { "buildingId", record.buildingId },
+                { "userName", record.userName },
+
                 { "buildingName", record.buildingName },
                 { "buildingPosition", new Dictionary<string, object>
                     {
