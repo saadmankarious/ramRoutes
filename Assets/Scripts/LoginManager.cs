@@ -84,16 +84,20 @@ public class LoginManager : MonoBehaviour
         }
     }
 
-    private void HandleSuccessfulLogin(string email)
+    private async void HandleSuccessfulLogin(string email)
     {
         playerName = email.Split('@')[0];
         PlayerPrefs.SetString("PlayerName", playerName);
-        
         loginPanel.SetActive(false);
         welcomePanel.SetActive(true);
         welcomeText.text = $"Welcome, {playerName}!";
         playButton.interactable = true;
         statusText.text = "";
+
+        // Retrieve and cache current user profile
+        var userService = new RamRoutes.Services.UserService();
+        string userId = auth.CurrentUser != null ? auth.CurrentUser.UserId : "unknown";
+        await userService.RetrieveAndCacheCurrentUserProfile(userId);
     }
 
     private async void OnLoginClicked()

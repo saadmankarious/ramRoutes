@@ -77,5 +77,48 @@ namespace RamRoutes.Services
             }
             return user;
         }
+
+        /// <summary>
+        /// Attempts to get the current user profile from local cache (PlayerPrefs),
+        /// falls back to Firestore if not found or malformed.
+        /// Returns a User object or null.
+        /// </summary>
+        public async Task<User> GetUserProfileCachedOrRemoteAsync(string userId)
+        {
+            // Try local cache first
+            if (PlayerPrefs.HasKey("current_user_profile"))
+            {
+                string json = PlayerPrefs.GetString("current_user_profile");
+                try
+                {
+                    User cachedUser = JsonUtility.FromJson<User>(json);
+                    if (cachedUser != null && !string.IsNullOrEmpty(cachedUser.userId))
+                    {
+                        Debug.Log($"User profile loaded from cache: {cachedUser.userId}, {cachedUser.name}");
+                        return cachedUser;
+                    }
+                    else
+                    {
+                        Debug.LogWarning("Cached user profile is malformed or missing userId.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning($"Failed to parse cached user profile: {ex.Message}");
+                }
+            }
+            // Fallback to Firestore
+            User remoteUser = await RetrieveUserById(userId);
+            if (remoteUser != null)
+            {
+                string json = JsonUtility.ToJson(remoteUser);
+                PlayerPrefs.SetString("current_user_profile", json);
+                PlayerPrefs.Save();
+                Debug.Log($"User profile loaded from Firestore and cached: {remoteUser.userId}, {remoteUser.name}");
+                return remoteUser;
+            }
+            Debug.LogWarning("User profile not found in cache or Firestore.");
+            return null;
+        }
     }
 }

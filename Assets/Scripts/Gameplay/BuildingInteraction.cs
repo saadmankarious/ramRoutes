@@ -35,7 +35,7 @@ public class BuildingInteraction : MonoBehaviour
     [SerializeField] private Button closeUnlockedPanelButton;
 
     [Header("Debug")]
-    [SerializeField] private bool showUnlockedPanelOnStart = true;
+    [SerializeField] private bool showUnlockedPanelOnStart = false;
 
     // Private Variables
     private bool isPlayerInRange = false;
@@ -328,11 +328,14 @@ public class BuildingInteraction : MonoBehaviour
                 DisplayUsersWhoUnlocked();
                 // Panel will be hidden by button click
             }
-
+            // Use unified user profile retrieval
+            var userService = new UserService();
+            var userProfile = await userService.GetUserProfileCachedOrRemoteAsync(userId);
+            string userName = userProfile != null && !string.IsNullOrEmpty(userProfile.name) ? userProfile.name : userId;
             // Save unlock event to Firestore
             var record = new UnlockedBuildingRecord(
                 userId,
-                FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.DisplayName : "Unknown User",
+                userName,
                 System.DateTime.UtcNow,
                 buildingName,
                 buildingName,
@@ -365,7 +368,7 @@ public class BuildingInteraction : MonoBehaviour
         if (userNameText != null)
         {
             Debug.Log($"Setting user text: userName={record.userName}, userId={record.userId}");
-            userNameText.text =  record.userId;
+            userNameText.text =  record.userName;
             
             // Optional: Adjust RectTransform if needed
             RectTransform textRect = userNameText.GetComponent<RectTransform>();

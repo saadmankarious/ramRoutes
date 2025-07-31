@@ -24,6 +24,8 @@ public class BuildingProximityDetector : MonoBehaviour
     private string currentStatus = "Initializing...";
     private Building closestBuilding;
     private float distanceToBuilding;
+    private float nextUpdateTime = 0f;
+    private float secondsRemaining = 0f;
 
     public delegate void BuildingEvent(Building building);
     public static event BuildingEvent OnApproachBuilding;
@@ -61,6 +63,7 @@ public class BuildingProximityDetector : MonoBehaviour
         }
         #endif
 
+        nextUpdateTime = Time.time + updateInterval;
         StartCoroutine(LocationUpdateRoutine());
     }
 
@@ -98,6 +101,7 @@ public class BuildingProximityDetector : MonoBehaviour
         while (true)
         {
             CheckBuildingProximity(Input.location.lastData);
+            nextUpdateTime = Time.time + updateInterval;
             yield return new WaitForSeconds(updateInterval);
         }
     }
@@ -239,17 +243,18 @@ public class BuildingProximityDetector : MonoBehaviour
     void OnGUI()
     {
         if (!showDebugInfo) return;
-        
         GUI.skin.label.fontSize = 30;
-        GUI.Label(new Rect(10, 10, 1000, 100), $"STATUS: {currentStatus}");
-        
+        // Status label
+        GUI.Label(new Rect(10, 10, 1000, 40), $"STATUS: {currentStatus}");
+        // GPS label
         if (Input.location.status == LocationServiceStatus.Running)
         {
             var loc = Input.location.lastData;
-            GUI.Label(new Rect(10, 50, 1000, 100), 
-                $"GPS: {loc.latitude:F6}, {loc.longitude:F6}\n" +
-                $"Accuracy: {loc.horizontalAccuracy:F1}m");
+            GUI.Label(new Rect(10, 55, 1000, 40), 
+                $"GPS: {loc.latitude:F6}, {loc.longitude:F6}    Accuracy: {loc.horizontalAccuracy:F1}m");
         }
+        // Countdown label (move down to avoid overlap)
+        GUI.Label(new Rect(10, 100, 1000, 40), $"Next location update in: {secondsRemaining:F1} seconds");
     }
 
     void Update()
@@ -271,6 +276,9 @@ public class BuildingProximityDetector : MonoBehaviour
                 }
             }
         }
+
+        // Countdown logic for next location update
+        secondsRemaining = Mathf.Max(0f, nextUpdateTime - Time.time);
 
         if (simulateBuildingEntry && buildings[3]!= null)
         {
