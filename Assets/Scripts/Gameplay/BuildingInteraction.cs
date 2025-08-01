@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 using RamRoutes.Model;
@@ -60,6 +61,8 @@ public class BuildingInteraction : MonoBehaviour
     public GameObject userPrefab;
     public GameObject usersWhoUnlockedPanel;
 
+    private List<BuildingEvent> cachedBuildingEvents;
+    private bool eventsLoaded = false;
 
     void Awake()
     {
@@ -105,8 +108,11 @@ public class BuildingInteraction : MonoBehaviour
         if (showUnlockedPanelOnStart && buildingUnlockedPanel != null)
         {
             buildingUnlockedPanel.SetActive(true);
-            DisplayUsersWhoUnlocked();
+            _ = DisplayUsersWhoUnlocked();
         }
+
+        // Load building events at start
+        _ = FetchBuildingEvents();
     }
 
     private IEnumerator SetActiveIfEntered(UnlockedBuildingService service)
@@ -280,6 +286,12 @@ public class BuildingInteraction : MonoBehaviour
             {
                 dialogText.text = "Press J to interact";
             }
+
+            // Display building events when player is in range
+            if (buildingEventsPanel != null && eventsLoaded && activated)
+            {
+                DisplayBuildingEvents();
+            }
         }
     }
 
@@ -289,6 +301,12 @@ public class BuildingInteraction : MonoBehaviour
         {
             isPlayerInRange = false;
             CloseDialog();
+            
+            // Deactivate building events panel when player leaves
+            if (buildingEventsPanel != null)
+            {
+                buildingEventsPanel.SetActive(false);
+            }
         }
     }
 
@@ -330,11 +348,8 @@ public class BuildingInteraction : MonoBehaviour
             if (buildingUnlockedPanel != null)
             {
                 buildingUnlockedPanel.SetActive(true);
-                // Run both display operations in parallel
-                await Task.WhenAll(
-                    Task.Run(async () => await DisplayUsersWhoUnlocked()),
-                    Task.Run(async () => await DisplayBuildingEvents())
-                );
+                // Only display users who unlocked
+                await DisplayUsersWhoUnlocked();
                 // Panel will be hidden by button click
             }
 
@@ -398,7 +413,18 @@ public class BuildingInteraction : MonoBehaviour
         }
     }
 
-    private async Task DisplayBuildingEvents()
+    private async Task FetchBuildingEvents()
+    {
+        if (eventsLoaded) return;
+        var eventService = new BuildingEventService();
+        var allEvents = await eventService.GetBuildingEventsAsync(forceRefresh: true);
+        cachedBuildingEvents = allEvents.FindAll(e => e.buildingName == buildingName);
+                Debug.Log("fetching events for building " + buildingName + cachedBuildingEvents.Count);
+
+        eventsLoaded = true;
+    }
+
+    private void DisplayBuildingEvents()
     {
         if (eventsContentParent == null || eventPrefab == null)
         {
@@ -412,14 +438,10 @@ public class BuildingInteraction : MonoBehaviour
             Destroy(child.gameObject);
         }
 
-        var eventService = new BuildingEventService();
-        var allEvents = await eventService.GetBuildingEventsAsync();
-        var buildingEvents = allEvents.FindAll(e => e.buildingName == buildingName);
-
-        if (buildingEvents.Count > 0 && buildingEventsPanel != null)
+        if (cachedBuildingEvents != null && cachedBuildingEvents.Count > 0 && buildingEventsPanel != null)
         {
             buildingEventsPanel.SetActive(true);
-            foreach (var evt in buildingEvents)
+            foreach (var evt in cachedBuildingEvents)
             {
                 GameObject eventGO = Instantiate(eventPrefab, eventsContentParent);
                 Text eventText = eventGO.GetComponentInChildren<Text>();

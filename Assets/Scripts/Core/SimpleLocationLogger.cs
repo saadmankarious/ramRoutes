@@ -18,7 +18,8 @@ public class BuildingProximityDetector : MonoBehaviour
     [SerializeField] private bool showDebugInfo = true;
     [SerializeField] private Canvas locationDisabledCanvas;
     [SerializeField] private bool simulateBuildingEntry = false;
-    [SerializeField] private bool simulateGpsEnabled = false;
+//change me later
+    [SerializeField] private bool simulateGpsEnabled = true;
 
     private LocationServiceStatus locationStatus;
     private string currentStatus = "Initializing...";
