@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using System.Data.SqlClient;
+using System.Threading.Tasks;
 using RamRoutes.Model;
 using RamRoutes.Services;
 using Firebase.Auth;
@@ -33,6 +34,9 @@ public class BuildingInteraction : MonoBehaviour
     [Header("UI Panels")]
     [SerializeField] private GameObject buildingUnlockedPanel;
     [SerializeField] private Button closeUnlockedPanelButton;
+    [SerializeField] private GameObject buildingEventsPanel; // Add this in Unity Inspector
+    [SerializeField] private Transform eventsContentParent; // Add this in Unity Inspector
+    [SerializeField] private GameObject eventPrefab; // Add this in Unity Inspector
 
     [Header("Debug")]
     [SerializeField] private bool showUnlockedPanelOnStart = false;
@@ -322,17 +326,23 @@ public class BuildingInteraction : MonoBehaviour
             Debug.Log("Activating building: " + building.name);
             activated = true;
 
-            // Show unlocked panel
+            // Show unlocked panel and related information
             if (buildingUnlockedPanel != null)
             {
                 buildingUnlockedPanel.SetActive(true);
-                DisplayUsersWhoUnlocked();
+                // Run both display operations in parallel
+                await Task.WhenAll(
+                    Task.Run(async () => await DisplayUsersWhoUnlocked()),
+                    Task.Run(async () => await DisplayBuildingEvents())
+                );
                 // Panel will be hidden by button click
             }
+
             // Use unified user profile retrieval
             var userService = new UserService();
             var userProfile = await userService.GetUserProfileCachedOrRemoteAsync(userId);
             string userName = userProfile != null && !string.IsNullOrEmpty(userProfile.name) ? userProfile.name : userId;
+            
             // Save unlock event to Firestore
             var record = new UnlockedBuildingRecord(
                 userId,
@@ -346,7 +356,8 @@ public class BuildingInteraction : MonoBehaviour
         }
     }
 
-    public async void DisplayUsersWhoUnlocked()
+    // Make DisplayUsersWhoUnlocked return a Task for parallel execution
+    public async Task DisplayUsersWhoUnlocked()
     {
         // Clear previous entries
         foreach (Transform child in usersContentParent)
@@ -365,16 +376,13 @@ public class BuildingInteraction : MonoBehaviour
         {
             // Instantiate the prefab
             GameObject userGO = Instantiate(userPrefab, usersContentParent);
-
-            // Get the Text component from a child object
-            Text userNameText = userGO.GetComponentInChildren<Text>(true); // 'true' to include inactive children
-
+            Text userNameText = userGO.GetComponentInChildren<Text>(true);
+            
             if (userNameText != null)
             {
                 Debug.Log($"Setting user text: userName={record.userName}, userId={record.userId}");
                 userNameText.text = record.userName;
 
-                // Optional: Adjust RectTransform if needed
                 RectTransform textRect = userNameText.GetComponent<RectTransform>();
                 if (textRect != null)
                 {
@@ -387,6 +395,43 @@ public class BuildingInteraction : MonoBehaviour
             {
                 Debug.LogError("No Text component found in prefab or its children!");
             }
+        }
+    }
+
+    private async Task DisplayBuildingEvents()
+    {
+        if (eventsContentParent == null || eventPrefab == null)
+        {
+            Debug.LogError("Events UI components not set up!");
+            return;
+        }
+
+        // Clear previous entries
+        foreach (Transform child in eventsContentParent)
+        {
+            Destroy(child.gameObject);
+        }
+
+        var eventService = new BuildingEventService();
+        var allEvents = await eventService.GetBuildingEventsAsync();
+        var buildingEvents = allEvents.FindAll(e => e.buildingName == buildingName);
+
+        if (buildingEvents.Count > 0 && buildingEventsPanel != null)
+        {
+            buildingEventsPanel.SetActive(true);
+            foreach (var evt in buildingEvents)
+            {
+                GameObject eventGO = Instantiate(eventPrefab, eventsContentParent);
+                Text eventText = eventGO.GetComponentInChildren<Text>();
+                if (eventText != null)
+                {
+                    eventText.text = $"{evt.eventName}\n{evt.date.ToString("MMM dd, yyyy h:mm tt")}";
+                }
+            }
+        }
+        else if (buildingEventsPanel != null)
+        {
+            buildingEventsPanel.SetActive(false);
         }
     }
 }

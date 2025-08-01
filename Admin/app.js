@@ -24,6 +24,11 @@ function generateRandomPassword(length = 12) {
   return crypto.randomBytes(length).toString('hex').slice(0, length);
 }
 
+// Generate random ID for building events
+function generateBuildingEventId(length = 8) {
+    return 'BE' + crypto.randomBytes(length).toString('hex').slice(0, length);
+}
+
 // Routes
 app.get('/', (req, res) => {
   res.render('form');
@@ -64,6 +69,32 @@ app.post('/create-user', async (req, res) => {
     console.error('Error creating user:', error);
     res.render('error', { error: error.message });
   }
+});
+
+// Building Event Routes
+app.get('/building-event', (req, res) => {
+    const buildingId = generateBuildingEventId();
+    res.render('building-event-form', { buildingId });
+});
+
+app.post('/create-building-event', async (req, res) => {
+    try {
+        const { buildingId, buildingName, eventName, date } = req.body;
+        
+        // Create building event document in Firestore
+        await db.collection('building-events').add({
+            buildingId,
+            buildingName,
+            eventName,
+            date: new Date(date), // Convert string to Date object
+            createdAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+        
+        res.send('Building event created successfully!');
+    } catch (error) {
+        console.error('Error creating building event:', error);
+        res.status(500).send('Error creating building event: ' + error.message);
+    }
 });
 
 // Start server
