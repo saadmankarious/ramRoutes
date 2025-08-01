@@ -22,10 +22,11 @@ namespace RamRoutes.Services
         {
             var docData = new Dictionary<string, object>
             {
-                { "userId", user.userId },
+                { "id", user.userId },
                 { "notificationToken", user.notificationToken },
                 { "name", user.name },
-                { "email", user.email }
+                { "email", user.email },
+                { "points", user.points }
             };
             try
             {
@@ -35,6 +36,8 @@ namespace RamRoutes.Services
             catch (Exception ex)
             {
                 Debug.LogError($"Failed to update user {user.userId}: {ex.Message}");
+                Debug.LogError($"Points: {user.points} id: {user.userId}");
+
             }
         }
 
@@ -46,12 +49,16 @@ namespace RamRoutes.Services
                 if (doc.Exists)
                 {
                     var data = doc.ToDictionary();
-                    string id = data.ContainsKey("userId") ? data["userId"].ToString() : "";
+                    string id = data.ContainsKey("id") ? data["id"].ToString() : "";
                     string token = data.ContainsKey("notificationToken") ? data["notificationToken"].ToString() : "";
                     string name = data.ContainsKey("name") ? data["name"].ToString() : "";
                     string email = data.ContainsKey("email") ? data["email"].ToString() : "";
+                    int points = data.ContainsKey("points") ? Convert.ToInt32(data["points"]) : 0;
+                    
+                    var user = new User(id, token, name, email);
+                    user.points = points;
                     Debug.Log($"User {id} retrieved from Firestore");
-                    return new User(id, token, name, email);
+                    return user;
                 }
                 else
                 {
@@ -99,7 +106,7 @@ namespace RamRoutes.Services
                     }
                     else
                     {
-                        Debug.LogWarning("Cached user profile is malformed or missing userId.");
+                        Debug.LogWarning($"Cached user profile is malformed or missing userId. User id: {cachedUser.userId}. Points: {cachedUser.points}");
                     }
                 }
                 catch (Exception ex)
@@ -119,6 +126,31 @@ namespace RamRoutes.Services
             }
             Debug.LogWarning("User profile not found in cache or Firestore.");
             return null;
+        }        public async Task AddPoints(string userId, int pointsToAdd)
+        {
+            var user = await GetUserProfileCachedOrRemoteAsync(userId);
+            if (user != null)
+            {
+                user.points += pointsToAdd;
+                await UpdateUser(user);
+                Debug.Log($"Added {pointsToAdd} points to user {userId}. New total: {user.points}");
+                
+                // Update cache
+                string json = JsonUtility.ToJson(user);
+                PlayerPrefs.SetString("current_user_profile", json);
+                PlayerPrefs.Save();
+            }
+            else
+            {
+                Debug.LogWarning($"Cannot add points: User {userId} not found in database");
+            }
+        }
+
+        public async Task<int> GetPoints(string userId)
+        {
+            var user = await GetUserProfileCachedOrRemoteAsync(userId);
+            Debug.Log($"Getting user points. User: {user.userId}. Points: {user.points}");
+            return user?.points ?? 0;
         }
     }
 }

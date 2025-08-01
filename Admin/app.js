@@ -35,11 +35,15 @@ app.get('/', (req, res) => {
 });
 
 app.post('/create-user', async (req, res) => {
-  try {
-    const { email, name, residenceHall } = req.body;
+  try {    const { email, name, residenceHall, password: providedPassword } = req.body;
     
-    // Generate random password
-    const password = generateRandomPassword();
+    // Validate and use provided password or generate random one
+    let password;
+    if (providedPassword && providedPassword.trim().length >= 6) {
+      password = providedPassword.trim();
+    } else {
+      password = generateRandomPassword();
+    }
     
     // Create Firebase Auth user
     const userRecord = await auth.createUser({
@@ -48,9 +52,9 @@ app.post('/create-user', async (req, res) => {
       emailVerified: false,
       disabled: false
     });
-    
-    // Save additional data to Firestore
+      // Save additional data to Firestore
     await db.collection('users').doc(userRecord.uid).set({
+      id: userRecord.uid,
       name,
       email,
       residenceHall,

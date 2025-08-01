@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.Events;
 using System.Linq;
 using System.Threading.Tasks;
+using RamRoutes.Services;
 
 public class UIManager : MonoBehaviour
 {
@@ -115,6 +116,27 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    private async Task GetUserPoints()
+    {
+        try 
+        {
+            var userService = new UserService();
+            string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var userProfile = await userService.GetUserProfileCachedOrRemoteAsync(userId);
+                if (userProfile != null)
+                {
+                    UpdateCoins(userProfile.points);
+                }
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Failed to get user points: {ex.Message}");
+        }
+    }
+
     private IEnumerator Start()
     {
         while (GameManager.Instance == null || GameManager.Instance.currentTrial == null)
@@ -124,6 +146,10 @@ public class UIManager : MonoBehaviour
 
         OnTrialComplete.AddListener(() => StartCoroutine(CompleteTrial()));
         OnTimeExpired.AddListener(TimeUp);
+
+        // Get and display user points
+        _ = GetUserPoints();
+
         StartTrial();
     }
 
@@ -461,7 +487,7 @@ private void HideObjectsWithTag(string tag)
         }
     }
 
-    private void StopAllCoroutines()
+    private void StopAllGameCoroutines()
     {
         if (typingCoroutine != null) StopCoroutine(typingCoroutine);
         if (objectiveRepeatCoroutine != null) StopCoroutine(objectiveRepeatCoroutine);
@@ -497,9 +523,11 @@ private void HideObjectsWithTag(string tag)
 
     }
 
-
-
-
-
-
+    public void UpdateCoins(int coins)
+    {
+        if (coinsText != null)
+        {
+            coinsText.text = coins.ToString();
+        }
+    }
 }

@@ -103,7 +103,7 @@ namespace RamRoutes.Services
                 PlayerPrefs.SetString("unlocked_buildings_cache", json);
                 PlayerPrefs.Save();
                 loadedFromFirestore = true;
-                Debug.Log($"Got unlocked buildings from firestore");
+                // Debug.Log($"Got unlocked buildings from firestore {}");
             }
             catch (Exception ex)
             {

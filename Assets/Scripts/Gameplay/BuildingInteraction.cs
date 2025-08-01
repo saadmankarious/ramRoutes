@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using RamRoutes.Model;
 using RamRoutes.Services;
 using Firebase.Auth;
+using System;
 
 public class BuildingInteraction : MonoBehaviour
 {
@@ -41,6 +42,7 @@ public class BuildingInteraction : MonoBehaviour
 
     [Header("Debug")]
     [SerializeField] private bool showUnlockedPanelOnStart = false;
+    [SerializeField] private bool simulateEntry = false; // Add this field
 
     // Private Variables
     private bool isPlayerInRange = false;
@@ -105,11 +107,11 @@ public class BuildingInteraction : MonoBehaviour
             closeUnlockedPanelButton.onClick.AddListener(() => buildingUnlockedPanel.SetActive(false));
         }
 
-        if (showUnlockedPanelOnStart && buildingUnlockedPanel != null)
-        {
-            buildingUnlockedPanel.SetActive(true);
-            _ = DisplayUsersWhoUnlocked();
-        }
+        // if (showUnlockedPanelOnStart && buildingUnlockedPanel != null)
+        // {
+        //     buildingUnlockedPanel.SetActive(true);
+        //     _ = DisplayUsersWhoUnlocked();
+        // }
 
         // Load building events at start
         _ = FetchBuildingEvents();
@@ -154,6 +156,15 @@ public class BuildingInteraction : MonoBehaviour
         if (isPlayerInRange && Input.GetKeyDown(interactKey))
         {
             HandleInteraction();
+        }
+
+        // Add debug simulation
+        if (simulateEntry && !activated)
+        {
+            simulateEntry = false; // Reset flag
+            Debug.Log($"[DEBUG] Simulating entry for building: {buildingName}");
+            var simBuilding = new BuildingProximityDetector.Building { name = buildingName };
+            HandleEnteringBuilding(simBuilding);
         }
 
         if (activated && !lastActivated)
@@ -334,6 +345,7 @@ public class BuildingInteraction : MonoBehaviour
             var service = new UnlockedBuildingService();
             string userId = FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.UserId : "unknown";
             var enteredBuildings = await service.RetrieveUnlockedBuildings();
+            // await service.ClearUnlockedBuildingsCache();
             bool alreadyEntered = enteredBuildings.Exists(b => b.buildingName == buildingName && b.userId == userId);
             if (alreadyEntered)
             {
@@ -348,9 +360,7 @@ public class BuildingInteraction : MonoBehaviour
             if (buildingUnlockedPanel != null)
             {
                 buildingUnlockedPanel.SetActive(true);
-                // Only display users who unlocked
                 await DisplayUsersWhoUnlocked();
-                // Panel will be hidden by button click
             }
 
             // Use unified user profile retrieval
@@ -358,6 +368,12 @@ public class BuildingInteraction : MonoBehaviour
             var userProfile = await userService.GetUserProfileCachedOrRemoteAsync(userId);
             string userName = userProfile != null && !string.IsNullOrEmpty(userProfile.name) ? userProfile.name : userId;
             
+            // Award points for unlocking the building
+            await userService.AddPoints(userId, 100);
+            // Update UI with new points
+            var updatedPoints = await userService.GetPoints(userId);
+            UIManager.Instance.UpdateCoins(updatedPoints);
+
             // Save unlock event to Firestore
             var record = new UnlockedBuildingRecord(
                 userId,
@@ -383,7 +399,10 @@ public class BuildingInteraction : MonoBehaviour
         var service = new UnlockedBuildingService();
         var unlockedList = await service.RetrieveUnlockedBuildings();
         var usersForBuilding = unlockedList.FindAll(b => b.buildingName == buildingName);
-        if (usersForBuilding.Count == 0)
+
+        try
+        {
+ if (usersForBuilding.Count == 0)
         {
             usersWhoUnlockedPanel.gameObject.SetActive(false);
         }
@@ -411,6 +430,11 @@ public class BuildingInteraction : MonoBehaviour
                 Debug.LogError("No Text component found in prefab or its children!");
             }
         }
+        } catch (Exception e) {
+                    Debug.LogError($"Error loading displaying user who unlcoked: {e.Message}");
+
+}
+       
     }
 
     private async Task FetchBuildingEvents()

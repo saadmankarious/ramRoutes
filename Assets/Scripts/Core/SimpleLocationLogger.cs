@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Android;
+using RamRoutes.Services;
 
 public class BuildingProximityDetector : MonoBehaviour
 {
@@ -13,13 +14,18 @@ public class BuildingProximityDetector : MonoBehaviour
         public Color debugColor = Color.cyan;
     }
 
+    [Header("Debug Settings")]
+    [SerializeField] private bool showDebugInfo = true;
+    [SerializeField] private bool clearCacheOnStart = false;
+    [Tooltip("Simulates GPS being enabled even if it's not")]
+    [SerializeField] private bool simulateGpsEnabled = false;
+
+    [Header("Location Settings")]
     [SerializeField] private Building[] buildings = new Building[2];
     [SerializeField] private float updateInterval = 1f;
-    [SerializeField] private bool showDebugInfo = true;
     [SerializeField] private Canvas locationDisabledCanvas;
-    [SerializeField] private bool simulateBuildingEntry = false;
+    // [SerializeField] private bool simulateBuildingEntry = false;
 //change me later
-    [SerializeField] private bool simulateGpsEnabled = true;
 
     private LocationServiceStatus locationStatus;
     private string currentStatus = "Initializing...";
@@ -32,10 +38,21 @@ public class BuildingProximityDetector : MonoBehaviour
     public static event BuildingEvent OnApproachBuilding;
     public static event BuildingEvent OnEnterBuilding;
 
-    void Start()
+    private void ClearCachedDataIfNeeded()
     {
+        // Clear local PlayerPrefs cache
         PlayerPrefs.DeleteKey("unlocked_buildings_cache");
         PlayerPrefs.Save();
+        Debug.Log("Cleared unlocked buildings cache");
+    }
+
+    void Start()
+    {
+        // Clear cache if enabled
+        if (clearCacheOnStart)
+        {
+            ClearCachedDataIfNeeded();
+        }
         
         if (buildings.Length == 0)
         {
@@ -281,10 +298,10 @@ public class BuildingProximityDetector : MonoBehaviour
         // Countdown logic for next location update
         secondsRemaining = Mathf.Max(0f, nextUpdateTime - Time.time);
 
-        if (simulateBuildingEntry && buildings[3]!= null)
-        {
-            OnBuildingEntered(buildings[3]);
-            simulateBuildingEntry = false;
-        }
+        // if (simulateBuildingEntry && buildings[3]!= null)
+        // {
+        //     OnBuildingEntered(buildings[3]);
+        //     simulateBuildingEntry = false;
+        // }
     }
 }
