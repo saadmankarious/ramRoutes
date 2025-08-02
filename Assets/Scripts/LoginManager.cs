@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using Firebase;
 using Firebase.Auth;
 using Firebase.Firestore;
+using System;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
 using System.Collections.Generic;
@@ -20,11 +21,10 @@ public class LoginManager : MonoBehaviour
     public GameObject welcomePanel;
     public Text welcomeText;
 
-    [Header("Attempts History")]
-    public ScrollRect attemptsScrollView;
-    public Transform attemptsContentParent;
-    public GameObject attemptTextPrefab;
-    public int maxAttemptsToShow = 20;
+    [Header("Leaderboard")]
+    public Text firstPlaceText;
+    public Text secondPlaceText;
+    public Text thirdPlaceText;
 
     private FirebaseAuth auth;
     private string playerName = "";
@@ -47,7 +47,9 @@ public class LoginManager : MonoBehaviour
 
         // Load attempts history
         await LoadAndDisplayAttempts();
-        ConfigureScrollContent();
+
+        // Load leaderboard
+        await UpdateLeaderboard();
     }
 
     private async Task InitializeFirebase()
@@ -174,7 +176,6 @@ public class LoginManager : MonoBehaviour
         try
         {
             List<GamePlay> attempts = await FirestoreUtility.GetGameCompletions();
-            DisplayAttempts(attempts);
         }
         catch (System.Exception e)
         {
@@ -182,59 +183,43 @@ public class LoginManager : MonoBehaviour
         }
     }
 
-    private void DisplayAttempts(List<GamePlay> attempts)
+    private async Task UpdateLeaderboard()
     {
-        foreach (Transform child in attemptsContentParent)
+        try
         {
-            Destroy(child.gameObject);
-        }
+            // Get all users ordered by points
+            var db = FirebaseFirestore.DefaultInstance;
+            var querySnapshot = await db.Collection("users")
+                .OrderByDescending("points")
+                .Limit(3)
+                .GetSnapshotAsync();
 
-        Color[] achievementColors = new Color[4]
-        {
-            new Color(0.8f, 0.8f, 0.8f),
-            new Color(0.2f, 0.8f, 0.2f),
-            new Color(0.2f, 0.5f, 0.8f),
-            new Color(0.9f, 0.7f, 0.1f)
-        };
-
-        int displayCount = Mathf.Min(attempts.Count, maxAttemptsToShow);
-        for (int i = displayCount - 1; i >= 0; i--)
-        {
-            GamePlay attempt = attempts[i];
-            GameObject attemptItem = Instantiate(attemptTextPrefab, attemptsContentParent);
+            var leaderboardTexts = new[] { firstPlaceText, secondPlaceText, thirdPlaceText };
             
-            RectTransform itemRect = attemptItem.GetComponent<RectTransform>();
-            itemRect.pivot = new Vector2(0.5f, 0.5f);
-            itemRect.anchorMin = new Vector2(0.5f, 0.5f);
-            itemRect.anchorMax = new Vector2(0.5f, 0.5f);
-            
-            Text attemptText = attemptItem.GetComponent<Text>();
-            string formattedDate = attempt.DateCompleted.ToDateTime().ToString("MMM dd, HH:mm");
-            attemptText.text = $"{attempt.PlayerName} - Trial {attempt.TrialNumber}";
-            attemptText.alignment = TextAnchor.MiddleCenter;
-            
-            int colorIndex = Mathf.Clamp(attempt.TrialNumber, 1, 4) - 1;
-            attemptText.color = achievementColors[colorIndex];
+            // Clear all texts first
+            foreach (var text in leaderboardTexts)
+            {
+                if (text != null) text.text = "";
+            }
+
+            int index = 0;
+            foreach (var doc in querySnapshot.Documents)
+            {
+                if (index < leaderboardTexts.Length && leaderboardTexts[index] != null)
+                {
+                    var userData = doc.ToDictionary();
+                    string name = userData.ContainsKey("name") ? userData["name"].ToString() : "Unknown";
+                    long points = userData.ContainsKey("points") ? Convert.ToInt64(userData["points"]) : 0;
+                    
+                    leaderboardTexts[index].text = $"{name}";
+                }
+                index++;
+            }
         }
-
-        LayoutRebuilder.ForceRebuildLayoutImmediate(attemptsContentParent as RectTransform);
-        Canvas.ForceUpdateCanvases();
-        attemptsScrollView.verticalNormalizedPosition = 1f;
-    }
-
-    private void ConfigureScrollContent()
-    {
-        var sizeFitter = attemptsContentParent.GetComponent<ContentSizeFitter>();
-        if (sizeFitter == null)
+        catch (System.Exception e)
         {
-            sizeFitter = attemptsContentParent.gameObject.AddComponent<ContentSizeFitter>();
-            sizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-            sizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            Debug.LogError($"Failed to update leaderboard: {e.Message}");
         }
-
-        attemptsScrollView.horizontal = false;
-        attemptsScrollView.vertical = true;
-        attemptsScrollView.movementType = ScrollRect.MovementType.Clamped;
     }
 
     public void ViewOnboarding()
