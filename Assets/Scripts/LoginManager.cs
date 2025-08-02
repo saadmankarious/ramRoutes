@@ -110,14 +110,15 @@ public class LoginManager : MonoBehaviour
         PlayerPrefs.SetString("PlayerName", playerName);
         loginPanel.SetActive(false);
         welcomePanel.SetActive(true);
-        welcomeText.text = $"Welcome, {playerName}!";
         playButton.interactable = true;
         statusText.text = "";
 
         // Retrieve and cache current user profile
         var userService = new RamRoutes.Services.UserService();
         string userId = auth.CurrentUser != null ? auth.CurrentUser.UserId : "unknown";
-        await userService.RetrieveAndCacheCurrentUserProfile(userId);
+        var user = await userService.RetrieveAndCacheCurrentUserProfile(userId);
+                welcomeText.text = $"Welcome, {user.name.Split(" ")[0]}!";
+
     }
 
     private async void OnLoginClicked()
