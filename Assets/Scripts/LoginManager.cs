@@ -26,6 +26,12 @@ public class LoginManager : MonoBehaviour
     public Text secondPlaceText;
     public Text thirdPlaceText;
 
+    [Header("Event List")]
+    public ScrollRect trialsScrollView;
+    public Transform trialContentParent;
+    public GameObject unlockPrefab;  // Prefab for unlock events
+    public GameObject eventPrefab;    // Prefab for building events
+
     private FirebaseAuth auth;
     private string playerName = "";
 
@@ -50,6 +56,12 @@ public class LoginManager : MonoBehaviour
 
         // Load leaderboard
         await UpdateLeaderboard();
+
+        // Load unlocks
+        await UpdateUnlockHistory();
+
+        // Load events
+        // await UpdateEventList();
     }
 
     private async Task InitializeFirebase()
@@ -219,6 +231,122 @@ public class LoginManager : MonoBehaviour
         catch (System.Exception e)
         {
             Debug.LogError($"Failed to update leaderboard: {e.Message}");
+        }
+    }    private async Task UpdateUnlockHistory()
+    {
+        try
+        {
+            var db = FirebaseFirestore.DefaultInstance;
+            
+            // Get both unlocks and events
+            var unlocksTask = db.Collection("unlocked-trials")
+                .OrderByDescending("unlockTime")
+                .GetSnapshotAsync();
+                
+            var eventsTask = db.Collection("building-events")
+                .OrderByDescending("date")
+                .GetSnapshotAsync();
+
+            // Wait for both queries to complete
+            await Task.WhenAll(unlocksTask, eventsTask);
+            
+            // Clear existing entries
+            if (trialContentParent != null)
+            {
+                foreach (Transform child in trialContentParent)
+                {
+                    Destroy(child.gameObject);
+                }
+            }
+
+            // Combine and sort both types of entries
+            var allEntries = new List<(DateTime time, string text)>();
+
+            // Process unlocks
+            foreach (var doc in unlocksTask.Result.Documents)
+            {
+                var data = doc.ToDictionary();
+                string userName = data.ContainsKey("userName") ? data["userName"].ToString() : "Unknown";
+                string buildingName = data.ContainsKey("buildingName") ? data["buildingName"].ToString() : "Unknown Building";
+                var time = data.ContainsKey("unlockTime") && data["unlockTime"] is Timestamp timestamp 
+                    ? timestamp.ToDateTime()
+                    : DateTime.MinValue;
+
+                allEntries.Add((time, $"{userName} unlocked {buildingName}"));
+            }
+
+            // Process events
+            foreach (var doc in eventsTask.Result.Documents)
+            {
+                var data = doc.ToDictionary();
+                string buildingName = data.ContainsKey("buildingName") ? data["buildingName"].ToString() : "Unknown Building";
+                string eventName = data.ContainsKey("eventName") ? data["eventName"].ToString() : "Unknown Event";
+                string eventDetails = data.ContainsKey("details") ? data["details"].ToString() : "";
+                var time = data.ContainsKey("date") && data["date"] is Timestamp timestamp
+                    ? timestamp.ToDateTime()
+                    : DateTime.MinValue;
+
+                // Format the event text with more details if available
+                string eventText = string.IsNullOrEmpty(eventDetails)
+                    ? $"Event: {eventName} at {buildingName}"
+                    : $"Event: {eventName} at {buildingName} - {eventDetails}";
+                                    allEntries.Add((time,eventText));
+
+            }
+
+            // Sort all entries by time
+            //allEntries.Sort((a, b) => b.time.CompareTo(a.time));
+
+            // Create entries in scroll view
+            foreach (var entry in allEntries)
+            {
+                if (unlockPrefab != null && eventPrefab != null && trialContentParent != null)
+                {                GameObject listEntry;
+                    // Use appropriate prefab based on event type and ensure prefab exists
+                    if (entry.text.Contains("unlocked"))
+                    {
+                        if (unlockPrefab != null)
+                        {
+                            listEntry = Instantiate(unlockPrefab, trialContentParent);
+                        }
+                        else
+                        {
+                            Debug.LogError("Unlock prefab is missing!");
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        if (eventPrefab != null)
+                        {
+                            listEntry = Instantiate(eventPrefab, trialContentParent);
+                        }
+                        else
+                        {
+                            Debug.LogError("Event prefab is missing!");
+                            continue;
+                        }
+                    }
+
+                    Text entryText = listEntry.GetComponentInChildren<Text>();
+                    
+                    if (entryText != null)
+                    {
+                        entryText.text = $"{entry.text}\n{entry.time.ToLocalTime():MMM dd, yyyy h:mm tt}";
+                    }
+                }
+            }
+
+            // Force layout update
+            if (trialsScrollView != null)
+            {
+                Canvas.ForceUpdateCanvases();
+                trialsScrollView.verticalNormalizedPosition = 1f;
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Failed to update unlock history: {e.Message}");
         }
     }
 
