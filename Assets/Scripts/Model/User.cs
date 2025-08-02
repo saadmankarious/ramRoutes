@@ -12,6 +12,7 @@ namespace RamRoutes.Model
         public string email  { set; get; }
         public int points  { set; get; }
 
+        public string currentBuilding { set; get; }
         public User(string userId, string notificationToken, string name, string email)
         {
             this.userId = userId;

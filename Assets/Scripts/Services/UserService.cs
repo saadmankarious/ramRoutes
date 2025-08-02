@@ -19,14 +19,14 @@ namespace RamRoutes.Services
         }
 
         public async Task UpdateUser(User user)
-        {
-            var docData = new Dictionary<string, object>
+        {            var docData = new Dictionary<string, object>
             {
                 { "id", user.userId },
                 { "notificationToken", user.notificationToken },
                 { "name", user.name },
                 { "email", user.email },
-                { "points", user.points }
+                { "points", user.points },
+                { "currentBuilding", user.currentBuilding }
             };
             try
             {
@@ -48,15 +48,15 @@ namespace RamRoutes.Services
                 DocumentSnapshot doc = await db.Collection("users").Document(userId).GetSnapshotAsync();
                 if (doc.Exists)
                 {
-                    var data = doc.ToDictionary();
-                    string id = data.ContainsKey("id") ? data["id"].ToString() : "";
+                    var data = doc.ToDictionary();                    string id = data.ContainsKey("id") ? data["id"].ToString() : "";
                     string token = data.ContainsKey("notificationToken") ? data["notificationToken"].ToString() : "";
                     string name = data.ContainsKey("name") ? data["name"].ToString() : "";
                     string email = data.ContainsKey("email") ? data["email"].ToString() : "";
                     int points = data.ContainsKey("points") ? Convert.ToInt32(data["points"]) : 0;
-                    
-                    var user = new User(id, token, name, email);
+                    string currentBuilding = data.ContainsKey("currentBuilding") ? data["currentBuilding"].ToString() : "";
+                      var user = new User(id, token, name, email);
                     user.points = points;
+                    user.currentBuilding = currentBuilding;
                     Debug.Log($"User {id} retrieved from Firestore");
                     return user;
                 }
@@ -151,6 +151,68 @@ namespace RamRoutes.Services
             var user = await GetUserProfileCachedOrRemoteAsync(userId);
             Debug.Log($"Getting user points. User: {user.userId}. Points: {user.points}");
             return user?.points ?? 0;
+        }
+
+        public async Task UpdateCurrentBuilding(string userId, string buildingName)
+        {
+            try
+            {
+                var userDoc = db.Collection("users").Document(userId);
+                await userDoc.UpdateAsync(new Dictionary<string, object>
+                {
+                    { "currentBuilding", buildingName }
+                });
+
+                // Update the cached user profile
+                var user = await GetUserProfileCachedOrRemoteAsync(userId);
+                if (user != null)
+                {
+                    user.currentBuilding = buildingName;
+                    string json = JsonUtility.ToJson(user);
+                    PlayerPrefs.SetString("current_user_profile", json);
+                    PlayerPrefs.Save();
+                    Debug.Log($"Updated current building for user {userId} to {buildingName}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Failed to update current building for user {userId}: {ex.Message}");
+            }
+        }
+
+        public async Task<List<User>> GetUsersInBuilding(string buildingName)
+        {
+            try
+            {
+                var users = new List<User>();
+                var querySnapshot = await db.Collection("users")
+                    .WhereEqualTo("currentBuilding", buildingName)
+                    .GetSnapshotAsync();
+
+                foreach (var doc in querySnapshot.Documents)
+                {
+                    var data = doc.ToDictionary();
+                    string id = data.ContainsKey("id") ? data["id"].ToString() : "";
+                    string token = data.ContainsKey("notificationToken") ? data["notificationToken"].ToString() : "";
+                    string name = data.ContainsKey("name") ? data["name"].ToString() : "";
+                    string email = data.ContainsKey("email") ? data["email"].ToString() : "";
+                    int points = data.ContainsKey("points") ? Convert.ToInt32(data["points"]) : 0;
+                    string currentBuilding = data.ContainsKey("currentBuilding") ? data["currentBuilding"].ToString() : "";
+
+                    var user = new User(id, token, name, email);
+                    user.points = points;
+                    user.currentBuilding = currentBuilding;
+                    users.Add(user);
+                }
+
+                Debug.Log($"Found {users.Count} users in building {buildingName}");
+                return users;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Failed to retrieve users in building {buildingName}: {ex.Message}");
+                return new List<User>();
+            }
         }
     }
 }

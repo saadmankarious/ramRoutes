@@ -40,6 +40,11 @@ public class BuildingInteraction : MonoBehaviour
     [SerializeField] private Transform eventsContentParent; // Add this in Unity Inspector
     [SerializeField] private GameObject eventPrefab; // Add this in Unity Inspector
 
+    [Header("User Location Display")]
+    [SerializeField] private GameObject userLocationPrefab;  // Prefab to show where users are
+    [SerializeField] private Transform[] userSpawnPoints;    // Array of possible spawn points
+    private Dictionary<string, GameObject> activeUserLocations = new Dictionary<string, GameObject>();  // Track spawned indicators
+
     [Header("Debug")]
     [SerializeField] private bool showUnlockedPanelOnStart = false;
     [SerializeField] private bool simulateEntry = false; // Add this field
@@ -296,12 +301,14 @@ public class BuildingInteraction : MonoBehaviour
                 GameManager.Instance.currentTrial.trialNumber == 2)
             {
                 dialogText.text = "Press J to interact";
-            }
-
-            // Display building events when player is in range
-            if (buildingEventsPanel != null && eventsLoaded && activated)
+            }            // Display building events and current users when player is in range
+            if (activated)
             {
-                DisplayBuildingEvents();
+                if (buildingEventsPanel != null && eventsLoaded)
+                {
+                    DisplayBuildingEvents();
+                }
+                _ = DisplayCurrentUsersInBuilding();
             }
         }
     }
@@ -312,12 +319,18 @@ public class BuildingInteraction : MonoBehaviour
         {
             isPlayerInRange = false;
             CloseDialog();
-            
-            // Deactivate building events panel when player leaves
+              // Deactivate building events panel when player leaves
             if (buildingEventsPanel != null)
             {
                 buildingEventsPanel.SetActive(false);
             }
+
+            // Clean up user location indicators
+            foreach (var indicator in activeUserLocations.Values)
+            {
+                Destroy(indicator);
+            }
+            activeUserLocations.Clear();
         }
     }
 
@@ -367,12 +380,14 @@ public class BuildingInteraction : MonoBehaviour
             var userService = new UserService();
             var userProfile = await userService.GetUserProfileCachedOrRemoteAsync(userId);
             string userName = userProfile != null && !string.IsNullOrEmpty(userProfile.name) ? userProfile.name : userId;
-            
-            // Award points for unlocking the building
+              // Award points for unlocking the building
             await userService.AddPoints(userId, 100);
             // Update UI with new points
             var updatedPoints = await userService.GetPoints(userId);
             UIManager.Instance.UpdateCoins(updatedPoints);
+
+            // Update user's current building
+            await userService.UpdateCurrentBuilding(userId, buildingName);
 
             // Save unlock event to Firestore
             var record = new UnlockedBuildingRecord(
@@ -478,6 +493,65 @@ public class BuildingInteraction : MonoBehaviour
         else if (buildingEventsPanel != null)
         {
             buildingEventsPanel.SetActive(false);
+        }
+    }    private async Task DisplayCurrentUsersInBuilding()
+    {
+        try
+        {
+            if (userLocationPrefab == null || userSpawnPoints == null || userSpawnPoints.Length == 0)
+            {
+                Debug.LogWarning("User location display not configured. Please set up prefab and spawn points.");
+                return;
+            }
+
+            var userService = new UserService();
+            var usersInBuilding = await userService.GetUsersInBuilding(buildingName);
+
+            // Clean up old indicators for users no longer in the building
+            List<string> usersToRemove = new List<string>();
+            foreach (var kvp in activeUserLocations)
+            {
+                if (!usersInBuilding.Exists(u => u.userId == kvp.Key))
+                {
+                    Destroy(kvp.Value);
+                    usersToRemove.Add(kvp.Key);
+                }
+            }
+            foreach (var userId in usersToRemove)
+            {
+                activeUserLocations.Remove(userId);
+            }
+
+            // Update or create indicators for current users
+            int spawnPointIndex = 0;
+            foreach (var user in usersInBuilding)
+            {
+                // Skip if this is the current user
+                if (user.userId == FirebaseAuth.DefaultInstance.CurrentUser?.UserId)
+                    continue;
+
+                GameObject indicator;
+                if (!activeUserLocations.TryGetValue(user.userId, out indicator))
+                {
+                    // Create new indicator
+                    Transform spawnPoint = userSpawnPoints[spawnPointIndex % userSpawnPoints.Length];
+                    indicator = Instantiate(userLocationPrefab, spawnPoint.position, spawnPoint.rotation);
+                    
+                    // Set user name if the prefab has a Text component
+                    Text nameText = indicator.GetComponentInChildren<Text>();
+                    if (nameText != null)
+                    {
+                        nameText.text = user.name;
+                    }
+
+                    activeUserLocations[user.userId] = indicator;
+                    spawnPointIndex++;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error displaying current users in building: {e.Message}");
         }
     }
 }
