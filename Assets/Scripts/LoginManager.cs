@@ -7,6 +7,8 @@ using System;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
 using System.Collections.Generic;
+using UnityEngine.EventSystems;
+using System.Collections;  // Add this for IEnumerator
 
 public class LoginManager : MonoBehaviour
 {
@@ -31,6 +33,10 @@ public class LoginManager : MonoBehaviour
     public Transform trialContentParent;
     public GameObject unlockPrefab;  // Prefab for unlock events
     public GameObject eventPrefab;    // Prefab for building events
+    [SerializeField] private float scrollSpeed = 0.1f; // Speed of scroll (0.1 = 10% of the scroll view per second)
+    [SerializeField] private float resetDelay = 1f; // Delay before resetting to top
+    private bool isScrollingPaused = false;
+    private bool isResetting = false;
 
     private FirebaseAuth auth;
     private string playerName = "";
@@ -41,7 +47,7 @@ public class LoginManager : MonoBehaviour
         loginPanel.SetActive(true);
         welcomePanel.SetActive(false);
         playButton.interactable = false;
-        
+
         // Setup button listeners
         loginButton.onClick.AddListener(OnLoginClicked);
         playButton.onClick.AddListener(OnPlayClicked);
@@ -71,7 +77,7 @@ public class LoginManager : MonoBehaviour
         {
             auth = FirebaseAuth.DefaultInstance;
             await FirestoreUtility.Initialize();
-            
+
             // Auth state persistence is now automatic in newer Firebase versions
             auth.StateChanged += AuthStateChanged;
         }
@@ -207,7 +213,7 @@ public class LoginManager : MonoBehaviour
                 .GetSnapshotAsync();
 
             var leaderboardTexts = new[] { firstPlaceText, secondPlaceText, thirdPlaceText };
-            
+
             // Clear all texts first
             foreach (var text in leaderboardTexts)
             {
@@ -222,7 +228,7 @@ public class LoginManager : MonoBehaviour
                     var userData = doc.ToDictionary();
                     string name = userData.ContainsKey("name") ? userData["name"].ToString() : "Unknown";
                     long points = userData.ContainsKey("points") ? Convert.ToInt64(userData["points"]) : 0;
-                    
+
                     leaderboardTexts[index].text = $"{name}";
                 }
                 index++;
@@ -232,24 +238,24 @@ public class LoginManager : MonoBehaviour
         {
             Debug.LogError($"Failed to update leaderboard: {e.Message}");
         }
-    }    private async Task UpdateUnlockHistory()
+    } private async Task UpdateUnlockHistory()
     {
         try
         {
             var db = FirebaseFirestore.DefaultInstance;
-            
+
             // Get both unlocks and events
             var unlocksTask = db.Collection("unlocked-trials")
                 .OrderByDescending("unlockTime")
                 .GetSnapshotAsync();
-                
+
             var eventsTask = db.Collection("building-events")
                 .OrderByDescending("date")
                 .GetSnapshotAsync();
 
             // Wait for both queries to complete
             await Task.WhenAll(unlocksTask, eventsTask);
-            
+
             // Clear existing entries
             if (trialContentParent != null)
             {
@@ -268,7 +274,7 @@ public class LoginManager : MonoBehaviour
                 var data = doc.ToDictionary();
                 string userName = data.ContainsKey("userName") ? data["userName"].ToString() : "Unknown";
                 string buildingName = data.ContainsKey("buildingName") ? data["buildingName"].ToString() : "Unknown Building";
-                var time = data.ContainsKey("unlockTime") && data["unlockTime"] is Timestamp timestamp 
+                var time = data.ContainsKey("unlockTime") && data["unlockTime"] is Timestamp timestamp
                     ? timestamp.ToDateTime()
                     : DateTime.MinValue;
 
@@ -290,18 +296,18 @@ public class LoginManager : MonoBehaviour
                 string eventText = string.IsNullOrEmpty(eventDetails)
                     ? $"Event: {eventName} at {buildingName}"
                     : $"Event: {eventName} at {buildingName} - {eventDetails}";
-                                    allEntries.Add((time,eventText));
+                allEntries.Add((time, eventText));
 
             }
 
             // Sort all entries by time
             //allEntries.Sort((a, b) => b.time.CompareTo(a.time));
-
+            allEntries.Shuffle();
             // Create entries in scroll view
             foreach (var entry in allEntries)
             {
                 if (unlockPrefab != null && eventPrefab != null && trialContentParent != null)
-                {                GameObject listEntry;
+                { GameObject listEntry;
                     // Use appropriate prefab based on event type and ensure prefab exists
                     if (entry.text.Contains("unlocked"))
                     {
@@ -329,19 +335,29 @@ public class LoginManager : MonoBehaviour
                     }
 
                     Text entryText = listEntry.GetComponentInChildren<Text>();
-                    
+
                     if (entryText != null)
                     {
                         entryText.text = $"{entry.text}\n{entry.time.ToLocalTime():MMM dd, yyyy h:mm tt}";
                     }
-                }
-            }
-
-            // Force layout update
-            if (trialsScrollView != null)
+                }            }       
             {
                 Canvas.ForceUpdateCanvases();
-                trialsScrollView.verticalNormalizedPosition = 1f;
+
+                // Add event triggers for pausing auto-scroll on interaction
+                var eventTrigger = trialsScrollView.gameObject.GetComponent<EventTrigger>();
+                if (eventTrigger == null)
+                {
+                    eventTrigger = trialsScrollView.gameObject.AddComponent<EventTrigger>();
+                }
+
+                var pointerEnterEntry = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+                pointerEnterEntry.callback.AddListener((data) => { OnScrollViewPointerEnter(); });
+                eventTrigger.triggers.Add(pointerEnterEntry);
+
+                var pointerExitEntry = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
+                pointerExitEntry.callback.AddListener((data) => { OnScrollViewPointerExit(); });
+                eventTrigger.triggers.Add(pointerExitEntry);
             }
         }
         catch (System.Exception e)
@@ -360,6 +376,75 @@ public class LoginManager : MonoBehaviour
         if (auth != null)
         {
             auth.StateChanged -= AuthStateChanged;
+        }
+    }    void Update()
+    {
+        // Auto-scroll the events list
+        if (trialsScrollView != null && !isScrollingPaused && trialContentParent.childCount > 0)
+        {
+            // Calculate content height
+            float contentHeight = 0;
+            foreach (RectTransform child in trialContentParent)
+            {
+                contentHeight += child.rect.height;
+            }
+
+            // Only scroll if there's enough content to scroll
+            if (contentHeight > trialsScrollView.viewport.rect.height)
+            {
+                // float currentPos = Mathf.Clamp01(trialsScrollView.verticalNormalizedPosition);
+                float newPosition = trialsScrollView.verticalNormalizedPosition - scrollSpeed;
+
+                if (newPosition <= 0)
+                {
+                    // When reaching bottom, wait a moment then reset to top
+                    StartCoroutine(ResetScrollPosition());
+                }
+                else
+                {
+                    trialsScrollView.verticalNormalizedPosition = newPosition;
+                }
+            }
+        }
+    }    private IEnumerator ResetScrollPosition()
+    {
+        if (!isResetting)
+        {
+            isResetting = true;
+            yield return new WaitForSeconds(resetDelay);
+            trialsScrollView.verticalNormalizedPosition = 0f;  // Start from the bottom
+            isResetting = false;
+        }
+    }
+
+    // Add pause/resume functionality when user interacts with scroll view
+    public void OnScrollViewPointerEnter()
+    {
+        isScrollingPaused = true;
+    }
+
+    public void OnScrollViewPointerExit()
+    {
+        isScrollingPaused = false;
+    }
+
+}
+
+
+public static class ListExtensions
+{
+    private static System.Random rng = new System.Random(); // Use a single instance of Random for better randomness
+
+    public static void Shuffle<T>(this IList<T> list)
+    {
+        int n = list.Count;
+        while (n > 1)
+        {
+            n--;
+            int k = rng.Next(n + 1); // Get a random index from 0 to n
+            T value = list[k];       // Store the value at the random index
+            list[k] = list[n];       // Move the value from the current end (n) to the random index (k)
+            list[n] = value;         // Move the stored value (from k) to the current end (n)
         }
     }
 }
