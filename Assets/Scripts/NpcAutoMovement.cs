@@ -8,6 +8,15 @@ public class NpcAutoMovement : MonoBehaviour
     public float waitTime = 2f; // Time to wait at each destination
     public float directionChangeInterval = 3f; // How often to pick new direction
     
+    [Header("Conversation")]
+    public string[] conversationLines = {
+        "Hello there, traveler!",
+        "Beautiful day, isn't it?",
+        "Safe travels on your journey!"
+    };
+    public float textDisplaySpeed = 0.05f; // Speed of text appearance
+    public KeyCode continueKey = KeyCode.Space; // Key to continue conversation
+    
     [Header("Animation")]
     private Animator animator;
     private string movingXParam = "moveX";
@@ -22,6 +31,15 @@ public class NpcAutoMovement : MonoBehaviour
     private float directionTimer;
     private bool isWaiting = false;
     
+    // Conversation variables
+    private bool isInConversation = false;
+    private int currentLineIndex = 0;
+    private string currentDisplayedText = "";
+    private float textTimer = 0f;
+    private bool isTyping = false;
+    private GameObject conversationUI;
+    private UnityEngine.UI.Text conversationText;
+    
     void Start()
     {
         // Set anchor point to starting position
@@ -33,11 +51,22 @@ public class NpcAutoMovement : MonoBehaviour
         
         // Set initial target
         ChooseNewTarget();
+        
+        // Create conversation UI
+        CreateConversationUI();
     }
     
     void Update()
     {
-        HandleMovement();
+        if (isInConversation)
+        {
+            HandleConversation();
+        }
+        else
+        {
+            HandleMovement();
+        }
+        
         UpdateAnimationParameters();
     }
     
@@ -141,6 +170,168 @@ public class NpcAutoMovement : MonoBehaviour
         animator.SetFloat(movingYParam, moveInput.y);
         animator.SetBool(idleParam, moveInput.magnitude < 0.1f);
     }
+    
+    // Conversation System
+    void CreateConversationUI()
+    {
+        // Create UI Canvas if it doesn't exist
+        Canvas canvas = FindObjectOfType<Canvas>();
+        if (canvas == null)
+        {
+            GameObject canvasObj = new GameObject("ConversationCanvas");
+            canvas = canvasObj.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvasObj.AddComponent<UnityEngine.UI.CanvasScaler>();
+            canvasObj.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+        }
+        
+        // Create conversation UI panel
+        conversationUI = new GameObject("ConversationPanel");
+        conversationUI.transform.SetParent(canvas.transform, false);
+        
+        // Add background panel
+        UnityEngine.UI.Image background = conversationUI.AddComponent<UnityEngine.UI.Image>();
+        background.color = new Color(0, 0, 0, 0.8f);
+        
+        // Set panel size and position
+        RectTransform panelRect = conversationUI.GetComponent<RectTransform>();
+        panelRect.anchorMin = new Vector2(0.1f, 0.1f);
+        panelRect.anchorMax = new Vector2(0.9f, 0.3f);
+        panelRect.offsetMin = Vector2.zero;
+        panelRect.offsetMax = Vector2.zero;
+        
+        // Create text component
+        GameObject textObj = new GameObject("ConversationText");
+        textObj.transform.SetParent(conversationUI.transform, false);
+        conversationText = textObj.AddComponent<UnityEngine.UI.Text>();
+        
+        // Configure text
+        conversationText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+        conversationText.fontSize = 18;
+        conversationText.color = Color.white;
+        conversationText.alignment = TextAnchor.MiddleLeft;
+        
+        // Set text size
+        RectTransform textRect = textObj.GetComponent<RectTransform>();
+        textRect.anchorMin = Vector2.zero;
+        textRect.anchorMax = Vector2.one;
+        textRect.offsetMin = new Vector2(20, 20);
+        textRect.offsetMax = new Vector2(-20, -20);
+        
+        // Hide UI initially
+        conversationUI.SetActive(false);
+    }
+    
+    void StartConversation()
+    {
+        if (conversationLines.Length == 0) return;
+        
+        isInConversation = true;
+        currentLineIndex = 0;
+        conversationUI.SetActive(true);
+        StartTyping();
+    }
+    
+    void StartTyping()
+    {
+        if (currentLineIndex >= conversationLines.Length) return;
+        
+        currentDisplayedText = "";
+        textTimer = 0f;
+        isTyping = true;
+    }
+    
+    void HandleConversation()
+    {
+        if (isTyping)
+        {
+            // Type out text character by character
+            textTimer += Time.deltaTime;
+            if (textTimer >= textDisplaySpeed)
+            {
+                textTimer = 0f;
+                if (currentDisplayedText.Length < conversationLines[currentLineIndex].Length)
+                {
+                    currentDisplayedText += conversationLines[currentLineIndex][currentDisplayedText.Length];
+                    conversationText.text = currentDisplayedText;
+                }
+                else
+                {
+                    isTyping = false;
+                }
+            }
+        }
+        
+        // Handle input to continue conversation
+        if (Input.GetKeyDown(continueKey))
+        {
+            if (isTyping)
+            {
+                // Skip typing animation and show full text
+                currentDisplayedText = conversationLines[currentLineIndex];
+                conversationText.text = currentDisplayedText;
+                isTyping = false;
+            }
+            else
+            {
+                // Move to next line or end conversation
+                currentLineIndex++;
+                if (currentLineIndex >= conversationLines.Length)
+                {
+                    EndConversation();
+                }
+                else
+                {
+                    StartTyping();
+                }
+            }
+        }
+    }
+    
+    void EndConversation()
+    {
+        isInConversation = false;
+        conversationUI.SetActive(false);
+        currentLineIndex = 0;
+        isWaiting = false; // Resume movement when conversation ends
+    }
+    
+    // Collision detection for starting conversation
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("Player") && !isInConversation)
+        {
+            animator.SetBool(idleParam, true); // Set idle animation
+            isWaiting = true; // Stop movement
+            StartConversation();
+        }
+    }
+    
+    void OnCollisionEnter2D(Collision2D other)
+    {
+        if (other.gameObject.CompareTag("Player") && !isInConversation)
+        {
+            StartConversation();
+        }
+    }
+    
+    // End conversation when player walks away
+    void OnTriggerExit2D(Collider2D other)
+    {
+        if (other.CompareTag("Player") && isInConversation)
+        {
+            EndConversation();
+        }
+    }
+    
+    void OnCollisionExit2D(Collision2D other)
+    {
+        if (other.gameObject.CompareTag("Player") && isInConversation)
+        {
+            EndConversation();
+        }
+    }
+
     
     // Visualize the movement radius in the scene view
     void OnDrawGizmosSelected()
