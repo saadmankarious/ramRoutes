@@ -3,8 +3,12 @@ using Firebase;
 using Firebase.Messaging;
 using Firebase.Firestore;
 using System.Threading.Tasks;
+#if UNITY_ANDROID && UNITY_NOTIFICATIONS_ANDROID
 using Unity.Notifications.Android;
-
+#endif
+#if UNITY_IOS && UNITY_NOTIFICATIONS_IOS
+using Unity.Notifications.iOS;
+#endif
 public class FirebaseMessagingManager : MonoBehaviour
 {
     private string _deviceToken;
@@ -119,7 +123,7 @@ private void OnMessageReceived(object sender, MessageReceivedEventArgs e)
     // Helper method to display notifications
     private void ShowSystemNotification(string title, string message)
     {
-#if UNITY_ANDROID
+#if UNITY_ANDROID && UNITY_NOTIFICATIONS_ANDROID
         // Android Notification (New API)
         var androidNotification = new AndroidNotification
         {
@@ -132,21 +136,24 @@ private void OnMessageReceived(object sender, MessageReceivedEventArgs e)
 
         AndroidNotificationCenter.SendNotification(androidNotification, "default_channel");
 
-#elif UNITY_IOS
-    // iOS Notification (New API)
-    var iosNotification = new iOSNotification
-    {
-        Title = title,
-        Body = message,
-        ShowInForeground = true,    // Display even if app is open
-        Trigger = new iOSNotificationTimeIntervalTrigger
+#elif UNITY_IOS && UNITY_NOTIFICATIONS_IOS
+        // iOS Notification (New API)
+        var iosNotification = new iOSNotification
         {
-            TimeInterval = TimeSpan.FromSeconds(1),
-            Repeats = false
-        }
-    };
-    
-    iOSNotificationCenter.ScheduleNotification(iosNotification);
+            Title = title,
+            Body = message,
+            ShowInForeground = true,    // Display even if app is open
+            Trigger = new iOSNotificationTimeIntervalTrigger
+            {
+                TimeInterval = System.TimeSpan.FromSeconds(1),
+                Repeats = false
+            }
+        };
+        
+        iOSNotificationCenter.ScheduleNotification(iosNotification);
+#else
+        // Fallback for editor or unsupported platforms
+        Debug.Log($"Local Notification: {title} - {message}");
 #endif
     }
 
