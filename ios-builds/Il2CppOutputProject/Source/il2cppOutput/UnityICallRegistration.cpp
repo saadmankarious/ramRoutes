@@ -2630,6 +2630,10 @@ void RegisterAllStrippedInternalCalls()
 		void Register_UnityEngine_Gizmos_DrawIcon_Injected();
 		Register_UnityEngine_Gizmos_DrawIcon_Injected();
 
+		//System.Void UnityEngine.Gizmos::DrawLine_Injected(UnityEngine.Vector3&,UnityEngine.Vector3&)
+		void Register_UnityEngine_Gizmos_DrawLine_Injected();
+		Register_UnityEngine_Gizmos_DrawLine_Injected();
+
 		//System.Void UnityEngine.Gizmos::DrawMesh_Injected(System.IntPtr,System.Int32,UnityEngine.Vector3&,UnityEngine.Quaternion&,UnityEngine.Vector3&)
 		void Register_UnityEngine_Gizmos_DrawMesh_Injected();
 		Register_UnityEngine_Gizmos_DrawMesh_Injected();
