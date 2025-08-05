@@ -36,9 +36,13 @@ public class BuildingInteraction : MonoBehaviour
     [Header("UI Panels")]
     [SerializeField] private GameObject buildingUnlockedPanel;
     [SerializeField] private Button closeUnlockedPanelButton;
-    [SerializeField] private GameObject buildingEventsPanel; // Add this in Unity Inspector
-    [SerializeField] private Transform eventsContentParent; // Add this in Unity Inspector
-    [SerializeField] private GameObject eventPrefab; // Add this in Unity Inspector
+    [SerializeField] private Image buildingSprite; // Sprite to fade in
+    [SerializeField] private Text buildingTitle; // Title text
+    [SerializeField] private Text buildingDescription; // Body text
+    [SerializeField] private float fadeDuration = 1f; // Duration of fade animation
+    [SerializeField] private GameObject buildingEventsPanel;
+    [SerializeField] private Transform eventsContentParent;
+    [SerializeField] private GameObject eventPrefab;
 
     [Header("User Location Display")]
     [SerializeField] private GameObject userLocationPrefab;  // Prefab to show where users are
@@ -350,6 +354,39 @@ public class BuildingInteraction : MonoBehaviour
         Debug.Log("Building Interaction:: Approaching building " + building.name);
     }
 
+    private void ShowBuildingUnlockedPanel()
+    {
+        if (buildingUnlockedPanel != null)
+        {
+            buildingUnlockedPanel.SetActive(true);
+            if (buildingSprite != null)
+            {
+                StartCoroutine(FadeInSprite());
+            }
+        }
+    }
+
+    private IEnumerator FadeInSprite()
+    {
+        if (buildingSprite == null) yield break;
+
+        Color spriteColor = buildingSprite.color;
+        spriteColor.a = 0f;
+        buildingSprite.color = spriteColor;
+
+        float elapsed = 0f;
+        while (elapsed < fadeDuration)
+        {
+            elapsed += Time.deltaTime;
+            spriteColor.a = Mathf.Lerp(0f, 1f, elapsed / fadeDuration);
+            buildingSprite.color = spriteColor;
+            yield return null;
+        }
+
+        spriteColor.a = 1f;
+        buildingSprite.color = spriteColor;
+    }
+
     private async void HandleEnteringBuilding(BuildingProximityDetector.Building building)
     {
         if (building.name == buildingName)
@@ -358,7 +395,6 @@ public class BuildingInteraction : MonoBehaviour
             var service = new UnlockedBuildingService();
             string userId = FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.UserId : "unknown";
             var enteredBuildings = await service.RetrieveUnlockedBuildings();
-            // await service.ClearUnlockedBuildingsCache();
             bool alreadyEntered = enteredBuildings.Exists(b => b.buildingName == buildingName && b.userId == userId);
             if (alreadyEntered)
             {
@@ -369,12 +405,17 @@ public class BuildingInteraction : MonoBehaviour
             Debug.Log("Activating building: " + building.name);
             activated = true;
 
-            // Show unlocked panel and related information
-            if (buildingUnlockedPanel != null)
+            // Update UI elements and show panel with animation
+            if (buildingTitle != null)
             {
-                buildingUnlockedPanel.SetActive(true);
-                await DisplayUsersWhoUnlocked();
+                buildingTitle.text = buildingName;
             }
+            if (buildingDescription != null)
+            {
+                buildingDescription.text = $"You've unlocked {buildingName}!";
+            }
+            ShowBuildingUnlockedPanel();
+            await DisplayUsersWhoUnlocked();
 
             // Use unified user profile retrieval
             var userService = new UserService();
