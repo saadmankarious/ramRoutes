@@ -406,7 +406,7 @@ private void HideObjectsWithTag(string tag)
         }
     }
 
-    public void ShowDialog(string message, float activeFor, GameObject animatedObject = null)
+    public void ShowDialog(string message, float activeFor, GameObject animatedObject = null, string animationTrigger = null)
     {
         if (dialogPanel != null && dialogText != null)
         {
@@ -416,12 +416,12 @@ private void HideObjectsWithTag(string tag)
             
             if (animatedObject != null)
             {
-                StartCoroutine(FadeInAndAnimate(animatedObject));
+                StartCoroutine(FadeInAndAnimate(animatedObject, animationTrigger));
             }
         }
     }
 
-    private IEnumerator FadeInAndAnimate(GameObject animatedObject)
+    private IEnumerator FadeInAndAnimate(GameObject animatedObject, string animationTrigger)
     {
         if (animatedObject == null) yield break;
         animatedObject.SetActive(true);
@@ -449,9 +449,10 @@ private void HideObjectsWithTag(string tag)
         }
         
         Animator animator = animatedObject.GetComponent<Animator>();
-        if (animator != null)
+        if (animator != null && !string.IsNullOrEmpty(animationTrigger))
         {
-            animator.SetTrigger("play");
+            // Play animation directly by state name
+            animator.Play(animationTrigger, 0, 0f);
         }
     }
 

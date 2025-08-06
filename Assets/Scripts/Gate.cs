@@ -118,7 +118,7 @@ public class Gate : MonoBehaviour
             // Show unlock message
             if (uiManager != null && !string.IsNullOrEmpty(unlockedMessage))
             {
-                uiManager.ShowDialog(unlockedMessage, 10f);
+                uiManager.ShowDialog(unlockedMessage, 10f, aros, "jumping-happy");
             }
         }
         else
@@ -194,7 +194,7 @@ public class Gate : MonoBehaviour
             // Show lock message via UI Manager
             if (uiManager != null)
             {
-                uiManager.ShowDialog(lockMessage, 5f, aros);
+                uiManager.ShowDialog(lockMessage, 5f, aros, "deep-sadness");
             }
             else
             {
