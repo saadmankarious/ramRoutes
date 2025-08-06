@@ -406,13 +406,52 @@ private void HideObjectsWithTag(string tag)
         }
     }
 
-    public void ShowDialog(string message, float activeFor)
+    public void ShowDialog(string message, float activeFor, GameObject animatedObject = null)
     {
         if (dialogPanel != null && dialogText != null)
         {
             dialogPanel.SetActive(true);
             if (typingCoroutine != null) StopCoroutine(typingCoroutine);
             typingCoroutine = StartCoroutine(TypeText(message, activeFor));
+            
+            if (animatedObject != null)
+            {
+                StartCoroutine(FadeInAndAnimate(animatedObject));
+            }
+        }
+    }
+
+    private IEnumerator FadeInAndAnimate(GameObject animatedObject)
+    {
+        if (animatedObject == null) yield break;
+        animatedObject.SetActive(true);
+        
+        Image image = animatedObject.GetComponent<Image>();
+        if (image != null)
+        {
+            Color color = image.color;
+            color.a = 0f;
+            image.color = color;
+            
+            float fadeTime = 0.5f;
+            float elapsed = 0f;
+            
+            while (elapsed < fadeTime)
+            {
+                elapsed += Time.deltaTime;
+                color.a = Mathf.Lerp(0f, 1f, elapsed / fadeTime);
+                image.color = color;
+                yield return null;
+            }
+            
+            color.a = 1f;
+            image.color = color;
+        }
+        
+        Animator animator = animatedObject.GetComponent<Animator>();
+        if (animator != null)
+        {
+            animator.SetTrigger("play");
         }
     }
 

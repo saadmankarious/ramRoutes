@@ -52,6 +52,9 @@ public class BuildingInteraction : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private bool showUnlockedPanelOnStart = false;
     [SerializeField] private bool simulateEntry = false; // Add this field
+    
+    [Header("Gate Integration")]
+    [SerializeField] private Gate connectedGate; // Gate to unlock when building is unlocked
 
     // Private Variables
     private bool isPlayerInRange = false;
@@ -113,7 +116,17 @@ public class BuildingInteraction : MonoBehaviour
 
         if (closeUnlockedPanelButton != null && buildingUnlockedPanel != null)
         {
-            closeUnlockedPanelButton.onClick.AddListener(() => buildingUnlockedPanel.SetActive(false));
+            closeUnlockedPanelButton.onClick.AddListener(() => {
+                buildingUnlockedPanel.SetActive(false);
+                
+                // Unlock connected gate when panel is closed
+                if (connectedGate != null)
+                {
+                    connectedGate.UnlockGate();
+
+                    Debug.Log($"Unlocked gate connected to building: {buildingName}");
+                }
+            });
         }
 
         // if (showUnlockedPanelOnStart && buildingUnlockedPanel != null)

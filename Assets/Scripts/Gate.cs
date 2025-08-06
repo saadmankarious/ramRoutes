@@ -7,10 +7,12 @@ public class Gate : MonoBehaviour
     public bool isUnlocked = false; // Inspector boolean to set initial state
     public float pushForce = 1000f; // Force to push player back when locked
     public string lockMessage = "This gate is locked. Find a way to unlock it."; // Message to display when locked
+    public string unlockedMessage = "The gate is now open!"; // Message to display when unlocked
     
     [Header("Animation")]
     public Animator gateAnimator;
     public string unlockAnimParam = "unlock"; // Animation parameter name
+    public GameObject aros; // Reference to AROS prefab for animation
     
     [Header("Audio")]
     public AudioClip unlockSound;
@@ -47,7 +49,16 @@ public class Gate : MonoBehaviour
         }
         
         // Find UI Manager
-        uiManager = FindObjectOfType<UIManager>();
+        if (uiManager == null)
+        {
+            uiManager = FindObjectOfType<UIManager>();
+            if (uiManager == null)
+            {
+                // Try to find by singleton pattern
+                uiManager = UIManager.Instance;
+            }
+        }
+        
         if (uiManager == null)
         {
             Debug.LogWarning("UIManager not found. Gate messages will not be displayed.");
@@ -103,6 +114,12 @@ public class Gate : MonoBehaviour
         {
             OnGateUnlocked?.Invoke();
             PlaySound(unlockSound, unlockVolume);
+            
+            // Show unlock message
+            if (uiManager != null && !string.IsNullOrEmpty(unlockedMessage))
+            {
+                uiManager.ShowDialog(unlockedMessage, 10f);
+            }
         }
         else
         {
@@ -177,7 +194,7 @@ public class Gate : MonoBehaviour
             // Show lock message via UI Manager
             if (uiManager != null)
             {
-                uiManager.ShowDialog(lockMessage, 5f);
+                uiManager.ShowDialog(lockMessage, 5f, aros);
             }
             else
             {
