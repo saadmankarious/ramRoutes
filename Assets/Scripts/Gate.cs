@@ -6,6 +6,7 @@ public class Gate : MonoBehaviour
     [Header("Gate Settings")]
     public bool isUnlocked = false; // Inspector boolean to set initial state
     public float pushForce = 1000f; // Force to push player back when locked
+    public string lockMessage = "This gate is locked. Find a way to unlock it."; // Message to display when locked
     
     [Header("Animation")]
     public Animator gateAnimator;
@@ -29,6 +30,9 @@ public class Gate : MonoBehaviour
     private Rigidbody2D gateRigidbody;
     private bool wasUnlocked; // Track previous state for change detection
     
+    // UI Manager reference
+    private UIManager uiManager;
+    
     void Start()
     {
         // Get components
@@ -40,6 +44,13 @@ public class Gate : MonoBehaviour
         if (gateAnimator == null)
         {
             gateAnimator = GetComponent<Animator>();
+        }
+        
+        // Find UI Manager
+        uiManager = FindObjectOfType<UIManager>();
+        if (uiManager == null)
+        {
+            Debug.LogWarning("UIManager not found. Gate messages will not be displayed.");
         }
         
         // Create AudioSource if it doesn't exist
@@ -162,7 +173,16 @@ public class Gate : MonoBehaviour
             // Player hit solid locked gate
             OnPlayerBlocked?.Invoke();
             PlaySound(blockedSound, blockedVolume);
-            Debug.Log("Gate is locked! Find a way to unlock it.");
+            
+            // Show lock message via UI Manager
+            if (uiManager != null)
+            {
+                uiManager.ShowDialog(lockMessage, 5f);
+            }
+            else
+            {
+                Debug.Log(lockMessage); // Fallback to console
+            }
         }
     }
     

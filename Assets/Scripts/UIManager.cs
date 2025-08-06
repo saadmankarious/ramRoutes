@@ -217,7 +217,6 @@ public class UIManager : MonoBehaviour
         timerRunning = true;
         UpdateTimerDisplay();
         
-        StartCoroutine(ShowInitialObjective());
         objectiveRepeatCoroutine = StartCoroutine(RepeatObjective());
         timerCoroutine = StartCoroutine(CountdownTimer());
     }
@@ -272,11 +271,6 @@ private void HideObjectsWithTag(string tag)
         }
     }
 
-    private IEnumerator ShowInitialObjective()
-    {
-        yield return new WaitForSeconds(0.5f);
-        ShowObjective();
-    }
 
     private IEnumerator CountdownTimer()
     {
@@ -432,7 +426,7 @@ private void HideObjectsWithTag(string tag)
         while (true)
         {
             yield return new WaitForSeconds(objectiveRepeatTime);
-            ShowObjective();
+            //ShowObjective();
         }
     }
 
