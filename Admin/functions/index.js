@@ -11,7 +11,7 @@ const {setGlobalOptions} = require("firebase-functions");
 const {onRequest} = require("firebase-functions/https");
 const logger = require("firebase-functions/logger");
 
-const { onDocumentCreated } = require("firebase-functions/v2/firestore");
+const { onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/firestore");
 const admin = require('firebase-admin');
 
 // For cost control, you can set the maximum number of containers that can be
@@ -85,3 +85,39 @@ exports.sendBuildingEventNotification = onDocumentCreated(
         }
     }
 );
+
+// // Listen to updates in the users collection for first-time sign-in
+// exports.sendUserJoinedNotification = onDocumentUpdated(
+//     'users/{userId}',
+//     async (event) => {
+//         try {
+//             const beforeData = event.data.before.data();
+//             const afterData = event.data.after.data();
+            
+//             // Check if lastSignedIn was added for the first time (didn't exist before, exists now)
+//             if (!beforeData.lastSignedIn && afterData.lastSignedIn) {
+//                 logger.info("User signed in for the first time. Pushing a notification", afterData);
+
+//                 // Create notification message
+//                 const message = {
+//                     notification: {
+//                         title: 'New Player Joined!',
+//                         body: `${afterData.name || 'A new player'} has joined the game. Welcome them to the community!`
+//                     },
+//                     topic: 'updates' // The topic clients are subscribed to
+//                 };
+                
+//                 // Send the notification
+//                 const response = await admin.messaging().send(message);
+//                 logger.info('Successfully sent user joined notification:', response);
+//                 return response;
+//             }
+            
+//             // If lastSignedIn already existed, don't send notification
+//             return null;
+//         } catch (error) {
+//             logger.error('Error sending user joined notification:', error);
+//             throw error;
+//         }
+//     }
+// );

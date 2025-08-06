@@ -14,7 +14,12 @@ public class UIManager : MonoBehaviour
     [Header("UI References")]
     public Text coinsText;
     public ParticleSystem teleportEffect;
+    public ParticleSystem celebrationEffect1;
+    public ParticleSystem celebrationEffect2;
     public float padding = 2f;
+    
+    [Header("Celebration Settings")]
+    [SerializeField] private float celebrationPlaybackSpeed = 1f; // 1f = normal speed, 2f = double speed, 0.5f = half speed
     public Text trashText;
     public Text bottlesText;
     public Text treesPlantedText;
@@ -539,23 +544,89 @@ private void HideObjectsWithTag(string tag)
 
     void CelebrationEffect()
     {
-        Vector2 bottomLeft = Camera.main.ViewportToWorldPoint(new Vector2(0, 0));
-        Vector2 topRight = Camera.main.ViewportToWorldPoint(new Vector2(1, 1));
-
-        bottomLeft += new Vector2(padding, padding);
-        topRight -= new Vector2(padding, padding);
-
-        Transform effectsParent = new GameObject("CelebrationEffects").transform;
-        for (int i = 0; i < 13; i++)
+        Debug.Log("Playing celebration effect with multiple particle systems");
+        if (teleportEffect == null)
         {
-            Vector2 spawnPos = new Vector2(
-                Random.Range(bottomLeft.x, topRight.x),
-                Random.Range(bottomLeft.y, topRight.y)
-            );
-            Instantiate(teleportEffect, spawnPos, Quaternion.identity, effectsParent);
+            Debug.LogWarning("Teleport effect not set in UIManager!");
+            return;
         }
 
+        // Get audio duration to sync effect duration
+        float audioDuration = trialCompleteSound != null ? trialCompleteSound.length : 5f;
 
+        // Create a parent object to organize all particle effects
+        GameObject effectsContainer = new GameObject("CelebrationEffects");
+        Transform effectsParent = effectsContainer.transform;
+        
+        // Auto-cleanup when audio finishes (add 1 second buffer for particle fadeout)
+        Destroy(effectsContainer, audioDuration + 1f);
+        
+        // Create 3 random points around the screen for celebration effects
+        Vector3[] celebrationPoints = new Vector3[3];
+        
+        for (int point = 0; point < 3; point++)
+        {
+            // Generate random screen positions (viewport coordinates)
+            float randomX = Random.Range(0.2f, 0.8f); // Avoid edges
+            float randomY = Random.Range(0.2f, 0.8f); // Avoid edges
+            celebrationPoints[point] = Camera.main.ViewportToWorldPoint(new Vector3(randomX, randomY, Camera.main.nearClipPlane + 5f));
+        }
+        
+        // Create array of available effects
+        ParticleSystem[] effects = { teleportEffect, celebrationEffect1, celebrationEffect2 };
+        
+        // Distribute effects across the 3 celebration points
+        for (int i = 0; i < 3; i++)
+        {
+            // Use different effect for each celebration point
+            ParticleSystem currentEffect = effects[i % effects.Length];
+            if (currentEffect == null) continue;
+            
+            Vector3 basePosition = celebrationPoints[i];
+            
+            // Spawn multiple instances of each effect around each point
+            int effectsPerPoint = i == 0 ? 5 : 4; // 5 + 4 + 4 = 13 total effects
+            
+            for (int j = 0; j < effectsPerPoint; j++)
+            {
+                // Add random offset around the celebration point
+                Vector3 spawnPos = basePosition + new Vector3(
+                    Random.Range(-1f, 1f),
+                    Random.Range(-1f, 1f),
+                    0f
+                );
+                
+                GameObject effect = Instantiate(currentEffect.gameObject, spawnPos, Quaternion.identity, effectsParent);
+                
+                // Set the particle system to a higher sorting layer to appear above grid/UI
+                ParticleSystem ps = effect.GetComponent<ParticleSystem>();
+                if (ps != null)
+                {
+                    // Stop the particle system first before modifying settings
+                    ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                    
+                    var renderer = ps.GetComponent<ParticleSystemRenderer>();
+                    if (renderer != null)
+                    {
+                        renderer.sortingLayerName = "Default";
+                        renderer.sortingOrder = 4;
+                    }
+                    
+                    // Adjust particle system duration to match audio length
+                    var main = ps.main;
+                    main.duration = audioDuration;
+                    main.loop = false;
+                    main.simulationSpeed = celebrationPlaybackSpeed; // Control playback speed
+                    
+                    // Start the particle system after configuring it
+                    ps.Play();
+                }
+                
+                Debug.Log($"Spawned {currentEffect.name} effect at celebration point {i} - position: {spawnPos}");
+            }
+        }
+        
+        Debug.Log($"Celebration effects will play for {audioDuration} seconds to match audio");
     }
 
     public void UpdateCoins(int coins)
@@ -564,5 +635,29 @@ private void HideObjectsWithTag(string tag)
         {
             coinsText.text = coins.ToString();
         }
+    }
+
+    public void PlayBuildingUnlockCelebration()
+    {
+        if (teleportEffect != null || celebrationEffect1 != null || celebrationEffect2 != null)
+        {
+            CelebrationEffect();
+        }
+        else
+        {
+            Debug.LogWarning("No celebration effects are set in UIManager!");
+        }
+        
+        // Play celebration sound as part of the celebration
+        if (trialCompleteSound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(trialCompleteSound);
+        }
+    }
+    
+    public float GetCelebrationDuration()
+    {
+        // Return the audio duration that celebration effects are synced to
+        return trialCompleteSound != null ? trialCompleteSound.length : 5f;
     }
 }

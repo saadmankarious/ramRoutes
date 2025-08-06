@@ -43,6 +43,7 @@ public class BuildingInteraction : MonoBehaviour
     [SerializeField] private GameObject buildingEventsPanel;
     [SerializeField] private Transform eventsContentParent;
     [SerializeField] private GameObject eventPrefab;
+    [SerializeField] private string preUnlockMeassage;
 
     [Header("User Location Display")]
     [SerializeField] private GameObject userLocationPrefab;  // Prefab to show where users are
@@ -333,7 +334,7 @@ public class BuildingInteraction : MonoBehaviour
             {
                 if (uiManager != null)
                 {
-                    uiManager.ShowDialog("This is the Commons—the heart of campus life. To unlock it, journey there on foot and let its energy welcome you. Make sure your GPS is enabled.", 5f);
+                    uiManager.ShowDialog(preUnlockMeassage, 5f);
                 }
             }
         }
@@ -426,6 +427,22 @@ public class BuildingInteraction : MonoBehaviour
 
             Debug.Log("Activating building: " + building.name);
             activated = true;
+
+            if (uiManager != null)
+            {
+                uiManager.PlayBuildingUnlockCelebration();
+                
+                float celebrationDuration = uiManager.GetCelebrationDuration();
+                int delayMs = Mathf.RoundToInt(celebrationDuration * 1000f);
+                
+                Debug.Log($"Waiting {celebrationDuration} seconds for celebration to complete before showing modal");
+                await Task.Delay(delayMs);
+            }
+            else
+            {
+                // Fallback delay if UIManager not available
+                await Task.Delay(3000);
+            }
 
             // Update UI elements and show panel with animation
             if (buildingTitle != null)
