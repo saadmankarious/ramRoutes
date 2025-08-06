@@ -404,14 +404,15 @@ private void HideObjectsWithTag(string tag)
             yield return new WaitForSeconds(activeFor);
             HideDialog();
         }
+        
+        typingCoroutine = null;
     }
 
     public void ShowDialog(string message, float activeFor, GameObject animatedObject = null, string animationTrigger = null)
     {
-        if (dialogPanel != null && dialogText != null)
+        if (dialogPanel != null && dialogText != null && typingCoroutine == null)
         {
             dialogPanel.SetActive(true);
-            if (typingCoroutine != null) StopCoroutine(typingCoroutine);
             typingCoroutine = StartCoroutine(TypeText(message, activeFor));
             
             if (animatedObject != null)

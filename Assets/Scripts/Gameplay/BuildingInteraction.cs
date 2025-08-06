@@ -77,6 +77,7 @@ public class BuildingInteraction : MonoBehaviour
 
     private List<BuildingEvent> cachedBuildingEvents;
     private bool eventsLoaded = false;
+    private UIManager uiManager;
 
     void Awake()
     {
@@ -102,6 +103,7 @@ public class BuildingInteraction : MonoBehaviour
 
     void Start()
     {
+        uiManager = UIManager.Instance;
         if (inactivePrefab != null)
         {
             Vector3 spawnPos = transform.position;
@@ -326,6 +328,13 @@ public class BuildingInteraction : MonoBehaviour
                     DisplayBuildingEvents();
                 }
                 _ = DisplayCurrentUsersInBuilding();
+            }
+            else
+            {
+                if (uiManager != null)
+                {
+                    uiManager.ShowDialog("This is the Commons—the heart of campus life. To unlock it, journey there on foot and let its energy welcome you. Make sure your GPS is enabled.", 5f);
+                }
             }
         }
     }
