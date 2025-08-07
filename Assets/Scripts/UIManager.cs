@@ -59,6 +59,7 @@ public class UIManager : MonoBehaviour
     private Coroutine typingCoroutine;
     private Coroutine objectiveRepeatCoroutine;
     private Coroutine timerCoroutine;
+    public GameObject aros; // Reference to AROS prefab for animation
 
     private bool isPaused = false;
 
@@ -411,28 +412,32 @@ private void HideObjectsWithTag(string tag)
         }
         
         typingCoroutine = null;
-    }
-
-    public void ShowDialog(string message, float activeFor, GameObject animatedObject = null, string animationTrigger = null)
+    }    public void ShowDialog(string message, float activeFor, string animationTrigger = null)
     {
         if (dialogPanel != null && dialogText != null && typingCoroutine == null)
         {
             dialogPanel.SetActive(true);
-            typingCoroutine = StartCoroutine(TypeText(message, activeFor));
+            var typeTextCoroutine = StartCoroutine(TypeText(message, activeFor));
+            var fadeAnimateCoroutine = aros != null && !string.IsNullOrEmpty(animationTrigger) ? 
+                StartCoroutine(FadeInAndAnimate(animationTrigger)) : null;
             
-            if (animatedObject != null)
-            {
-                StartCoroutine(FadeInAndAnimate(animatedObject, animationTrigger));
-            }
+            StartCoroutine(WaitForCoroutines(typeTextCoroutine, fadeAnimateCoroutine, "aros-neutral"));
         }
     }
 
-    private IEnumerator FadeInAndAnimate(GameObject animatedObject, string animationTrigger)
+    private IEnumerator WaitForCoroutines(Coroutine typeText, Coroutine fadeAnimate, string finalAnimation)
     {
-        if (animatedObject == null) yield break;
-        animatedObject.SetActive(true);
+        if (typeText != null) yield return typeText;
+        if (fadeAnimate != null) yield return fadeAnimate;
+        if (aros != null) StartCoroutine(FadeInAndAnimate(finalAnimation));
+    }
+
+    public IEnumerator FadeInAndAnimate(string animationTrigger)
+    {
+        if (aros == null) yield break;
+        aros.SetActive(true);
         
-        Image image = animatedObject.GetComponent<Image>();
+        Image image = aros.GetComponent<Image>();
         if (image != null)
         {
             Color color = image.color;
@@ -454,7 +459,7 @@ private void HideObjectsWithTag(string tag)
             image.color = color;
         }
         
-        Animator animator = animatedObject.GetComponent<Animator>();
+        Animator animator = aros.GetComponent<Animator>();
         if (animator != null && !string.IsNullOrEmpty(animationTrigger))
         {
             // Play animation directly by state name

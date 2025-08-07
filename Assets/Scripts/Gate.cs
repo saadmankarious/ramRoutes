@@ -12,7 +12,6 @@ public class Gate : MonoBehaviour
     [Header("Animation")]
     public Animator gateAnimator;
     public string unlockAnimParam = "unlock"; // Animation parameter name
-    public GameObject aros; // Reference to AROS prefab for animation
     
     [Header("Audio")]
     public AudioClip unlockSound;
@@ -114,11 +113,10 @@ public class Gate : MonoBehaviour
         {
             OnGateUnlocked?.Invoke();
             PlaySound(unlockSound, unlockVolume);
-            
-            // Show unlock message
+              // Show unlock message and animate AROS
             if (uiManager != null && !string.IsNullOrEmpty(unlockedMessage))
             {
-                uiManager.ShowDialog(unlockedMessage, 10f, aros, "jumping-happy");
+                uiManager.ShowDialog(unlockedMessage, 5f, "jumping-happy");
             }
         }
         else
@@ -194,7 +192,7 @@ public class Gate : MonoBehaviour
             // Show lock message via UI Manager
             if (uiManager != null)
             {
-                uiManager.ShowDialog(lockMessage, 5f, aros, "deep-sadness");
+                uiManager.ShowDialog(lockMessage, 5f, "deep-sadness");
             }
             else
             {
@@ -209,14 +207,6 @@ public class Gate : MonoBehaviour
         if (other.CompareTag("Player") && isUnlocked)
         {
             Debug.Log("Player passed through unlocked gate.");
-        }
-    }
-    
-    void OnTriggerExit2D(Collider2D other)
-    {
-        if (other.CompareTag("Player") && isUnlocked)
-        {
-            Debug.Log("Player exited unlocked gate area.");
         }
     }
 }
