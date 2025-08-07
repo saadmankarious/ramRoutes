@@ -19,7 +19,6 @@ public class BuildingInteraction : MonoBehaviour
 
     [Header("Interaction Settings")]
     [SerializeField] private KeyCode interactKey = KeyCode.J;
-    [SerializeField] private bool isPlanet = false;
     [SerializeField] private bool hasSapling = false;
 
     [Header("Reward Settings")]
@@ -36,7 +35,6 @@ public class BuildingInteraction : MonoBehaviour
     [Header("UI Panels")]
     [SerializeField] private GameObject buildingUnlockedPanel;
     [SerializeField] private Button closeUnlockedPanelButton;
-    [SerializeField] private Image buildingSprite; // Sprite to fade in
     [SerializeField] private Text buildingTitle; // Title text
     [SerializeField] private Text buildingDescription; // Body text
     [SerializeField] private float fadeDuration = 1f; // Duration of fade animation
@@ -46,14 +44,12 @@ public class BuildingInteraction : MonoBehaviour
     [SerializeField] private string preUnlockMeassage;
 
     [Header("User Location Display")]
-    [SerializeField] private GameObject userLocationPrefab;  // Prefab to show where users are
-    [SerializeField] private Transform[] userSpawnPoints;    // Array of possible spawn points
     private Dictionary<string, GameObject> activeUserLocations = new Dictionary<string, GameObject>();  // Track spawned indicators
 
     [Header("Debug")]
     [SerializeField] private bool showUnlockedPanelOnStart = false;
     [SerializeField] private bool simulateEntry = false; // Add this field
-    
+
     [Header("Gate Integration")]
     [SerializeField] private Gate connectedGate; // Gate to unlock when building is unlocked
 
@@ -119,9 +115,10 @@ public class BuildingInteraction : MonoBehaviour
 
         if (closeUnlockedPanelButton != null && buildingUnlockedPanel != null)
         {
-            closeUnlockedPanelButton.onClick.AddListener(() => {
+            closeUnlockedPanelButton.onClick.AddListener(() =>
+            {
                 buildingUnlockedPanel.SetActive(false);
-                
+
                 // Unlock connected gate when panel is closed
                 if (connectedGate != null)
                 {
@@ -316,19 +313,13 @@ public class BuildingInteraction : MonoBehaviour
             {
                 mobileInteractButton.gameObject.SetActive(true);
             }
-
-            if (!isPlanet && other.CompareTag("Player") &&
-                GameManager.Instance.currentTrial.trialNumber == 2)
-            {
-                dialogText.text = "Press J to interact";
-            }            // Display building events and current users when player is in range
+            // Display building events and current users when player is in range
             if (activated)
             {
                 if (buildingEventsPanel != null && eventsLoaded)
                 {
                     DisplayBuildingEvents();
                 }
-                _ = DisplayCurrentUsersInBuilding();
             }
             else
             {
@@ -346,7 +337,7 @@ public class BuildingInteraction : MonoBehaviour
         {
             isPlayerInRange = false;
             CloseDialog();
-              // Deactivate building events panel when player leaves
+            // Deactivate building events panel when player leaves
             if (buildingEventsPanel != null)
             {
                 buildingEventsPanel.SetActive(false);
@@ -382,33 +373,9 @@ public class BuildingInteraction : MonoBehaviour
         if (buildingUnlockedPanel != null)
         {
             buildingUnlockedPanel.SetActive(true);
-            if (buildingSprite != null)
-            {
-                StartCoroutine(FadeInSprite());
-            }
         }
     }
 
-    private IEnumerator FadeInSprite()
-    {
-        if (buildingSprite == null) yield break;
-
-        Color spriteColor = buildingSprite.color;
-        spriteColor.a = 0f;
-        buildingSprite.color = spriteColor;
-
-        float elapsed = 0f;
-        while (elapsed < fadeDuration)
-        {
-            elapsed += Time.deltaTime;
-            spriteColor.a = Mathf.Lerp(0f, 1f, elapsed / fadeDuration);
-            buildingSprite.color = spriteColor;
-            yield return null;
-        }
-
-        spriteColor.a = 1f;
-        buildingSprite.color = spriteColor;
-    }
 
     private async void HandleEnteringBuilding(BuildingProximityDetector.Building building)
     {
@@ -431,10 +398,10 @@ public class BuildingInteraction : MonoBehaviour
             if (uiManager != null)
             {
                 uiManager.PlayBuildingUnlockCelebration();
-                
+
                 float celebrationDuration = uiManager.GetCelebrationDuration();
                 int delayMs = Mathf.RoundToInt(celebrationDuration * 1000f);
-                
+
                 Debug.Log($"Waiting {celebrationDuration} seconds for celebration to complete before showing modal");
                 await Task.Delay(delayMs);
             }
@@ -460,7 +427,7 @@ public class BuildingInteraction : MonoBehaviour
             var userService = new UserService();
             var userProfile = await userService.GetUserProfileCachedOrRemoteAsync(userId);
             string userName = userProfile != null && !string.IsNullOrEmpty(userProfile.name) ? userProfile.name : userId;
-              // Award points for unlocking the building
+            // Award points for unlocking the building
             await userService.AddPoints(userId, 100);
             // Update UI with new points
             var updatedPoints = await userService.GetPoints(userId);
@@ -497,39 +464,41 @@ public class BuildingInteraction : MonoBehaviour
 
         try
         {
- if (usersForBuilding.Count == 0)
-        {
-            usersWhoUnlockedPanel.gameObject.SetActive(false);
-        }
-        foreach (var record in usersForBuilding)
-        {
-            // Instantiate the prefab
-            GameObject userGO = Instantiate(userPrefab, usersContentParent);
-            Text userNameText = userGO.GetComponentInChildren<Text>(true);
-            
-            if (userNameText != null)
+            if (usersForBuilding.Count == 0)
             {
-                Debug.Log($"Setting user text: userName={record.userName}, userId={record.userId}");
-                userNameText.text = record.userName;
+                usersWhoUnlockedPanel.gameObject.SetActive(false);
+            }
+            foreach (var record in usersForBuilding)
+            {
+                // Instantiate the prefab
+                GameObject userGO = Instantiate(userPrefab, usersContentParent);
+                Text userNameText = userGO.GetComponentInChildren<Text>(true);
 
-                RectTransform textRect = userNameText.GetComponent<RectTransform>();
-                if (textRect != null)
+                if (userNameText != null)
                 {
-                    textRect.pivot = new Vector2(0.5f, 0.5f);
-                    textRect.anchorMin = new Vector2(0.5f, 0.5f);
-                    textRect.anchorMax = new Vector2(0.5f, 0.5f);
+                    Debug.Log($"Setting user text: userName={record.userName}, userId={record.userId}");
+                    userNameText.text = record.userName;
+
+                    RectTransform textRect = userNameText.GetComponent<RectTransform>();
+                    if (textRect != null)
+                    {
+                        textRect.pivot = new Vector2(0.5f, 0.5f);
+                        textRect.anchorMin = new Vector2(0.5f, 0.5f);
+                        textRect.anchorMax = new Vector2(0.5f, 0.5f);
+                    }
+                }
+                else
+                {
+                    Debug.LogError("No Text component found in prefab or its children!");
                 }
             }
-            else
-            {
-                Debug.LogError("No Text component found in prefab or its children!");
-            }
         }
-        } catch (Exception e) {
-                    Debug.LogError($"Error loading displaying user who unlcoked: {e.Message}");
+        catch (Exception e)
+        {
+            Debug.LogError($"Error loading displaying user who unlcoked: {e.Message}");
 
-}
-       
+        }
+
     }
 
     private async Task FetchBuildingEvents()
@@ -538,7 +507,7 @@ public class BuildingInteraction : MonoBehaviour
         var eventService = new BuildingEventService();
         var allEvents = await eventService.GetBuildingEventsAsync(forceRefresh: true);
         cachedBuildingEvents = allEvents.FindAll(e => e.buildingName == buildingName);
-                Debug.Log("fetching events for building " + buildingName + cachedBuildingEvents.Count);
+        Debug.Log("fetching events for building " + buildingName + cachedBuildingEvents.Count);
 
         eventsLoaded = true;
     }
@@ -573,65 +542,6 @@ public class BuildingInteraction : MonoBehaviour
         else if (buildingEventsPanel != null)
         {
             buildingEventsPanel.SetActive(false);
-        }
-    }    private async Task DisplayCurrentUsersInBuilding()
-    {
-        try
-        {
-            if (userLocationPrefab == null || userSpawnPoints == null || userSpawnPoints.Length == 0)
-            {
-                Debug.LogWarning("User location display not configured. Please set up prefab and spawn points.");
-                return;
-            }
-
-            var userService = new UserService();
-            var usersInBuilding = await userService.GetUsersInBuilding(buildingName);
-
-            // Clean up old indicators for users no longer in the building
-            List<string> usersToRemove = new List<string>();
-            foreach (var kvp in activeUserLocations)
-            {
-                if (!usersInBuilding.Exists(u => u.userId == kvp.Key))
-                {
-                    Destroy(kvp.Value);
-                    usersToRemove.Add(kvp.Key);
-                }
-            }
-            foreach (var userId in usersToRemove)
-            {
-                activeUserLocations.Remove(userId);
-            }
-
-            // Update or create indicators for current users
-            int spawnPointIndex = 0;
-            foreach (var user in usersInBuilding)
-            {
-                // Skip if this is the current user
-                if (user.userId == FirebaseAuth.DefaultInstance.CurrentUser?.UserId)
-                    continue;
-
-                GameObject indicator;
-                if (!activeUserLocations.TryGetValue(user.userId, out indicator))
-                {
-                    // Create new indicator
-                    Transform spawnPoint = userSpawnPoints[spawnPointIndex % userSpawnPoints.Length];
-                    indicator = Instantiate(userLocationPrefab, spawnPoint.position, spawnPoint.rotation);
-                    
-                    // Set user name if the prefab has a Text component
-                    Text nameText = indicator.GetComponentInChildren<Text>();
-                    if (nameText != null)
-                    {
-                        nameText.text = user.name;
-                    }
-
-                    activeUserLocations[user.userId] = indicator;
-                    spawnPointIndex++;
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"Error displaying current users in building: {e.Message}");
         }
     }
 }
