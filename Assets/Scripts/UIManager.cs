@@ -56,6 +56,7 @@ public class UIManager : MonoBehaviour
     [Header("Events")]
     public UnityEvent OnTrialComplete = new UnityEvent();
     public UnityEvent OnTimeExpired = new UnityEvent();
+    public UnityEvent<BuildingInteraction> OnBuildingUnlocked = new UnityEvent<BuildingInteraction>();
 
     private Coroutine typingCoroutine;
     private Coroutine objectiveRepeatCoroutine;
@@ -679,5 +680,49 @@ private void HideObjectsWithTag(string tag)
     {
         // Return the unified celebration duration
         return celebrationDuration;
+    }
+
+    public async Task UnlockBuilding(BuildingInteraction building)
+    {
+        OnBuildingUnlocked.Invoke(building);
+        PlayBuildingUnlockCelebration();
+        
+        float celebrationDuration = GetCelebrationDuration();
+        int delayMs = Mathf.RoundToInt(celebrationDuration * 1000f);
+        await Task.Delay(delayMs);
+    }
+
+    public void HandlePreUnlock(BuildingInteraction building)
+    {
+        if (!string.IsNullOrEmpty(building.preUnlockMessage))
+        {
+            ShowDialog(building.preUnlockMessage, 5f);
+        }
+    }    public async Task<bool> HandleBuildingUnlock(BuildingInteraction building)
+    {
+        // Play celebration and jumping-happy animation
+        OnBuildingUnlocked.Invoke(building);
+        PlayBuildingUnlockCelebration();
+        if (aros != null) StartCoroutine(FadeInAndAnimate("jumping-happy"));
+        
+        float celebrationDuration = GetCelebrationDuration();
+        int delayMs = Mathf.RoundToInt(celebrationDuration * 1000f);
+        await Task.Delay(delayMs);
+
+        // Update UI elements
+        if (building.buildingTitle != null)
+        {
+            building.buildingTitle.text = building.buildingName;
+        }
+        if (building.buildingDescription != null)
+        {
+            building.buildingDescription.text = $"You've unlocked {building.buildingName}!";
+        }
+
+        // Show unlock panel
+        building.ShowBuildingUnlockedPanel();
+        await building.DisplayUsersWhoUnlocked();
+
+        return true;
     }
 }

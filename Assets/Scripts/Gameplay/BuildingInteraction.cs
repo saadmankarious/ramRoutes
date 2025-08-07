@@ -30,18 +30,16 @@ public class BuildingInteraction : MonoBehaviour
 
     [Header("Inactive Display")]
     [SerializeField] private GameObject inactivePrefab;
-    [SerializeField] private Material lockedMaterial;
-
-    [Header("UI Panels")]
+    [SerializeField] private Material lockedMaterial;    [Header("UI Panels")]
     [SerializeField] private GameObject buildingUnlockedPanel;
     [SerializeField] private Button closeUnlockedPanelButton;
-    [SerializeField] private Text buildingTitle; // Title text
-    [SerializeField] private Text buildingDescription; // Body text
+    [SerializeField] public Text buildingTitle; // Title text
+    [SerializeField] public Text buildingDescription; // Body text
     [SerializeField] private float fadeDuration = 1f; // Duration of fade animation
     [SerializeField] private GameObject buildingEventsPanel;
     [SerializeField] private Transform eventsContentParent;
     [SerializeField] private GameObject eventPrefab;
-    [SerializeField] private string preUnlockMeassage;
+    public string preUnlockMessage;
 
     [Header("User Location Display")]
     private Dictionary<string, GameObject> activeUserLocations = new Dictionary<string, GameObject>();  // Track spawned indicators
@@ -322,11 +320,10 @@ public class BuildingInteraction : MonoBehaviour
                 }
             }
             else
+            {            if (uiManager != null)
             {
-                if (uiManager != null)
-                {
-                    uiManager.ShowDialog(preUnlockMeassage, 5f);
-                }
+                uiManager.HandlePreUnlock(this);
+            }
             }
         }
     }
@@ -366,9 +363,7 @@ public class BuildingInteraction : MonoBehaviour
     private void HandleApproachBuilding(BuildingProximityDetector.Building building)
     {
         Debug.Log("Building Interaction:: Approaching building " + building.name);
-    }
-
-    private void ShowBuildingUnlockedPanel()
+    }    public void ShowBuildingUnlockedPanel()
     {
         if (buildingUnlockedPanel != null)
         {
@@ -390,38 +385,20 @@ public class BuildingInteraction : MonoBehaviour
             {
                 Debug.Log($"Building {buildingName} already entered. Skipping unlock logic.");
                 return;
-            }
-
-            Debug.Log("Activating building: " + building.name);
+            }            Debug.Log("Activating building: " + building.name);
             activated = true;
 
             if (uiManager != null)
             {
-                uiManager.PlayBuildingUnlockCelebration();
-
-                float celebrationDuration = uiManager.GetCelebrationDuration();
-                int delayMs = Mathf.RoundToInt(celebrationDuration * 1000f);
-
-                Debug.Log($"Waiting {celebrationDuration} seconds for celebration to complete before showing modal");
-                await Task.Delay(delayMs);
+                await uiManager.HandleBuildingUnlock(this);
             }
             else
             {
-                // Fallback delay if UIManager not available
+                // Fallback for no UIManager
                 await Task.Delay(3000);
+                ShowBuildingUnlockedPanel();
+                await DisplayUsersWhoUnlocked();
             }
-
-            // Update UI elements and show panel with animation
-            if (buildingTitle != null)
-            {
-                buildingTitle.text = buildingName;
-            }
-            if (buildingDescription != null)
-            {
-                buildingDescription.text = $"You've unlocked {buildingName}!";
-            }
-            ShowBuildingUnlockedPanel();
-            await DisplayUsersWhoUnlocked();
 
             // Use unified user profile retrieval
             var userService = new UserService();
@@ -510,9 +487,7 @@ public class BuildingInteraction : MonoBehaviour
         Debug.Log("fetching events for building " + buildingName + cachedBuildingEvents.Count);
 
         eventsLoaded = true;
-    }
-
-    private void DisplayBuildingEvents()
+    }    private void DisplayBuildingEvents()
     {
         if (eventsContentParent == null || eventPrefab == null)
         {
@@ -524,24 +499,132 @@ public class BuildingInteraction : MonoBehaviour
         foreach (Transform child in eventsContentParent)
         {
             Destroy(child.gameObject);
-        }
-
-        if (cachedBuildingEvents != null && cachedBuildingEvents.Count > 0 && buildingEventsPanel != null)
+        }        if (cachedBuildingEvents != null && cachedBuildingEvents.Count > 0 && buildingEventsPanel != null)
         {
             buildingEventsPanel.SetActive(true);
-            foreach (var evt in cachedBuildingEvents)
+            
+            // Animate the panel appearing
+            StartCoroutine(AnimatePanelPopup(buildingEventsPanel));
+            
+            // Sort events by date (most recent first)
+            var sortedEvents = new List<BuildingEvent>(cachedBuildingEvents);
+            sortedEvents.Sort((a, b) => b.date.CompareTo(a.date));
+              foreach (var evt in sortedEvents)
             {
                 GameObject eventGO = Instantiate(eventPrefab, eventsContentParent);
-                Text eventText = eventGO.GetComponentInChildren<Text>();
-                if (eventText != null)
+                
+                // Get separate text components for title and date
+                Text[] textComponents = eventGO.GetComponentsInChildren<Text>();
+                Text titleText = null;
+                Text dateText = null;
+                
+                // Assign the correct text component based on name or order
+                if (textComponents.Length >= 2)
                 {
-                    eventText.text = $"{evt.eventName}\n{evt.date.ToString("MMM dd, yyyy h:mm tt")}";
+                    // If we have names to identify them
+                    foreach (var text in textComponents)
+                    {
+                        if (text.gameObject.name.Contains("Title") || text.gameObject.name.Contains("Event"))
+                        {
+                            titleText = text;
+                        }
+                        else if (text.gameObject.name.Contains("Date") || text.gameObject.name.Contains("Time"))
+                        {
+                            dateText = text;
+                        }
+                    }
+                    
+                    // If names don't match, just use the first two
+                    if (titleText == null && dateText == null)
+                    {
+                        titleText = textComponents[0];
+                        dateText = textComponents[1];
+                    }
                 }
+                else if (textComponents.Length == 1)
+                {
+                    // Fallback if there's only one text component
+                    titleText = textComponents[0];
+                }
+                
+                // Format and set text
+                string formattedDate = evt.date.ToString("MMM dd, yyyy h:mm tt");
+                
+                if (titleText != null)
+                {
+                    titleText.text = evt.eventName;
+                    
+                    if (titleText.supportRichText)
+                    {
+                        titleText.text = $"<b>{evt.eventName}</b>";
+                    }
+                }
+                
+                if (dateText != null)
+                {
+                    dateText.text = formattedDate;
+                    
+                    if (dateText.supportRichText)
+                    {
+                        dateText.text = $"<color=#888888>{formattedDate}</color>";
+                    }
+                }
+                else if (titleText != null && dateText == null)
+                {
+                    // Fallback if we only have one text component
+                    titleText.text += $"\n{formattedDate}";
+                }
+                
+                // Add animation or visual effects if needed
+                // StartCoroutine(AnimateEventEntry(eventGO));
             }
         }
         else if (buildingEventsPanel != null)
         {
             buildingEventsPanel.SetActive(false);
         }
+    }
+    
+
+    private IEnumerator AnimatePanelPopup(GameObject panel)
+    {
+        if (panel == null) yield break;
+
+        // Save original scale
+        Vector3 originalScale = panel.transform.localScale;
+        
+        // Start with zero scale
+        panel.transform.localScale = Vector3.zero;
+        
+        // Animate to full size with a slight overshoot
+        float duration = 0.4f;
+        float elapsed = 0f;
+        
+        // First phase - grow quickly to slightly larger than original
+        while (elapsed < duration * 0.8f)
+        {
+            elapsed += Time.deltaTime;
+            float progress = elapsed / (duration * 0.8f);
+            // Use easeOutBack-like effect for a bouncy feel
+            float overshoot = Mathf.Lerp(0, 1.1f, progress);
+            panel.transform.localScale = Vector3.Lerp(Vector3.zero, originalScale * overshoot, progress);
+            yield return null;
+        }
+        
+        // Second phase - settle back to original size
+        float secondPhaseDuration = duration * 0.2f;
+        elapsed = 0f;
+        Vector3 overshotScale = panel.transform.localScale;
+        
+        while (elapsed < secondPhaseDuration)
+        {
+            elapsed += Time.deltaTime;
+            float progress = elapsed / secondPhaseDuration;
+            panel.transform.localScale = Vector3.Lerp(overshotScale, originalScale, progress);
+            yield return null;
+        }
+        
+        // Ensure we end at exactly the original scale
+        panel.transform.localScale = originalScale;
     }
 }
