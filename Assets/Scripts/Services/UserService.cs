@@ -214,5 +214,24 @@ namespace RamRoutes.Services
                 return new List<User>();
             }
         }
+
+        public async Task UpdateLastLogin(string userId)
+        {
+            try
+            {
+                var userDoc = db.Collection("users").Document(userId);
+                await userDoc.UpdateAsync(new Dictionary<string, object>
+                {
+                    { "lastLogin", Timestamp.GetCurrentTimestamp() }
+                });
+
+                Debug.Log($"Updated last login timestamp for user {userId}");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Failed to update last login for user {userId}: {ex.Message}");
+                throw; // Re-throw to allow proper error handling in LoginManager
+            }
+        }
     }
 }

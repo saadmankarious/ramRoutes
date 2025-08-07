@@ -116,9 +116,23 @@ public class LoginManager : MonoBehaviour
         // Retrieve and cache current user profile
         var userService = new RamRoutes.Services.UserService();
         string userId = auth.CurrentUser != null ? auth.CurrentUser.UserId : "unknown";
+        
+        // Update last login timestamp
+        try
+        {
+            await userService.UpdateLastLogin(userId);
+            Debug.Log("Successfully updated last login time");
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Failed to update last login: {e.Message}");
+        }
+        
+        // Retrieve user profile after updating login time
         var user = await userService.RetrieveAndCacheCurrentUserProfile(userId);
-                welcomeText.text = $"Welcome, {user.name.Split(" ")[0]}!";
+        welcomeText.text = $"Welcome, {user.name.Split(" ")[0]}!";
 
+        // Ensure Firebase Messaging is initialized
     }
 
     private async void OnLoginClicked()

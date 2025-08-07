@@ -67,9 +67,9 @@ private string _cachedDeviceId;
     {
         try
         {
-            await FirebaseMessaging.SubscribeAsync("/topics/global");
+            await FirebaseMessaging.SubscribeAsync("/topics/general");  // Changed from "global" to "general"
             await FirebaseMessaging.SubscribeAsync("/topics/updates");
-            Debug.Log("Subscribed to default topics");
+            Debug.Log("Subscribed to notification topics: general, updates");
         }
         catch (System.Exception e)
         {
