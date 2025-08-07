@@ -251,15 +251,19 @@ public class BuildingInteraction : MonoBehaviour
         currentLineIndex = 0;
         extraLineShown = false;
         dialogText.text = dialogLines[currentLineIndex];
-    }
-
-    private void ShowDialog(string message)
+    }    private void ShowDialog(string message)
     {
         dialogActive = true;
         dialogPanel.SetActive(true);
         currentLineIndex = 0;
         extraLineShown = false;
         dialogText.text = message;
+        
+        // Apply animation to the dialog panel using UIManager
+        if (uiManager != null)
+        {
+            StartCoroutine(uiManager.AnimatePanelPopup(dialogPanel));
+        }
     }
 
     private void AdvanceDialog()
@@ -368,6 +372,12 @@ public class BuildingInteraction : MonoBehaviour
         if (buildingUnlockedPanel != null)
         {
             buildingUnlockedPanel.SetActive(true);
+            
+            // Apply animation to the panel using UIManager
+            if (uiManager != null)
+            {
+                StartCoroutine(uiManager.AnimatePanelPopup(buildingUnlockedPanel));
+            }
         }
     }
 
@@ -502,10 +512,8 @@ public class BuildingInteraction : MonoBehaviour
         }        if (cachedBuildingEvents != null && cachedBuildingEvents.Count > 0 && buildingEventsPanel != null)
         {
             buildingEventsPanel.SetActive(true);
-            
-            // Animate the panel appearing
-            StartCoroutine(AnimatePanelPopup(buildingEventsPanel));
-            
+              // Animate the panel appearing
+            StartCoroutine(uiManager.AnimatePanelPopup(buildingEventsPanel));
             // Sort events by date (most recent first)
             var sortedEvents = new List<BuildingEvent>(cachedBuildingEvents);
             sortedEvents.Sort((a, b) => b.date.CompareTo(a.date));
@@ -585,46 +593,4 @@ public class BuildingInteraction : MonoBehaviour
         }
     }
     
-
-    private IEnumerator AnimatePanelPopup(GameObject panel)
-    {
-        if (panel == null) yield break;
-
-        // Save original scale
-        Vector3 originalScale = panel.transform.localScale;
-        
-        // Start with zero scale
-        panel.transform.localScale = Vector3.zero;
-        
-        // Animate to full size with a slight overshoot
-        float duration = 0.4f;
-        float elapsed = 0f;
-        
-        // First phase - grow quickly to slightly larger than original
-        while (elapsed < duration * 0.8f)
-        {
-            elapsed += Time.deltaTime;
-            float progress = elapsed / (duration * 0.8f);
-            // Use easeOutBack-like effect for a bouncy feel
-            float overshoot = Mathf.Lerp(0, 1.1f, progress);
-            panel.transform.localScale = Vector3.Lerp(Vector3.zero, originalScale * overshoot, progress);
-            yield return null;
-        }
-        
-        // Second phase - settle back to original size
-        float secondPhaseDuration = duration * 0.2f;
-        elapsed = 0f;
-        Vector3 overshotScale = panel.transform.localScale;
-        
-        while (elapsed < secondPhaseDuration)
-        {
-            elapsed += Time.deltaTime;
-            float progress = elapsed / secondPhaseDuration;
-            panel.transform.localScale = Vector3.Lerp(overshotScale, originalScale, progress);
-            yield return null;
-        }
-        
-        // Ensure we end at exactly the original scale
-        panel.transform.localScale = originalScale;
-    }
 }
