@@ -20,6 +20,7 @@ public class UIManager : MonoBehaviour
     
     [Header("Celebration Settings")]
     [SerializeField] private float celebrationPlaybackSpeed = 1f; // 1f = normal speed, 2f = double speed, 0.5f = half speed
+    [SerializeField] private float celebrationDuration = 2f; // Total duration of celebration in seconds (controls both sound and particles)
     public Text trashText;
     public Text bottlesText;
     public Text treesPlantedText;
@@ -556,15 +557,15 @@ private void HideObjectsWithTag(string tag)
             return;
         }
 
-        // Get audio duration to sync effect duration
-        float audioDuration = trialCompleteSound != null ? trialCompleteSound.length : 5f;
+        // Use the unified celebration duration parameter
+        float audioDuration = celebrationDuration;
 
         // Create a parent object to organize all particle effects
         GameObject effectsContainer = new GameObject("CelebrationEffects");
         Transform effectsParent = effectsContainer.transform;
         
-        // Auto-cleanup when audio finishes (add 1 second buffer for particle fadeout)
-        Destroy(effectsContainer, audioDuration + 1f);
+        // Auto-cleanup when celebration finishes (add small buffer for particle fadeout)
+        Destroy(effectsContainer, audioDuration + 0.5f);
         
         // Create 3 random points around the screen for celebration effects
         Vector3[] celebrationPoints = new Vector3[3];
@@ -653,16 +654,30 @@ private void HideObjectsWithTag(string tag)
             Debug.LogWarning("No celebration effects are set in UIManager!");
         }
         
-        // Play celebration sound as part of the celebration
+        // Play celebration sound with controlled duration
         if (trialCompleteSound != null && audioSource != null)
         {
+            // Stop any previous sound
+            audioSource.Stop();
+            
+            // Play the sound and stop it after celebrationDuration
             audioSource.PlayOneShot(trialCompleteSound);
+            StartCoroutine(StopAudioAfterDuration(celebrationDuration));
+        }
+    }
+    
+    private IEnumerator StopAudioAfterDuration(float duration)
+    {
+        yield return new WaitForSeconds(duration);
+        if (audioSource != null)
+        {
+            audioSource.Stop();
         }
     }
     
     public float GetCelebrationDuration()
     {
-        // Return the audio duration that celebration effects are synced to
-        return trialCompleteSound != null ? trialCompleteSound.length : 5f;
+        // Return the unified celebration duration
+        return celebrationDuration;
     }
 }
