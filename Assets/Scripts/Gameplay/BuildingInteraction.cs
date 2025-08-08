@@ -242,16 +242,20 @@ public class BuildingInteraction : MonoBehaviour
         {
             HandleInteraction();
         }
-    }
-
-    private void StartDialog()
+    }    private void StartDialog()
     {
         dialogActive = true;
         dialogPanel.SetActive(true);
         currentLineIndex = 0;
         extraLineShown = false;
         dialogText.text = dialogLines[currentLineIndex];
-    }    private void ShowDialog(string message)
+        
+        // Apply animation to the dialog panel using UIManager
+        if (uiManager != null)
+        {
+            StartCoroutine(uiManager.AnimatePanelPopup(dialogPanel));
+        }
+    }private void ShowDialog(string message)
     {
         dialogActive = true;
         dialogPanel.SetActive(true);
@@ -447,13 +451,22 @@ public class BuildingInteraction : MonoBehaviour
 
         var service = new UnlockedBuildingService();
         var unlockedList = await service.RetrieveUnlockedBuildings();
-        var usersForBuilding = unlockedList.FindAll(b => b.buildingName == buildingName);
-
-        try
+        var usersForBuilding = unlockedList.FindAll(b => b.buildingName == buildingName);        try
         {
             if (usersForBuilding.Count == 0)
             {
                 usersWhoUnlockedPanel.gameObject.SetActive(false);
+            }
+            else if (usersWhoUnlockedPanel != null)
+            {
+                // Make sure the panel is active and animate it
+                usersWhoUnlockedPanel.gameObject.SetActive(true);
+                
+                // Apply animation to the panel using UIManager
+                if (uiManager != null)
+                {
+                    StartCoroutine(uiManager.AnimatePanelPopup(usersWhoUnlockedPanel));
+                }
             }
             foreach (var record in usersForBuilding)
             {

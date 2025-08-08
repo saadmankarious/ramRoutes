@@ -105,9 +105,7 @@ public class UIManager : MonoBehaviour
     {
         Time.timeScale = 1f; // Just in case it was paused
         SceneManager.LoadScene("Landing");
-    }
-
-    private void Awake()
+    }    private void Awake()
     {
         if (Instance == null)
         {
@@ -121,6 +119,29 @@ public class UIManager : MonoBehaviour
         if (audioSource == null)
         {
             audioSource = gameObject.AddComponent<AudioSource>();
+        }
+        
+        // Initialize AROS with proper scale and hide it initially
+        if (aros != null)
+        {
+            // Store original scale to restore after animations
+            if (aros.transform.localScale == Vector3.zero)
+            {
+                // If scale is zero, set a default scale
+                aros.transform.localScale = new Vector3(1f, 1f, 1f);
+            }
+            
+            // Make sure color is fully opaque
+            Image image = aros.GetComponent<Image>();
+            if (image != null)
+            {
+                Color color = image.color;
+                color.a = 1f;
+                image.color = color;
+            }
+            
+            // Make sure it's hidden initially
+            aros.SetActive(false);
         }
     }
 
@@ -420,58 +441,167 @@ private void HideObjectsWithTag(string tag)
         {
             dialogPanel.SetActive(true);
             var typeTextCoroutine = StartCoroutine(TypeText(message, activeFor));
+            
+            // Make sure AROS is hidden before starting a new animation
+            if (aros != null)
+            {
+                // Stop any active animations first
+                StopArosAnimations();
+                aros.SetActive(false);
+            }
+            
+            // Only start AROS animation if we have a trigger
             var fadeAnimateCoroutine = aros != null && !string.IsNullOrEmpty(animationTrigger) ? 
                 StartCoroutine(FadeInAndAnimate(animationTrigger)) : null;
             
-            StartCoroutine(WaitForCoroutines(typeTextCoroutine, fadeAnimateCoroutine, "aros-neutral"));
+            // Only schedule the final "neutral" animation if we don't have a specific animation
+            string finalAnim = string.IsNullOrEmpty(animationTrigger) ? "aros-neutral" : null;
+            StartCoroutine(WaitForCoroutines(typeTextCoroutine, fadeAnimateCoroutine, finalAnim));
         }
     }
-
-    private IEnumerator WaitForCoroutines(Coroutine typeText, Coroutine fadeAnimate, string finalAnimation)
+    
+    // Helper method to stop any active AROS animations
+    private void StopArosAnimations()
+    {
+        if (aros != null)
+        {
+            // Find and stop any active coroutines that might be animating AROS
+            var arosCouroutines = StartCoroutine(EmptyCoroutine());
+            StopCoroutine(arosCouroutines);
+            
+            // Reset any animator if needed
+            Animator animator = aros.GetComponent<Animator>();
+            if (animator != null)
+            {
+                animator.Rebind();
+                animator.Update(0f);
+            }
+        }
+    }
+    
+    // Empty coroutine for stopping purposes
+    private IEnumerator EmptyCoroutine()
+    {
+        yield return null;
+    }private IEnumerator WaitForCoroutines(Coroutine typeText, Coroutine fadeAnimate, string finalAnimation)
     {
         if (typeText != null) yield return typeText;
         if (fadeAnimate != null) yield return fadeAnimate;
-        if (aros != null) StartCoroutine(FadeInAndAnimate(finalAnimation));
-    }
-
-    public IEnumerator FadeInAndAnimate(string animationTrigger)
+        
+        // Only show AROS with animation if there is a final animation to play
+        // and the previous animation has finished
+        if (aros != null && !string.IsNullOrEmpty(finalAnimation) && !aros.activeSelf) 
+        {
+            StartCoroutine(FadeInAndAnimate(finalAnimation));
+        }
+    }public IEnumerator FadeInAndAnimate(string animationTrigger)
     {
         if (aros == null) yield break;
-        aros.SetActive(true);
         
+        // Store the original scale before doing anything
+        Vector3 originalScale = new Vector3(1f, 1f, 1f); // Default to unit scale
+        
+        // Check if we have a valid scale, otherwise use default
+        if (aros.transform.localScale.magnitude > 0.1f)
+        {
+            originalScale = aros.transform.localScale;
+        }
+        
+        // Make sure AROS is active but with zero scale initially
+        aros.SetActive(true);
+        aros.transform.localScale = Vector3.zero;
+        
+        // First animate with popup effect
+        float popupDuration = 0.35f;
+        float elapsed = 0f;
+        
+        // Grow with slight overshoot
+        while (elapsed < popupDuration * 0.7f)
+        {
+            elapsed += Time.deltaTime;
+            float progress = elapsed / (popupDuration * 0.7f);
+            float overshoot = Mathf.Lerp(0, 1.15f, progress);
+            aros.transform.localScale = Vector3.Lerp(Vector3.zero, originalScale * overshoot, progress);
+            yield return null;
+        }
+        
+        // Settle back to original size
+        float secondPhaseDuration = popupDuration * 0.3f;
+        elapsed = 0f;
+        Vector3 overshotScale = aros.transform.localScale;
+        
+        while (elapsed < secondPhaseDuration)
+        {
+            elapsed += Time.deltaTime;
+            float progress = elapsed / secondPhaseDuration;
+            aros.transform.localScale = Vector3.Lerp(overshotScale, originalScale, progress);
+            yield return null;
+        }
+        
+        // Ensure we end at exactly the original scale
+        aros.transform.localScale = originalScale;
+        
+        // Then handle fade-in effect if needed
         Image image = aros.GetComponent<Image>();
         if (image != null)
         {
-            Color color = image.color;
-            color.a = 0f;
-            image.color = color;
-            
-            float fadeTime = 0.5f;
-            float elapsed = 0f;
-            
-            while (elapsed < fadeTime)
+            // Only fade if the image is transparent
+            if (image.color.a < 0.1f)
             {
-                elapsed += Time.deltaTime;
-                color.a = Mathf.Lerp(0f, 1f, elapsed / fadeTime);
+                Color color = image.color;
+                color.a = 0f;
                 image.color = color;
-                yield return null;
+                
+                float fadeTime = 0.3f;
+                elapsed = 0f;
+                
+                while (elapsed < fadeTime)
+                {
+                    elapsed += Time.deltaTime;
+                    color.a = Mathf.Lerp(0f, 1f, elapsed / fadeTime);
+                    image.color = color;
+                    yield return null;
+                }
+                
+                color.a = 1f;
+                image.color = color;
             }
-            
-            color.a = 1f;
-            image.color = color;
         }
         
+        // Finally play the animation
         Animator animator = aros.GetComponent<Animator>();
         if (animator != null && !string.IsNullOrEmpty(animationTrigger))
         {
             // Play animation directly by state name
             animator.Play(animationTrigger, 0, 0f);
+            
+            // Wait for the animation to finish (approximate by using the current animation length)
+            if (animator.GetCurrentAnimatorStateInfo(0).length > 0)
+            {
+                yield return new WaitForSeconds(animator.GetCurrentAnimatorStateInfo(0).length);
+            }
+            else
+            {
+                // Default wait time if we can't determine animation length
+                yield return new WaitForSeconds(2f);
+            }
         }
-    }
-
-    private void HideDialog()
+        else
+        {
+            // If no animation to play, wait a couple seconds before hiding
+            yield return new WaitForSeconds(2f);
+        }
+          // Hide AROS with a reverse popup animation
+        StartCoroutine(HideArosWithAnimation());
+    }    private void HideDialog()
     {
         dialogPanel?.SetActive(false);
+        
+        // Hide AROS with animation when dialog is closed
+        if (aros != null && aros.activeSelf)
+        {
+            StartCoroutine(HideArosWithAnimation());
+        }
     }
 
     private IEnumerator RepeatObjective()
@@ -539,14 +669,18 @@ private void HideObjectsWithTag(string tag)
         if (typingCoroutine != null) StopCoroutine(typingCoroutine);
         if (objectiveRepeatCoroutine != null) StopCoroutine(objectiveRepeatCoroutine);
         if (timerCoroutine != null) StopCoroutine(timerCoroutine);
-    }
-
-    private void OnDestroy()
+    }    private void OnDestroy()
     {
         StopAllCoroutines();
         OnTrialComplete.RemoveAllListeners();
         OnTimeExpired.RemoveAllListeners();
         Time.timeScale = 1f;
+        
+        // Make sure AROS is hidden when scene ends
+        if (aros != null)
+        {
+            aros.SetActive(false);
+        }
     }
 
     void CelebrationEffect()
@@ -703,7 +837,16 @@ private void HideObjectsWithTag(string tag)
         // Play celebration and jumping-happy animation
         OnBuildingUnlocked.Invoke(building);
         PlayBuildingUnlockCelebration();
-        if (aros != null) StartCoroutine(FadeInAndAnimate("jumping-happy"));
+        
+        // Make sure AROS is hidden before starting the animation
+        if (aros != null)
+        {
+            StopArosAnimations();
+            aros.SetActive(false);
+            
+            // Now show AROS with popup animation for the celebration
+            StartCoroutine(FadeInAndAnimate("jumping-happy"));
+        }
         
         float celebrationDuration = GetCelebrationDuration();
         int delayMs = Mathf.RoundToInt(celebrationDuration * 1000f);
@@ -766,5 +909,61 @@ private void HideObjectsWithTag(string tag)
         
         // Ensure we end at exactly the original scale
         panel.transform.localScale = originalScale;
+    }    // Public method to safely hide AROS with animation
+    public void HideAros()
+    {
+        if (aros != null && aros.activeSelf)
+        {
+            StopArosAnimations();
+            StartCoroutine(HideArosWithAnimation());
+        }
+    }
+
+    // Animates AROS zooming down when hiding
+    private IEnumerator HideArosWithAnimation()
+    {
+        if (aros == null || !aros.activeSelf) yield break;
+        
+        // Store the current scale before shrinking
+        Vector3 originalScale = aros.transform.localScale;
+        
+        // First animate fade out if needed
+        Image image = aros.GetComponent<Image>();
+        if (image != null && image.color.a > 0.1f)
+        {
+            Color color = image.color;
+            float fadeTime = 0.2f;
+            float elapsed = 0f;
+            
+            while (elapsed < fadeTime)
+            {
+                elapsed += Time.deltaTime;
+                color.a = Mathf.Lerp(1f, 0f, elapsed / fadeTime);
+                image.color = color;
+                yield return null;
+            }
+        }
+        
+        // Then animate the scale to zero with a zoom-down effect
+        float shrinkDuration = 0.25f;
+        float elapsed2 = 0f;
+        
+        while (elapsed2 < shrinkDuration)
+        {
+            elapsed2 += Time.deltaTime;
+            float progress = elapsed2 / shrinkDuration;
+            
+            // Use an ease-in curve for a natural shrinking effect
+            float t = 1f - (1f - progress) * (1f - progress);
+            aros.transform.localScale = Vector3.Lerp(originalScale, Vector3.zero, t);
+            yield return null;
+        }
+        
+        // Ensure we end at exactly zero scale and inactive
+        aros.transform.localScale = Vector3.zero;
+        aros.SetActive(false);
+        
+        // Reset the scale for next time
+        aros.transform.localScale = originalScale;
     }
 }
