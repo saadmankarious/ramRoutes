@@ -51,6 +51,9 @@ public class BuildingInteraction : MonoBehaviour
     [Header("Gate Integration")]
     [SerializeField] private Gate connectedGate; // Gate to unlock when building is unlocked
 
+    [Header("Player Teleportation")]
+    [SerializeField] private Transform playerTeleportPosition; // Position where player will be moved after unlocking
+
     // Private Variables
     private bool isPlayerInRange = false;
     private int currentLineIndex = 0;
@@ -73,6 +76,7 @@ public class BuildingInteraction : MonoBehaviour
     private List<BuildingEvent> cachedBuildingEvents;
     private bool eventsLoaded = false;
     private UIManager uiManager;
+    private bool shouldTeleportOnPanelClose = false; // Flag to track if this building should teleport player
 
     void Awake()
     {
@@ -123,6 +127,17 @@ public class BuildingInteraction : MonoBehaviour
                     connectedGate.UnlockGate();
 
                     Debug.Log($"Unlocked gate connected to building: {buildingName}");
+                }
+
+                // Only teleport if this building was the one that was unlocked
+                if (shouldTeleportOnPanelClose)
+                {
+                    TeleportPlayerToPosition();
+                    
+                    // Add delay then set building as activated after teleportation
+                    StartCoroutine(ActivateBuildingAfterDelay());
+                    
+                    shouldTeleportOnPanelClose = false; // Reset flag after teleporting
                 }
             });
         }
@@ -400,7 +415,10 @@ public class BuildingInteraction : MonoBehaviour
                 Debug.Log($"Building {buildingName} already entered. Skipping unlock logic.");
                 return;
             }            Debug.Log("Activating building: " + building.name);
-            activated = true;
+            // Don't set activated = true here, let it happen after teleportation
+
+            // Set flag to indicate this building should teleport when panel closes
+            shouldTeleportOnPanelClose = true;
 
             if (uiManager != null)
             {
@@ -437,6 +455,54 @@ public class BuildingInteraction : MonoBehaviour
                 transform.position
             );
             await service.SaveUnlockedBuildingAsync(record);
+        }
+    }
+
+    private IEnumerator ActivateBuildingAfterDelay()
+    {
+        yield return new WaitForSeconds(2f);
+        activated = true;
+        
+        // Play reward sound when building is revealed
+        if (rewardSound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(rewardSound);
+        }
+    }
+
+    private void TeleportPlayerToPosition()
+    {
+        if (playerTeleportPosition != null)
+        {
+            Debug.Log($"Teleporting player to position: {playerTeleportPosition.position} for building: {buildingName}");
+            // Find the player GameObject
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player == null)
+            {
+                // Try alternate tag
+                player = GameObject.FindGameObjectWithTag("Spaceship");
+            }
+
+            if (player != null)
+            {
+                // Teleport the player to the designated position
+                player.transform.position = playerTeleportPosition.position;
+                Debug.Log($"Player teleported to position: {playerTeleportPosition.position} for building: {buildingName}");
+                
+                // Optional: Add some visual effects for teleportation
+                if (uiManager != null)
+                {
+                    StartCoroutine(uiManager.PlayTeleportEffect(player.transform.position));
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Player GameObject not found! Cannot teleport after building unlock.");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"Player teleport position not set for building: {buildingName}. Player will not be moved.");
         }
     }
 

@@ -1648,6 +1648,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1490650722}
+  - {fileID: 1681770776}
   m_Father: {fileID: 1187746829}
   m_LocalEulerAnglesHint: {x: 0, y: 29.564, z: 0}
 --- !u!212 &185559588
@@ -1746,6 +1747,7 @@ MonoBehaviour:
   showUnlockedPanelOnStart: 0
   simulateEntry: 0
   connectedGate: {fileID: 0}
+  playerTeleportPosition: {fileID: 1681770776}
   activated: 0
   buildingName: Library
   usersScrollView: {fileID: 1017116444}
@@ -2190,6 +2192,7 @@ Transform:
   - {fileID: 1050557107}
   - {fileID: 1957419304}
   - {fileID: 786206271}
+  - {fileID: 829954904}
   m_Father: {fileID: 1187746829}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &211162575
@@ -2336,6 +2339,7 @@ MonoBehaviour:
   showUnlockedPanelOnStart: 0
   simulateEntry: 0
   connectedGate: {fileID: 0}
+  playerTeleportPosition: {fileID: 829954904}
   activated: 0
   buildingName: McWeathy
   usersScrollView: {fileID: 1017116444}
@@ -3244,6 +3248,37 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 163157214}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &316913357
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 316913358}
+  m_Layer: 8
+  m_Name: Player Spawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &316913358
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 316913357}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -6.7, y: -2.06, z: -59.36315}
+  m_LocalScale: {x: 1.4479324, y: 1.4479324, z: 1.4479324}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1046268213}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &321169907
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -20371,6 +20406,37 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 89458861}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &783852338
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 783852339}
+  m_Layer: 8
+  m_Name: Player Spawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &783852339
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 783852338}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.9976046, z: -0, w: -0.06917477}
+  m_LocalPosition: {x: -0.94, y: -4.88, z: 25.41}
+  m_LocalScale: {x: 0.95932776, y: 0.95932806, z: 0.95932776}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1851404767}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &786206270
 GameObject:
   m_ObjectHideFlags: 0
@@ -20692,6 +20758,37 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 83483506}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &829954903
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 829954904}
+  m_Layer: 8
+  m_Name: Player Spawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &829954904
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 829954903}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.07, y: 7.13, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 211162574}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &831595945
 GameObject:
   m_ObjectHideFlags: 0
@@ -20724,6 +20821,37 @@ Transform:
   - {fileID: 266150988}
   - {fileID: 834382928}
   m_Father: {fileID: 1082779267}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &833470304
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 833470305}
+  m_Layer: 8
+  m_Name: Player Spawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &833470305
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 833470304}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.3, y: -5.3, z: 2.7515619}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1878086076}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &834382927
 GameObject:
@@ -22063,7 +22191,8 @@ Transform:
   m_LocalPosition: {x: -83.27, y: -21.36, z: 41}
   m_LocalScale: {x: 0.69064, y: 0.69064, z: 0.69064}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 316913358}
   m_Father: {fileID: 1187746829}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!61 &1046268214
@@ -22149,6 +22278,7 @@ MonoBehaviour:
   showUnlockedPanelOnStart: 0
   simulateEntry: 0
   connectedGate: {fileID: 0}
+  playerTeleportPosition: {fileID: 316913358}
   activated: 0
   buildingName: Ebersole
   usersScrollView: {fileID: 1017116444}
@@ -22757,6 +22887,11 @@ PrefabInstance:
       objectReference: {fileID: 8300000, guid: 0d46cf262fa9f42de904f8f4409a9661, type: 3}
     - target: {fileID: 7013091016929523227, guid: cb19daed2fa4048b4b2286af5a1e155b,
         type: 3}
+      propertyPath: isUnlocked
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7013091016929523227, guid: cb19daed2fa4048b4b2286af5a1e155b,
+        type: 3}
       propertyPath: lockMessage
       value: Aros senses a gathering place of great energy nearby... Unlock the Commons
         to open the path to the Eastern Campus.
@@ -23338,11 +23473,11 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1851404767}
   - {fileID: 211162574}
+  - {fileID: 1851404767}
   - {fileID: 1602936569}
-  - {fileID: 1046268213}
   - {fileID: 185559587}
+  - {fileID: 1046268213}
   - {fileID: 1878086076}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -24843,6 +24978,37 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4d331b29b0fa2bd4ea3191da55cb4457, type: 3}
+--- !u!1 &1353312975
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1353312976}
+  m_Layer: 8
+  m_Name: Player Spawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1353312976
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1353312975}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.8, y: 4.96, z: 2.7515619}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1602936569}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1375497523
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -25870,35 +26036,35 @@ MonoBehaviour:
   clearCacheOnStart: 1
   simulateGpsEnabled: 1
   buildings:
-  - name: Stoner
-    entranceGPS: {x: 41.24447, y: -96.013336}
-    detectionRadius: 50
-    closeProximityRadius: 20
-    debugColor: {r: 0, g: 1, b: 1, a: 1}
-  - name: Lytle
-    entranceGPS: {x: 41.24444, y: -96.012764}
-    detectionRadius: 50
-    closeProximityRadius: 20
-    debugColor: {r: 1, g: 0.063696235, b: 0, a: 1}
-  - name: McWeathy
-    entranceGPS: {x: 41.217262, y: -96.09751}
-    detectionRadius: 20
-    closeProximityRadius: 80.9
-    debugColor: {r: 0.101122856, g: 0, b: 1, a: 1}
-  - name: McWeathy
-    entranceGPS: {x: 41.244305, y: -96.015594}
-    detectionRadius: 100
-    closeProximityRadius: 50
-    debugColor: {r: 0.101122856, g: 0, b: 1, a: 1}
-  - name: Luce
-    entranceGPS: {x: 41.244305, y: -96.015594}
+  - name: TC
+    entranceGPS: {x: 41.925922, y: -91.42549}
     detectionRadius: 80
     closeProximityRadius: 50
     debugColor: {r: 0.6226415, g: 0.13040228, b: 0.44183475, a: 1}
-  - name: BT2
-    entranceGPS: {x: 41.2173, y: -96.097855}
-    detectionRadius: 80
-    closeProximityRadius: 50
+  - name: McWeathy
+    entranceGPS: {x: 41.927017, y: -91.42439}
+    detectionRadius: 35
+    closeProximityRadius: 15
+    debugColor: {r: 0.101122856, g: 0, b: 1, a: 1}
+  - name: Stoner
+    entranceGPS: {x: 41.925278, y: -91.42181}
+    detectionRadius: 35
+    closeProximityRadius: 20
+    debugColor: {r: 0, g: 1, b: 1, a: 1}
+  - name: PR
+    entranceGPS: {x: 41.927242, y: -91.428085}
+    detectionRadius: 50
+    closeProximityRadius: 15
+    debugColor: {r: 1, g: 0.063696235, b: 0, a: 1}
+  - name: Library
+    entranceGPS: {x: 41.924538, y: -91.42379}
+    detectionRadius: 35
+    closeProximityRadius: 15
+    debugColor: {r: 0.6226415, g: 0.13040228, b: 0.44183475, a: 1}
+  - name: Ebersole
+    entranceGPS: {x: 41.925148, y: -91.42546}
+    detectionRadius: 35
+    closeProximityRadius: 15
     debugColor: {r: 0.6226415, g: 0.13040228, b: 0.44183475, a: 1}
   updateInterval: 10
   locationDisabledCanvas: {fileID: 1742409201}
@@ -26034,6 +26200,11 @@ PrefabInstance:
       propertyPath: lockSound
       value: 
       objectReference: {fileID: 8300000, guid: 0d46cf262fa9f42de904f8f4409a9661, type: 3}
+    - target: {fileID: 7013091016929523227, guid: cb19daed2fa4048b4b2286af5a1e155b,
+        type: 3}
+      propertyPath: isUnlocked
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7013091016929523227, guid: cb19daed2fa4048b4b2286af5a1e155b,
         type: 3}
       propertyPath: lockMessage
@@ -26812,6 +26983,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2118235787}
+  - {fileID: 1353312976}
   m_Father: {fileID: 1187746829}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &1602936570
@@ -26913,6 +27085,7 @@ MonoBehaviour:
   showUnlockedPanelOnStart: 0
   simulateEntry: 0
   connectedGate: {fileID: 0}
+  playerTeleportPosition: {fileID: 1353312976}
   activated: 0
   buildingName: Stoner
   usersScrollView: {fileID: 1017116444}
@@ -27370,6 +27543,37 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c63c01c46376b9c408cef006a9f5730a, type: 3}
+--- !u!1 &1681770775
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1681770776}
+  m_Layer: 8
+  m_Name: Player Spawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1681770776
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1681770775}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0.25513858, z: -0, w: 0.9669045}
+  m_LocalPosition: {x: 27.34, y: -5.39, z: -48.87}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 185559587}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1740749351
 GameObject:
   m_ObjectHideFlags: 0
@@ -269575,7 +269779,8 @@ Transform:
   m_LocalPosition: {x: -58.62, y: -21.72, z: 26.1}
   m_LocalScale: {x: 1.0423963, y: 1.0423963, z: 1.0423963}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 783852339}
   m_Father: {fileID: 1187746829}
   m_LocalEulerAnglesHint: {x: 0, y: -187.933, z: 0}
 --- !u!61 &1851404768
@@ -269762,6 +269967,7 @@ MonoBehaviour:
   showUnlockedPanelOnStart: 0
   simulateEntry: 0
   connectedGate: {fileID: 7270442483274850398}
+  playerTeleportPosition: {fileID: 783852339}
   activated: 0
   buildingName: TC
   usersScrollView: {fileID: 1017116444}
@@ -270137,7 +270343,7 @@ GameObject:
   - component: {fileID: 1878086078}
   - component: {fileID: 1878086080}
   m_Layer: 8
-  m_Name: Clock
+  m_Name: PR
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -270157,6 +270363,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1958176161}
+  - {fileID: 833470305}
   m_Father: {fileID: 1187746829}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &1878086077
@@ -270257,8 +270464,9 @@ MonoBehaviour:
   showUnlockedPanelOnStart: 0
   simulateEntry: 0
   connectedGate: {fileID: 0}
+  playerTeleportPosition: {fileID: 833470305}
   activated: 0
-  buildingName: Clock
+  buildingName: PR
   usersScrollView: {fileID: 1017116444}
   usersContentParent: {fileID: 377416275}
   userPrefab: {fileID: 8987667154442864685, guid: ba4005a013b4d9f4f9bb7f88891f4e60,

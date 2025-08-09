@@ -623,11 +623,11 @@ private void HideObjectsWithTag(string tag)
     {
 
         var trial = GameManager.Instance.currentTrial;
-        trashText.text = $"{trial.currentTrash}/{trial.targetTrash}";
-        bottlesText.text = $"{trial.currentRecycling}/{trial.targetRecycling}";
-        treesPlantedText.text = $"{trial.currentTreesPlanted}/{trial.targetTreesPlanted}";
-        treesWateredText.text = $"{trial.currentTreesWatered}/{trial.targetTreesWatered}";
-        levelText.text = trial.trialName;
+        // trashText.text = $"{trial.currentTrash}/{trial.targetTrash}";
+        // bottlesText.text = $"{trial.currentRecycling}/{trial.targetRecycling}";
+        // treesPlantedText.text = $"{trial.currentTreesPlanted}/{trial.targetTreesPlanted}";
+        // treesWateredText.text = $"{trial.currentTreesWatered}/{trial.targetTreesWatered}";
+        // levelText.text = trial.trialName;
         // if (Input.GetKeyDown(KeyCode.Escape))
         // {
         //     TogglePauseMenu();
@@ -965,5 +965,26 @@ private void HideObjectsWithTag(string tag)
         
         // Reset the scale for next time
         aros.transform.localScale = originalScale;
+    }
+
+    public IEnumerator PlayTeleportEffect(Vector3 worldPosition)
+    {
+        if (teleportEffect != null)
+        {
+            // Position the teleport effect at the specified world position
+            teleportEffect.transform.position = worldPosition;
+            
+            // Play the teleport effect
+            teleportEffect.Play();
+            
+            Debug.Log($"Playing teleport effect at position: {worldPosition}");
+            
+            // Wait for a short duration to let the effect play
+            yield return new WaitForSeconds(2f);
+        }
+        else
+        {
+            Debug.LogWarning("Teleport effect not assigned in UIManager!");
+        }
     }
 }
