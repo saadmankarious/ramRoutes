@@ -463,6 +463,12 @@ public class BuildingInteraction : MonoBehaviour
         yield return new WaitForSeconds(2f);
         activated = true;
         
+        // Update progress bar when building is revealed
+        if (uiManager != null)
+        {
+            uiManager.UpdateProgressBarOnReveal();
+        }
+        
         // Play reward sound when building is revealed
         if (rewardSound != null && audioSource != null)
         {

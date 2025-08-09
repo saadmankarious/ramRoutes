@@ -6,6 +6,7 @@ using UnityEngine.Events;
 using System.Linq;
 using System.Threading.Tasks;
 using RamRoutes.Services;
+using Firebase.Auth;
 
 public class UIManager : MonoBehaviour
 {
@@ -58,10 +59,14 @@ public class UIManager : MonoBehaviour
     public UnityEvent OnTimeExpired = new UnityEvent();
     public UnityEvent<BuildingInteraction> OnBuildingUnlocked = new UnityEvent<BuildingInteraction>();
 
+    [Header("Progress Bar")]
+    public GameObject[] progressBarImages; // Array of progress bar images to activate sequentially
+
     private Coroutine typingCoroutine;
     private Coroutine objectiveRepeatCoroutine;
     private Coroutine timerCoroutine;
     public GameObject aros; // Reference to AROS prefab for animation
+    private int buildingsUnlockedCount = 0; // Track number of buildings unlocked
 
     private bool isPaused = false;
 
@@ -143,6 +148,21 @@ public class UIManager : MonoBehaviour
             // Make sure it's hidden initially
             aros.SetActive(false);
         }
+
+        // Initialize progress bar - all images inactive at start
+        if (progressBarImages != null)
+        {
+            foreach (GameObject progressImage in progressBarImages)
+            {
+                if (progressImage != null)
+                {
+                    progressImage.SetActive(false);
+                }
+            }
+        }
+
+        // Initialize progress bar based on unlocked buildings
+        _ = InitializeProgressBar();
     }
 
     private async Task GetUserPoints()
@@ -867,6 +887,61 @@ private void HideObjectsWithTag(string tag)
         await building.DisplayUsersWhoUnlocked();
 
         return true;
+    }
+
+    private void UpdateProgressBar()
+    {
+        if (progressBarImages != null && buildingsUnlockedCount < progressBarImages.Length)
+        {
+            GameObject progressImage = progressBarImages[buildingsUnlockedCount];
+            if (progressImage != null)
+            {
+                progressImage.SetActive(true);
+                Debug.Log($"Activated progress bar image {buildingsUnlockedCount + 1}");
+                
+                // Animate the progress bar image popup
+                StartCoroutine(AnimatePanelPopup(progressImage));
+            }
+            buildingsUnlockedCount++;
+        }
+    }
+
+    public void UpdateProgressBarOnReveal()
+    {
+        UpdateProgressBar();
+    }
+
+    private async Task InitializeProgressBar()
+    {
+        try
+        {
+            var buildingService = new UnlockedBuildingService();
+            var unlockedBuildings = await buildingService.RetrieveUnlockedBuildings();
+            
+            // Get current user's unlocked buildings
+            string userId = FirebaseAuth.DefaultInstance.CurrentUser?.UserId ?? "unknown";
+            var userUnlockedBuildings = unlockedBuildings.Where(b => b.userId == userId).ToList();
+            
+            // Set the buildings unlocked count and activate corresponding progress images
+            buildingsUnlockedCount = userUnlockedBuildings.Count;
+            
+            if (progressBarImages != null)
+            {
+                for (int i = 0; i < buildingsUnlockedCount && i < progressBarImages.Length; i++)
+                {
+                    if (progressBarImages[i] != null)
+                    {
+                        progressBarImages[i].SetActive(true);
+                    }
+                }
+            }
+            
+            Debug.Log($"Initialized progress bar with {buildingsUnlockedCount} unlocked buildings");
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Failed to initialize progress bar: {ex.Message}");
+        }
     }
 
     public IEnumerator AnimatePanelPopup(GameObject panel)
