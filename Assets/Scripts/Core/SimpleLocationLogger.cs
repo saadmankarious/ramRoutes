@@ -21,7 +21,7 @@ public class BuildingProximityDetector : MonoBehaviour
     [SerializeField] private bool simulateGpsEnabled = false;
 
     [Header("Location Settings")]
-    [SerializeField] private Building[] buildings = new Building[2];
+    public Building[] buildings = new Building[2]; // Make public for BuildingInteraction access
     [SerializeField] private float updateInterval = 1f;
     [SerializeField] private Canvas locationDisabledCanvas;
     // [SerializeField] private bool simulateBuildingEntry = false;
@@ -158,7 +158,7 @@ public class BuildingProximityDetector : MonoBehaviour
         UpdateStatusText();
     }
 
-    float CalculatePreciseDistance(float lat1, float lon1, float lat2, float lon2)
+    public float CalculatePreciseDistance(float lat1, float lon1, float lat2, float lon2)
     {
         // Vincenty formula implementation for higher accuracy
         const float a = 6378137f; // WGS-84 semi-major axis

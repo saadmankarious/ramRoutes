@@ -31,6 +31,8 @@ public class UIManager : MonoBehaviour
     public Text heldItem;
     public GameObject dialogPanel;
     public Text dialogText;
+    public Button dialogActionButton; // Action button for dialogs
+    public Text dialogActionButtonText; // Text component of the action button
     public GameObject timeUpMenu;
     public GameObject trialCompleteMenu;
     public GameObject gamePauseMenu;
@@ -67,6 +69,9 @@ public class UIManager : MonoBehaviour
     private Coroutine timerCoroutine;
     public GameObject aros; // Reference to AROS prefab for animation
     private int buildingsUnlockedCount = 0; // Track number of buildings unlocked
+    private Coroutine dialogCoroutine; // Track the entire dialog sequence
+    private bool isDialogActive = false; // Flag to prevent overlapping dialogs
+    private System.Action currentDialogAction; // Store current dialog action
 
     private bool isPaused = false;
 
@@ -457,10 +462,37 @@ private void HideObjectsWithTag(string tag)
         typingCoroutine = null;
     }    public void ShowDialog(string message, float activeFor, string animationTrigger = null)
     {
-        if (dialogPanel != null && dialogText != null && typingCoroutine == null)
+        ShowDialog(message, activeFor, animationTrigger, null, null);
+    }
+    
+    public void ShowDialog(string message, float activeFor, string animationTrigger, string actionButtonText, System.Action onActionButtonClick)
+    {
+        if (dialogPanel != null && dialogText != null)
+        {
+            // If dialog is already active, stop the current one
+            if (isDialogActive && dialogCoroutine != null)
+            {
+                StopCoroutine(dialogCoroutine);
+                CleanupDialog();
+            }
+            
+            dialogCoroutine = StartCoroutine(ShowDialogSequence(message, activeFor, animationTrigger, actionButtonText, onActionButtonClick));
+        }
+    }
+    
+    private IEnumerator ShowDialogSequence(string message, float activeFor, string animationTrigger, string actionButtonText, System.Action onActionButtonClick)
+    {
+        isDialogActive = true;
+        currentDialogAction = onActionButtonClick;
+        
+        try 
         {
             dialogPanel.SetActive(true);
-            var typeTextCoroutine = StartCoroutine(TypeText(message, activeFor));
+            
+            // Setup action button if provided
+            SetupActionButton(actionButtonText, onActionButtonClick);
+            
+            typingCoroutine = StartCoroutine(TypeText(message, activeFor));
             
             // Make sure AROS is hidden before starting a new animation
             if (aros != null)
@@ -476,7 +508,55 @@ private void HideObjectsWithTag(string tag)
             
             // Only schedule the final "neutral" animation if we don't have a specific animation
             string finalAnim = string.IsNullOrEmpty(animationTrigger) ? "aros-neutral" : null;
-            StartCoroutine(WaitForCoroutines(typeTextCoroutine, fadeAnimateCoroutine, finalAnim));
+            yield return StartCoroutine(WaitForCoroutines(typingCoroutine, fadeAnimateCoroutine, finalAnim));
+        }
+        finally 
+        {
+            CleanupDialog();
+        }
+    }
+    
+    private void SetupActionButton(string buttonText, System.Action onButtonClick)
+    {
+        if (dialogActionButton != null)
+        {
+            if (onButtonClick != null) // Show button if action is provided, text can be empty for icon-only buttons
+            {
+                // Show and setup the action button
+                dialogActionButton.gameObject.SetActive(true);
+                
+                // Set button text (can be empty)
+                if (dialogActionButtonText != null)
+                {
+                    dialogActionButtonText.text = buttonText ?? "";
+                }
+                
+                // Clear any existing listeners and add the new one
+                dialogActionButton.onClick.RemoveAllListeners();
+                dialogActionButton.onClick.AddListener(() => {
+                    onButtonClick?.Invoke();
+                    HideDialog(); // Hide dialog after action
+                });
+            }
+            else
+            {
+                // Hide the action button if no action is provided
+                dialogActionButton.gameObject.SetActive(false);
+            }
+        }
+    }
+    
+    private void CleanupDialog()
+    {
+        isDialogActive = false;
+        dialogCoroutine = null;
+        currentDialogAction = null;
+        
+        // Hide action button and clear listeners
+        if (dialogActionButton != null)
+        {
+            dialogActionButton.gameObject.SetActive(false);
+            dialogActionButton.onClick.RemoveAllListeners();
         }
     }
     
@@ -613,7 +693,7 @@ private void HideObjectsWithTag(string tag)
         }
           // Hide AROS with a reverse popup animation
         StartCoroutine(HideArosWithAnimation());
-    }    private void HideDialog()
+    }    public void HideDialog()
     {
         dialogPanel?.SetActive(false);
         
@@ -622,6 +702,14 @@ private void HideObjectsWithTag(string tag)
         {
             StartCoroutine(HideArosWithAnimation());
         }
+        
+        // Clean up dialog state
+        CleanupDialog();
+    }
+    
+    public bool IsDialogActive()
+    {
+        return isDialogActive;
     }
 
     private IEnumerator RepeatObjective()
@@ -689,6 +777,11 @@ private void HideObjectsWithTag(string tag)
         if (typingCoroutine != null) StopCoroutine(typingCoroutine);
         if (objectiveRepeatCoroutine != null) StopCoroutine(objectiveRepeatCoroutine);
         if (timerCoroutine != null) StopCoroutine(timerCoroutine);
+        if (dialogCoroutine != null) 
+        {
+            StopCoroutine(dialogCoroutine);
+            CleanupDialog();
+        }
     }    private void OnDestroy()
     {
         StopAllCoroutines();

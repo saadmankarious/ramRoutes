@@ -11,7 +11,6 @@ using System;
 
 public class BuildingInteraction : MonoBehaviour
 {
-    // Serialized Fields
     [Header("Dialog Settings")]
     [SerializeField] private GameObject dialogPanel;
     [SerializeField] private Text dialogText;
@@ -33,28 +32,31 @@ public class BuildingInteraction : MonoBehaviour
     [SerializeField] private Material lockedMaterial;    [Header("UI Panels")]
     [SerializeField] private GameObject buildingUnlockedPanel;
     [SerializeField] private Button closeUnlockedPanelButton;
-    [SerializeField] public Text buildingTitle; // Title text
-    [SerializeField] public Text buildingDescription; // Body text
-    [SerializeField] private float fadeDuration = 1f; // Duration of fade animation
+    [SerializeField] public Text buildingTitle;
+    [SerializeField] public Text buildingDescription;
+    [SerializeField] private float fadeDuration = 1f;
     [SerializeField] private GameObject buildingEventsPanel;
     [SerializeField] private Transform eventsContentParent;
     [SerializeField] private GameObject eventPrefab;
     public string preUnlockMessage;
 
     [Header("User Location Display")]
-    private Dictionary<string, GameObject> activeUserLocations = new Dictionary<string, GameObject>();  // Track spawned indicators
+    private Dictionary<string, GameObject> activeUserLocations = new Dictionary<string, GameObject>();
 
     [Header("Debug")]
     [SerializeField] private bool showUnlockedPanelOnStart = false;
-    [SerializeField] private bool simulateEntry = false; // Add this field
+    [SerializeField] private bool simulateEntry = false;
 
     [Header("Gate Integration")]
-    [SerializeField] private Gate connectedGate; // Gate to unlock when building is unlocked
+    [SerializeField] private Gate connectedGate;
 
     [Header("Player Teleportation")]
-    [SerializeField] private Transform playerTeleportPosition; // Position where player will be moved after unlocking
+    [SerializeField] private Transform playerTeleportPosition;
 
-    // Private Variables
+    [Header("GPS Integration")]
+    [SerializeField] private float gpsUnlockRadius = 50f;
+    [SerializeField] private bool bypassGpsCheck = false;
+
     private bool isPlayerInRange = false;
     private int currentLineIndex = 0;
     private bool saplingSpawned = false;
@@ -67,6 +69,7 @@ public class BuildingInteraction : MonoBehaviour
     private GameObject inactiveInstance;
     private Material originalMaterial;
     private SpriteRenderer sr;
+    private bool lastGpsProximityState = false;
 
     public ScrollRect usersScrollView;
     public Transform usersContentParent;
@@ -76,17 +79,14 @@ public class BuildingInteraction : MonoBehaviour
     private List<BuildingEvent> cachedBuildingEvents;
     private bool eventsLoaded = false;
     private UIManager uiManager;
-    private bool shouldTeleportOnPanelClose = false; // Flag to track if this building should teleport player
+    private bool shouldTeleportOnPanelClose = false;
+    private BuildingProximityDetector proximityDetector;
 
     void Awake()
     {
-        // Initialize components
         audioSource = GetComponent<AudioSource>();
-
-        // Set initial state
         dialogPanel.SetActive(false);
 
-        // Setup mobile button if it exists
         if (mobileInteractButton != null)
         {
             mobileInteractButton.onClick.AddListener(HandleMobileInteraction);
@@ -103,6 +103,8 @@ public class BuildingInteraction : MonoBehaviour
     void Start()
     {
         uiManager = UIManager.Instance;
+        proximityDetector = FindObjectOfType<BuildingProximityDetector>();
+        
         if (inactivePrefab != null)
         {
             Vector3 spawnPos = transform.position;
@@ -111,7 +113,6 @@ public class BuildingInteraction : MonoBehaviour
             inactiveInstance.SetActive(true);
         }
 
-        // Check if building has already been entered
         var service = new UnlockedBuildingService();
         StartCoroutine(SetActiveIfEntered(service));
 
@@ -121,7 +122,6 @@ public class BuildingInteraction : MonoBehaviour
             {
                 buildingUnlockedPanel.SetActive(false);
 
-                // Unlock connected gate when panel is closed
                 if (connectedGate != null)
                 {
                     connectedGate.UnlockGate();
@@ -129,15 +129,13 @@ public class BuildingInteraction : MonoBehaviour
                     Debug.Log($"Unlocked gate connected to building: {buildingName}");
                 }
 
-                // Only teleport if this building was the one that was unlocked
                 if (shouldTeleportOnPanelClose)
                 {
                     TeleportPlayerToPosition();
                     
-                    // Add delay then set building as activated after teleportation
                     StartCoroutine(ActivateBuildingAfterDelay());
                     
-                    shouldTeleportOnPanelClose = false; // Reset flag after teleporting
+                    shouldTeleportOnPanelClose = false;
                 }
             });
         }
@@ -187,16 +185,14 @@ public class BuildingInteraction : MonoBehaviour
 
     void Update()
     {
-        // Handle keyboard input
         if (isPlayerInRange && Input.GetKeyDown(interactKey))
         {
             HandleInteraction();
         }
 
-        // Add debug simulation
         if (simulateEntry && !activated)
         {
-            simulateEntry = false; // Reset flag
+            simulateEntry = false;
             Debug.Log($"[DEBUG] Simulating entry for building: {buildingName}");
             var simBuilding = new BuildingProximityDetector.Building { name = buildingName };
             HandleEnteringBuilding(simBuilding);
@@ -234,6 +230,52 @@ public class BuildingInteraction : MonoBehaviour
                 c.a = 1f;
                 sr.color = c;
             }
+        }
+        
+        // Monitor GPS proximity changes for locked buildings when player is in range
+        if (!activated && isPlayerInRange)
+        {
+            bool currentGpsProximity = IsPlayerCloseToBuilding();
+            
+            // If GPS proximity state changed, update the dialog
+            if (currentGpsProximity != lastGpsProximityState)
+            {
+                lastGpsProximityState = currentGpsProximity;
+                
+                // Refresh the dialog with updated GPS state
+                if (uiManager != null && uiManager.IsDialogActive())
+                {
+                    // Hide current dialog and show updated one
+                    uiManager.HideDialog();
+                    
+                    // Wait a frame then show the updated dialog
+                    StartCoroutine(ShowUpdatedDialog(currentGpsProximity));
+                }
+            }
+        }
+    }
+    
+    private System.Collections.IEnumerator ShowUpdatedDialog(bool isCloseInRealLife)
+    {
+        yield return new WaitForEndOfFrame(); // Wait a frame to ensure previous dialog is hidden
+        
+        if (isCloseInRealLife)
+        {
+            string lockedMessage = !string.IsNullOrEmpty(preUnlockMessage) ? preUnlockMessage : 
+                $"Great! You're now close to {buildingName}. You can now unlock this building!";
+            
+            uiManager.ShowDialog(lockedMessage, 0f, "jumping-happy", "", () => {
+                // Trigger unlock logic
+                UnlockBuilding();
+            });
+        }
+        else
+        {
+            string distanceMessage = !string.IsNullOrEmpty(preUnlockMessage) ? preUnlockMessage : 
+                $"You've moved away from {buildingName}. You need to be physically close to this location to unlock it.";
+            
+            // Show message without unlock button since player is not close enough
+            uiManager.ShowDialog(distanceMessage, 5f, "aros-neutral");
         }
     }
 
@@ -334,6 +376,13 @@ public class BuildingInteraction : MonoBehaviour
             {
                 mobileInteractButton.gameObject.SetActive(true);
             }
+            
+            // Initialize GPS proximity state for locked buildings
+            if (!activated)
+            {
+                lastGpsProximityState = IsPlayerCloseToBuilding();
+            }
+            
             // Display building events and current users when player is in range
             if (activated)
             {
@@ -343,10 +392,31 @@ public class BuildingInteraction : MonoBehaviour
                 }
             }
             else
-            {            if (uiManager != null)
             {
-                uiManager.HandlePreUnlock(this);
-            }
+                // Show locked building dialog with unlock action button only if player is close in real life
+                if (uiManager != null)
+                {
+                    bool isCloseInRealLife = IsPlayerCloseToBuilding();
+                    
+                    if (isCloseInRealLife)
+                    {
+                        string lockedMessage = !string.IsNullOrEmpty(preUnlockMessage) ? preUnlockMessage : 
+                            $"Great! You're close to {buildingName}. You can now unlock this building!";
+                        
+                        uiManager.ShowDialog(lockedMessage, 0f, "jumping-happy", "", () => {
+                            // Trigger unlock logic
+                            UnlockBuilding();
+                        });
+                    }
+                    else
+                    {
+                        string distanceMessage = !string.IsNullOrEmpty(preUnlockMessage) ? preUnlockMessage : 
+                            $"This building ({buildingName}) is locked. You need to be physically close to this location to unlock it using GPS.";
+                        
+                        // Show message without unlock button since player is not close enough
+                        uiManager.ShowDialog(distanceMessage, 5f, "aros-neutral");
+                    }
+                }
             }
         }
     }
@@ -356,7 +426,15 @@ public class BuildingInteraction : MonoBehaviour
         if (other.CompareTag("Player") || other.CompareTag("Spaceship"))
         {
             isPlayerInRange = false;
+            lastGpsProximityState = false; // Reset GPS proximity state
             CloseDialog();
+            
+            // Hide UIManager dialog if it's active
+            if (uiManager != null && uiManager.IsDialogActive())
+            {
+                uiManager.HideDialog();
+            }
+            
             // Deactivate building events panel when player leaves
             if (buildingEventsPanel != null)
             {
@@ -456,6 +534,67 @@ public class BuildingInteraction : MonoBehaviour
             );
             await service.SaveUnlockedBuildingAsync(record);
         }
+    }
+    
+    public void UnlockBuilding()
+    {
+        // Create a fake building object to trigger the unlock logic
+        var building = new BuildingProximityDetector.Building { name = buildingName };
+        HandleEnteringBuilding(building);
+    }
+    
+    private bool IsPlayerCloseToBuilding()
+    {
+        // Bypass GPS check if enabled (for testing) - use building-level flag
+        if (bypassGpsCheck)
+        {
+            return true;
+        }
+        
+        // Use cached proximity detector reference
+        if (proximityDetector == null)
+        {
+            Debug.LogWarning("BuildingProximityDetector not found in scene. Cannot check GPS proximity.");
+            return false;
+        }
+        
+        // Check if location services are available and running
+        if (!Input.location.isEnabledByUser || Input.location.status != LocationServiceStatus.Running)
+        {
+            return false;
+        }
+        
+        // Find this building in the proximity detector's building list
+        BuildingProximityDetector.Building targetBuilding = null;
+        foreach (var building in proximityDetector.buildings)
+        {
+            if (building.name == buildingName)
+            {
+                targetBuilding = building;
+                break;
+            }
+        }
+        
+        if (targetBuilding == null)
+        {
+            Debug.LogWarning($"Building '{buildingName}' not found in BuildingProximityDetector's building list.");
+            return false;
+        }
+        
+        // Get current player location
+        LocationInfo currentLocation = Input.location.lastData;
+        
+        // Use the existing precise distance calculation from BuildingProximityDetector
+        float distance = proximityDetector.CalculatePreciseDistance(
+            currentLocation.latitude,
+            currentLocation.longitude,
+            targetBuilding.entranceGPS.x,
+            targetBuilding.entranceGPS.y
+        );
+        
+        Debug.Log($"GPS Distance to {buildingName}: {distance:F1}m (threshold: {gpsUnlockRadius}m)");
+        
+        return distance <= gpsUnlockRadius;
     }
 
     private IEnumerator ActivateBuildingAfterDelay()
