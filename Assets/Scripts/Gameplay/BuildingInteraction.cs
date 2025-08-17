@@ -140,13 +140,6 @@ public class BuildingInteraction : MonoBehaviour
             });
         }
 
-        // if (showUnlockedPanelOnStart && buildingUnlockedPanel != null)
-        // {
-        //     buildingUnlockedPanel.SetActive(true);
-        //     _ = DisplayUsersWhoUnlocked();
-        // }
-
-        // Load building events at start
         _ = FetchBuildingEvents();
     }
 
@@ -232,23 +225,18 @@ public class BuildingInteraction : MonoBehaviour
             }
         }
         
-        // Monitor GPS proximity changes for locked buildings when player is in range
         if (!activated && isPlayerInRange)
         {
             bool currentGpsProximity = IsPlayerCloseToBuilding();
             
-            // If GPS proximity state changed, update the dialog
             if (currentGpsProximity != lastGpsProximityState)
             {
                 lastGpsProximityState = currentGpsProximity;
                 
-                // Refresh the dialog with updated GPS state
                 if (uiManager != null && uiManager.IsDialogActive())
                 {
-                    // Hide current dialog and show updated one
                     uiManager.HideDialog();
                     
-                    // Wait a frame then show the updated dialog
                     StartCoroutine(ShowUpdatedDialog(currentGpsProximity));
                 }
             }
@@ -262,9 +250,9 @@ public class BuildingInteraction : MonoBehaviour
         if (isCloseInRealLife)
         {
             string lockedMessage = !string.IsNullOrEmpty(preUnlockMessage) ? preUnlockMessage : 
-                $"Great! You're now close to {buildingName}. You can now unlock this building!";
+                $"You're now close to {buildingName}. Press the button below to unlock this building!";
             
-            uiManager.ShowDialog(lockedMessage, 0f, "jumping-happy", "", () => {
+            uiManager.ShowDialog(lockedMessage, 0f, "jumping-happy", "🔓 Unlock", () => {
                 // Trigger unlock logic
                 UnlockBuilding();
             });
@@ -401,9 +389,9 @@ public class BuildingInteraction : MonoBehaviour
                     if (isCloseInRealLife)
                     {
                         string lockedMessage = !string.IsNullOrEmpty(preUnlockMessage) ? preUnlockMessage : 
-                            $"Great! You're close to {buildingName}. You can now unlock this building!";
+                            $"You're close to {buildingName}. Press the button below to unlock this building!";
                         
-                        uiManager.ShowDialog(lockedMessage, 0f, "jumping-happy", "", () => {
+                        uiManager.ShowDialog(lockedMessage, 0f, "jumping-happy", "🔓 Unlock", () => {
                             // Trigger unlock logic
                             UnlockBuilding();
                         });
@@ -414,7 +402,7 @@ public class BuildingInteraction : MonoBehaviour
                             $"This building ({buildingName}) is locked. You need to be physically close to this location to unlock it using GPS.";
                         
                         // Show message without unlock button since player is not close enough
-                        uiManager.ShowDialog(distanceMessage, 5f, "aros-neutral");
+                        uiManager.ShowDialog(distanceMessage, 10f, "aros-neutral");
                     }
                 }
             }
@@ -483,64 +471,81 @@ public class BuildingInteraction : MonoBehaviour
     {
         if (building.name == buildingName)
         {
-            // Check if already entered
+            Debug.Log($"Player entered GPS proximity of building: {building.name}");
+            
+            // Check if already unlocked
             var service = new UnlockedBuildingService();
             string userId = FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.UserId : "unknown";
             var enteredBuildings = await service.RetrieveUnlockedBuildings();
             bool alreadyEntered = enteredBuildings.Exists(b => b.buildingName == buildingName && b.userId == userId);
+            
             if (alreadyEntered)
             {
-                Debug.Log($"Building {buildingName} already entered. Skipping unlock logic.");
+                Debug.Log($"Building {buildingName} already unlocked. No action needed.");
                 return;
-            }            Debug.Log("Activating building: " + building.name);
-            // Don't set activated = true here, let it happen after teleportation
-
-            // Set flag to indicate this building should teleport when panel closes
-            shouldTeleportOnPanelClose = true;
-
-            if (uiManager != null)
-            {
-                await uiManager.HandleBuildingUnlock(this);
             }
-            else
+            
+            // Just log that player is now in GPS proximity - don't auto-unlock
+            Debug.Log($"Player is now in GPS range of {buildingName}. They can interact to unlock it.");
+            
+            // If player is currently in interaction range, refresh the dialog to show unlock button
+            if (isPlayerInRange && uiManager != null && uiManager.IsDialogActive())
             {
-                // Fallback for no UIManager
-                await Task.Delay(3000);
-                ShowBuildingUnlockedPanel();
-                await DisplayUsersWhoUnlocked();
+                // Refresh the dialog with updated GPS state
+                if (uiManager != null)
+                {
+                    uiManager.HideDialog();
+                    
+                    // Wait a frame then show the updated dialog
+                    StartCoroutine(ShowUpdatedDialog(true));
+                }
             }
-
-            // Use unified user profile retrieval
-            var userService = new UserService();
-            var userProfile = await userService.GetUserProfileCachedOrRemoteAsync(userId);
-            string userName = userProfile != null && !string.IsNullOrEmpty(userProfile.name) ? userProfile.name : userId;
-            // Award points for unlocking the building
-            await userService.AddPoints(userId, 100);
-            // Update UI with new points
-            var updatedPoints = await userService.GetPoints(userId);
-            UIManager.Instance.UpdateCoins(updatedPoints);
-
-            // Update user's current building
-            await userService.UpdateCurrentBuilding(userId, buildingName);
-
-            // Save unlock event to Firestore
-            var record = new UnlockedBuildingRecord(
-                userId,
-                userName,
-                System.DateTime.UtcNow,
-                buildingName,
-                buildingName,
-                transform.position
-            );
-            await service.SaveUnlockedBuildingAsync(record);
         }
     }
     
-    public void UnlockBuilding()
+    public async void UnlockBuilding()
     {
-        // Create a fake building object to trigger the unlock logic
-        var building = new BuildingProximityDetector.Building { name = buildingName };
-        HandleEnteringBuilding(building);
+        // Set flag to indicate this building should teleport when panel closes
+        shouldTeleportOnPanelClose = true;
+
+        if (uiManager != null)
+        {
+            await uiManager.HandleBuildingUnlock(this);
+        }
+        else
+        {
+            // Fallback for no UIManager
+            await Task.Delay(3000);
+            ShowBuildingUnlockedPanel();
+            await DisplayUsersWhoUnlocked();
+        }
+
+        // Use unified user profile retrieval for points and saving
+        var service = new UnlockedBuildingService();
+        string userId = FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.UserId : "unknown";
+        var userService = new UserService();
+        var userProfile = await userService.GetUserProfileCachedOrRemoteAsync(userId);
+        string userName = userProfile != null && !string.IsNullOrEmpty(userProfile.name) ? userProfile.name : userId;
+        
+        // Award points for unlocking the building
+        await userService.AddPoints(userId, 100);
+        // Update UI with new points
+        var updatedPoints = await userService.GetPoints(userId);
+        UIManager.Instance.UpdateCoins(updatedPoints);
+
+        // Update user's current building
+        await userService.UpdateCurrentBuilding(userId, buildingName);
+
+        // Save unlock event to Firestore
+        var record = new UnlockedBuildingRecord(
+            userId,
+            userName,
+            System.DateTime.UtcNow,
+            buildingName,
+            buildingName,
+            transform.position
+        );
+        await service.SaveUnlockedBuildingAsync(record);
     }
     
     private bool IsPlayerCloseToBuilding()
