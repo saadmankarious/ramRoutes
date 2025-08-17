@@ -19,6 +19,11 @@ public class UIManager : MonoBehaviour
     public ParticleSystem celebrationEffect2;
     public float padding = 2f;
     
+    [Header("Building UI")]
+    public Text buildingTitle;      // Moved from BuildingInteraction
+    public Text buildingDescription; // Moved from BuildingInteraction
+        public Text buildingUnlockedMessage; // Moved from BuildingInteraction
+
     [Header("Celebration Settings")]
     [SerializeField] private float celebrationPlaybackSpeed = 1f; // 1f = normal speed, 2f = double speed, 0.5f = half speed
     [SerializeField] private float celebrationDuration = 2f; // Total duration of celebration in seconds (controls both sound and particles)
@@ -130,6 +135,9 @@ public class UIManager : MonoBehaviour
         {
             audioSource = gameObject.AddComponent<AudioSource>();
         }
+        
+        // Load building data from JSON
+        BuildingDataManager.LoadBuildingData();
         
         // Initialize AROS with proper scale and hide it initially
         if (aros != null)
@@ -883,6 +891,24 @@ private void HideObjectsWithTag(string tag)
         Debug.Log($"Celebration effects will play for {audioDuration} seconds to match audio");
     }
 
+    public void UpdateBuildingUI(string buildingName)
+    {
+        var buildingInfo = BuildingDataManager.GetBuildingInfo(buildingName);
+
+        if (buildingTitle != null)
+        {
+            buildingTitle.text = buildingInfo.displayName;
+        }
+        if (buildingDescription != null)
+        {
+            buildingDescription.text = buildingInfo.description;
+        }
+         if (buildingUnlockedMessage != null)
+        {
+            buildingUnlockedMessage.text = buildingInfo.unlockedMessage;
+        }
+    }
+
     public void UpdateCoins(int coins)
     {
         if (coinsText != null)
@@ -965,15 +991,8 @@ private void HideObjectsWithTag(string tag)
         int delayMs = Mathf.RoundToInt(celebrationDuration * 1000f);
         await Task.Delay(delayMs);
 
-        // Update UI elements
-        if (building.buildingTitle != null)
-        {
-            building.buildingTitle.text = building.buildingName;
-        }
-        if (building.buildingDescription != null)
-        {
-            building.buildingDescription.text = $"You've unlocked {building.buildingName}!";
-        }
+        // Update UI elements using building data from JSON
+        UpdateBuildingUI(building.buildingName);
 
         // Show unlock panel
         building.ShowBuildingUnlockedPanel();

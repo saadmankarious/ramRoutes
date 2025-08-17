@@ -1,4 +1,7 @@
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class NpcAutoMovement : MonoBehaviour
 {
@@ -7,6 +10,13 @@ public class NpcAutoMovement : MonoBehaviour
     public float moveRadius = 3f; // How far from anchor point NPC can move
     public float waitTime = 2f; // Time to wait at each destination
     public float directionChangeInterval = 3f; // How often to pick new direction
+    
+    [Header("Building Association")]
+    public string associatedBuilding = ""; // Which building this NPC belongs to
+    public bool stayNearBuilding = true; // Whether to constrain movement to building area
+    public Transform spawnPoint; // Spawn point to return to (usually building or nearby point)
+    public float despawnDelay = 2f; // Delay before despawning after player walks away
+    public NPCSpawner npcSpawner; // Reference to spawner for cleanup
     
     [Header("Conversation")]
     public string[] conversationLines = {
@@ -30,6 +40,12 @@ public class NpcAutoMovement : MonoBehaviour
     private float waitTimer;
     private float directionTimer;
     private bool isWaiting = false;
+    
+    // NPC State Management
+    private enum NPCState { Normal, ReturningToSpawn, Despawning }
+    private NPCState currentState = NPCState.Normal;
+    private bool playerNearby = false;
+    private float despawnTimer = 0f;
     
     // Conversation variables
     private bool isInConversation = false;
@@ -67,10 +83,37 @@ public class NpcAutoMovement : MonoBehaviour
             HandleMovement();
         }
         
+        // Handle despawn timing
+        if (currentState == NPCState.Despawning)
+        {
+            despawnTimer -= Time.deltaTime;
+            if (despawnTimer <= 0)
+            {
+                DespawnNPC();
+            }
+        }
+        
         UpdateAnimationParameters();
     }
     
     void HandleMovement()
+    {
+        switch (currentState)
+        {
+            case NPCState.Normal:
+                HandleNormalMovement();
+                break;
+            case NPCState.ReturningToSpawn:
+                HandleReturnToSpawn();
+                break;
+            case NPCState.Despawning:
+                // NPC is despawning, don't move
+                currentVelocity = Vector3.zero;
+                break;
+        }
+    }
+    
+    void HandleNormalMovement()
     {
         // Check if we're waiting
         if (isWaiting)
@@ -115,6 +158,28 @@ public class NpcAutoMovement : MonoBehaviour
         if (directionTimer <= 0)
         {
             ChooseNewTarget();
+        }
+    }
+    
+    void HandleReturnToSpawn()
+    {
+        if (spawnPoint == null) return;
+        
+        // Move directly towards spawn point
+        Vector3 toSpawn = spawnPoint.position - transform.position;
+        
+        if (toSpawn.magnitude > 0.1f)
+        {
+            Vector3 direction = toSpawn.normalized;
+            currentVelocity = direction * moveSpeed;
+            transform.position += currentVelocity * Time.deltaTime;
+        }
+        else
+        {
+            // Reached spawn point, start despawn timer
+            currentVelocity = Vector3.zero;
+            currentState = NPCState.Despawning;
+            despawnTimer = despawnDelay;
         }
     }    void ChooseNewTarget()
     {
@@ -299,8 +364,9 @@ public class NpcAutoMovement : MonoBehaviour
     // Collision detection for starting conversation
     void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player") && !isInConversation)
+        if (other.CompareTag("Player") && !isInConversation && currentState == NPCState.Normal)
         {
+            playerNearby = true;
             animator.SetBool(idleParam, true); // Set idle animation
             isWaiting = true; // Stop movement
             StartConversation();
@@ -309,8 +375,9 @@ public class NpcAutoMovement : MonoBehaviour
     
     void OnCollisionEnter2D(Collision2D other)
     {
-        if (other.gameObject.CompareTag("Player") && !isInConversation)
+        if (other.gameObject.CompareTag("Player") && !isInConversation && currentState == NPCState.Normal)
         {
+            playerNearby = true;
             StartConversation();
         }
     }
@@ -318,18 +385,67 @@ public class NpcAutoMovement : MonoBehaviour
     // End conversation when player walks away
     void OnTriggerExit2D(Collider2D other)
     {
-        if (other.CompareTag("Player") && isInConversation)
+        if (other.CompareTag("Player"))
         {
-            EndConversation();
+            playerNearby = false;
+            if (isInConversation)
+            {
+                EndConversation();
+            }
+            
+            // Start return to spawn sequence
+            if (currentState == NPCState.Normal)
+            {
+                StartReturnToSpawn();
+            }
         }
     }
     
     void OnCollisionExit2D(Collision2D other)
     {
-        if (other.gameObject.CompareTag("Player") && isInConversation)
+        if (other.gameObject.CompareTag("Player"))
         {
-            EndConversation();
+            playerNearby = false;
+            if (isInConversation)
+            {
+                EndConversation();
+            }
+            
+            // Start return to spawn sequence
+            if (currentState == NPCState.Normal)
+            {
+                StartReturnToSpawn();
+            }
         }
+    }
+
+    void StartReturnToSpawn()
+    {
+        if (currentState != NPCState.Normal) return;
+        
+        currentState = NPCState.ReturningToSpawn;
+        isWaiting = false; // Stop any waiting
+        Debug.Log($"NPC {gameObject.name} starting return to spawn point");
+    }
+    
+    void DespawnNPC()
+    {
+        Debug.Log($"Despawning NPC {gameObject.name}");
+        
+        // Notify spawner that this NPC is being removed
+        if (npcSpawner != null)
+        {
+            // Extract NPC name from the gameObject name (remove the building part)
+            string npcName = gameObject.name;
+            if (npcName.Contains(" (Building:"))
+            {
+                npcName = npcName.Substring(0, npcName.IndexOf(" (Building:"));
+            }
+            npcSpawner.OnNPCDespawned(npcName);
+        }
+        
+        // Destroy the NPC GameObject
+        Destroy(gameObject);
     }
 
     
@@ -344,11 +460,27 @@ public class NpcAutoMovement : MonoBehaviour
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(center, 0.1f);
         
-        if (Application.isPlaying)
+        // Draw spawn point if assigned
+        if (spawnPoint != null)
+        {
+            Gizmos.color = Color.blue;
+            Gizmos.DrawWireSphere(spawnPoint.position, 0.2f);
+            Gizmos.DrawLine(transform.position, spawnPoint.position);
+        }
+        
+        if (Application.isPlaying && currentState == NPCState.Normal)
         {
             Gizmos.color = Color.green;
             Gizmos.DrawWireSphere(targetPosition, 0.1f);
             Gizmos.DrawLine(transform.position, targetPosition);
+        }
+        
+        // Show current state
+        if (Application.isPlaying)
+        {
+#if UNITY_EDITOR
+            UnityEditor.Handles.Label(transform.position + Vector3.up * 2, $"State: {currentState}");
+#endif
         }
     }
 }

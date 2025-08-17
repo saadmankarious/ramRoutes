@@ -32,8 +32,6 @@ public class BuildingInteraction : MonoBehaviour
     [SerializeField] private Material lockedMaterial;    [Header("UI Panels")]
     [SerializeField] private GameObject buildingUnlockedPanel;
     [SerializeField] private Button closeUnlockedPanelButton;
-    [SerializeField] public Text buildingTitle;
-    [SerializeField] public Text buildingDescription;
     [SerializeField] private float fadeDuration = 1f;
     [SerializeField] private GameObject buildingEventsPanel;
     [SerializeField] private Transform eventsContentParent;
@@ -249,8 +247,9 @@ public class BuildingInteraction : MonoBehaviour
         
         if (isCloseInRealLife)
         {
+            var buildingInfo = BuildingDataManager.GetBuildingInfo(buildingName);
             string lockedMessage = !string.IsNullOrEmpty(preUnlockMessage) ? preUnlockMessage : 
-                $"You're now close to {buildingName}. Press the button below to unlock this building!";
+                $"You're now close to {buildingInfo.displayName}. Press the button below to unlock this building!";
             
             uiManager.ShowDialog(lockedMessage, 0f, "jumping-happy", "🔓 Unlock", () => {
                 // Trigger unlock logic
@@ -259,8 +258,9 @@ public class BuildingInteraction : MonoBehaviour
         }
         else
         {
+            var buildingInfo = BuildingDataManager.GetBuildingInfo(buildingName);
             string distanceMessage = !string.IsNullOrEmpty(preUnlockMessage) ? preUnlockMessage : 
-                $"You've moved away from {buildingName}. You need to be physically close to this location to unlock it.";
+                $"You've moved away from {buildingInfo.displayName}. You need to be physically close to this location to unlock it.";
             
             // Show message without unlock button since player is not close enough
             uiManager.ShowDialog(distanceMessage, 5f, "aros-neutral");
@@ -388,8 +388,9 @@ public class BuildingInteraction : MonoBehaviour
                     
                     if (isCloseInRealLife)
                     {
+                        var buildingInfo = BuildingDataManager.GetBuildingInfo(buildingName);
                         string lockedMessage = !string.IsNullOrEmpty(preUnlockMessage) ? preUnlockMessage : 
-                            $"You're close to {buildingName}. Press the button below to unlock this building!";
+                            $"You're close to {buildingInfo.displayName}. Press the button below to unlock this building!";
                         
                         uiManager.ShowDialog(lockedMessage, 0f, "jumping-happy", "🔓 Unlock", () => {
                             // Trigger unlock logic
@@ -398,8 +399,9 @@ public class BuildingInteraction : MonoBehaviour
                     }
                     else
                     {
+                        var buildingInfo = BuildingDataManager.GetBuildingInfo(buildingName);
                         string distanceMessage = !string.IsNullOrEmpty(preUnlockMessage) ? preUnlockMessage : 
-                            $"This building ({buildingName}) is locked. You need to be physically close to this location to unlock it using GPS.";
+                            $"This building ({buildingInfo.displayName}) is locked. You need to be physically close to this location to unlock it using GPS.";
                         
                         // Show message without unlock button since player is not close enough
                         uiManager.ShowDialog(distanceMessage, 10f, "aros-neutral");
