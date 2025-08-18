@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 using System.Collections.Generic;
 using RamRoutes.Services;
 using Firebase.Auth;
@@ -155,28 +156,98 @@ public class NPCSpawner : MonoBehaviour
         }
     }
     
-    // Method to despawn all NPCs for a building
+    // Method to despawn all NPCs for a building with delay
     public void DespawnNPCsForBuilding(string buildingName)
     {
-        Debug.Log($"NPCSpawner: DespawnNPCsForBuilding called for building '{buildingName}'");
+        Debug.Log($"NPCSpawner: DespawnNPCsForBuilding called for building '{buildingName}' - starting 5 second delay");
+        StartCoroutine(DespawnNPCsAfterDelay(buildingName, 5f));
+    }
+    
+    private IEnumerator DespawnNPCsAfterDelay(string buildingName, float delay)
+    {
+        yield return new WaitForSeconds(delay);
         
-        List<string> npcsToRemove = new List<string>();
+        Debug.Log($"NPCSpawner: 5 second delay complete, checking NPCs for building '{buildingName}'");
+        
+        List<string> npcsToReturn = new List<string>();
         
         foreach (var buildingNPC in buildingNPCs)
         {
             if (buildingNPC.associatedBuilding == buildingName && spawnedNPCs.ContainsKey(buildingNPC.npcName))
             {
-                Debug.Log($"NPCSpawner: Found NPC '{buildingNPC.npcName}' to remove for building '{buildingName}'");
-                npcsToRemove.Add(buildingNPC.npcName);
+                GameObject npcObject = spawnedNPCs[buildingNPC.npcName];
+                if (npcObject != null)
+                {
+                    NpcAutoMovement npcMovement = npcObject.GetComponent<NpcAutoMovement>();
+                    if (npcMovement != null)
+                    {
+                        // Check if NPC is currently in conversation with player
+                        if (npcMovement.IsInConversation())
+                        {
+                            Debug.Log($"NPCSpawner: NPC '{buildingNPC.npcName}' is in conversation, will wait for conversation to end");
+                            // Start a coroutine to wait for this specific NPC's conversation to end
+                            StartCoroutine(WaitForConversationEndThenDespawn(buildingNPC.npcName, npcObject));
+                        }
+                        else
+                        {
+                            Debug.Log($"NPCSpawner: Found NPC '{buildingNPC.npcName}' to return to spawn for building '{buildingName}'");
+                            npcsToReturn.Add(buildingNPC.npcName);
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"NPCSpawner: NPC '{buildingNPC.npcName}' has no NpcAutoMovement component");
+                        npcsToReturn.Add(buildingNPC.npcName);
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning($"NPCSpawner: NPC GameObject '{buildingNPC.npcName}' was null, removing from tracking");
+                    spawnedNPCs.Remove(buildingNPC.npcName);
+                }
             }
         }
         
-        Debug.Log($"NPCSpawner: Found {npcsToRemove.Count} NPCs to despawn for building '{buildingName}'");
+        Debug.Log($"NPCSpawner: Found {npcsToReturn.Count} NPCs ready to return to spawn for building '{buildingName}'");
         
-        foreach (string npcName in npcsToRemove)
+        foreach (string npcName in npcsToReturn)
         {
-            Debug.Log($"NPCSpawner: Despawning NPC '{npcName}'");
-            DespawnNPC(npcName);
+            if (spawnedNPCs.ContainsKey(npcName))
+            {
+                GameObject npcObject = spawnedNPCs[npcName];
+                if (npcObject != null)
+                {
+                    NpcAutoMovement npcMovement = npcObject.GetComponent<NpcAutoMovement>();
+                    if (npcMovement != null)
+                    {
+                        Debug.Log($"NPCSpawner: Triggering return-to-spawn for NPC '{npcName}'");
+                        npcMovement.StartReturnToSpawnForDespawn();
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"NPCSpawner: NPC '{npcName}' has no NpcAutoMovement component, destroying immediately");
+                        DespawnNPC(npcName);
+                    }
+                }
+            }
+        }
+    }
+    
+    private IEnumerator WaitForConversationEndThenDespawn(string npcName, GameObject npcObject)
+    {
+        NpcAutoMovement npcMovement = npcObject.GetComponent<NpcAutoMovement>();
+        
+        // Wait until conversation ends
+        while (npcMovement != null && npcMovement.IsInConversation())
+        {
+            yield return new WaitForSeconds(0.5f); // Check every half second
+        }
+        
+        Debug.Log($"NPCSpawner: Conversation ended for NPC '{npcName}', starting return to spawn");
+        
+        if (npcMovement != null)
+        {
+            npcMovement.StartReturnToSpawnForDespawn();
         }
     }
     

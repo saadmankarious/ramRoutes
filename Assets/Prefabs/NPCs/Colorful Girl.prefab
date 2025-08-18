@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 1303207837891651162}
   - component: {fileID: 3979548990149366905}
   m_Layer: 0
-  m_Name: Old Lady 3
+  m_Name: Colorful Girl
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -133,11 +133,15 @@ MonoBehaviour:
   spawnPoint: {fileID: 0}
   npcSpawner: {fileID: 0}
   conversationLines:
-  - Hello there, traveler!
-  - Beautiful day, isn't it?
-  - Safe travels on your journey!
+  - Creation flows through these studios like lifeblood. The soul painted their heart
+    here, stroke by trembling stroke.
+  - Art transforms the ordinary into eternal beauty. This hall witnessed countless
+    visions born from inspiration and struggle
+  - Aros favors places where beauty is born, where human hands shape wonder from
+    nothing but will and imagination.
   textDisplaySpeed: 0.05
   continueKey: 32
+  npcSound: {fileID: 8300000, guid: bf527d825758e5b4ca7b69f5a02d9a56, type: 3}
 --- !u!61 &3979548990149366905
 BoxCollider2D:
   m_ObjectHideFlags: 0

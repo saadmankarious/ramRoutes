@@ -32,6 +32,10 @@ public class NpcAutoMovement : MonoBehaviour
     private string movingYParam = "moveY";
     private string idleParam = "idle";
     
+    [Header("Audio")]
+    public AudioClip npcSound; // Sound to play when spawning and despawning
+    private AudioSource audioSource;
+    
     private Vector3 anchorPoint;
     private Vector3 targetPosition;
     private Vector3 currentVelocity;
@@ -44,6 +48,10 @@ public class NpcAutoMovement : MonoBehaviour
     private enum NPCState { Normal, ReturningToSpawn }
     private NPCState currentState = NPCState.Normal;
     private bool playerNearby = false;
+    
+    // Return to spawn pathfinding state
+    private bool returningHorizontalFirst = false;
+    private bool hasChosenReturnPath = false;
     
     // Conversation variables
     private bool isInConversation = false;
@@ -63,11 +71,21 @@ public class NpcAutoMovement : MonoBehaviour
         if (animator == null)
             animator = GetComponent<Animator>();
         
+        // Get or add audio source
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+        }
+        
         // Set initial target
         ChooseNewTarget();
         
         // Create conversation UI
         CreateConversationUI();
+        
+        // Play spawn sound
+        PlayNPCSound();
     }
     
     void Update()
@@ -212,21 +230,47 @@ public class NpcAutoMovement : MonoBehaviour
         if (toSpawn.magnitude < 0.2f)
             return Vector3.zero;
         
-        // Calculate direction with pathfinding logic
+        // Calculate direction with stable pathfinding logic
         Vector3 direction = Vector3.zero;
         
-        // Simple pathfinding: move on strongest axis first
-        if (Mathf.Abs(toSpawn.x) > Mathf.Abs(toSpawn.y))
+        // Choose path direction only once when starting return
+        if (!hasChosenReturnPath)
+        {
+            returningHorizontalFirst = Mathf.Abs(toSpawn.x) > Mathf.Abs(toSpawn.y);
+            hasChosenReturnPath = true;
+            Debug.Log($"NPC {gameObject.name}: Chose return path - horizontal first: {returningHorizontalFirst}");
+        }
+        
+        // Stick with chosen direction until that axis is complete
+        if (returningHorizontalFirst)
         {
             // Move horizontally first
-            direction.x = toSpawn.x > 0 ? 1 : -1;
-            direction.y = 0;
+            if (Mathf.Abs(toSpawn.x) > 0.1f)
+            {
+                direction.x = toSpawn.x > 0 ? 1 : -1;
+                direction.y = 0;
+            }
+            else
+            {
+                // Horizontal movement complete, now move vertically
+                direction.x = 0;
+                direction.y = toSpawn.y > 0 ? 1 : -1;
+            }
         }
         else
         {
-            // Move vertically first  
-            direction.x = 0;
-            direction.y = toSpawn.y > 0 ? 1 : -1;
+            // Move vertically first
+            if (Mathf.Abs(toSpawn.y) > 0.1f)
+            {
+                direction.x = 0;
+                direction.y = toSpawn.y > 0 ? 1 : -1;
+            }
+            else
+            {
+                // Vertical movement complete, now move horizontally
+                direction.x = toSpawn.x > 0 ? 1 : -1;
+                direction.y = 0;
+            }
         }
         
         return direction;
@@ -481,11 +525,39 @@ public class NpcAutoMovement : MonoBehaviour
         Debug.Log($"NPC {gameObject.name}: Changing state to ReturningToSpawn");
         currentState = NPCState.ReturningToSpawn;
         isWaiting = false; // Stop any waiting
+        
+        // Reset pathfinding state for new return journey
+        hasChosenReturnPath = false;
+        returningHorizontalFirst = false;
+    }
+    
+    // New method for spawner to trigger return-to-spawn for despawn
+    public void StartReturnToSpawnForDespawn()
+    {
+        Debug.Log($"NPC {gameObject.name}: Player left building, starting return to spawn for despawn");
+        
+        // End any active conversation
+        if (isInConversation)
+        {
+            EndConversation();
+        }
+        
+        // Start return to spawn
+        StartReturnToSpawn();
+    }
+    
+    // Public method to check if NPC is currently in conversation
+    public bool IsInConversation()
+    {
+        return isInConversation;
     }
     
     void DespawnNPC()
     {
         Debug.Log($"Despawning NPC {gameObject.name}");
+        
+        // Play despawn sound
+        PlayNPCSound();
         
         // Notify spawner that this NPC is being removed
         if (npcSpawner != null)
@@ -501,6 +573,15 @@ public class NpcAutoMovement : MonoBehaviour
         
         // Destroy the NPC GameObject
         Destroy(gameObject);
+    }
+    
+    void PlayNPCSound()
+    {
+        if (npcSound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(npcSound);
+            Debug.Log($"NPC {gameObject.name}: Playing NPC sound");
+        }
     }
 
     

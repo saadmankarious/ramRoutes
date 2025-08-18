@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 1303207837891651162}
   - component: {fileID: 3979548990149366905}
   m_Layer: 0
-  m_Name: Old Lady 2
+  m_Name: Old Lady Blue
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -79,12 +79,12 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 4
-  m_Sprite: {fileID: 21300000, guid: 5e9e208a2d5f04751a0aeb6b68155483, type: 3}
+  m_Sprite: {fileID: 21300000, guid: ce1f2136c5c9c422883a516c3d0b560a, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 1.1875, y: 1.125}
+  m_Size: {x: 2.375, y: 2.25}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -100,7 +100,7 @@ Animator:
   m_GameObject: {fileID: 1875208262579020639}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: b577dc0d24f73465abc7ddc583f79748, type: 2}
+  m_Controller: {fileID: 9100000, guid: 23f58e09c90ef4be99df5156af29553b, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -133,11 +133,12 @@ MonoBehaviour:
   spawnPoint: {fileID: 0}
   npcSpawner: {fileID: 0}
   conversationLines:
-  - Hello there, traveler!
-  - Beautiful day, isn't it?
-  - Safe travels on your journey!
+  - Here voices from across the world intertwine. The soul yearned for distant horizons,
+    dreaming of journeys denied.
+  - The soul spoke with strangers as if they were kin, always searching for a home.
   textDisplaySpeed: 0.05
   continueKey: 32
+  npcSound: {fileID: 8300000, guid: bf527d825758e5b4ca7b69f5a02d9a56, type: 3}
 --- !u!61 &3979548990149366905
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -177,7 +178,7 @@ BoxCollider2D:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
     oldSize: {x: 2.375, y: 2.25}
-    newSize: {x: 1.1875, y: 1.125}
+    newSize: {x: 2.375, y: 2.25}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0

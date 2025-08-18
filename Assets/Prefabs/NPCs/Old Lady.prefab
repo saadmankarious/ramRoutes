@@ -130,12 +130,15 @@ MonoBehaviour:
   directionChangeInterval: 3
   associatedBuilding: 
   stayNearBuilding: 1
+  spawnPoint: {fileID: 0}
+  npcSpawner: {fileID: 0}
   conversationLines:
-  - Hello there, traveler!
-  - Beautiful day, isn't it?
-  - Safe travels on your journey!
+  - "Between parchment and ink, memories linger. The soul\u2019s words remain hidden
+    in forgotten margins."
+  - Soul spent long hours by lamplight, writing thoughts too heavy for speech.
   textDisplaySpeed: 0.05
   continueKey: 32
+  npcSound: {fileID: 8300000, guid: bf527d825758e5b4ca7b69f5a02d9a56, type: 3}
 --- !u!61 &3979548990149366905
 BoxCollider2D:
   m_ObjectHideFlags: 0

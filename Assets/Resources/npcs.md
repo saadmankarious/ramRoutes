@@ -1,5 +1,55 @@
-# NPC List for Cornell Myth Game
+# ## 🏛️ Thomas C## 📚 Cole Libr## 🛌 Pauly Ro## 🎨 McWethy H## 🌍 Stoner Ho## 🩺 Ebersole Health & Wellness Center  
+**NPC:** The Healer of Broken Spirits  
+- "Wounds of the body heal with time; wounds of the soul fester unseen. Yet fragments of care remain here, where the soul once sought refuge."  
+- Clue: Fragment of Memory — *"The soul confided their pain, but carried burdens heavier than any cure."*
+**Conversation Lines:**
+• "Healing flows through these halls like gentle rain. The soul sought mending here when hope grew thin."
+• "Body and spirit intertwine—this center tends to both with equal reverence and ancient wisdom."
+• "Aros dwells where healing happens, where broken things are made whole and weary souls find renewal."(International Students)  
 
+
+**NPC:** The Wanderer of Many Tongues  
+- "Here voices from across the world intertwine. The soul yearned for distant horizons, dreaming of journeys denied."  
+- Clue: Fragment of Memory — *"The soul spoke with strangers as if they were kin, always searching for a home."*
+**Conversation Lines:**
+• "This sanctuary welcomes wanderers from distant shores, weaving their stories into the campus tapestry."
+• "The soul found kinship here among fellow travelers, sharing languages of both tongue and heart."
+• "Aros treasures places where cultures merge, where the lost find family and the foreign becomes familiar."(Arts Building)
+
+
+**NPC:** The Muse with Fading Colors  
+- "The walls still echo with strokes of passion. The soul once painted joy upon blank canvas, but time has dulled the hues."  
+- Clue: Fragment of Memory — *"The soul's laughter was like a brushstroke — fleeting but unforgettable."*
+
+**Conversation Lines:**
+• "Creation flows through these studios like lifeblood. The soul painted their heart here, stroke by trembling stroke."
+• "Art transforms the ordinary into eternal beauty. This hall witnessed countless visions born from inspiration and struggle."
+• "Aros favors places where beauty is born, where human hands shape wonder from nothing but will and imagination."Dorm
+**NPC:** The Sleepless Watcher  
+- "These chambers cradle dreams and secrets. The soul's bed grew cold, yet their spirit wandered the halls at night."  
+- Clue: Fragment of Memory — *"The soul longed for companionship, but silence filled their nights."*
+
+**Conversation Lines:**
+• "Home away from home, these rooms sheltered countless dreams. The soul found refuge here when the world felt too vast."
+• "Night after night, young hearts found solace in shared walls and whispered hopes. Community bloomed in quiet corners."
+• "Seek Aros where rest was cherished, where weary souls laid down their burdens and dared to dream of tomorrow."**NPC:** The Keeper of Forgotten Pages  
+- "Between parchment and ink, memories linger. The soul's words remain hidden in forgotten margins."  
+- Clue: Fragment of Memory — *"The soul spent long hours by lamplight, writing thoughts too heavy for speech."*
+
+**Conversation Lines:**
+• "Knowledge sleeps within these walls, bound in leather and dreams. The soul sought answers here that books alone could not provide."
+• "Students once filled these quiet halls, thirsting for wisdom. Now I guard the silence they left behind."
+• "Aros may dwell where learning dwells, hidden among the words that shaped young minds across the ages."ns
+**NPC:** The Herald of Gatherings  
+- "All who walk these halls seek belonging. The soul once dined, laughed, and debated here, before exile consumed their voice."  
+- Clue: Fragment of Memory — *"The soul cherished community, their laughter echoing like music."*
+
+
+
+**Conversation Lines:**
+• "This great hall once rang with voices sharing meals and dreams. Now only echoes remain, whispering of what was lost."
+• "The soul loved this place where students gathered to nourish body and spirit. Perhaps their essence lingers still."
+• "Search well, traveler. Aros hides in places where joy once flourished, waiting for one who remembers the old bonds."List for Cornell Myth Game
 ## 🏛️ Thomas Commons
 **NPC:** The Herald of Gatherings  
 - "All who walk these halls seek belonging. The soul once dined, laughed, and debated here, before exile consumed their voice."  
