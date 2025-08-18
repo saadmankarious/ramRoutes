@@ -421,6 +421,8 @@ public class BuildingInteraction : MonoBehaviour
     {
         if (other.CompareTag("Player") || other.CompareTag("Spaceship"))
         {
+            Debug.Log($"BuildingInteraction: Player exited building '{buildingName}' trigger area");
+            
             isPlayerInRange = false;
             lastGpsProximityState = false; // Reset GPS proximity state
             CloseDialog();
@@ -447,8 +449,16 @@ public class BuildingInteraction : MonoBehaviour
             // Despawn NPCs when player leaves the building
             if (activated && NPCSpawner.Instance != null)
             {
-                Debug.Log($"Player left building '{buildingName}', despawning NPCs");
+                Debug.Log($"BuildingInteraction: Player left activated building '{buildingName}', calling despawn NPCs");
                 NPCSpawner.Instance.DespawnNPCsForBuilding(buildingName);
+            }
+            else if (!activated)
+            {
+                Debug.Log($"BuildingInteraction: Building '{buildingName}' not activated, skipping NPC despawn");
+            }
+            else if (NPCSpawner.Instance == null)
+            {
+                Debug.LogWarning($"BuildingInteraction: NPCSpawner.Instance is null, cannot despawn NPCs");
             }
         }
     }
