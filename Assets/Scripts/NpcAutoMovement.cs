@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
@@ -25,6 +26,15 @@ public class NpcAutoMovement : MonoBehaviour
     };
     public float textDisplaySpeed = 0.05f; // Speed of text appearance
     public KeyCode continueKey = KeyCode.Space; // Key to continue conversation
+    
+    [Header("UI References")]
+    public Image npcPanel; // UI Panel component - assigned by spawner at runtime
+    public Text npcNameText; // Text component for NPC name - assigned by spawner at runtime
+    public Text conversationText; // Text component for conversation lines - assigned by spawner at runtime
+    public Image npcSpriteImage; // Image component for NPC sprite - assigned by spawner at runtime
+    
+    [Header("NPC Info")]
+    public string npcName = "Unknown NPC"; // Will be set by spawner
     
     [Header("Animation")]
     private Animator animator;
@@ -59,8 +69,6 @@ public class NpcAutoMovement : MonoBehaviour
     private string currentDisplayedText = "";
     private float textTimer = 0f;
     private bool isTyping = false;
-    private GameObject conversationUI;
-    private UnityEngine.UI.Text conversationText;
     
     void Start()
     {
@@ -81,11 +89,54 @@ public class NpcAutoMovement : MonoBehaviour
         // Set initial target
         ChooseNewTarget();
         
-        // Create conversation UI
-        CreateConversationUI();
+        // Initialize UI
+        InitializeUI();
         
         // Play spawn sound
         PlayNPCSound();
+    }
+    
+    void InitializeUI()
+    {
+        if (npcPanel != null)
+        {
+            // Set NPC name in the UI
+            if (npcNameText != null)
+            {
+                npcNameText.text = npcName;
+            }
+            
+            // Set NPC sprite in the UI
+            if (npcSpriteImage != null)
+            {
+                SpriteRenderer spriteRenderer = GetComponent<SpriteRenderer>();
+                if (spriteRenderer != null && spriteRenderer.sprite != null)
+                {
+                    npcSpriteImage.sprite = spriteRenderer.sprite;
+                    Debug.Log($"NPC {gameObject.name}: Set sprite '{spriteRenderer.sprite.name}' in UI");
+                }
+                else
+                {
+                    Debug.LogWarning($"NPC {gameObject.name}: No SpriteRenderer or sprite found for UI");
+                }
+            }
+            
+            // Show the panel since NPC is in scene
+            npcPanel.gameObject.SetActive(true);
+            
+            // Initially hide conversation text
+            if (conversationText != null)
+            {
+                conversationText.text = "";
+            }
+            
+            Debug.Log($"NPC {gameObject.name}: UI initialized with name '{npcName}'");
+        }
+        else
+        {
+            Debug.LogWarning($"NPC {gameObject.name}: No NPC panel assigned in inspector!");
+        }
+    
     }
     
     void Update()
@@ -330,64 +381,16 @@ public class NpcAutoMovement : MonoBehaviour
     }
     
     // Conversation System
-    void CreateConversationUI()
-    {
-        // Create UI Canvas if it doesn't exist
-        Canvas canvas = FindObjectOfType<Canvas>();
-        if (canvas == null)
-        {
-            GameObject canvasObj = new GameObject("ConversationCanvas");
-            canvas = canvasObj.AddComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvasObj.AddComponent<UnityEngine.UI.CanvasScaler>();
-            canvasObj.AddComponent<UnityEngine.UI.GraphicRaycaster>();
-        }
-        
-        // Create conversation UI panel
-        conversationUI = new GameObject("ConversationPanel");
-        conversationUI.transform.SetParent(canvas.transform, false);
-        
-        // Add background panel
-        UnityEngine.UI.Image background = conversationUI.AddComponent<UnityEngine.UI.Image>();
-        background.color = new Color(0, 0, 0, 0.8f);
-        
-        // Set panel size and position
-        RectTransform panelRect = conversationUI.GetComponent<RectTransform>();
-        panelRect.anchorMin = new Vector2(0.1f, 0.1f);
-        panelRect.anchorMax = new Vector2(0.9f, 0.3f);
-        panelRect.offsetMin = Vector2.zero;
-        panelRect.offsetMax = Vector2.zero;
-        
-        // Create text component
-        GameObject textObj = new GameObject("ConversationText");
-        textObj.transform.SetParent(conversationUI.transform, false);
-        conversationText = textObj.AddComponent<UnityEngine.UI.Text>();
-        
-        // Configure text
-        conversationText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        conversationText.fontSize = 18;
-        conversationText.color = Color.white;
-        conversationText.alignment = TextAnchor.MiddleLeft;
-        
-        // Set text size
-        RectTransform textRect = textObj.GetComponent<RectTransform>();
-        textRect.anchorMin = Vector2.zero;
-        textRect.anchorMax = Vector2.one;
-        textRect.offsetMin = new Vector2(20, 20);
-        textRect.offsetMax = new Vector2(-20, -20);
-        
-        // Hide UI initially
-        conversationUI.SetActive(false);
-    }
-    
     void StartConversation()
     {
         if (conversationLines.Length == 0) return;
+        if (npcPanel == null || conversationText == null) return;
         
         isInConversation = true;
         currentLineIndex = 0;
-        conversationUI.SetActive(true);
         StartTyping();
+        
+        Debug.Log($"NPC {gameObject.name}: Starting conversation");
     }
     
     void StartTyping()
@@ -449,9 +452,16 @@ public class NpcAutoMovement : MonoBehaviour
     void EndConversation()
     {
         isInConversation = false;
-        conversationUI.SetActive(false);
         currentLineIndex = 0;
         isWaiting = false; // Resume movement when conversation ends
+        
+        // Clear conversation text but keep panel visible (showing NPC name)
+        if (conversationText != null)
+        {
+            conversationText.text = "";
+        }
+        
+        Debug.Log($"NPC {gameObject.name}: Conversation ended");
     }
     
     // Collision detection for starting conversation
@@ -555,6 +565,12 @@ public class NpcAutoMovement : MonoBehaviour
     void DespawnNPC()
     {
         Debug.Log($"Despawning NPC {gameObject.name}");
+        
+        // Hide the NPC panel
+        if (npcPanel != null)
+        {
+            npcPanel.gameObject.SetActive(false);
+        }
         
         // Play despawn sound
         PlayNPCSound();

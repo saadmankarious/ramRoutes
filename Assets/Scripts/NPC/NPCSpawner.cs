@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using RamRoutes.Services;
@@ -23,6 +24,12 @@ public class NPCSpawner : MonoBehaviour
     
     [Header("Spawn Settings")]
     public bool spawnOnStart = false; // For testing - spawn all NPCs immediately
+    
+    [Header("UI References")]
+    public UnityEngine.UI.Image npcPanel; // Main NPC panel in the scene
+    public UnityEngine.UI.Text npcNameText; // Text component for NPC name
+    public UnityEngine.UI.Text conversationText; // Text component for conversation
+    public UnityEngine.UI.Image npcSpriteImage; // Image component for NPC sprite
     
     private Dictionary<string, GameObject> spawnedNPCs = new Dictionary<string, GameObject>();
     private UIManager uiManager;
@@ -73,9 +80,33 @@ public class NPCSpawner : MonoBehaviour
                         npcMovement.stayNearBuilding = true;
                         npcMovement.spawnPoint = buildingNPC.spawnPoint;
                         npcMovement.npcSpawner = this;
+                        npcMovement.npcName = buildingNPC.npcName; // Set NPC name for UI
+                        
+                        // Assign UI references from spawner
+                        npcMovement.npcPanel = this.npcPanel;
+                        npcMovement.npcNameText = this.npcNameText;
+                        npcMovement.conversationText = this.conversationText;
+                        npcMovement.npcSpriteImage = this.npcSpriteImage;
+                        
+                        // Set the NPC sprite in the UI
+                        if (this.npcSpriteImage != null)
+                        {
+                            SpriteRenderer npcSpriteRenderer = npcInstance.GetComponent<SpriteRenderer>();
+                            if (npcSpriteRenderer != null && npcSpriteRenderer.sprite != null)
+                            {
+                                this.npcSpriteImage.sprite = npcSpriteRenderer.sprite;
+                                Debug.Log($"NPCSpawner: Assigned sprite '{npcSpriteRenderer.sprite.name}' to UI for '{buildingNPC.npcName}'");
+                            }
+                            else
+                            {
+                                Debug.LogWarning($"NPCSpawner: No SpriteRenderer or sprite found on '{buildingNPC.npcName}'");
+                            }
+                        }
                         
                         // Set the NPC's name for identification
                         npcInstance.name = $"{buildingNPC.npcName} (Building: {buildingName})";
+                        
+                        Debug.Log($"NPCSpawner: Assigned UI references to '{buildingNPC.npcName}' - using conversation lines from prefab");
                     }
                     
                     // Store spawned NPC
