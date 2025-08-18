@@ -1005,6 +1005,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 3377443090169510630, guid: dda21d07aa28b084781868cd9490e3fd,
         type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3377443090169510630, guid: dda21d07aa28b084781868cd9490e3fd,
+        type: 3}
       propertyPath: m_SortingOrder
       value: 2
       objectReference: {fileID: 0}
@@ -17549,7 +17554,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -64.239426, y: 109.94}
+  m_AnchoredPosition: {x: -64.239426, y: 109.93999}
   m_SizeDelta: {x: 127.3479, y: 0}
   m_Pivot: {x: 0, y: 1}
 --- !u!114 &377416277
@@ -20196,7 +20201,7 @@ Transform:
   m_GameObject: {fileID: 783852338}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.9976046, z: -0, w: -0.06917477}
-  m_LocalPosition: {x: -0.94, y: -4.88, z: 25.41}
+  m_LocalPosition: {x: -0.94, y: -2.58, z: 25.41}
   m_LocalScale: {x: 0.95932776, y: 0.95932806, z: 0.95932776}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -22489,6 +22494,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Guardian
       objectReference: {fileID: 0}
+    - target: {fileID: 1875208262579020639, guid: 5a27368f960094ce9962e5385b824767,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2518753347804721089, guid: 5a27368f960094ce9962e5385b824767,
         type: 3}
       propertyPath: m_Controller
@@ -23831,6 +23841,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 6998246199047915117, guid: 47f0d2c4202a7c64091e5913be72158e,
         type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6998246199047915117, guid: 47f0d2c4202a7c64091e5913be72158e,
+        type: 3}
       propertyPath: m_SortingOrder
       value: 2
       objectReference: {fileID: 0}
@@ -24092,7 +24107,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1553716642}
   m_HandleRect: {fileID: 1553716641}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -25000,6 +25015,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7959403559607558578, guid: 4d331b29b0fa2bd4ea3191da55cb4457,
         type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7959403559607558578, guid: 4d331b29b0fa2bd4ea3191da55cb4457,
+        type: 3}
       propertyPath: m_SortingOrder
       value: 2
       objectReference: {fileID: 0}
@@ -25736,6 +25756,7 @@ Transform:
   m_Children:
   - {fileID: 978471447}
   - {fileID: 1768754251}
+  - {fileID: 1529527542}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1435281093
@@ -25920,7 +25941,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   showDebugInfo: 1
   clearCacheOnStart: 0
-  simulateGpsEnabled: 0
+  simulateGpsEnabled: 1
   buildings:
   - name: TC
     entranceGPS: {x: 38.900494, y: -76.99689}
@@ -26530,6 +26551,59 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1528660727}
   m_CullTransparentMesh: 1
+--- !u!1 &1529527541
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1529527542}
+  - component: {fileID: 1529527543}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1529527542
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1529527541}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1431704524}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1529527543
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1529527541}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 029d4c9912415444bb3b50f44b1fabda, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  buildingNPCs:
+  - npcName: 'facehk '
+    npcPrefab: {fileID: 1875208262579020639, guid: 5a27368f960094ce9962e5385b824767,
+      type: 3}
+    associatedBuilding: TC
+    spawnPoint: {fileID: 783852339}
+    despawnDelay: 0
+    conversationLines: []
+  spawnOnStart: 0
 --- !u!1 &1533334589
 GameObject:
   m_ObjectHideFlags: 0
@@ -27631,6 +27705,11 @@ PrefabInstance:
     - target: {fileID: 109743107097688301, guid: c63c01c46376b9c408cef006a9f5730a,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7500564015456586564, guid: c63c01c46376b9c408cef006a9f5730a,
+        type: 3}
+      propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7500564015456586564, guid: c63c01c46376b9c408cef006a9f5730a,
@@ -269815,6 +269894,11 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 520821004672057035, guid: afcd3c04c5f6a214aa2756119847c263,
         type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 520821004672057035, guid: afcd3c04c5f6a214aa2756119847c263,
+        type: 3}
       propertyPath: m_SortingOrder
       value: 2
       objectReference: {fileID: 0}
@@ -272487,6 +272571,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: NPC
+      objectReference: {fileID: 0}
+    - target: {fileID: 1875208262579020639, guid: 5a27368f960094ce9962e5385b824767,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4886725283858063500, guid: 5a27368f960094ce9962e5385b824767,
         type: 3}

@@ -374,6 +374,12 @@ public class BuildingInteraction : MonoBehaviour
             // Display building events and current users when player is in range
             if (activated)
             {
+                // Spawn NPCs when player enters an unlocked building
+                if (NPCSpawner.Instance != null)
+                {
+                    NPCSpawner.Instance.SpawnNPCForBuildingOnEnter(buildingName);
+                }
+                
                 if (buildingEventsPanel != null && eventsLoaded)
                 {
                     DisplayBuildingEvents();
@@ -437,6 +443,13 @@ public class BuildingInteraction : MonoBehaviour
                 Destroy(indicator);
             }
             activeUserLocations.Clear();
+            
+            // Despawn NPCs when player leaves the building
+            if (activated && NPCSpawner.Instance != null)
+            {
+                Debug.Log($"Player left building '{buildingName}', despawning NPCs");
+                NPCSpawner.Instance.DespawnNPCsForBuilding(buildingName);
+            }
         }
     }
 

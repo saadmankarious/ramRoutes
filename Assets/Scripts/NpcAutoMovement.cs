@@ -15,7 +15,6 @@ public class NpcAutoMovement : MonoBehaviour
     public string associatedBuilding = ""; // Which building this NPC belongs to
     public bool stayNearBuilding = true; // Whether to constrain movement to building area
     public Transform spawnPoint; // Spawn point to return to (usually building or nearby point)
-    public float despawnDelay = 2f; // Delay before despawning after player walks away
     public NPCSpawner npcSpawner; // Reference to spawner for cleanup
     
     [Header("Conversation")]
@@ -42,10 +41,9 @@ public class NpcAutoMovement : MonoBehaviour
     private bool isWaiting = false;
     
     // NPC State Management
-    private enum NPCState { Normal, ReturningToSpawn, Despawning }
+    private enum NPCState { Normal, ReturningToSpawn }
     private NPCState currentState = NPCState.Normal;
     private bool playerNearby = false;
-    private float despawnTimer = 0f;
     
     // Conversation variables
     private bool isInConversation = false;
@@ -83,13 +81,24 @@ public class NpcAutoMovement : MonoBehaviour
             HandleMovement();
         }
         
-        // Handle despawn timing
-        if (currentState == NPCState.Despawning)
+        // Fallback: Check distance to player if in Normal state
+        if (currentState == NPCState.Normal && playerNearby)
         {
-            despawnTimer -= Time.deltaTime;
-            if (despawnTimer <= 0)
+            GameObject player = GameObject.FindWithTag("Player");
+            if (player != null)
             {
-                DespawnNPC();
+                float distanceToPlayer = Vector3.Distance(transform.position, player.transform.position);
+                // If player is too far away, start return to spawn
+                if (distanceToPlayer > 5f) // Fallback distance check
+                {
+                    Debug.Log($"NPC {gameObject.name}: Player too far ({distanceToPlayer:F2}), returning to spawn (fallback)");
+                    playerNearby = false;
+                    if (isInConversation)
+                    {
+                        EndConversation();
+                    }
+                    StartReturnToSpawn();
+                }
             }
         }
         
@@ -105,10 +114,6 @@ public class NpcAutoMovement : MonoBehaviour
                 break;
             case NPCState.ReturningToSpawn:
                 HandleReturnToSpawn();
-                break;
-            case NPCState.Despawning:
-                // NPC is despawning, don't move
-                currentVelocity = Vector3.zero;
                 break;
         }
     }
@@ -163,24 +168,68 @@ public class NpcAutoMovement : MonoBehaviour
     
     void HandleReturnToSpawn()
     {
-        if (spawnPoint == null) return;
-        
-        // Move directly towards spawn point
-        Vector3 toSpawn = spawnPoint.position - transform.position;
-        
-        if (toSpawn.magnitude > 0.1f)
+        if (spawnPoint == null) 
         {
-            Vector3 direction = toSpawn.normalized;
-            currentVelocity = direction * moveSpeed;
+            Debug.LogWarning($"NPC {gameObject.name}: No spawn point assigned, despawning immediately");
+            DespawnNPC();
+            return;
+        }
+        
+        // Calculate direct path to spawn point
+        Vector3 directionToSpawn = GetDirectionToSpawn();
+        
+        if (directionToSpawn != Vector3.zero)
+        {
+            // Move towards spawn point
+            currentVelocity = directionToSpawn * moveSpeed;
             transform.position += currentVelocity * Time.deltaTime;
+            
+            // Check if close enough to spawn point
+            float distanceToSpawn = Vector3.Distance(transform.position, spawnPoint.position);
+            Debug.Log($"NPC {gameObject.name}: Moving to spawn, distance: {distanceToSpawn:F2}");
+            
+            if (distanceToSpawn < 0.2f)
+            {
+                Debug.Log($"NPC {gameObject.name}: Reached spawn point, despawning");
+                DespawnNPC();
+            }
         }
         else
         {
-            // Reached spawn point, start despawn timer
-            currentVelocity = Vector3.zero;
-            currentState = NPCState.Despawning;
-            despawnTimer = despawnDelay;
+            // Already at spawn point
+            Debug.Log($"NPC {gameObject.name}: At spawn point, despawning");
+            DespawnNPC();
         }
+    }
+    
+    Vector3 GetDirectionToSpawn()
+    {
+        if (spawnPoint == null) return Vector3.zero;
+        
+        Vector3 toSpawn = spawnPoint.position - transform.position;
+        
+        // If very close, return zero (we're at spawn)
+        if (toSpawn.magnitude < 0.2f)
+            return Vector3.zero;
+        
+        // Calculate direction with pathfinding logic
+        Vector3 direction = Vector3.zero;
+        
+        // Simple pathfinding: move on strongest axis first
+        if (Mathf.Abs(toSpawn.x) > Mathf.Abs(toSpawn.y))
+        {
+            // Move horizontally first
+            direction.x = toSpawn.x > 0 ? 1 : -1;
+            direction.y = 0;
+        }
+        else
+        {
+            // Move vertically first  
+            direction.x = 0;
+            direction.y = toSpawn.y > 0 ? 1 : -1;
+        }
+        
+        return direction;
     }    void ChooseNewTarget()
     {
         // Choose one of 4 pure cardinal directions from current position
@@ -367,7 +416,8 @@ public class NpcAutoMovement : MonoBehaviour
         if (other.CompareTag("Player") && !isInConversation && currentState == NPCState.Normal)
         {
             playerNearby = true;
-            animator.SetBool(idleParam, true); // Set idle animation
+            Debug.Log($"NPC {gameObject.name}: Player entered trigger, starting conversation");
+            if (animator != null) animator.SetBool(idleParam, true); // Set idle animation
             isWaiting = true; // Stop movement
             StartConversation();
         }
@@ -378,6 +428,7 @@ public class NpcAutoMovement : MonoBehaviour
         if (other.gameObject.CompareTag("Player") && !isInConversation && currentState == NPCState.Normal)
         {
             playerNearby = true;
+            Debug.Log($"NPC {gameObject.name}: Player collision detected, starting conversation");
             StartConversation();
         }
     }
@@ -388,6 +439,8 @@ public class NpcAutoMovement : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             playerNearby = false;
+            Debug.Log($"NPC {gameObject.name}: Player left trigger area, ending conversation and returning to spawn");
+            
             if (isInConversation)
             {
                 EndConversation();
@@ -406,6 +459,8 @@ public class NpcAutoMovement : MonoBehaviour
         if (other.gameObject.CompareTag("Player"))
         {
             playerNearby = false;
+            Debug.Log($"NPC {gameObject.name}: Player collision exit detected, returning to spawn");
+            
             if (isInConversation)
             {
                 EndConversation();
@@ -423,9 +478,9 @@ public class NpcAutoMovement : MonoBehaviour
     {
         if (currentState != NPCState.Normal) return;
         
+        Debug.Log($"NPC {gameObject.name}: Changing state to ReturningToSpawn");
         currentState = NPCState.ReturningToSpawn;
         isWaiting = false; // Stop any waiting
-        Debug.Log($"NPC {gameObject.name} starting return to spawn point");
     }
     
     void DespawnNPC()

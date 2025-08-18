@@ -12,9 +12,7 @@ public class BuildingNPC
     public string associatedBuilding; // Building name this NPC belongs to
     
     [Header("Spawn Settings")]
-    public Transform spawnPoint; // Editor-assigned spawn point instead of offset
-    public Vector3 spawnOffset = Vector3.zero; // Fallback offset if no spawn point assigned
-    public float spawnDelay = 1f; // Delay before spawning after building unlock
+    public Transform spawnPoint; // Editor-assigned spawn point
     public float despawnDelay = 2f; // Delay before despawning after player walks away
     
     [Header("Conversation")]
@@ -54,103 +52,24 @@ public class NPCSpawner : MonoBehaviour
     
     void Start()
     {
-        uiManager = UIManager.Instance;
-        
-        // Subscribe to building unlock events
-        if (uiManager != null)
-        {
-            uiManager.OnBuildingUnlocked.AddListener(HandleBuildingUnlocked);
-        }
-        
-        // For testing - spawn all NPCs if enabled
-        if (spawnOnStart)
-        {
-            SpawnAllNPCs();
-        }
-        else
-        {
-            // Check for already unlocked buildings and spawn their NPCs
-            StartCoroutine(SpawnNPCsForUnlockedBuildings());
-        }
+        Debug.Log($"NPCSpawner: Starting up with {buildingNPCs?.Length ?? 0} NPCs configured");
     }
     
-    private System.Collections.IEnumerator SpawnNPCsForUnlockedBuildings()
+    public void SpawnNPCForBuildingOnEnter(string buildingName)
     {
-        // Wait a frame to ensure all systems are initialized
-        yield return new WaitForEndOfFrame();
+        Debug.Log($"NPCSpawner: Player entered building '{buildingName}', spawning NPCs");
         
-        var service = new RamRoutes.Services.UnlockedBuildingService();
-        var task = service.RetrieveUnlockedBuildings();
-        
-        // Wait for the task to complete
-        while (!task.IsCompleted)
-        {
-            yield return null;
-        }
-        
-        if (task.Result != null)
-        {
-            var userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId ?? "unknown";
-            
-            foreach (var unlockedBuilding in task.Result)
-            {
-                if (unlockedBuilding.userId == userId)
-                {
-                    yield return StartCoroutine(SpawnNPCForBuilding(unlockedBuilding.buildingName));
-                }
-            }
-        }
-    }
-    
-    void OnDestroy()
-    {
-        // Unsubscribe from events
-        if (uiManager != null)
-        {
-            uiManager.OnBuildingUnlocked.RemoveListener(HandleBuildingUnlocked);
-        }
-    }
-    
-    public void HandleBuildingUnlocked(BuildingInteraction building)
-    {
-        StartCoroutine(SpawnNPCForBuilding(building.buildingName));
-    }
-    
-    public System.Collections.IEnumerator SpawnNPCForBuilding(string buildingName)
-    {
         // Find NPCs associated with this building
         foreach (var buildingNPC in buildingNPCs)
         {
             if (buildingNPC.associatedBuilding == buildingName && !spawnedNPCs.ContainsKey(buildingNPC.npcName))
             {
-                // Wait for spawn delay
-                yield return new WaitForSeconds(buildingNPC.spawnDelay);
+                Debug.Log($"NPCSpawner: Found matching NPC '{buildingNPC.npcName}', spawning now");
                 
-                // Find the building GameObject
-                BuildingInteraction[] buildings = FindObjectsOfType<BuildingInteraction>();
-                BuildingInteraction targetBuilding = null;
-                
-                foreach (var b in buildings)
+                if (buildingNPC.npcPrefab != null && buildingNPC.spawnPoint != null)
                 {
-                    if (b.buildingName == buildingName)
-                    {
-                        targetBuilding = b;
-                        break;
-                    }
-                }
-                
-                if (targetBuilding != null && buildingNPC.npcPrefab != null)
-                {
-                    // Determine spawn position - prefer spawn point, fallback to building + offset
-                    Vector3 spawnPosition;
-                    if (buildingNPC.spawnPoint != null)
-                    {
-                        spawnPosition = buildingNPC.spawnPoint.position;
-                    }
-                    else
-                    {
-                        spawnPosition = targetBuilding.transform.position + buildingNPC.spawnOffset;
-                    }
+                    Vector3 spawnPosition = buildingNPC.spawnPoint.position;
+                    Debug.Log($"NPCSpawner: Spawning at position {spawnPosition}");
                     
                     GameObject npcInstance = Instantiate(buildingNPC.npcPrefab, spawnPosition, Quaternion.identity);
                     
@@ -161,9 +80,8 @@ public class NPCSpawner : MonoBehaviour
                         npcMovement.conversationLines = buildingNPC.conversationLines;
                         npcMovement.associatedBuilding = buildingName;
                         npcMovement.stayNearBuilding = true;
-                        npcMovement.spawnPoint = spawnPosition; // Store spawn position for returning
-                        npcMovement.despawnDelay = buildingNPC.despawnDelay; // Configure despawn delay
-                        npcMovement.npcSpawner = this; // Reference to spawner for despawn callback
+                        npcMovement.spawnPoint = buildingNPC.spawnPoint;
+                        npcMovement.npcSpawner = this;
                         
                         // Set the NPC's name for identification
                         npcInstance.name = $"{buildingNPC.npcName} (Building: {buildingName})";
@@ -172,21 +90,23 @@ public class NPCSpawner : MonoBehaviour
                     // Store spawned NPC
                     spawnedNPCs[buildingNPC.npcName] = npcInstance;
                     
-                    // Add some spawn effect if UIManager has teleport effects
-                    if (uiManager != null && uiManager.teleportEffect != null)
-                    {
-                        StartCoroutine(uiManager.PlayTeleportEffect(spawnPosition));
-                    }
-                    
                     Debug.Log($"Spawned NPC '{buildingNPC.npcName}' for building '{buildingName}' at position {spawnPosition}");
                 }
                 else
                 {
-                    Debug.LogWarning($"Could not spawn NPC '{buildingNPC.npcName}' - building '{buildingName}' not found or NPC prefab is null");
+                    if (buildingNPC.npcPrefab == null)
+                        Debug.LogWarning($"Could not spawn NPC '{buildingNPC.npcName}' - NPC prefab is null");
+                    if (buildingNPC.spawnPoint == null)
+                        Debug.LogWarning($"Could not spawn NPC '{buildingNPC.npcName}' - spawn point is null");
                 }
+            }
+            else if (spawnedNPCs.ContainsKey(buildingNPC.npcName))
+            {
+                Debug.Log($"NPCSpawner: NPC '{buildingNPC.npcName}' already spawned, skipping");
             }
         }
     }
+    
     
     // Method to spawn all NPCs (for testing or loading saved game state)
     public void SpawnAllNPCs()
@@ -195,7 +115,7 @@ public class NPCSpawner : MonoBehaviour
         {
             if (!spawnedNPCs.ContainsKey(buildingNPC.npcName))
             {
-                StartCoroutine(SpawnNPCForBuilding(buildingNPC.associatedBuilding));
+                SpawnNPCForBuildingOnEnter(buildingNPC.associatedBuilding);
             }
         }
     }
@@ -215,7 +135,7 @@ public class NPCSpawner : MonoBehaviour
     // Method to manually spawn NPC (for specific use cases)
     public void ManuallySpawnNPC(string buildingName)
     {
-        StartCoroutine(SpawnNPCForBuilding(buildingName));
+        SpawnNPCForBuildingOnEnter(buildingName);
     }
     
     // Method to despawn NPC

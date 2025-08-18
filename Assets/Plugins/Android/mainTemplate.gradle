@@ -21,8 +21,6 @@ dependencies {
     implementation 'com.google.firebase:firebase-common:22.0.0' // Assets/Firebase/Editor/AppDependencies.xml:13
     implementation 'com.google.firebase:firebase-firestore:26.0.0' // Assets/Firebase/Editor/FirestoreDependencies.xml:13
     implementation 'com.google.firebase:firebase-firestore-unity:13.0.0' // Assets/Firebase/Editor/FirestoreDependencies.xml:20
-    implementation 'com.google.firebase:firebase-functions:22.0.0' // Assets/Firebase/Editor/FunctionsDependencies.xml:13
-    implementation 'com.google.firebase:firebase-functions-unity:13.0.0' // Assets/Firebase/Editor/FunctionsDependencies.xml:20
     implementation 'com.google.firebase:firebase-iid:21.1.0' // Assets/Firebase/Editor/MessagingDependencies.xml:17
     implementation 'com.google.firebase:firebase-messaging:25.0.0' // Assets/Firebase/Editor/MessagingDependencies.xml:13
     implementation 'com.google.firebase:firebase-messaging-unity:13.0.0' // Assets/Firebase/Editor/MessagingDependencies.xml:24
@@ -35,7 +33,6 @@ dependencies {
 // Android Resolver Exclusions Start
 android {
   packaging {
-      exclude ('/lib/arm64-v8a/*' + '*')
       exclude ('/lib/armeabi/*' + '*')
       exclude ('/lib/mips/*' + '*')
       exclude ('/lib/mips64/*' + '*')
