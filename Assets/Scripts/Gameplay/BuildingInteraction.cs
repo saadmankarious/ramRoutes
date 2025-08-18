@@ -36,6 +36,9 @@ public class BuildingInteraction : MonoBehaviour
     [SerializeField] private GameObject buildingEventsPanel;
     [SerializeField] private Transform eventsContentParent;
     [SerializeField] private GameObject eventPrefab;
+    [SerializeField] private Text buildingNameText; // Text component to display building name
+    [SerializeField] private Text buildingDescriptionText; // Text component to display building description
+    [SerializeField] private Text unlockMessageText; // Text component to display unlock message
     public string preUnlockMessage;
 
     [Header("User Location Display")]
@@ -359,6 +362,45 @@ public class BuildingInteraction : MonoBehaviour
         if (other.CompareTag("Player") || other.CompareTag("Spaceship"))
         {
             isPlayerInRange = true;
+            
+            // Set building name in UI text when player enters this building's area
+            if (buildingNameText != null && !string.IsNullOrEmpty(buildingName))
+            {
+                buildingNameText.text = buildingName;
+                Debug.Log($"BuildingInteraction: Set building name text to '{buildingName}' for current interaction");
+            }
+            
+            // Set building description for any building (activated or not)
+            if (buildingDescriptionText != null && !string.IsNullOrEmpty(buildingName))
+            {
+                var buildingInfo = BuildingDataManager.GetBuildingInfo(buildingName);
+                if (buildingInfo != null && !string.IsNullOrEmpty(buildingInfo.description))
+                {
+                    buildingDescriptionText.text = buildingInfo.description;
+                    Debug.Log($"BuildingInteraction: Set building description for '{buildingName}': {buildingInfo.description}");
+                }
+                else
+                {
+                    buildingDescriptionText.text = "No description available.";
+                    Debug.Log($"BuildingInteraction: No description found for building '{buildingName}'");
+                }
+            }
+            
+            // Set unlock message for any building (activated or not)
+            if (unlockMessageText != null && !string.IsNullOrEmpty(buildingName))
+            {
+                var buildingInfo = BuildingDataManager.GetBuildingInfo(buildingName);
+                if (buildingInfo != null && !string.IsNullOrEmpty(buildingInfo.unlockedMessage))
+                {
+                    unlockMessageText.text = buildingInfo.unlockedMessage;
+                    Debug.Log($"BuildingInteraction: Set unlock message for '{buildingName}': {buildingInfo.unlockedMessage}");
+                }
+                else
+                {
+                    unlockMessageText.text = "No unlock message available.";
+                    Debug.Log($"BuildingInteraction: No unlock message found for building '{buildingName}'");
+                }
+            }
 
             if (mobileInteractButton != null)
             {

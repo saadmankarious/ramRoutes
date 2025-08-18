@@ -141,7 +141,14 @@ MonoBehaviour:
     nothing but will and imagination.
   textDisplaySpeed: 0.05
   continueKey: 32
+  npcPanel: {fileID: 0}
+  npcNameText: {fileID: 0}
+  conversationText: {fileID: 0}
+  npcSpriteImage: {fileID: 0}
+  npcName: Unknown NPC
   npcSound: {fileID: 8300000, guid: bf527d825758e5b4ca7b69f5a02d9a56, type: 3}
+  typingTickSound: {fileID: 8300000, guid: 74d71d820e630407db1f8d2de6cc97ca, type: 3}
+  typingSoundInterval: 0.15
 --- !u!61 &3979548990149366905
 BoxCollider2D:
   m_ObjectHideFlags: 0

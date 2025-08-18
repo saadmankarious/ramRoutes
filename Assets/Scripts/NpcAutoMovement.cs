@@ -44,7 +44,12 @@ public class NpcAutoMovement : MonoBehaviour
     
     [Header("Audio")]
     public AudioClip npcSound; // Sound to play when spawning and despawning
+    public AudioClip typingTickSound; // Sound to play during conversation typing
     private AudioSource audioSource;
+    
+    [Header("Typing Sound Settings")]
+    [SerializeField] private float typingSoundInterval = 0.15f;
+    private float lastTypingSoundTime;
     
     private Vector3 anchorPoint;
     private Vector3 targetPosition;
@@ -121,8 +126,14 @@ public class NpcAutoMovement : MonoBehaviour
                 }
             }
             
-            // Show the panel since NPC is in scene
+            // Show the panel since NPC is in scene with popup animation
             npcPanel.gameObject.SetActive(true);
+            
+            // Apply popup animation using UIManager
+            if (UIManager.Instance != null)
+            {
+                StartCoroutine(UIManager.Instance.AnimatePanelPopup(npcPanel.gameObject));
+            }
             
             // Initially hide conversation text
             if (conversationText != null)
@@ -130,7 +141,7 @@ public class NpcAutoMovement : MonoBehaviour
                 conversationText.text = "";
             }
             
-            Debug.Log($"NPC {gameObject.name}: UI initialized with name '{npcName}'");
+            Debug.Log($"NPC {gameObject.name}: UI initialized with name '{npcName}' with popup animation");
         }
         else
         {
@@ -400,6 +411,7 @@ public class NpcAutoMovement : MonoBehaviour
         currentDisplayedText = "";
         textTimer = 0f;
         isTyping = true;
+        lastTypingSoundTime = 0f; // Reset typing sound timer for new line
     }
     
     void HandleConversation()
@@ -415,6 +427,13 @@ public class NpcAutoMovement : MonoBehaviour
                 {
                     currentDisplayedText += conversationLines[currentLineIndex][currentDisplayedText.Length];
                     conversationText.text = currentDisplayedText;
+                    
+                    // Play typing sound at intervals
+                    if (Time.time - lastTypingSoundTime >= typingSoundInterval)
+                    {
+                        PlayTypingSound();
+                        lastTypingSoundTime = Time.time;
+                    }
                 }
                 else
                 {
@@ -597,6 +616,15 @@ public class NpcAutoMovement : MonoBehaviour
         {
             audioSource.PlayOneShot(npcSound);
             Debug.Log($"NPC {gameObject.name}: Playing NPC sound");
+        }
+    }
+    
+    void PlayTypingSound()
+    {
+        if (typingTickSound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(typingTickSound, 0.1f); // Volume 3 times lower than UIManager
+            // Debug.Log($"NPC {gameObject.name}: Playing typing sound"); // Commented out to avoid spam
         }
     }
 
