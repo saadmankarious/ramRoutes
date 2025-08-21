@@ -89,3 +89,35 @@
 **NPC:** The Healer of Broken Spirits  
 - "Wounds of the body heal with time; wounds of the soul fester unseen. Yet fragments of care remain here, where the soul once sought refuge."  
 - Clue: Fragment of Memory — *“The soul confided their pain, but carried burdens heavier than any cure.”*
+
+
+
+🏛️ Thomas Commons — The Herald of Gatherings
+"Students gather here for food, study, and friendship. The soul once laughed among them."
+"This hall still hums with echoes of shared meals and quiet debates."
+"Seek Aros where joy once flowed freely."
+
+📚 Cole Library — The Keeper of Forgotten Pages
+"Knowledge rests in these stacks. The soul often searched here for answers."
+"Even now, the quiet carries whispers of their late-night study."
+"Look for Aros where words shape minds."
+
+🛌 Pauly Rorem Dorm — The Sleepless Watcher
+"These rooms hold dreams and restless nights. The soul wandered here, seeking peace."
+"Friendship and quiet comfort live in these walls."
+"Aros lingers where rest and longing meet."
+
+🎨 McWethy Hall (Arts) — The Muse with Fading Colors
+"Creativity blooms here. The soul painted their heart across canvas and clay."
+"Every stroke was a memory, a plea to be seen."
+"Aros waits where beauty takes shape."
+
+🌍 Stoner House (International Students) — The Wanderer of Many Tongues
+"This home welcomes voices from everywhere. The soul found kinship here."
+"They shared stories and laughter in many tongues."
+"Seek Aros where cultures intertwine."
+
+🩺 Ebersole Health & Wellness Center — The Healer of Broken Spirits
+"Here, healing is more than medicine. The soul came here when hope dimmed."
+"Care flows through these halls for body and spirit alike."
+"Aros dwells where broken things are made whole."

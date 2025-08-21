@@ -4,11 +4,11 @@ apply from: '../shared/keepUnitySymbols.gradle'
 
 dependencies {
         // Geofencing Plugin - Modified implementation
-    implementation(name: 'geofencing-plugin', ext: 'aar') {
-        transitive = true
-        exclude group: 'com.google.android.gms', module: 'play-services-basement'
-    }
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    // implementation(name: 'geofencing-plugin', ext: 'aar') {
+    //     transitive = true
+    //     exclude group: 'com.google.android.gms', module: 'play-services-basement'
+    // }
+    // implementation fileTree(dir: 'libs', include: ['*.jar'])
  implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.11.0'
     

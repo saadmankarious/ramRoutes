@@ -18,10 +18,8 @@ public class BuildingInteraction : MonoBehaviour
 
     [Header("Interaction Settings")]
     [SerializeField] private KeyCode interactKey = KeyCode.J;
-    [SerializeField] private bool hasSapling = false;
 
     [Header("Reward Settings")]
-    [SerializeField] private GameObject saplingPrefab;
     [SerializeField] private AudioClip rewardSound;
 
     [Header("Mobile Controls")]
@@ -48,16 +46,12 @@ public class BuildingInteraction : MonoBehaviour
     [Header("Gate Integration")]
     [SerializeField] private Gate connectedGate;
 
-    [Header("Player Teleportation")]
-    [SerializeField] private Transform playerTeleportPosition;
-
     [Header("GPS Integration")]
     [SerializeField] private float gpsUnlockRadius = 50f;
     [SerializeField] private bool bypassGpsCheck = false;
 
     private bool isPlayerInRange = false;
     private int currentLineIndex = 0;
-    private bool saplingSpawned = false;
     private bool extraLineShown = false;
     private AudioSource audioSource;
     private bool dialogActive = false;
@@ -77,7 +71,6 @@ public class BuildingInteraction : MonoBehaviour
     private List<BuildingEvent> cachedBuildingEvents;
     private bool eventsLoaded = false;
     private UIManager uiManager;
-    private bool shouldTeleportOnPanelClose = false;
     private BuildingProximityDetector proximityDetector;
 
     void Awake()
@@ -131,15 +124,6 @@ public class BuildingInteraction : MonoBehaviour
                     connectedGate.UnlockGate();
 
                     Debug.Log($"Unlocked gate connected to building: {buildingName}");
-                }
-
-                if (shouldTeleportOnPanelClose)
-                {
-                    TeleportPlayerToPosition();
-                    
-                    StartCoroutine(ActivateBuildingAfterDelay());
-                    
-                    shouldTeleportOnPanelClose = false;
                 }
             });
         }
@@ -329,24 +313,10 @@ public class BuildingInteraction : MonoBehaviour
         {
             dialogText.text = dialogLines[currentLineIndex];
         }
-        else if (hasSapling && !saplingSpawned &&
-                GameManager.Instance.currentTrial.trialNumber == 2 &&
-                !extraLineShown)
-        {
-            GiveSaplingReward();
-        }
         else
         {
             CloseDialog();
         }
-    }
-
-    private void GiveSaplingReward()
-    {
-        dialogText.text = "You received a sapling!";
-        SpawnSapling();
-        saplingSpawned = true;
-        extraLineShown = true;
     }
 
     private void CloseDialog()
@@ -469,17 +439,6 @@ public class BuildingInteraction : MonoBehaviour
         }
     }
 
-    private void SpawnSapling()
-    {
-        Vector3 spawnPosition = transform.position + transform.right * 1.5f;
-        Instantiate(saplingPrefab, spawnPosition, Quaternion.identity);
-
-        if (rewardSound != null && audioSource != null)
-        {
-            audioSource.PlayOneShot(rewardSound);
-        }
-    }
-
     private void HandleApproachBuilding(BuildingProximityDetector.Building building)
     {
         Debug.Log("Building Interaction:: Approaching building " + building.name);
@@ -536,9 +495,6 @@ public class BuildingInteraction : MonoBehaviour
     
     public async void UnlockBuilding()
     {
-        // Set flag to indicate this building should teleport when panel closes
-        shouldTeleportOnPanelClose = true;
-
         if (uiManager != null)
         {
             await uiManager.HandleBuildingUnlock(this);
@@ -549,6 +505,21 @@ public class BuildingInteraction : MonoBehaviour
             await Task.Delay(3000);
             ShowBuildingUnlockedPanel();
             await DisplayUsersWhoUnlocked();
+        }
+
+        // Activate building after unlock
+        activated = true;
+        
+        // Update progress bar when building is revealed
+        if (uiManager != null)
+        {
+            uiManager.UpdateProgressBarOnReveal();
+        }
+        
+        // Play reward sound when building is revealed
+        if (rewardSound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(rewardSound);
         }
 
         // Use unified user profile retrieval for points and saving
@@ -631,60 +602,6 @@ public class BuildingInteraction : MonoBehaviour
         Debug.Log($"GPS Distance to {buildingName}: {distance:F1}m (threshold: {gpsUnlockRadius}m)");
         
         return distance <= gpsUnlockRadius;
-    }
-
-    private IEnumerator ActivateBuildingAfterDelay()
-    {
-        yield return new WaitForSeconds(2f);
-        activated = true;
-        
-        // Update progress bar when building is revealed
-        if (uiManager != null)
-        {
-            uiManager.UpdateProgressBarOnReveal();
-        }
-        
-        // Play reward sound when building is revealed
-        if (rewardSound != null && audioSource != null)
-        {
-            audioSource.PlayOneShot(rewardSound);
-        }
-    }
-
-    private void TeleportPlayerToPosition()
-    {
-        if (playerTeleportPosition != null)
-        {
-            Debug.Log($"Teleporting player to position: {playerTeleportPosition.position} for building: {buildingName}");
-            // Find the player GameObject
-            GameObject player = GameObject.FindGameObjectWithTag("Player");
-            if (player == null)
-            {
-                // Try alternate tag
-                player = GameObject.FindGameObjectWithTag("Spaceship");
-            }
-
-            if (player != null)
-            {
-                // Teleport the player to the designated position
-                player.transform.position = playerTeleportPosition.position;
-                Debug.Log($"Player teleported to position: {playerTeleportPosition.position} for building: {buildingName}");
-                
-                // Optional: Add some visual effects for teleportation
-                if (uiManager != null)
-                {
-                    StartCoroutine(uiManager.PlayTeleportEffect(player.transform.position));
-                }
-            }
-            else
-            {
-                Debug.LogWarning("Player GameObject not found! Cannot teleport after building unlock.");
-            }
-        }
-        else
-        {
-            Debug.LogWarning($"Player teleport position not set for building: {buildingName}. Player will not be moved.");
-        }
     }
 
     // Make DisplayUsersWhoUnlocked return a Task for parallel execution

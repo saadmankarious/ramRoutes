@@ -1068,9 +1068,6 @@ MonoBehaviour:
   - This is one of Cornell's appartment building. You get to live here with people
     you choseif you are a senior.
   interactKey: 118
-  hasSapling: 1
-  saplingPrefab: {fileID: 5638119740413968204, guid: b77002f8471b9456f8d0c3515e50e22c,
-    type: 3}
   rewardSound: {fileID: 8300000, guid: dab7626c0a3474a0aba894ac33d149e7, type: 3}
   mobileInteractButton: {fileID: 1299654885}
   inactivePrefab: {fileID: 6131559785892294148, guid: b3d494e286427de438f4ed9b2097482d,
@@ -1087,9 +1084,8 @@ MonoBehaviour:
   showUnlockedPanelOnStart: 0
   simulateEntry: 0
   connectedGate: {fileID: 0}
-  playerTeleportPosition: {fileID: 1681770776}
   gpsUnlockRadius: 50
-  bypassGpsCheck: 0
+  bypassGpsCheck: 1
   activated: 0
   buildingName: Library
   usersScrollView: {fileID: 1017116444}
@@ -1819,9 +1815,6 @@ MonoBehaviour:
   - 'The four largest moons orbiting Jupiter were discovered by Galileo in 1610 via
     telescope, a recent invention of the time. '
   interactKey: 118
-  hasSapling: 1
-  saplingPrefab: {fileID: 5638119740413968204, guid: b77002f8471b9456f8d0c3515e50e22c,
-    type: 3}
   rewardSound: {fileID: 8300000, guid: dab7626c0a3474a0aba894ac33d149e7, type: 3}
   mobileInteractButton: {fileID: 1299654885}
   inactivePrefab: {fileID: 6131559785892294148, guid: b3d494e286427de438f4ed9b2097482d,
@@ -1838,9 +1831,8 @@ MonoBehaviour:
   showUnlockedPanelOnStart: 0
   simulateEntry: 0
   connectedGate: {fileID: 0}
-  playerTeleportPosition: {fileID: 829954904}
   gpsUnlockRadius: 50
-  bypassGpsCheck: 0
+  bypassGpsCheck: 1
   activated: 0
   buildingName: McWethy
   usersScrollView: {fileID: 1017116444}
@@ -2252,6 +2244,7 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 543864026}
   - {fileID: 1293688549}
   - {fileID: 195424822}
   - {fileID: 1503913376}
@@ -2684,7 +2677,7 @@ Transform:
   m_GameObject: {fileID: 316913357}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -2.51, y: -1.88, z: -59.36315}
+  m_LocalPosition: {x: -9.8, y: -11.8, z: -59.36315}
   m_LocalScale: {x: 1.4479324, y: 1.4479324, z: 1.4479324}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -18679,20 +18672,20 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 543864025}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1435281094}
   - {fileID: 482067286}
-  m_Father: {fileID: 2050128707}
+  m_Father: {fileID: 263408520}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 400, y: 225.12079}
+  m_SizeDelta: {x: 800, y: 450.24155}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &543864027
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18951,7 +18944,7 @@ PrefabInstance:
     - target: {fileID: 4879654010440164587, guid: 7dc17e83f4e9ac545b4fae3cc84cb6cc,
         type: 3}
       propertyPath: m_SizeDelta.y
-      value: -38.591797
+      value: -38.337288
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -20176,7 +20169,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1221185092}
   m_HandleRect: {fileID: 1221185091}
   m_Direction: 2
-  m_Value: 1
+  m_Value: 1.0000006
   m_Size: 0.8157793
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -20551,7 +20544,7 @@ Transform:
   m_GameObject: {fileID: 833470304}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.13, y: -2.36, z: 2.7515619}
+  m_LocalPosition: {x: -3.8, y: -8.4, z: 2.7515619}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -20591,7 +20584,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.0000028016, y: 23.073}
+  m_AnchoredPosition: {x: -2.5818, y: 32.6}
   m_SizeDelta: {x: 57.8971, y: 54.8498}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &834252932
@@ -22155,8 +22148,6 @@ MonoBehaviour:
   dialogLines:
   - This is just a random building on 1st street.
   interactKey: 118
-  hasSapling: 0
-  saplingPrefab: {fileID: 0}
   rewardSound: {fileID: 0}
   mobileInteractButton: {fileID: 1299654885}
   inactivePrefab: {fileID: 6131559785892294148, guid: b3d494e286427de438f4ed9b2097482d,
@@ -22173,9 +22164,8 @@ MonoBehaviour:
   showUnlockedPanelOnStart: 0
   simulateEntry: 0
   connectedGate: {fileID: 0}
-  playerTeleportPosition: {fileID: 316913358}
   gpsUnlockRadius: 50
-  bypassGpsCheck: 0
+  bypassGpsCheck: 1
   activated: 0
   buildingName: Ebersole
   usersScrollView: {fileID: 1017116444}
@@ -22785,8 +22775,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 0.0000031292, y: -28}
-  m_SizeDelta: {x: 157.7255, y: 38.4375}
+  m_AnchoredPosition: {x: -2.5818, y: -25.9973}
+  m_SizeDelta: {x: 251.0083, y: 34.4322}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1109458624
 MonoBehaviour:
@@ -22809,7 +22799,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 12800000, guid: 85329bcbbd70849fe84d3c83c4d31210, type: 3}
+    m_Font: {fileID: 12800000, guid: dfe99d3636ca90148a754e2f79774837, type: 3}
     m_FontSize: 16
     m_FontStyle: 1
     m_BestFit: 0
@@ -23810,7 +23800,7 @@ PrefabInstance:
     - target: {fileID: 4879654010440164587, guid: 7dc17e83f4e9ac545b4fae3cc84cb6cc,
         type: 3}
       propertyPath: m_SizeDelta.y
-      value: -38.591797
+      value: -38.337288
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -24277,7 +24267,7 @@ GameObject:
   - component: {fileID: 1299654883}
   - component: {fileID: 1299654885}
   m_Layer: 0
-  m_Name: Image
+  m_Name: Chat
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -24567,7 +24557,7 @@ Transform:
   m_GameObject: {fileID: 1353312975}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.8, y: 2.48, z: 2.7515619}
+  m_LocalPosition: {x: 9.05, y: 6.2, z: 2.7515619}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -25448,7 +25438,7 @@ MonoBehaviour:
     detectionRadius: 80
     closeProximityRadius: 50
     debugColor: {r: 0.6226415, g: 0.13040228, b: 0.44183475, a: 1}
-  - name: McWeathy
+  - name: McWethy
     entranceGPS: {x: 38.90049, y: -76.99689}
     detectionRadius: 35
     closeProximityRadius: 15
@@ -25875,8 +25865,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -316.97, y: 0.000061035156}
-  m_SizeDelta: {x: -633.949, y: -279.7312}
+  m_AnchoredPosition: {x: -264.8004, y: 14.018616}
+  m_SizeDelta: {x: -529.6099, y: -251.694}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1503913377
 MonoBehaviour:
@@ -26156,7 +26146,7 @@ Transform:
   m_GameObject: {fileID: 1529527541}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 48.4, y: -25.99, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -26183,7 +26173,7 @@ MonoBehaviour:
   - npcName: The Muse with Fading Colors
     npcPrefab: {fileID: 1875208262579020639, guid: 74841f23d482240d281500b0b2dc190e,
       type: 3}
-    associatedBuilding: McWeathy
+    associatedBuilding: McWethy
     spawnPoint: {fileID: 829954904}
   - npcName: Satin
     npcPrefab: {fileID: 1875208262579020639, guid: af66e9027cac64f3f83d923018f10e6e,
@@ -26710,9 +26700,6 @@ MonoBehaviour:
   - "ISA (International Student Association) hosts heart-warming potlucks around
     the holidays when the weather outside is cold enough to knock your socks off\u2026 "
   interactKey: 118
-  hasSapling: 1
-  saplingPrefab: {fileID: 5638119740413968204, guid: b77002f8471b9456f8d0c3515e50e22c,
-    type: 3}
   rewardSound: {fileID: 8300000, guid: dab7626c0a3474a0aba894ac33d149e7, type: 3}
   mobileInteractButton: {fileID: 1299654885}
   inactivePrefab: {fileID: 6131559785892294148, guid: b3d494e286427de438f4ed9b2097482d,
@@ -26729,9 +26716,8 @@ MonoBehaviour:
   showUnlockedPanelOnStart: 0
   simulateEntry: 0
   connectedGate: {fileID: 0}
-  playerTeleportPosition: {fileID: 1353312976}
   gpsUnlockRadius: 50
-  bypassGpsCheck: 0
+  bypassGpsCheck: 1
   activated: 0
   buildingName: Stoner
   usersScrollView: {fileID: 1017116444}
@@ -27280,7 +27266,7 @@ Transform:
   m_GameObject: {fileID: 1681770775}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.25513858, z: -0, w: 0.9669045}
-  m_LocalPosition: {x: 28.42, y: -2.45, z: -48.26}
+  m_LocalPosition: {x: 29.84, y: -8.2, z: -47.45}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -27402,7 +27388,7 @@ PrefabInstance:
     - target: {fileID: 4879654010440164587, guid: 7dc17e83f4e9ac545b4fae3cc84cb6cc,
         type: 3}
       propertyPath: m_SizeDelta.y
-      value: -52.03353
+      value: -51.86386
       objectReference: {fileID: 0}
     - target: {fileID: 5852777773248866128, guid: 7dc17e83f4e9ac545b4fae3cc84cb6cc,
         type: 3}
@@ -27448,8 +27434,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: -1.2792, y: 44.64}
-  m_SizeDelta: {x: 163.4926, y: 89.277}
+  m_AnchoredPosition: {x: 0.7235, y: 52.123775}
+  m_SizeDelta: {x: 257.6173, y: 94.2303}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1730201333
 CanvasRenderer:
@@ -27481,7 +27467,7 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 12800000, guid: dfe99d3636ca90148a754e2f79774837, type: 3}
-    m_FontSize: 16
+    m_FontSize: 24
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 1
@@ -269812,9 +269798,6 @@ MonoBehaviour:
   - This is one of Cornell's appartment building. You get to live here with people
     you choseif you are a senior.
   interactKey: 118
-  hasSapling: 1
-  saplingPrefab: {fileID: 5638119740413968204, guid: b77002f8471b9456f8d0c3515e50e22c,
-    type: 3}
   rewardSound: {fileID: 8300000, guid: dab7626c0a3474a0aba894ac33d149e7, type: 3}
   mobileInteractButton: {fileID: 1299654885}
   inactivePrefab: {fileID: 6131559785892294148, guid: b3d494e286427de438f4ed9b2097482d,
@@ -269831,7 +269814,6 @@ MonoBehaviour:
   showUnlockedPanelOnStart: 0
   simulateEntry: 0
   connectedGate: {fileID: 7270442483274850398}
-  playerTeleportPosition: {fileID: 783852339}
   gpsUnlockRadius: 50
   bypassGpsCheck: 1
   activated: 0
@@ -270267,9 +270249,6 @@ MonoBehaviour:
   - it was then converted into a mortuary until 1963 when the house was purchased
     by Cornell to become Music Practice House.
   interactKey: 118
-  hasSapling: 1
-  saplingPrefab: {fileID: 5638119740413968204, guid: b77002f8471b9456f8d0c3515e50e22c,
-    type: 3}
   rewardSound: {fileID: 8300000, guid: dab7626c0a3474a0aba894ac33d149e7, type: 3}
   mobileInteractButton: {fileID: 1299654885}
   inactivePrefab: {fileID: 6131559785892294148, guid: b3d494e286427de438f4ed9b2097482d,
@@ -270286,9 +270265,8 @@ MonoBehaviour:
   showUnlockedPanelOnStart: 0
   simulateEntry: 0
   connectedGate: {fileID: 0}
-  playerTeleportPosition: {fileID: 833470305}
   gpsUnlockRadius: 50
-  bypassGpsCheck: 0
+  bypassGpsCheck: 1
   activated: 0
   buildingName: PR
   usersScrollView: {fileID: 1017116444}
@@ -271392,7 +271370,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 263408520}
-  - {fileID: 543864026}
   - {fileID: 1742409198}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
