@@ -4,7 +4,7 @@ public class BuildingDataTester : MonoBehaviour
 {
     [Header("Test Settings")]
     public bool testOnStart = true;
-    public string[] testBuildingNames = {"Library", "McWeathy", "PR", "Ebersole", "Stoner"};
+    public string[] testBuildingNames = {"Library", "McWethy", "PR", "Ebersole", "Stoner"};
 
     void Start()
     {

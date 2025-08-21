@@ -404,7 +404,7 @@ public class BuildingInteraction : MonoBehaviour
                         string lockedMessage = !string.IsNullOrEmpty(preUnlockMessage) ? preUnlockMessage : 
                             $"You're close to {buildingInfo.displayName}. Press the button below to unlock this building!";
                         
-                        uiManager.ShowDialog(lockedMessage, 0f, "🔓 Unlock", () => {
+                        uiManager.ShowDialog(lockedMessage, 10f, "🔓 Unlock", () => {
                             // Trigger unlock logic
                             UnlockBuilding();
                         });

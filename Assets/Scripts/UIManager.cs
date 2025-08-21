@@ -849,10 +849,11 @@ private void HideObjectsWithTag(string tag)
         OnBuildingUnlocked.Invoke(building);
         PlayBuildingUnlockCelebration();
         
-        // Show AROS and keep it visible throughout the unlock process
+        // Show AROS with jumping happy animation
         if (aros != null)
         {
             aros.SetActive(true);
+            PlayArosAnimation("jumping-happy");
         }
         
         float celebrationDuration = GetCelebrationDuration();
@@ -986,6 +987,26 @@ private void HideObjectsWithTag(string tag)
         if (hideAros && aros != null)
         {
             aros.SetActive(false);
+        }
+    }
+    
+    // Method to play AROS animation using Animator
+    private void PlayArosAnimation(string animationName)
+    {
+        if (aros != null)
+        {
+            Animator animator = aros.GetComponent<Animator>();
+            if (animator != null && !string.IsNullOrEmpty(animationName))
+            {
+                // Play animation directly by state name
+                // animator.Play(animationName, 0, 0f);
+                animator.SetTrigger("jumping-happy");
+                Debug.Log($"Playing AROS animation: {animationName}");
+            }
+            else
+            {
+                Debug.LogWarning($"AROS Animator component not found or animation name is empty: {animationName}");
+            }
         }
     }
 
