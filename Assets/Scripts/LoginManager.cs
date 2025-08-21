@@ -22,6 +22,27 @@ public class LoginManager : MonoBehaviour
     public GameObject loginPanel;
     public GameObject welcomePanel;
     public Text welcomeText;
+    public Text resetPasswordText;
+
+    [Header("Reset Password UI")]
+    public InputField resetUsernameInput;
+    public Button resetPasswordButton;
+    public GameObject resetPasswordPanel;
+    public Text backToLoginText;
+    public Text resetStatusText;
+
+    [Header("Signup UI")]
+    public InputField signupUsernameInput;
+    public InputField signupPasswordInput;
+    public Dropdown residenceHallDropdown;
+    public Button signupButton;
+    public GameObject signupPanel;
+    public Text toggleText;
+    public Text signupToggleText;
+    public Text verificationStatusText;
+    
+    [Header("Domain Settings")]
+    public bool allowExternalDomains = false;
 
     [Header("Leaderboard")]
     public Text firstPlaceText;
@@ -40,18 +61,85 @@ public class LoginManager : MonoBehaviour
 
     private FirebaseAuth auth;
     private string playerName = "";
+    private bool isSignupMode = false;
+    private bool isResetPasswordMode = false;
+    
+    // Resend verification fields
+    private int resendCountdownSeconds = 10;
+    private Coroutine resendCountdownCoroutine = null;
+    private string lastSignupUserId = null;
+    private string lastSignupEmail = null;
+    private float countdownTimer = 0f;
+    private bool isCountingDown = false;
 
     private async void Start()
     {
         // Initialize UI
         loginPanel.SetActive(true);
+        signupPanel.SetActive(false);
+        resetPasswordPanel.SetActive(false);
         welcomePanel.SetActive(false);
         playButton.interactable = false;
 
         // Setup button listeners
         loginButton.onClick.AddListener(OnLoginClicked);
+        signupButton.onClick.AddListener(OnSignupClicked);
         playButton.onClick.AddListener(OnPlayClicked);
         logoutButton.onClick.AddListener(OnLogoutClicked);
+        resetPasswordButton.onClick.AddListener(OnResetPasswordButtonClicked);
+        
+        // Setup toggle text click listener
+        if (toggleText != null)
+        {
+            var toggleButton = toggleText.gameObject.GetComponent<Button>();
+            if (toggleButton == null)
+            {
+                toggleButton = toggleText.gameObject.AddComponent<Button>();
+            }
+            toggleButton.onClick.AddListener(OnToggleModeClicked);
+        }
+
+        // Setup signup toggle text click listener
+        if (signupToggleText != null)
+        {
+            var signupToggleButton = signupToggleText.gameObject.GetComponent<Button>();
+            if (signupToggleButton == null)
+            {
+                signupToggleButton = signupToggleText.gameObject.AddComponent<Button>();
+            }
+            signupToggleButton.onClick.AddListener(OnToggleModeClicked);
+        }
+
+        // Setup reset password text click listener
+        if (resetPasswordText != null)
+        {
+            var resetPasswordButton = resetPasswordText.gameObject.GetComponent<Button>();
+            if (resetPasswordButton == null)
+            {
+                resetPasswordButton = resetPasswordText.gameObject.AddComponent<Button>();
+            }
+            resetPasswordButton.onClick.AddListener(OnResetPasswordTextClicked);
+        }
+
+        // Setup back to login text click listener
+        if (backToLoginText != null)
+        {
+            var backToLoginButton = backToLoginText.gameObject.GetComponent<Button>();
+            if (backToLoginButton == null)
+            {
+                backToLoginButton = backToLoginText.gameObject.AddComponent<Button>();
+            }
+            backToLoginButton.onClick.AddListener(OnBackToLoginClicked);
+        }
+
+        // Initialize residence hall dropdown
+        InitializeResidenceHallDropdown();
+        
+        // Update toggle text
+        UpdateToggleText();
+        
+        // Update UI based on domain settings
+        UpdateDomainUI();
 
         // Initialize Firebase
         await InitializeFirebase();
@@ -72,43 +160,457 @@ public class LoginManager : MonoBehaviour
 
     private async Task InitializeFirebase()
     {
-        var dependencyStatus = await FirebaseApp.CheckAndFixDependenciesAsync();
-        if (dependencyStatus == DependencyStatus.Available)
+        try
         {
-            auth = FirebaseAuth.DefaultInstance;
-            await FirestoreUtility.Initialize();
+            var dependencyStatus = await FirebaseApp.CheckAndFixDependenciesAsync();
+            if (dependencyStatus == DependencyStatus.Available)
+            {
+                auth = FirebaseAuth.DefaultInstance;
+                await FirestoreUtility.Initialize();
 
-            // Auth state persistence is now automatic in newer Firebase versions
-            auth.StateChanged += AuthStateChanged;
+                // Auth state persistence is now automatic in newer Firebase versions
+                auth.StateChanged += AuthStateChanged;
+                
+                Debug.Log("Firebase initialized successfully");
+            }
+            else
+            {
+                Debug.LogError($"Could not resolve Firebase dependencies: {dependencyStatus}");
+                statusText.text = "Firebase initialization failed";
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Firebase initialization error: {e.Message}");
+            statusText.text = "Firebase initialization error";
+        }
+    }
+
+    private void InitializeResidenceHallDropdown()
+    {
+        if (residenceHallDropdown != null)
+        {
+            residenceHallDropdown.ClearOptions();
+            List<string> residenceHalls = new List<string>
+            {
+                "Select Residence Hall",
+                "Tarr Hall",
+                "Pfeiffer Hall",
+                "Dows Hall",
+                "Bowman Carter Hall",
+                "Merner Hall",
+                "Olin Hall",
+                "Pauley-Rorem Hall",
+                "Russell Hall",
+                "Smith Hall",
+                "Wilch Appartments",
+                "Other"
+            };
+            residenceHallDropdown.AddOptions(residenceHalls);
+            residenceHallDropdown.value = 0;
+        }
+    }
+
+    private void OnToggleModeClicked()
+    {
+        isSignupMode = !isSignupMode;
+        UpdateToggleText();
+        TogglePanels();
+    }
+
+    private void UpdateToggleText()
+    {
+        if (toggleText != null)
+        {
+            toggleText.text = isSignupMode ? "Already have an account? Login" : "Create Account";
+        }
+        
+        if (signupToggleText != null)
+        {
+            signupToggleText.text = "Already have an account? Login";
+        }
+    }
+    
+    private void UpdateDomainUI()
+    {
+        // Update username input placeholder if available
+        if (signupUsernameInput != null)
+        {
+            var placeholder = signupUsernameInput.placeholder as Text;
+            if (placeholder != null)
+            {
+                placeholder.text = allowExternalDomains ? "Enter full email address" : "Enter username (without @cornellcollege.edu)";
+            }
+        }
+    }
+    
+    private bool IsValidEmail(string email)
+    {
+        try
+        {
+            var addr = new System.Net.Mail.MailAddress(email);
+            return addr.Address == email;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private void TogglePanels()
+    {
+        loginPanel.SetActive(!isSignupMode && !isResetPasswordMode);
+        signupPanel.SetActive(isSignupMode && !isResetPasswordMode);
+        resetPasswordPanel.SetActive(isResetPasswordMode);
+        
+        // Clear all status texts when toggling
+        ClearSignupStatus();
+        
+        // Reset button states
+        loginButton.interactable = true;
+        signupButton.interactable = true;
+        resetPasswordButton.interactable = true;
+        
+        // Reset signup button text and listeners when switching panels
+        if (signupButton != null)
+        {
+            var buttonText = signupButton.GetComponentInChildren<Text>();
+            if (buttonText != null)
+            {
+                buttonText.text = "Sign Up";
+            }
+            signupButton.onClick.RemoveAllListeners();
+            signupButton.onClick.AddListener(OnSignupClicked);
+            
+            // Stop any running countdown
+            if (resendCountdownCoroutine != null)
+            {
+                StopCoroutine(resendCountdownCoroutine);
+                resendCountdownCoroutine = null;
+            }
+            isCountingDown = false;
+        }
+    }
+
+    // ---- Signup status helpers ----
+    private void ShowSignupStatus(string message)
+    {
+        if (statusText != null)
+        {
+            statusText.text = message;
+        }
+        // Optionally mirror to verification text if present
+        if (verificationStatusText != null && string.IsNullOrEmpty(message) == false)
+        {
+            // Keep the same message visible in signup panel too
+            verificationStatusText.text = message;
+        }
+    }
+
+    private void ClearSignupStatus()
+    {
+        if (statusText != null) statusText.text = "";
+        if (verificationStatusText != null) verificationStatusText.text = "";
+    }
+
+    private async void OnSignupClicked()
+    {
+        // Defensive: make sure inputs exist
+        if (signupUsernameInput == null || signupPasswordInput == null || residenceHallDropdown == null)
+        {
+            ShowSignupStatus("Signup form not configured. Please contact support.");
+            return;
+        }
+
+        string username = signupUsernameInput.text;
+        string password = signupPasswordInput.text;
+        string residenceHall = residenceHallDropdown.options[residenceHallDropdown.value].text;
+
+        // Clear previous status
+        ClearSignupStatus();
+
+        // Validate inputs
+        if (string.IsNullOrEmpty(username))
+        {
+            ShowSignupStatus("Please enter a username");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(password))
+        {
+            ShowSignupStatus("Please enter a password");
+            return;
+        }
+
+        if (password.Length < 6)
+        {
+            ShowSignupStatus("Password must be at least 6 characters long");
+            return;
+        }
+
+        if (residenceHallDropdown.value == 0)
+        {
+            ShowSignupStatus("Please select a residence hall");
+            return;
+        }
+
+        // Validate username format
+        string email;
+        if (allowExternalDomains)
+        {
+            // When external domains are allowed, treat username as full email
+            if (!username.Contains("@"))
+            {
+                ShowSignupStatus("When external domains are enabled, please enter a full email address");
+                return;
+            }
+            
+            // Basic email validation
+            if (!IsValidEmail(username))
+            {
+                ShowSignupStatus("Please enter a valid email address");
+                return;
+            }
+            
+            email = username;
         }
         else
         {
-            Debug.LogError($"Could not resolve Firebase dependencies: {dependencyStatus}");
+            // Original behavior - validate username format (no spaces, special characters)
+            if (username.Contains(" ") || username.Contains("@"))
+            {
+                ShowSignupStatus("Username cannot contain spaces or @ symbol");
+                return;
+            }
+            // Convert username to Cornell College email format
+            email = $"{username}@cornellcollege.edu";
+        }
+
+        ShowSignupStatus("Creating account...");
+        signupButton.interactable = false;
+
+        // Check if Firebase Auth is properly initialized
+        if (auth == null)
+        {
+            ShowSignupStatus("Firebase not initialized. Please restart the app.");
+            signupButton.interactable = true;
+            return;
+        }
+
+        try
+        {
+            // Create Firebase user
+            var authResult = await auth.CreateUserWithEmailAndPasswordAsync(email, password);
+            var firebaseUser = authResult != null ? authResult.User : null;
+
+            // Resolve a reliable userId (fallback to CurrentUser after reload)
+            string userId = firebaseUser != null ? firebaseUser.UserId : null;
+            if (string.IsNullOrEmpty(userId))
+            {
+                if (auth.CurrentUser != null)
+                {
+                    try { await auth.CurrentUser.ReloadAsync(); } catch { }
+                    userId = auth.CurrentUser.UserId;
+                }
+            }
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                throw new System.Exception("Failed to determine user id for the new account");
+            }
+
+            // Send verification email (use whichever user instance is available)
+            var userToVerify = firebaseUser ?? auth.CurrentUser;
+            if (userToVerify == null)
+            {
+                throw new System.Exception("Failed to access new user instance to send verification email");
+            }
+            await userToVerify.SendEmailVerificationAsync();
+
+            // Store for resend
+            lastSignupUserId = userId;
+            lastSignupEmail = email;
+            
+            // Create user profile in Firestore using UserService
+            var userService = new RamRoutes.Services.UserService();
+            await userService.CreateUser(userId, username, email, residenceHall);
+            
+            // Sign out the user immediately since they need to verify email first
+            auth.SignOut();
+            
+            // Success messaging to status text
+            ShowSignupStatus($"Confirmation link sent to {email}. Check your mailbox.");
+            
+            // Stay on signup panel, start countdown for resend
+            if (resendCountdownCoroutine != null)
+            {
+                Debug.Log("Stopping existing countdown coroutine");
+                StopCoroutine(resendCountdownCoroutine);
+            }
+            Debug.Log("Starting resend countdown after successful signup");
+            
+            // Start both coroutine and Update-based countdown as backup
+            // The Update method will be the primary countdown mechanism
+            countdownTimer = resendCountdownSeconds;
+            isCountingDown = true;
+            Debug.Log($"Started Update-based countdown with timer={countdownTimer}");
+            
+            // Also start coroutine as backup, but Update method will handle the countdown
+            resendCountdownCoroutine = StartCoroutine(ResendCountdownRoutine());
+            
+            if (resendCountdownCoroutine == null)
+            {
+                Debug.LogError("Failed to start countdown coroutine! Using Update-based timer.");
+            }
+            else
+            {
+                Debug.Log("Countdown coroutine started successfully");
+            }
+        }
+        catch (FirebaseException e)
+        {
+            ShowSignupStatus(GetFirebaseErrorMessage(e));
+            signupButton.interactable = true;
+        }
+        catch (System.Exception e)
+        {
+            ShowSignupStatus("Failed to create account: " + e.Message);
+            signupButton.interactable = true;
         }
     }
 
-    private void AuthStateChanged(object sender, System.EventArgs eventArgs)
+    private IEnumerator ResendCountdownRoutine()
+    {
+        Debug.Log("ResendCountdownRoutine started");
+        int secondsLeft = resendCountdownSeconds;
+        signupButton.interactable = false;
+        var buttonText = signupButton.GetComponentInChildren<Text>();
+        
+        if (buttonText == null)
+        {
+            Debug.LogError("Button text component not found!");
+            signupButton.interactable = true;
+            yield break;
+        }
+        
+        Debug.Log($"Button text component found. Starting countdown from {secondsLeft} seconds");
+        
+        for (int i = secondsLeft; i > 0; i--)
+        {
+            if (!isCountingDown) // Check if countdown was cancelled
+            {
+                Debug.Log("Countdown was cancelled, exiting coroutine");
+                yield break;
+            }
+            
+            buttonText.text = $"Resend in {i}s";
+            Debug.Log($"Coroutine: Updated button text to: {buttonText.text}, seconds left: {i}");
+            
+            yield return new WaitForSecondsRealtime(1f); // Use WaitForSecondsRealtime instead
+            
+            Debug.Log($"Coroutine: After waiting 1 second, continuing loop. Next iteration: {i-1}");
+        }
+        
+        Debug.Log("Coroutine countdown finished, enabling resend");
+        isCountingDown = false; // Stop the Update-based timer
+        buttonText.text = "Resend Confirmation Email";
+        signupButton.interactable = true;
+        signupButton.onClick.RemoveAllListeners();
+        signupButton.onClick.AddListener(OnResendConfirmationClicked);
+        Debug.Log("Coroutine: Resend button is now enabled and listener added");
+    }
+
+    private async void OnResendConfirmationClicked()
+    {
+        Debug.Log("Resend confirmation clicked");
+        signupButton.interactable = false;
+        var buttonText = signupButton.GetComponentInChildren<Text>();
+        
+        if (buttonText != null)
+        {
+            buttonText.text = "Sending...";
+        }
+        
+        ShowSignupStatus($"Resending confirmation email to {lastSignupEmail}...");
+        
+        try
+        {
+            // Since user already exists, we can't create again. Instead, provide helpful message.
+            ShowSignupStatus($"If you haven't received the verification email, please check your spam folder. The email was sent to {lastSignupEmail}.");
+            Debug.Log("Showed message about checking spam folder");
+        }
+        catch (Exception e)
+        {
+            ShowSignupStatus("Failed to resend confirmation email: " + e.Message);
+            Debug.LogError($"Error in resend: {e.Message}");
+        }
+        
+        // Reset button text and restart countdown
+        if (buttonText != null)
+        {
+            buttonText.text = "Sign Up";
+        }
+        
+        signupButton.onClick.RemoveAllListeners();
+        signupButton.onClick.AddListener(OnSignupClicked);
+        
+        // Restart countdown
+        if (resendCountdownCoroutine != null)
+        {
+            StopCoroutine(resendCountdownCoroutine);
+        }
+        
+        Debug.Log("Restarting countdown coroutine");
+        resendCountdownCoroutine = StartCoroutine(ResendCountdownRoutine());
+        countdownTimer = resendCountdownSeconds;
+        isCountingDown = true;
+    }
+
+    private async void AuthStateChanged(object sender, System.EventArgs eventArgs)
     {
         if (auth.CurrentUser != null)
         {
-            // User is signed in
-            HandleSuccessfulLogin(auth.CurrentUser.Email);
+            await auth.CurrentUser.ReloadAsync(); // Refresh to get latest verification status
+            
+            if (auth.CurrentUser.IsEmailVerified)
+            {
+                // User is signed in and email is verified
+                HandleSuccessfulLogin(auth.CurrentUser.Email);
+            }
+            else
+            {
+                // User is signed in but email is not verified
+                statusText.text = "Please verify your email before accessing the app.";
+                auth.SignOut();
+            }
         }
     }
 
-    private void CheckAuthState()
+    private async void CheckAuthState()
     {
         if (auth != null && auth.CurrentUser != null)
         {
-            HandleSuccessfulLogin(auth.CurrentUser.Email);
+            await auth.CurrentUser.ReloadAsync(); // Refresh to get latest verification status
+            
+            if (auth.CurrentUser.IsEmailVerified)
+            {
+                HandleSuccessfulLogin(auth.CurrentUser.Email);
+            }
+            else
+            {
+                statusText.text = "Please verify your email before accessing the app.";
+                auth.SignOut();
+            }
         }
     }
 
     private async void HandleSuccessfulLogin(string email)
     {
+        // Extract username from email - use the part before @ for all domains
         playerName = email.Split('@')[0];
         PlayerPrefs.SetString("PlayerName", playerName);
         loginPanel.SetActive(false);
+        signupPanel.SetActive(false);
         welcomePanel.SetActive(true);
         playButton.interactable = true;
         statusText.text = "";
@@ -137,10 +639,10 @@ public class LoginManager : MonoBehaviour
 
     private async void OnLoginClicked()
     {
-        string email = emailInput.text;
+        string usernameOrEmail = emailInput.text;
         string password = passwordInput.text;
 
-        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
+        if (string.IsNullOrEmpty(usernameOrEmail) || string.IsNullOrEmpty(password))
         {
             statusText.text = "Please enter email and password";
             return;
@@ -149,9 +651,50 @@ public class LoginManager : MonoBehaviour
         statusText.text = "Logging in...";
         loginButton.interactable = false;
 
+        // Check if Firebase Auth is properly initialized
+        if (auth == null)
+        {
+            statusText.text = "Firebase not initialized. Please restart the app.";
+            loginButton.interactable = true;
+            return;
+        }
+
+        // Convert username to full email if needed
+        string email;
+        if (usernameOrEmail.Contains("@"))
+        {
+            email = usernameOrEmail;
+        }
+        else
+        {
+            email = $"{usernameOrEmail}@cornellcollege.edu";
+        }
+
         try
         {
-            await auth.SignInWithEmailAndPasswordAsync(email, password);
+            var result = await auth.SignInWithEmailAndPasswordAsync(email, password);
+            var user = result.User;
+            
+            // Check if email is verified
+            await user.ReloadAsync(); // Refresh user data to get latest verification status
+            
+            if (!user.IsEmailVerified)
+            {
+                statusText.text = "Email not verified";
+                // Provide option to resend verification email
+                var resendButton = GameObject.Find("ResendVerificationButton");
+                if (resendButton == null)
+                {
+                    statusText.text = "Please verify your email before logging in. Check your inbox for the verification link.";
+                }
+                
+                // Sign out the user
+                auth.SignOut();
+                loginButton.interactable = true;
+                return;
+            }
+            
+            // Email is verified, proceed with login
             // AuthStateChanged will handle the UI update
         }
         catch (FirebaseException e)
@@ -159,6 +702,104 @@ public class LoginManager : MonoBehaviour
             statusText.text = GetFirebaseErrorMessage(e);
             loginButton.interactable = true;
         }
+    }
+
+    private async void OnResetPasswordClicked()
+    {
+        string usernameOrEmail = emailInput.text;
+
+        if (string.IsNullOrEmpty(usernameOrEmail))
+        {
+            statusText.text = "Please enter your Cornell username in the email field, then click reset password again.";
+            return;
+        }
+
+        // Check if Firebase Auth is properly initialized
+        if (auth == null)
+        {
+            statusText.text = "Firebase not initialized. Please restart the app.";
+            return;
+        }
+
+        string email;
+        if (usernameOrEmail.Contains("@"))
+        {
+            email = usernameOrEmail;
+        }
+        else
+        {
+            email = $"{usernameOrEmail}@cornellcollege.edu";
+        }
+
+        try
+        {
+            await auth.SendPasswordResetEmailAsync(email);
+            statusText.text = $"If you are registered with {email}, you should get a link to reset your password.";
+        }
+        catch (FirebaseException e)
+        {
+            statusText.text = GetFirebaseErrorMessage(e);
+        }
+    }
+
+    private void OnResetPasswordTextClicked()
+    {
+        isSignupMode = false;
+        isResetPasswordMode = true;
+        TogglePanels();
+    }
+
+    private async void OnResetPasswordButtonClicked()
+    {
+        string username = resetUsernameInput.text;
+
+        if (string.IsNullOrEmpty(username))
+        {
+            if (resetStatusText != null)
+                resetStatusText.text = "Please enter your Cornell username.";
+            return;
+        }
+
+        resetPasswordButton.interactable = false;
+        if (resetStatusText != null)
+            resetStatusText.text = "Sending reset email...";
+
+        // Check if Firebase Auth is properly initialized
+        if (auth == null)
+        {
+            if (resetStatusText != null)
+                resetStatusText.text = "Firebase not initialized. Please restart the app.";
+            resetPasswordButton.interactable = true;
+            return;
+        }
+
+        string email = $"{username}@cornellcollege.edu";
+
+        try
+        {
+            await auth.SendPasswordResetEmailAsync(email);
+            if (resetStatusText != null)
+                resetStatusText.text = $"If you are registered with {email}, you should get a link to reset your password.";
+        }
+        catch (FirebaseException e)
+        {
+            if (resetStatusText != null)
+                resetStatusText.text = GetFirebaseErrorMessage(e);
+        }
+        finally
+        {
+            resetPasswordButton.interactable = true;
+        }
+    }
+
+    private void OnBackToLoginClicked()
+    {
+        isSignupMode = false;
+        isResetPasswordMode = false;
+        TogglePanels();
+        resetUsernameInput.text = "";
+        if (resetStatusText != null)
+            resetStatusText.text = "";
     }
 
     private void OnLogoutClicked()
@@ -169,11 +810,30 @@ public class LoginManager : MonoBehaviour
             PlayerPrefs.DeleteKey("PlayerName");
         }
 
-        loginPanel.SetActive(true);
+        // Reset to login mode
+        isSignupMode = false;
+        isResetPasswordMode = false;
+        UpdateToggleText();
+        TogglePanels();
+        
         welcomePanel.SetActive(false);
         playButton.interactable = false;
+        
+        // Clear input fields
         emailInput.text = "";
         passwordInput.text = "";
+        signupUsernameInput.text = "";
+        signupPasswordInput.text = "";
+        resetUsernameInput.text = "";
+        if (residenceHallDropdown != null)
+        {
+            residenceHallDropdown.value = 0;
+        }
+        if (verificationStatusText != null)
+        {
+            verificationStatusText.text = "";
+        }
+        
         statusText.text = "Logged out successfully";
     }
 
@@ -186,7 +846,7 @@ public class LoginManager : MonoBehaviour
             string msg when msg.Contains("WRONG_PASSWORD") => "Incorrect password",
             string msg when msg.Contains("TOO_MANY_REQUESTS") => "Too many attempts. Try again later",
             string msg when msg.Contains("USER_DISABLED") => "Account disabled",
-            _ => "Login failed: " + e.Message
+            _ => "Login failed: Incorrect Credentials"
         };
     }
 
@@ -394,6 +1054,44 @@ public class LoginManager : MonoBehaviour
         }
     }    void Update()
     {
+        // Handle countdown timer as backup to coroutine
+        if (isCountingDown)
+        {
+            countdownTimer -= Time.deltaTime;
+            var buttonText = signupButton?.GetComponentInChildren<Text>();
+            
+            if (buttonText != null)
+            {
+                int secondsLeft = Mathf.CeilToInt(countdownTimer);
+                if (secondsLeft > 0)
+                {
+                    buttonText.text = $"Resend in {secondsLeft}s";
+                    // Debug.Log($"Update: countdownTimer={countdownTimer:F1}, secondsLeft={secondsLeft}");
+                }
+                else
+                {
+                    // Countdown finished
+                    isCountingDown = false;
+                    buttonText.text = "Resend Confirmation Email";
+                    signupButton.interactable = true;
+                    signupButton.onClick.RemoveAllListeners();
+                    signupButton.onClick.AddListener(OnResendConfirmationClicked);
+                    Debug.Log("Update-based countdown finished, enabling resend");
+                    
+                    // Stop the coroutine if it's still running
+                    if (resendCountdownCoroutine != null)
+                    {
+                        StopCoroutine(resendCountdownCoroutine);
+                        resendCountdownCoroutine = null;
+                    }
+                }
+            }
+            else
+            {
+                Debug.LogError("Update: Button text component not found during countdown");
+            }
+        }
+        
         // Auto-scroll the events list
         if (trialsScrollView != null && !isScrollingPaused && trialContentParent.childCount > 0)
         {

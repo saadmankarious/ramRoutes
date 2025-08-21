@@ -233,5 +233,49 @@ namespace RamRoutes.Services
                 throw; // Re-throw to allow proper error handling in LoginManager
             }
         }
+
+        public async Task CreateUser(string userId, string username, string email, string residenceHall)
+        {
+            // Defensive checks and normalization
+            userId = string.IsNullOrWhiteSpace(userId) ? null : userId.Trim();
+            username = username?.Trim();
+            email = email?.Trim();
+            residenceHall = residenceHall?.Trim();
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                throw new System.ArgumentException("CreateUser called with empty userId; cannot create Firestore document path.", nameof(userId));
+            }
+
+            if (db == null)
+            {
+                throw new System.InvalidOperationException("Firestore db is not initialized in UserService.");
+            }
+
+            try
+            {
+                var now = Timestamp.FromDateTime(DateTime.UtcNow);
+                var userData = new Dictionary<string, object>
+                {
+                    { "id", userId },
+                    { "name", username },
+                    { "email", email },
+                    { "residenceHall", residenceHall },
+                    { "points", 0 },
+                    { "createdAt", now },
+                    { "lastLoginAt", now },
+                    { "currentBuilding", null },
+                    { "emailVerified", false },
+                    { "notificationToken", null }
+                };
+
+                await db.Collection("users").Document(userId).SetAsync(userData);
+            }
+            catch (Exception ex)
+            {
+                UnityEngine.Debug.LogError($"UserService.CreateUser failed for userId='{userId}': {ex.Message}\n{ex.StackTrace}");
+                throw;
+            }
+        }
     }
 }
