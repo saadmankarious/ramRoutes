@@ -435,6 +435,10 @@ public class LoginManager : MonoBehaviour
             var userService = new RamRoutes.Services.UserService();
             await userService.CreateUser(userId, username, email, residenceHall);
             
+            // Mark this as a new user for onboarding
+            PlayerPrefs.SetInt($"FirstTime_{userId}", 1);
+            PlayerPrefs.Save();
+            
             // Sign out the user immediately since they need to verify email first
             auth.SignOut();
             
@@ -609,12 +613,7 @@ public class LoginManager : MonoBehaviour
         // Extract username from email - use the part before @ for all domains
         playerName = email.Split('@')[0];
         PlayerPrefs.SetString("PlayerName", playerName);
-        loginPanel.SetActive(false);
-        signupPanel.SetActive(false);
-        welcomePanel.SetActive(true);
-        playButton.interactable = true;
-        statusText.text = "";
-
+        
         // Retrieve and cache current user profile
         var userService = new RamRoutes.Services.UserService();
         string userId = auth.CurrentUser != null ? auth.CurrentUser.UserId : "unknown";
@@ -633,6 +632,26 @@ public class LoginManager : MonoBehaviour
         // Retrieve user profile after updating login time
         var user = await userService.RetrieveAndCacheCurrentUserProfile(userId);
         welcomeText.text = $"Welcome, {user.name.Split(" ")[0]}!";
+
+        // Check if this is a first-time user
+        bool isFirstTime = PlayerPrefs.GetInt($"FirstTime_{userId}", 0) == 1;
+        
+        if (isFirstTime)
+        {
+            // First-time user - redirect directly to onboarding
+            PlayerPrefs.SetInt($"FirstTime_{userId}", 0); // Mark as no longer first time
+            PlayerPrefs.Save();
+            SceneManager.LoadScene("Onboarding");
+        }
+        else
+        {
+            // Returning user - show welcome screen
+            loginPanel.SetActive(false);
+            signupPanel.SetActive(false);
+            welcomePanel.SetActive(true);
+            playButton.interactable = true;
+            statusText.text = "";
+        }
 
         // Ensure Firebase Messaging is initialized
     }
