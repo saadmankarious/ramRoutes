@@ -120,6 +120,12 @@ public class BuildingInteraction : MonoBehaviour
             {
                 buildingUnlockedPanel.SetActive(false);
 
+                // Reset AROS visibility when unlock panel is closed
+                if (uiManager != null)
+                {
+                    uiManager.ResetArosVisibility(true);
+                }
+
                 if (connectedGate != null)
                 {
                     connectedGate.UnlockGate();

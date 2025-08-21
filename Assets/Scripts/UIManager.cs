@@ -77,6 +77,7 @@ public class UIManager : MonoBehaviour
     private Coroutine dialogCoroutine; // Track the entire dialog sequence
     private bool isDialogActive = false; // Flag to prevent overlapping dialogs
     private System.Action currentDialogAction; // Store current dialog action
+    private bool keepArosVisible = false; // Flag to keep AROS visible during unlock sequences
 
     private bool isPaused = false;
 
@@ -493,6 +494,13 @@ private void HideObjectsWithTag(string tag)
         isDialogActive = true;
         currentDialogAction = onActionButtonClick;
         
+        // Reset the keep AROS visible flag for new dialog sequences
+        // Unless this is part of an unlock sequence (action button present)
+        if (onActionButtonClick == null)
+        {
+            keepArosVisible = false;
+        }
+        
         try 
         {
             dialogPanel.SetActive(true);
@@ -563,8 +571,8 @@ private void HideObjectsWithTag(string tag)
     {
         dialogPanel?.SetActive(false);
         
-        // Hide AROS when dialog is closed
-        if (aros != null)
+        // Only hide AROS if we're not in an unlock sequence
+        if (!keepArosVisible && aros != null)
         {
             aros.SetActive(false);
         }
@@ -655,7 +663,8 @@ private void HideObjectsWithTag(string tag)
         OnTimeExpired.RemoveAllListeners();
         Time.timeScale = 1f;
         
-        // Make sure AROS is hidden when scene ends
+        // Reset flags and hide AROS when scene ends
+        keepArosVisible = false;
         if (aros != null)
         {
             aros.SetActive(false);
@@ -833,11 +842,14 @@ private void HideObjectsWithTag(string tag)
 
     public async Task<bool> HandleBuildingUnlock(BuildingInteraction building)
     {
+        // Set flag to keep AROS visible during unlock sequence
+        keepArosVisible = true;
+        
         // Play celebration
         OnBuildingUnlocked.Invoke(building);
         PlayBuildingUnlockCelebration();
         
-        // Show AROS without animation
+        // Show AROS and keep it visible throughout the unlock process
         if (aros != null)
         {
             aros.SetActive(true);
@@ -850,10 +862,18 @@ private void HideObjectsWithTag(string tag)
         // Update UI elements using building data from JSON
         UpdateBuildingUI(building.buildingName);
 
+        // Make sure AROS is still visible when showing unlock panel
+        if (aros != null)
+        {
+            aros.SetActive(true);
+        }
+
         // Show unlock panel
         building.ShowBuildingUnlockedPanel();
         await building.DisplayUsersWhoUnlocked();
 
+        // Keep the flag active so AROS stays visible until manually hidden
+        // Note: keepArosVisible will be reset when a new dialog sequence starts
         return true;
     }
 
@@ -954,6 +974,16 @@ private void HideObjectsWithTag(string tag)
     public void HideAros()
     {
         if (aros != null)
+        {
+            aros.SetActive(false);
+        }
+    }
+    
+    // Method to reset AROS visibility control and optionally hide it
+    public void ResetArosVisibility(bool hideAros = true)
+    {
+        keepArosVisible = false;
+        if (hideAros && aros != null)
         {
             aros.SetActive(false);
         }
