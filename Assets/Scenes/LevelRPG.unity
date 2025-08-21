@@ -1083,9 +1083,6 @@ MonoBehaviour:
   eventsContentParent: {fileID: 1541338460}
   eventPrefab: {fileID: 2000664500281949103, guid: 7dc17e83f4e9ac545b4fae3cc84cb6cc,
     type: 3}
-  buildingNameText: {fileID: 670941118}
-  buildingDescriptionText: {fileID: 235215558}
-  unlockMessageText: {fileID: 1975607410}
   preUnlockMessage: 
   showUnlockedPanelOnStart: 0
   simulateEntry: 0
@@ -1837,9 +1834,6 @@ MonoBehaviour:
   eventsContentParent: {fileID: 1541338460}
   eventPrefab: {fileID: 2000664500281949103, guid: 7dc17e83f4e9ac545b4fae3cc84cb6cc,
     type: 3}
-  buildingNameText: {fileID: 670941118}
-  buildingDescriptionText: {fileID: 235215558}
-  unlockMessageText: {fileID: 1975607410}
   preUnlockMessage: 
   showUnlockedPanelOnStart: 0
   simulateEntry: 0
@@ -2218,7 +2212,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: The Commons doors finally opened. Dust hangs heavy in the air.
+  m_Text: 
 --- !u!222 &235215559
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -22175,9 +22169,6 @@ MonoBehaviour:
   eventsContentParent: {fileID: 1541338460}
   eventPrefab: {fileID: 2000664500281949103, guid: 7dc17e83f4e9ac545b4fae3cc84cb6cc,
     type: 3}
-  buildingNameText: {fileID: 670941118}
-  buildingDescriptionText: {fileID: 235215558}
-  unlockMessageText: {fileID: 1975607410}
   preUnlockMessage: 
   showUnlockedPanelOnStart: 0
   simulateEntry: 0
@@ -26734,9 +26725,6 @@ MonoBehaviour:
   eventsContentParent: {fileID: 1541338460}
   eventPrefab: {fileID: 2000664500281949103, guid: 7dc17e83f4e9ac545b4fae3cc84cb6cc,
     type: 3}
-  buildingNameText: {fileID: 670941118}
-  buildingDescriptionText: {fileID: 235215558}
-  unlockMessageText: {fileID: 1975607410}
   preUnlockMessage: 
   showUnlockedPanelOnStart: 0
   simulateEntry: 0
@@ -257605,8 +257593,8 @@ MonoBehaviour:
     type: 3}
   padding: 0.5
   buildingTitle: {fileID: 391651270}
-  buildingDescription: {fileID: 1975607410}
-  buildingUnlockedMessage: {fileID: 0}
+  buildingDescription: {fileID: 235215558}
+  buildingUnlockedMessage: {fileID: 1975607410}
   celebrationPlaybackSpeed: 1
   celebrationDuration: 2
   trashText: {fileID: 0}
@@ -269839,16 +269827,13 @@ MonoBehaviour:
   eventsContentParent: {fileID: 1541338460}
   eventPrefab: {fileID: 2000664500281949103, guid: 7dc17e83f4e9ac545b4fae3cc84cb6cc,
     type: 3}
-  buildingNameText: {fileID: 670941118}
-  buildingDescriptionText: {fileID: 235215558}
-  unlockMessageText: {fileID: 1975607410}
   preUnlockMessage: 
   showUnlockedPanelOnStart: 0
   simulateEntry: 0
   connectedGate: {fileID: 7270442483274850398}
   playerTeleportPosition: {fileID: 783852339}
   gpsUnlockRadius: 50
-  bypassGpsCheck: 0
+  bypassGpsCheck: 1
   activated: 0
   buildingName: TC
   usersScrollView: {fileID: 1017116444}
@@ -270297,9 +270282,6 @@ MonoBehaviour:
   eventsContentParent: {fileID: 1541338460}
   eventPrefab: {fileID: 2000664500281949103, guid: 7dc17e83f4e9ac545b4fae3cc84cb6cc,
     type: 3}
-  buildingNameText: {fileID: 670941118}
-  buildingDescriptionText: {fileID: 235215558}
-  unlockMessageText: {fileID: 1975607410}
   preUnlockMessage: 
   showUnlockedPanelOnStart: 0
   simulateEntry: 0
@@ -271054,8 +271036,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'The Commons doors finally opened. Dust hangs heavy in the air, but I swear
-    I felt a shift. '
+  m_Text: 
 --- !u!222 &1975607411
 CanvasRenderer:
   m_ObjectHideFlags: 0

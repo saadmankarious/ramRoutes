@@ -36,9 +36,6 @@ public class BuildingInteraction : MonoBehaviour
     [SerializeField] private GameObject buildingEventsPanel;
     [SerializeField] private Transform eventsContentParent;
     [SerializeField] private GameObject eventPrefab;
-    [SerializeField] private Text buildingNameText; // Text component to display building name
-    [SerializeField] private Text buildingDescriptionText; // Text component to display building description
-    [SerializeField] private Text unlockMessageText; // Text component to display unlock message
     public string preUnlockMessage;
 
     [Header("User Location Display")]
@@ -254,7 +251,7 @@ public class BuildingInteraction : MonoBehaviour
             string lockedMessage = !string.IsNullOrEmpty(preUnlockMessage) ? preUnlockMessage : 
                 $"You're now close to {buildingInfo.displayName}. Press the button below to unlock this building!";
             
-            uiManager.ShowDialog(lockedMessage, 0f, "jumping-happy", "🔓 Unlock", () => {
+            uiManager.ShowDialog(lockedMessage, 0f, "🔓 Unlock", () => {
                 // Trigger unlock logic
                 UnlockBuilding();
             });
@@ -266,7 +263,7 @@ public class BuildingInteraction : MonoBehaviour
                 $"You've moved away from {buildingInfo.displayName}. You need to be physically close to this location to unlock it.";
             
             // Show message without unlock button since player is not close enough
-            uiManager.ShowDialog(distanceMessage, 5f, "aros-neutral");
+            uiManager.ShowDialog(distanceMessage, 5f);
         }
     }
 
@@ -362,45 +359,6 @@ public class BuildingInteraction : MonoBehaviour
         if (other.CompareTag("Player") || other.CompareTag("Spaceship"))
         {
             isPlayerInRange = true;
-            
-            // Set building name in UI text when player enters this building's area
-            if (buildingNameText != null && !string.IsNullOrEmpty(buildingName))
-            {
-                buildingNameText.text = buildingName;
-                Debug.Log($"BuildingInteraction: Set building name text to '{buildingName}' for current interaction");
-            }
-            
-            // Set building description for any building (activated or not)
-            if (buildingDescriptionText != null && !string.IsNullOrEmpty(buildingName))
-            {
-                var buildingInfo = BuildingDataManager.GetBuildingInfo(buildingName);
-                if (buildingInfo != null && !string.IsNullOrEmpty(buildingInfo.description))
-                {
-                    buildingDescriptionText.text = buildingInfo.description;
-                    Debug.Log($"BuildingInteraction: Set building description for '{buildingName}': {buildingInfo.description}");
-                }
-                else
-                {
-                    buildingDescriptionText.text = "No description available.";
-                    Debug.Log($"BuildingInteraction: No description found for building '{buildingName}'");
-                }
-            }
-            
-            // Set unlock message for any building (activated or not)
-            if (unlockMessageText != null && !string.IsNullOrEmpty(buildingName))
-            {
-                var buildingInfo = BuildingDataManager.GetBuildingInfo(buildingName);
-                if (buildingInfo != null && !string.IsNullOrEmpty(buildingInfo.unlockedMessage))
-                {
-                    unlockMessageText.text = buildingInfo.unlockedMessage;
-                    Debug.Log($"BuildingInteraction: Set unlock message for '{buildingName}': {buildingInfo.unlockedMessage}");
-                }
-                else
-                {
-                    unlockMessageText.text = "No unlock message available.";
-                    Debug.Log($"BuildingInteraction: No unlock message found for building '{buildingName}'");
-                }
-            }
 
             if (mobileInteractButton != null)
             {
@@ -440,7 +398,7 @@ public class BuildingInteraction : MonoBehaviour
                         string lockedMessage = !string.IsNullOrEmpty(preUnlockMessage) ? preUnlockMessage : 
                             $"You're close to {buildingInfo.displayName}. Press the button below to unlock this building!";
                         
-                        uiManager.ShowDialog(lockedMessage, 0f, "jumping-happy", "🔓 Unlock", () => {
+                        uiManager.ShowDialog(lockedMessage, 0f, "🔓 Unlock", () => {
                             // Trigger unlock logic
                             UnlockBuilding();
                         });
@@ -452,7 +410,7 @@ public class BuildingInteraction : MonoBehaviour
                             $"This building ({buildingInfo.displayName}) is locked. You need to be physically close to this location to unlock it using GPS.";
                         
                         // Show message without unlock button since player is not close enough
-                        uiManager.ShowDialog(distanceMessage, 10f, "aros-neutral");
+                        uiManager.ShowDialog(distanceMessage, 10f);
                     }
                 }
             }
