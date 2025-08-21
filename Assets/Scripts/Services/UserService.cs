@@ -48,13 +48,14 @@ namespace RamRoutes.Services
                 DocumentSnapshot doc = await db.Collection("users").Document(userId).GetSnapshotAsync();
                 if (doc.Exists)
                 {
-                    var data = doc.ToDictionary();                    string id = data.ContainsKey("id") ? data["id"].ToString() : "";
-                    string token = data.ContainsKey("notificationToken") ? data["notificationToken"].ToString() : "";
-                    string name = data.ContainsKey("name") ? data["name"].ToString() : "";
-                    string email = data.ContainsKey("email") ? data["email"].ToString() : "";
+                    var data = doc.ToDictionary();
+                    string id = data.ContainsKey("id") && data["id"] != null ? data["id"].ToString() : "";
+                    string token = data.ContainsKey("notificationToken") && data["notificationToken"] != null ? data["notificationToken"].ToString() : "";
+                    string name = data.ContainsKey("name") && data["name"] != null ? data["name"].ToString() : "";
+                    string email = data.ContainsKey("email") && data["email"] != null ? data["email"].ToString() : "";
                     int points = data.ContainsKey("points") ? Convert.ToInt32(data["points"]) : 0;
-                    string currentBuilding = data.ContainsKey("currentBuilding") ? data["currentBuilding"].ToString() : "";
-                      var user = new User(id, token, name, email);
+                    string currentBuilding = data.ContainsKey("currentBuilding") && data["currentBuilding"] != null ? data["currentBuilding"].ToString() : "";
+                    var user = new User(id, token, name, email);
                     user.points = points;
                     user.currentBuilding = currentBuilding;
                     Debug.Log($"User {id} retrieved from Firestore");
@@ -192,12 +193,12 @@ namespace RamRoutes.Services
                 foreach (var doc in querySnapshot.Documents)
                 {
                     var data = doc.ToDictionary();
-                    string id = data.ContainsKey("id") ? data["id"].ToString() : "";
-                    string token = data.ContainsKey("notificationToken") ? data["notificationToken"].ToString() : "";
-                    string name = data.ContainsKey("name") ? data["name"].ToString() : "";
-                    string email = data.ContainsKey("email") ? data["email"].ToString() : "";
+                    string id = data.ContainsKey("id") && data["id"] != null ? data["id"].ToString() : "";
+                    string token = data.ContainsKey("notificationToken") && data["notificationToken"] != null ? data["notificationToken"].ToString() : "";
+                    string name = data.ContainsKey("name") && data["name"] != null ? data["name"].ToString() : "";
+                    string email = data.ContainsKey("email") && data["email"] != null ? data["email"].ToString() : "";
                     int points = data.ContainsKey("points") ? Convert.ToInt32(data["points"]) : 0;
-                    string currentBuilding = data.ContainsKey("currentBuilding") ? data["currentBuilding"].ToString() : "";
+                    string currentBuilding = data.ContainsKey("currentBuilding") && data["currentBuilding"] != null ? data["currentBuilding"].ToString() : "";
 
                     var user = new User(id, token, name, email);
                     user.points = points;
