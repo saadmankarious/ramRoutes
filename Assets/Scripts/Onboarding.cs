@@ -32,6 +32,10 @@ public class OnboardingManager : MonoBehaviour
 
     private void Start()
     {
+        // Ensure time is running properly when scene starts
+        Time.timeScale = 1f;
+        Debug.Log($"OnboardingManager Start - Time.timeScale set to: {Time.timeScale}");
+        
         panelTexts = new Text[panels.Length];
         narrationCoroutines = new Coroutine[panels.Length];
 
@@ -90,6 +94,18 @@ public class OnboardingManager : MonoBehaviour
             // Start the narration coroutine for the current panel
             if (panelTexts[index] != null)
             {
+                // Disable advance button during narration
+                if (advanceButton != null)
+                {
+                    advanceButton.interactable = false;
+                }
+                
+                // Disable play button during narration if it's visible
+                if (playButton != null && index == panels.Length - 1)
+                {
+                    playButton.interactable = false;
+                }
+                
                 narrationCoroutines[index] = StartCoroutine(NarrateText(panelTexts[index]));
             }
 
@@ -121,7 +137,30 @@ public class OnboardingManager : MonoBehaviour
                 }
             }
 
-            yield return new WaitForSeconds(0.1f / narrationTypingSpeed);
+            // Check if current character is punctuation that needs longer pause
+            float pauseTime = 0.1f / narrationTypingSpeed;
+            if (c == '.' || c == '!' || c == '?')
+            {
+                pauseTime *= 50f; // Make pause 3x longer for sentence-ending punctuation
+            }
+            else if (c == ',' || c == ';' || c == ':')
+            {
+                pauseTime *= 25f; // Make pause 1.5x longer for mid-sentence punctuation
+            }
+
+            yield return new WaitForSeconds(pauseTime);
+        }
+        
+        // Re-enable advance button when narration is complete
+        if (advanceButton != null)
+        {
+            advanceButton.interactable = true;
+        }
+        
+        // Re-enable play button when narration is complete (if it's on the last panel)
+        if (playButton != null && currentPanelIndex == panels.Length - 1)
+        {
+            playButton.interactable = true;
         }
     }
 
