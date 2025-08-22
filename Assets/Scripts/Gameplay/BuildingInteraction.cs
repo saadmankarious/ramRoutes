@@ -26,6 +26,7 @@ public class BuildingInteraction : MonoBehaviour
     // [SerializeField] private Button mobileInteractButton;
 
     [Header("Inactive Display")]
+            public Text buildingTitleUnlcoked;      // Moved from BuildingInteraction
     [SerializeField] private GameObject inactivePrefab;
     [SerializeField] private Material lockedMaterial;    [Header("UI Panels")]
     [SerializeField] private GameObject buildingUnlockedPanel;
@@ -287,6 +288,13 @@ public class BuildingInteraction : MonoBehaviour
             // Display building events and current users when player is in range
             if (activated)
             {
+                // Display building name in unlocked title
+                if (buildingTitleUnlcoked != null)
+                {
+                    var buildingInfo = BuildingDataManager.GetBuildingInfo(buildingName);
+                    buildingTitleUnlcoked.text = buildingInfo.displayName;
+                }
+                
                 // Spawn NPCs when player enters an unlocked building
                 if (NPCSpawner.Instance != null)
                 {

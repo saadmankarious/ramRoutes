@@ -760,10 +760,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1223223026}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 129.3, y: 146.7}
-  m_SizeDelta: {x: 456.7578, y: 85.642}
+  m_AnchorMin: {x: 1, y: 1}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: -288.87827, y: -67.42668}
+  m_SizeDelta: {x: 538.5143, y: 100.9713}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &594150392
 MonoBehaviour:
@@ -778,7 +778,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.8156863}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -839,7 +839,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: -2.6268, y: -83.1098}
+  m_AnchoredPosition: {x: -83, y: -99}
   m_SizeDelta: {x: 61.335, y: 61.3346}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!95 &814002149
@@ -1597,7 +1597,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1223223026
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1693,8 +1693,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.000016212, y: 130.1}
-  m_SizeDelta: {x: 589.5499, y: 107.0499}
+  m_AnchoredPosition: {x: 0.000005722, y: 130.1}
+  m_SizeDelta: {x: 620.2201, y: 107.0499}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1244900295
 MonoBehaviour:
@@ -1729,7 +1729,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'Now Cornell buildings lie sealed in silence.
+  m_Text: 'Now Aros is hidden in one of the buidlings at Cornell.
 
 '
 --- !u!222 &1244900296
@@ -1810,9 +1810,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Their love was forbidden: a mortal beast and an immortal god. In her fury,
-    Venus tore Aros\u2019 soul away and exiled it to Cornell, a place hidden from
-    the heavens."
+  m_Text: 'Their love was forbidden: a mortal beast and an immortal god. In her fury,
+    Venus (Aros'' mom) tore his soul away and exiled him to Cornell, a place hidden
+    from the heavens.'
 --- !u!222 &1278826063
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -2433,7 +2433,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &1792958412
 RectTransform:
   m_ObjectHideFlags: 0

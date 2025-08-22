@@ -69,12 +69,12 @@ android {
     }
     
     // Add packaging options to avoid conflicts
-    packaging {
+    packagingOptions {
         exclude 'META-INF/*'
         exclude 'META-INF/NOTICE'
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/LICENSE.txt'
-        //This MODERFUCKER solves the libmain.so conflict
+        exclude 'META-INF/NOTICE.txt'
         pickFirst 'lib/armeabi-v7a/libmain.so'
         pickFirst 'lib/arm64-v8a/libmain.so'
         pickFirst 'lib/x86/libmain.so'
