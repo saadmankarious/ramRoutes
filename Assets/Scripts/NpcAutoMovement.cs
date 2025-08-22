@@ -51,6 +51,10 @@ public class NpcAutoMovement : MonoBehaviour
     [SerializeField] private float typingSoundInterval = 0.15f;
     private float lastTypingSoundTime;
     
+    [Header("Despawn Settings")]
+    [SerializeField] private float maxLifetime = 30f; // 3 minutes maximum lifetime
+    private float spawnTime;
+    
     private Vector3 anchorPoint;
     private Vector3 targetPosition;
     private Vector3 currentVelocity;
@@ -60,13 +64,17 @@ public class NpcAutoMovement : MonoBehaviour
     private bool isWaiting = false;
     
     // NPC State Management
-    private enum NPCState { Normal, ReturningToSpawn }
-    private NPCState currentState = NPCState.Normal;
+    private enum NPCState { PursuingPlayer, Normal, ReturningToSpawn }
+    private NPCState currentState = NPCState.PursuingPlayer; // Start by pursuing player
     private bool playerNearby = false;
     
     // Return to spawn pathfinding state
     private bool returningHorizontalFirst = false;
     private bool hasChosenReturnPath = false;
+    
+    // Player pursuit pathfinding state
+    private bool pursuingHorizontalFirst = false;
+    private bool hasChosenPursuitPath = false;
     
     // Conversation variables
     private bool isInConversation = false;
@@ -77,6 +85,9 @@ public class NpcAutoMovement : MonoBehaviour
     
     void Start()
     {
+        // Record spawn time for lifetime tracking
+        spawnTime = Time.time;
+        
         // Set anchor point to starting position
         anchorPoint = transform.position;
         
@@ -91,8 +102,11 @@ public class NpcAutoMovement : MonoBehaviour
             audioSource = gameObject.AddComponent<AudioSource>();
         }
         
-        // Set initial target
+        // Set initial target (for normal movement later)
         ChooseNewTarget();
+        
+        // Start in pursuit mode - don't wait, immediately begin pursuing
+        isWaiting = false;
         
         // Initialize UI
         InitializeUI();
@@ -152,6 +166,14 @@ public class NpcAutoMovement : MonoBehaviour
     
     void Update()
     {
+        // Check if NPC has exceeded maximum lifetime
+        if (Time.time - spawnTime > maxLifetime)
+        {
+            Debug.Log($"NPC {gameObject.name}: Exceeded maximum lifetime ({maxLifetime}s), despawning");
+            DespawnNPC();
+            return;
+        }
+        
         if (isInConversation)
         {
             HandleConversation();
@@ -189,6 +211,9 @@ public class NpcAutoMovement : MonoBehaviour
     {
         switch (currentState)
         {
+            case NPCState.PursuingPlayer:
+                HandlePlayerPursuit();
+                break;
             case NPCState.Normal:
                 HandleNormalMovement();
                 break;
@@ -196,6 +221,101 @@ public class NpcAutoMovement : MonoBehaviour
                 HandleReturnToSpawn();
                 break;
         }
+    }
+    
+    void HandlePlayerPursuit()
+    {
+        GameObject player = GameObject.FindWithTag("Player");
+        if (player == null)
+        {
+            // No player found, switch to normal movement
+            currentState = NPCState.Normal;
+            currentVelocity = Vector3.zero; // Stop movement
+            return;
+        }
+        
+        float distanceToPlayer = Vector3.Distance(transform.position, player.transform.position);
+        
+        // If close enough to player, switch to normal movement
+        if (distanceToPlayer < 1.5f)
+        {
+            Debug.Log($"NPC {gameObject.name}: Reached player, switching to normal movement");
+            currentState = NPCState.Normal;
+            hasChosenPursuitPath = false; // Reset for future use
+            currentVelocity = Vector3.zero; // Stop movement
+            return;
+        }
+        
+        // Calculate smooth path to player using same logic as return-to-spawn
+        Vector3 directionToPlayer = GetDirectionToPlayer(player.transform.position);
+        
+        if (directionToPlayer != Vector3.zero)
+        {
+            // Move towards player with proper animation
+            currentVelocity = directionToPlayer * moveSpeed;
+            transform.position += currentVelocity * Time.deltaTime;
+            
+            // Ensure NPC is not in waiting state during pursuit
+            isWaiting = false;
+        }
+        else
+        {
+            // No direction to move, stop
+            currentVelocity = Vector3.zero;
+        }
+    }
+    
+    Vector3 GetDirectionToPlayer(Vector3 playerPosition)
+    {
+        Vector3 toPlayer = playerPosition - transform.position;
+        
+        // If very close, return zero
+        if (toPlayer.magnitude < 1.5f)
+            return Vector3.zero;
+        
+        Vector3 direction = Vector3.zero;
+        
+        // Choose path direction only once when starting pursuit
+        if (!hasChosenPursuitPath)
+        {
+            pursuingHorizontalFirst = Mathf.Abs(toPlayer.x) > Mathf.Abs(toPlayer.y);
+            hasChosenPursuitPath = true;
+            Debug.Log($"NPC {gameObject.name}: Starting pursuit - horizontal first: {pursuingHorizontalFirst}");
+        }
+        
+        // Stick with chosen direction until that axis is complete
+        if (pursuingHorizontalFirst)
+        {
+            // Move horizontally first
+            if (Mathf.Abs(toPlayer.x) > 0.1f)
+            {
+                direction.x = toPlayer.x > 0 ? 1 : -1;
+                direction.y = 0;
+            }
+            else
+            {
+                // Horizontal movement complete, now move vertically
+                direction.x = 0;
+                direction.y = toPlayer.y > 0 ? 1 : -1;
+            }
+        }
+        else
+        {
+            // Move vertically first
+            if (Mathf.Abs(toPlayer.y) > 0.1f)
+            {
+                direction.x = 0;
+                direction.y = toPlayer.y > 0 ? 1 : -1;
+            }
+            else
+            {
+                // Vertical movement complete, now move horizontally
+                direction.x = toPlayer.x > 0 ? 1 : -1;
+                direction.y = 0;
+            }
+        }
+        
+        return direction;
     }
     
     void HandleNormalMovement()
@@ -376,9 +496,10 @@ public class NpcAutoMovement : MonoBehaviour
         // Calculate move input from current velocity
         Vector2 moveInput = Vector2.zero;
         
+        // Only show movement animation if actually moving (not waiting and has velocity)
         if (!isWaiting && currentVelocity.magnitude > 0.1f)
         {
-            // Normalize the velocity to get direction
+            // Normalize the velocity to get direction for animation
             moveInput = new Vector2(currentVelocity.x, currentVelocity.y).normalized;
         }
         
@@ -389,6 +510,12 @@ public class NpcAutoMovement : MonoBehaviour
         animator.SetFloat(movingXParam, moveInput.x);
         animator.SetFloat(movingYParam, moveInput.y);
         animator.SetBool(idleParam, moveInput.magnitude < 0.1f);
+        
+        // Debug animation state during pursuit
+        if (currentState == NPCState.PursuingPlayer && currentVelocity.magnitude > 0.1f)
+        {
+            Debug.Log($"NPC {gameObject.name}: Pursuit animation - X: {moveInput.x:F1}, Y: {moveInput.y:F1}, Idle: {moveInput.magnitude < 0.1f}");
+        }
     }
     
     // Conversation System
@@ -486,10 +613,17 @@ public class NpcAutoMovement : MonoBehaviour
     // Collision detection for starting conversation
     void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player") && !isInConversation && currentState == NPCState.Normal)
+        if (other.CompareTag("Player") && !isInConversation)
         {
             playerNearby = true;
             Debug.Log($"NPC {gameObject.name}: Player entered trigger, starting conversation");
+            
+            // Switch to normal state if pursuing
+            if (currentState == NPCState.PursuingPlayer)
+            {
+                currentState = NPCState.Normal;
+            }
+            
             if (animator != null) animator.SetBool(idleParam, true); // Set idle animation
             isWaiting = true; // Stop movement
             StartConversation();
@@ -498,10 +632,17 @@ public class NpcAutoMovement : MonoBehaviour
     
     void OnCollisionEnter2D(Collision2D other)
     {
-        if (other.gameObject.CompareTag("Player") && !isInConversation && currentState == NPCState.Normal)
+        if (other.gameObject.CompareTag("Player") && !isInConversation)
         {
             playerNearby = true;
             Debug.Log($"NPC {gameObject.name}: Player collision detected, starting conversation");
+            
+            // Switch to normal state if pursuing
+            if (currentState == NPCState.PursuingPlayer)
+            {
+                currentState = NPCState.Normal;
+            }
+            
             StartConversation();
         }
     }
@@ -648,11 +789,22 @@ public class NpcAutoMovement : MonoBehaviour
             Gizmos.DrawLine(transform.position, spawnPoint.position);
         }
         
-        if (Application.isPlaying && currentState == NPCState.Normal)
+        if (Application.isPlaying && (currentState == NPCState.Normal || currentState == NPCState.PursuingPlayer))
         {
             Gizmos.color = Color.green;
             Gizmos.DrawWireSphere(targetPosition, 0.1f);
             Gizmos.DrawLine(transform.position, targetPosition);
+            
+            // Show player pursuit target
+            if (currentState == NPCState.PursuingPlayer)
+            {
+                GameObject player = GameObject.FindWithTag("Player");
+                if (player != null)
+                {
+                    Gizmos.color = Color.red;
+                    Gizmos.DrawLine(transform.position, player.transform.position);
+                }
+            }
         }
         
         // Show current state
