@@ -1069,6 +1069,7 @@ MonoBehaviour:
     you choseif you are a senior.
   interactKey: 118
   rewardSound: {fileID: 8300000, guid: dab7626c0a3474a0aba894ac33d149e7, type: 3}
+  buildingTitleUnlcoked: {fileID: 670941118}
   inactivePrefab: {fileID: 6131559785892294148, guid: b3d494e286427de438f4ed9b2097482d,
     type: 3}
   lockedMaterial: {fileID: 2100000, guid: 25f4a6718277fbc40b7a9a678583b742, type: 2}
@@ -1815,6 +1816,7 @@ MonoBehaviour:
     telescope, a recent invention of the time. '
   interactKey: 118
   rewardSound: {fileID: 8300000, guid: dab7626c0a3474a0aba894ac33d149e7, type: 3}
+  buildingTitleUnlcoked: {fileID: 670941118}
   inactivePrefab: {fileID: 6131559785892294148, guid: b3d494e286427de438f4ed9b2097482d,
     type: 3}
   lockedMaterial: {fileID: 2100000, guid: 25f4a6718277fbc40b7a9a678583b742, type: 2}
@@ -18093,10 +18095,10 @@ RectTransform:
   - {fileID: 102393107}
   m_Father: {fileID: 543864026}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 0.5}
-  m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -58.975098, y: 0.0000095367}
-  m_SizeDelta: {x: -96.1446, y: -220.0131}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 38.006, y: -56.5}
+  m_SizeDelta: {x: -76.0127, y: -73.826}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &482067287
 MonoBehaviour:
@@ -18864,7 +18866,7 @@ PrefabInstance:
     - target: {fileID: 4879654010440164587, guid: 7dc17e83f4e9ac545b4fae3cc84cb6cc,
         type: 3}
       propertyPath: m_SizeDelta.y
-      value: -38.337288
+      value: -38.847916
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -20507,10 +20509,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1503913376}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 108.13921, y: 33.06677}
-  m_SizeDelta: {x: 54.1187, y: 51.2703}
+  m_AnchorMin: {x: 1, y: 1}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: -45.9114, y: -43.531}
+  m_SizeDelta: {x: 92.2216, y: 87.368}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &834252932
 MonoBehaviour:
@@ -20525,7 +20527,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.5529412}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -22149,6 +22151,7 @@ MonoBehaviour:
   - This is just a random building on 1st street.
   interactKey: 118
   rewardSound: {fileID: 0}
+  buildingTitleUnlcoked: {fileID: 670941118}
   inactivePrefab: {fileID: 6131559785892294148, guid: b3d494e286427de438f4ed9b2097482d,
     type: 3}
   lockedMaterial: {fileID: 2100000, guid: 25f4a6718277fbc40b7a9a678583b742, type: 2}
@@ -22774,8 +22777,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: -36.0784, y: -17.216}
-  m_SizeDelta: {x: 177.4045, y: 34.4322}
+  m_AnchoredPosition: {x: -45.529, y: -43.531}
+  m_SizeDelta: {x: 177.4045, y: 62.0283}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1109458624
 MonoBehaviour:
@@ -22799,7 +22802,7 @@ MonoBehaviour:
       m_Calls: []
   m_FontData:
     m_Font: {fileID: 12800000, guid: dfe99d3636ca90148a754e2f79774837, type: 3}
-    m_FontSize: 16
+    m_FontSize: 20
     m_FontStyle: 1
     m_BestFit: 0
     m_MinSize: 1
@@ -23799,7 +23802,7 @@ PrefabInstance:
     - target: {fileID: 4879654010440164587, guid: 7dc17e83f4e9ac545b4fae3cc84cb6cc,
         type: 3}
       propertyPath: m_SizeDelta.y
-      value: -38.337288
+      value: -38.847916
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -24288,8 +24291,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.00002861, y: 5}
-  m_SizeDelta: {x: 76.1966, y: 76.1966}
+  m_AnchoredPosition: {x: 0.00000095367, y: 0.000010014}
+  m_SizeDelta: {x: 63.1258, y: 63.1258}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1299654883
 MonoBehaviour:
@@ -26853,6 +26856,7 @@ MonoBehaviour:
     the holidays when the weather outside is cold enough to knock your socks off\u2026 "
   interactKey: 118
   rewardSound: {fileID: 8300000, guid: dab7626c0a3474a0aba894ac33d149e7, type: 3}
+  buildingTitleUnlcoked: {fileID: 670941118}
   inactivePrefab: {fileID: 6131559785892294148, guid: b3d494e286427de438f4ed9b2097482d,
     type: 3}
   lockedMaterial: {fileID: 2100000, guid: 25f4a6718277fbc40b7a9a678583b742, type: 2}
@@ -27539,7 +27543,7 @@ PrefabInstance:
     - target: {fileID: 4879654010440164587, guid: 7dc17e83f4e9ac545b4fae3cc84cb6cc,
         type: 3}
       propertyPath: m_SizeDelta.y
-      value: -51.86386
+      value: -52.204277
       objectReference: {fileID: 0}
     - target: {fileID: 5852777773248866128, guid: 7dc17e83f4e9ac545b4fae3cc84cb6cc,
         type: 3}
@@ -27585,8 +27589,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 0.7235, y: 43.991}
-  m_SizeDelta: {x: 257.6173, y: 77.964}
+  m_AnchoredPosition: {x: 0.7235, y: 55.797}
+  m_SizeDelta: {x: 257.6173, y: 101.58}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1730201333
 CanvasRenderer:
@@ -27629,7 +27633,8 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'Hello there. '
+  m_Text: 'Hello there. Hello there. Hello there. Hello there. Hello there. Hello
+    there. Hello there. '
 --- !u!1 &1740749351
 GameObject:
   m_ObjectHideFlags: 0
@@ -269951,6 +269956,7 @@ MonoBehaviour:
     you choseif you are a senior.
   interactKey: 118
   rewardSound: {fileID: 8300000, guid: dab7626c0a3474a0aba894ac33d149e7, type: 3}
+  buildingTitleUnlcoked: {fileID: 670941118}
   inactivePrefab: {fileID: 6131559785892294148, guid: b3d494e286427de438f4ed9b2097482d,
     type: 3}
   lockedMaterial: {fileID: 2100000, guid: 25f4a6718277fbc40b7a9a678583b742, type: 2}
@@ -270477,6 +270483,7 @@ MonoBehaviour:
     by Cornell to become Music Practice House.
   interactKey: 118
   rewardSound: {fileID: 8300000, guid: dab7626c0a3474a0aba894ac33d149e7, type: 3}
+  buildingTitleUnlcoked: {fileID: 670941118}
   inactivePrefab: {fileID: 6131559785892294148, guid: b3d494e286427de438f4ed9b2097482d,
     type: 3}
   lockedMaterial: {fileID: 2100000, guid: 25f4a6718277fbc40b7a9a678583b742, type: 2}

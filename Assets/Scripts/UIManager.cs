@@ -22,7 +22,9 @@ public class UIManager : MonoBehaviour
     [Header("Building UI")]
     public Text buildingTitle;      // Moved from BuildingInteraction
     public Text buildingDescription; // Moved from BuildingInteraction
-        public Text buildingUnlockedMessage; // Moved from BuildingInteraction
+    public Text buildingUnlockedMessage; // Moved from BuildingInteraction
+    public Image npcImage;          // NPC image in building unlocked dialog
+    public Text npcTitle;           // NPC title in building unlocked dialog
 
     [Header("Celebration Settings")]
     [SerializeField] private float celebrationPlaybackSpeed = 1f; // 1f = normal speed, 2f = double speed, 0.5f = half speed
@@ -779,6 +781,23 @@ private void HideObjectsWithTag(string tag)
          if (buildingUnlockedMessage != null)
         {
             buildingUnlockedMessage.text = buildingInfo.unlockedMessage;
+        }
+        
+        // Update NPC information from NPCSpawner
+        if (NPCSpawner.Instance != null)
+        {
+            var npcInfo = NPCSpawner.Instance.GetFirstNPCForBuilding(buildingName);
+            if (npcInfo != null)
+            {
+                if (npcTitle != null)
+                {
+                    npcTitle.text = !string.IsNullOrEmpty(npcInfo.npcName) ? npcInfo.npcName : npcInfo.npcTitle;
+                }
+                if (npcImage != null && npcInfo.npcImage != null)
+                {
+                    npcImage.sprite = npcInfo.npcImage;
+                }
+            }
         }
     }
 

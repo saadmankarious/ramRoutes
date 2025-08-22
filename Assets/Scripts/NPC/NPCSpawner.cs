@@ -13,6 +13,10 @@ public class BuildingNPC
     public GameObject npcPrefab;
     public string associatedBuilding; // Building name this NPC belongs to
     
+    [Header("Building Unlock Dialog (Auto-populated from prefab if empty)")]
+    public Sprite npcImage;           // NPC image - auto-read from prefab's SpriteRenderer if null
+    public string npcTitle;           // NPC title - auto-read from prefab's NpcAutoMovement.npcName if empty
+    
     [Header("Spawn Settings")]
     public Transform spawnPoint; // Editor-assigned spawn point
 }
@@ -306,5 +310,45 @@ public class NPCSpawner : MonoBehaviour
         }
         
         return npcsForBuilding.ToArray();
+    }
+    
+    // Method to get first NPC info for a building (for unlocked dialog)
+    public BuildingNPC GetFirstNPCForBuilding(string buildingName)
+    {
+        foreach (var buildingNPC in buildingNPCs)
+        {
+            if (buildingNPC.associatedBuilding == buildingName)
+            {
+                // Automatically populate NPC image and title from prefab if not already set
+                if (buildingNPC.npcPrefab != null)
+                {
+                    // Get sprite from prefab's SpriteRenderer
+                    if (buildingNPC.npcImage == null)
+                    {
+                        SpriteRenderer spriteRenderer = buildingNPC.npcPrefab.GetComponent<SpriteRenderer>();
+                        if (spriteRenderer != null && spriteRenderer.sprite != null)
+                        {
+                            buildingNPC.npcImage = spriteRenderer.sprite;
+                        }
+                    }
+                    
+                    // Always read NPC name from prefab's NpcAutoMovement component
+                    NpcAutoMovement npcMovement = buildingNPC.npcPrefab.GetComponent<NpcAutoMovement>();
+                    if (npcMovement != null && !string.IsNullOrEmpty(npcMovement.npcName))
+                    {
+                        buildingNPC.npcTitle = npcMovement.npcName;
+                        Debug.Log($"NPCSpawner: Read NPC title '{npcMovement.npcName}' from prefab for building '{buildingName}'");
+                    }
+                    else
+                    {
+                        buildingNPC.npcTitle = buildingNPC.npcName;
+                        Debug.Log($"NPCSpawner: Using fallback NPC title '{buildingNPC.npcName}' for building '{buildingName}'");
+                    }
+                }
+                
+                return buildingNPC;
+            }
+        }
+        return null;
     }
 }
