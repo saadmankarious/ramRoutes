@@ -76,11 +76,10 @@ public class BuildingInteraction : MonoBehaviour
     void Awake()
     {
         audioSource = GetComponent<AudioSource>();
-        dialogPanel.SetActive(false);
 
         if (mobileInteractButton != null)
         {
-            mobileInteractButton.onClick.AddListener(HandleMobileInteraction);
+            // mobileInteractButton.onClick.AddListener(HandleMobileInteraction);
             mobileInteractButton.gameObject.SetActive(false);
         }
 
@@ -166,10 +165,10 @@ public class BuildingInteraction : MonoBehaviour
 
     void Update()
     {
-        if (isPlayerInRange && Input.GetKeyDown(interactKey))
-        {
-            HandleInteraction();
-        }
+        // if (isPlayerInRange && Input.GetKeyDown(interactKey))
+        // {
+        //     HandleInteraction();
+        // }
 
         if (simulateEntry && !activated)
         {
@@ -258,77 +257,15 @@ public class BuildingInteraction : MonoBehaviour
     }
 
     // Combined handler for both mobile and PC interactions
-    private void HandleInteraction()
-    {
-        if (!dialogActive)
-        {
-            ShowDialog(dialogLines[currentLineIndex]);
-        }
-        else
-        {
-            AdvanceDialog();
-        }
-    }
 
     // Mobile-specific interaction handler
-    private void HandleMobileInteraction()
-    {
-        if (isPlayerInRange)
-        {
-            HandleInteraction();
-        }
-    }    private void StartDialog()
-    {
-        dialogActive = true;
-        dialogPanel.SetActive(true);
-        currentLineIndex = 0;
-        extraLineShown = false;
-        dialogText.text = dialogLines[currentLineIndex];
-        
-        // Apply animation to the dialog panel using UIManager
-        if (uiManager != null)
-        {
-            StartCoroutine(uiManager.AnimatePanelPopup(dialogPanel));
-        }
-    }private void ShowDialog(string message)
-    {
-        dialogActive = true;
-        dialogPanel.SetActive(true);
-        currentLineIndex = 0;
-        extraLineShown = false;
-        dialogText.text = message;
-        
-        // Apply animation to the dialog panel using UIManager
-        if (uiManager != null)
-        {
-            StartCoroutine(uiManager.AnimatePanelPopup(dialogPanel));
-        }
-    }
-
-    private void AdvanceDialog()
-    {
-        currentLineIndex++;
-
-        if (currentLineIndex < dialogLines.Length)
-        {
-            dialogText.text = dialogLines[currentLineIndex];
-        }
-        else
-        {
-            CloseDialog();
-        }
-    }
-
-    private void CloseDialog()
-    {
-        dialogActive = false;
-        dialogPanel.SetActive(false);
-
-        if (mobileInteractButton != null)
-        {
-            mobileInteractButton.gameObject.SetActive(false);
-        }
-    }
+    // private void HandleMobileInteraction()
+    // {
+    //     if (isPlayerInRange)
+    //     {
+    //         HandleInteraction();
+    //     }
+    // }   
 
     private void OnTriggerEnter2D(Collider2D other)
     {
@@ -401,7 +338,6 @@ public class BuildingInteraction : MonoBehaviour
             
             isPlayerInRange = false;
             lastGpsProximityState = false; // Reset GPS proximity state
-            CloseDialog();
             
             // Hide UIManager dialog if it's active
             if (uiManager != null && uiManager.IsDialogActive())
