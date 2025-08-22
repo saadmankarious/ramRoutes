@@ -83,6 +83,9 @@ public class NpcAutoMovement : MonoBehaviour
     private float textTimer = 0f;
     private bool isTyping = false;
     
+    // Mobile interaction flag - set by external scripts like player controller
+    public bool mobileInteractPressed = false;
+    
     void Start()
     {
         // Record spawn time for lifetime tracking
@@ -110,6 +113,9 @@ public class NpcAutoMovement : MonoBehaviour
         
         // Initialize UI
         InitializeUI();
+        
+        // Setup mobile button from UIManager
+        SetupMobileButton();
         
         // Play spawn sound
         PlayNPCSound();
@@ -162,6 +168,20 @@ public class NpcAutoMovement : MonoBehaviour
             Debug.LogWarning($"NPC {gameObject.name}: No NPC panel assigned in inspector!");
         }
     
+    }
+    
+    void SetupMobileButton()
+    {
+        // Register this NPC with UIManager for mobile interaction
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.RegisterNPCForMobileInteraction(this);
+            Debug.Log($"NPC {gameObject.name}: Registered with UIManager for mobile interaction");
+        }
+        else
+        {
+            Debug.LogWarning($"NPC {gameObject.name}: UIManager.Instance is null!");
+        }
     }
     
     void Update()
@@ -528,6 +548,12 @@ public class NpcAutoMovement : MonoBehaviour
         currentLineIndex = 0;
         StartTyping();
         
+        // Show mobile interact button when conversation starts
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ShowMobileInteractButton();
+        }
+        
         Debug.Log($"NPC {gameObject.name}: Starting conversation");
     }
     
@@ -570,8 +596,14 @@ public class NpcAutoMovement : MonoBehaviour
         }
         
         // Handle input to continue conversation
-        if (Input.GetKeyDown(continueKey))
+        if (Input.GetKeyDown(continueKey) || mobileInteractPressed)
         {
+            // Reset mobile interaction flag immediately after reading
+            if (mobileInteractPressed)
+            {
+                mobileInteractPressed = false;
+            }
+            
             if (isTyping)
             {
                 // Skip typing animation and show full text
@@ -601,6 +633,12 @@ public class NpcAutoMovement : MonoBehaviour
         currentLineIndex = 0;
         isWaiting = false; // Resume movement when conversation ends
         
+        // Hide mobile interact button when conversation ends
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.HideMobileInteractButton();
+        }
+        
         // Clear conversation text but keep panel visible (showing NPC name)
         if (conversationText != null)
         {
@@ -629,7 +667,7 @@ public class NpcAutoMovement : MonoBehaviour
             StartConversation();
         }
     }
-    
+
     void OnCollisionEnter2D(Collision2D other)
     {
         if (other.gameObject.CompareTag("Player") && !isInConversation)
@@ -725,6 +763,13 @@ public class NpcAutoMovement : MonoBehaviour
     void DespawnNPC()
     {
         Debug.Log($"Despawning NPC {gameObject.name}");
+        
+        // Hide the mobile interact button and unregister from UIManager
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.HideMobileInteractButton();
+            UIManager.Instance.UnregisterNPCForMobileInteraction(this);
+        }
         
         // Hide the NPC panel
         if (npcPanel != null)

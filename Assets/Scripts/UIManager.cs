@@ -66,6 +66,9 @@ public class UIManager : MonoBehaviour
     public UnityEvent OnTimeExpired = new UnityEvent();
     public UnityEvent<BuildingInteraction> OnBuildingUnlocked = new UnityEvent<BuildingInteraction>();
 
+    [Header("Mobile NPC Interaction")]
+    public Button mobileInteractButton; // Mobile button for NPC interactions
+    
     [Header("Progress Bar")]
     public GameObject[] progressBarImages; // Array of progress bar images to activate sequentially
 
@@ -78,7 +81,10 @@ public class UIManager : MonoBehaviour
     private bool isDialogActive = false; // Flag to prevent overlapping dialogs
     private System.Action currentDialogAction; // Store current dialog action
     private bool keepArosVisible = false; // Flag to keep AROS visible during unlock sequences
-
+    
+    // Mobile NPC interaction state
+    private NpcAutoMovement currentInteractingNPC; // Currently registered NPC for mobile interaction
+    
     private bool isPaused = false;
 
     // Call this to toggle pause menu
@@ -1028,6 +1034,87 @@ private void HideObjectsWithTag(string tag)
         else
         {
             Debug.LogWarning("Teleport effect not assigned in UIManager!");
+        }
+    }
+    
+    // Mobile NPC Interaction Methods
+    public void RegisterNPCForMobileInteraction(NpcAutoMovement npc)
+    {
+        if (npc == null)
+        {
+            Debug.LogWarning("UIManager: Cannot register null NPC for mobile interaction");
+            return;
+        }
+        
+        // Store reference to the current NPC
+        currentInteractingNPC = npc;
+        
+        // Setup mobile button listener if button exists
+        if (mobileInteractButton != null)
+        {
+            // Clear any existing listeners to prevent multiple calls
+            mobileInteractButton.onClick.RemoveAllListeners();
+            
+            // Add listener that sets the mobile interaction flag on the NPC
+            mobileInteractButton.onClick.AddListener(() => {
+                if (currentInteractingNPC != null)
+                {
+                    currentInteractingNPC.mobileInteractPressed = true;
+                    Debug.Log($"UIManager: Mobile interact pressed for NPC {currentInteractingNPC.gameObject.name}");
+                }
+                else
+                {
+                    Debug.LogWarning("UIManager: Mobile interact pressed but no NPC registered");
+                }
+            });
+            
+            Debug.Log($"UIManager: Registered NPC {npc.gameObject.name} for mobile interaction");
+        }
+        else
+        {
+            Debug.LogWarning("UIManager: Mobile interact button not assigned!");
+        }
+    }
+    
+    public void UnregisterNPCForMobileInteraction(NpcAutoMovement npc)
+    {
+        if (currentInteractingNPC == npc)
+        {
+            // Clear the NPC reference
+            currentInteractingNPC = null;
+            
+            // Hide the button
+            HideMobileInteractButton();
+            
+            // Clear button listeners
+            if (mobileInteractButton != null)
+            {
+                mobileInteractButton.onClick.RemoveAllListeners();
+            }
+            
+            Debug.Log($"UIManager: Unregistered NPC {npc?.gameObject.name} from mobile interaction");
+        }
+    }
+    
+    public void ShowMobileInteractButton()
+    {
+        if (mobileInteractButton != null)
+        {
+            mobileInteractButton.gameObject.SetActive(true);
+            Debug.Log("UIManager: Showing mobile interact button");
+        }
+        else
+        {
+            Debug.LogWarning("UIManager: Cannot show mobile interact button - not assigned!");
+        }
+    }
+    
+    public void HideMobileInteractButton()
+    {
+        if (mobileInteractButton != null)
+        {
+            mobileInteractButton.gameObject.SetActive(false);
+            Debug.Log("UIManager: Hiding mobile interact button");
         }
     }
 }

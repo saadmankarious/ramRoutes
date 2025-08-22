@@ -22,8 +22,8 @@ public class BuildingInteraction : MonoBehaviour
     [Header("Reward Settings")]
     [SerializeField] private AudioClip rewardSound;
 
-    [Header("Mobile Controls")]
-    [SerializeField] private Button mobileInteractButton;
+    // [Header("Mobile Controls")]
+    // [SerializeField] private Button mobileInteractButton;
 
     [Header("Inactive Display")]
     [SerializeField] private GameObject inactivePrefab;
@@ -77,11 +77,11 @@ public class BuildingInteraction : MonoBehaviour
     {
         audioSource = GetComponent<AudioSource>();
 
-        if (mobileInteractButton != null)
-        {
-            // mobileInteractButton.onClick.AddListener(HandleMobileInteraction);
-            mobileInteractButton.gameObject.SetActive(false);
-        }
+        // if (mobileInteractButton != null)
+        // {
+        //     // mobileInteractButton.onClick.AddListener(HandleMobileInteraction);
+        //     mobileInteractButton.gameObject.SetActive(false);
+        // }
 
         sr = GetComponent<SpriteRenderer>();
         if (sr != null)
@@ -273,10 +273,10 @@ public class BuildingInteraction : MonoBehaviour
         {
             isPlayerInRange = true;
 
-            if (mobileInteractButton != null)
-            {
-                mobileInteractButton.gameObject.SetActive(true);
-            }
+            // if (mobileInteractButton != null)
+            // {
+            //     mobileInteractButton.gameObject.SetActive(true);
+            // }
             
             // Initialize GPS proximity state for locked buildings
             if (!activated)

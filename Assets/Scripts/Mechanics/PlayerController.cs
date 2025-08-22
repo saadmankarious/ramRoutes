@@ -41,7 +41,7 @@ namespace Platformer.Mechanics
         private bool mobileRightPressed = false;
         private bool mobileUpPressed = false;
         private bool mobileDownPressed = false;
-        private bool mobileInteractPressed = false;
+        public bool mobileInteractPressed = false;
         public Tilemap paintedTilemap; // Assign in inspector - the tilemap with painted areas
 
         // Add this function to your PlayerController class
