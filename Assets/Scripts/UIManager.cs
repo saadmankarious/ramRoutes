@@ -833,6 +833,24 @@ private void HideObjectsWithTag(string tag)
 
         if (buildingGateMap != null && buildingGateMap.TryGetValue(building, out var gate) && gate != null)
         {
+            // New: set game stage based on gate name '1','2','3' before unlocking
+            var gateName = gate.gameObject.name?.Trim();
+            if (!string.IsNullOrEmpty(gateName))
+            {
+                RamRoutes.Model.Stage? nextStage = null;
+                if (gateName == "1") nextStage = RamRoutes.Model.Stage.EasternCampus;
+                else if (gateName == "2") nextStage = RamRoutes.Model.Stage.FirstStreet;
+                else if (gateName == "3") nextStage = RamRoutes.Model.Stage.Pedmall;
+
+                if (nextStage.HasValue)
+                {
+                    var gs = GameStage.FromArea(nextStage.Value);
+                    SetCurrentStageText(gs); // update UI immediately
+                    _ = GameStageService.SetStage(gs); // persist (fire-and-forget)
+                    Debug.Log($"UIManager: Stage set to {gs.area} based on gate '{gateName}'.");
+                }
+            }
+
             gate.UnlockGate();
             Debug.Log($"UIManager: Unlocked mapped gate '{gate.gameObject.name}' for building '{building.buildingName}'.");
         }
