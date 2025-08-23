@@ -13,17 +13,18 @@ public class FirebaseMessagingManager : MonoBehaviour
 {
     private string _deviceToken;
     private bool _firebaseInitialized = false;
-private string _cachedDeviceId;
+    private string _cachedDeviceId;
+    private bool _topicsSubscribed = false;
 
     async void Start()
     {
-            _cachedDeviceId = SystemInfo.deviceUniqueIdentifier;
+        _cachedDeviceId = SystemInfo.deviceUniqueIdentifier;
 
         await InitializeFirebase();
         if (_firebaseInitialized)
         {
             SetupMessaging();
-            await SubscribeToTopics();
+            // ...existing code...
         }
     }
 
@@ -53,22 +54,31 @@ private string _cachedDeviceId;
         FirebaseMessaging.TokenReceived += OnTokenReceived;
         FirebaseMessaging.MessageReceived += OnMessageReceived;
 
-        // Request token explicitly (works even if automatic retrieval fails)
-        RequestToken();
-
-        // Configure notification settings
+#if UNITY_IOS
+        // iOS: request permission first to ensure APNS token, then request FCM token
         FirebaseMessaging.RequestPermissionAsync().ContinueWith(task =>
         {
-            Debug.Log("Notification permission requested");
+            Debug.Log("Notification permission requested (iOS)");
+            RequestToken();
         });
+#else
+        // Non-iOS: it's safe to request token immediately
+        RequestToken();
+        FirebaseMessaging.RequestPermissionAsync().ContinueWith(task =>
+        {
+            Debug.Log("Notification permission requested (non-iOS)");
+        });
+#endif
     }
 
     private async Task SubscribeToTopics()
     {
+        if (_topicsSubscribed) return;
         try
         {
             await FirebaseMessaging.SubscribeAsync("/topics/general");  // Changed from "global" to "general"
             await FirebaseMessaging.SubscribeAsync("/topics/updates");
+            _topicsSubscribed = true;
             Debug.Log("Subscribed to notification topics: general, updates");
         }
         catch (System.Exception e)
@@ -85,6 +95,16 @@ private string _cachedDeviceId;
                 _deviceToken = task.Result;
                 Debug.Log($"FCM Token (manual): {_deviceToken}");
                 SendTokenToServer(_deviceToken);
+                // Subscribe once we have a token
+                _ = SubscribeToTopics();
+            }
+            else if (task.IsFaulted)
+            {
+                Debug.LogError($"Failed to get FCM token: {task.Exception}");
+            }
+            else
+            {
+                Debug.LogWarning("FCM token request completed but no token received");
             }
         });
     }
@@ -94,31 +114,36 @@ private string _cachedDeviceId;
         _deviceToken = token.Token;
         Debug.Log($"FCM Token (auto): {_deviceToken}");
         SendTokenToServer(_deviceToken);
+        // Subscribe once we have a token (idempotent via _topicsSubscribed)
+        if (!_topicsSubscribed)
+        {
+            _ = SubscribeToTopics();
+        }
     }
 
-private void OnMessageReceived(object sender, MessageReceivedEventArgs e)
-{
-    Debug.Log($"Received message from: {e.Message.From}");
-    
-    // Handle notification data
-    if (e.Message.Notification != null)
+    private void OnMessageReceived(object sender, MessageReceivedEventArgs e)
     {
-        Debug.Log($"Title: {e.Message.Notification.Title}");
-        Debug.Log($"Body: {e.Message.Notification.Body}");
+        Debug.Log($"Received message from: {e.Message.From}");
+        
+        // Handle notification data
+        if (e.Message.Notification != null)
+        {
+            Debug.Log($"Title: {e.Message.Notification.Title}");
+            Debug.Log($"Body: {e.Message.Notification.Body}");
 
-        // Show notification in system tray (works in background/foreground)
-        ShowSystemNotification(
-            e.Message.Notification.Title, 
-            e.Message.Notification.Body
-        );
+            // Show notification in system tray (works in background/foreground)
+            ShowSystemNotification(
+                e.Message.Notification.Title, 
+                e.Message.Notification.Body
+            );
+        }
+        
+        // Handle custom data payload
+        foreach (var pair in e.Message.Data)
+        {
+            Debug.Log($"{pair.Key}: {pair.Value}");
+        }
     }
-    
-    // Handle custom data payload
-    foreach (var pair in e.Message.Data)
-    {
-        Debug.Log($"{pair.Key}: {pair.Value}");
-    }
-}
 
     // Helper method to display notifications
     private void ShowSystemNotification(string title, string message)
@@ -157,37 +182,37 @@ private void OnMessageReceived(object sender, MessageReceivedEventArgs e)
 #endif
     }
 
- private async void SendTokenToServer(string token)
-{
-    if (string.IsNullOrEmpty(_cachedDeviceId)) 
+    private async void SendTokenToServer(string token)
     {
-        Debug.LogError("Device ID not cached");
-        return;
-    }
-
-    if (FirebaseFirestore.DefaultInstance != null)
-    {
-        try
+        if (string.IsNullOrEmpty(_cachedDeviceId)) 
         {
-            DocumentReference docRef = FirebaseFirestore.DefaultInstance
-                .Collection("devices")
-                .Document(_cachedDeviceId);  // Use the cached version here
+            Debug.LogError("Device ID not cached");
+            return;
+        }
 
-            await docRef.SetAsync(new
+        if (FirebaseFirestore.DefaultInstance != null)
+        {
+            try
             {
-                token = token,
-                lastUpdated = FieldValue.ServerTimestamp,
-                platform = Application.platform.ToString()
-            });
+                DocumentReference docRef = FirebaseFirestore.DefaultInstance
+                    .Collection("devices")
+                    .Document(_cachedDeviceId);  // Use the cached version here
 
-            Debug.Log("Device token saved to Firestore");
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError($"Failed to save token: {e.Message}");
+                await docRef.SetAsync(new
+                {
+                    token = token,
+                    lastUpdated = FieldValue.ServerTimestamp,
+                    platform = Application.platform.ToString()
+                });
+
+                Debug.Log("Device token saved to Firestore");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Failed to save token: {e.Message}");
+            }
         }
     }
-}
 
     void OnEnable()
     {
