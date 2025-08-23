@@ -1830,7 +1830,7 @@ MonoBehaviour:
   preUnlockMessage: 
   showUnlockedPanelOnStart: 0
   simulateEntry: 0
-  connectedGate: {fileID: 0}
+  connectedGate: {fileID: 1496117206}
   gpsUnlockRadius: 50
   bypassGpsCheck: 1
   activated: 0
@@ -22744,12 +22744,12 @@ PrefabInstance:
     - target: {fileID: 4755777993286910424, guid: cb19daed2fa4048b4b2286af5a1e155b,
         type: 3}
       propertyPath: m_Name
-      value: Gate (1)
+      value: 3
       objectReference: {fileID: 0}
     - target: {fileID: 4755777993286910424, guid: cb19daed2fa4048b4b2286af5a1e155b,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7013091016929523227, guid: cb19daed2fa4048b4b2286af5a1e155b,
         type: 3}
@@ -25897,12 +25897,12 @@ PrefabInstance:
     - target: {fileID: 4755777993286910424, guid: cb19daed2fa4048b4b2286af5a1e155b,
         type: 3}
       propertyPath: m_Name
-      value: Gate (2)
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4755777993286910424, guid: cb19daed2fa4048b4b2286af5a1e155b,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7013091016929523227, guid: cb19daed2fa4048b4b2286af5a1e155b,
         type: 3}
@@ -26063,6 +26063,18 @@ Animator:
     type: 3}
   m_PrefabInstance: {fileID: 1496117203}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1496117206 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7013091016929523227, guid: cb19daed2fa4048b4b2286af5a1e155b,
+    type: 3}
+  m_PrefabInstance: {fileID: 1496117203}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b8937aa47e8345dbaed170694217e3f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1499820067
 GameObject:
   m_ObjectHideFlags: 0
@@ -27040,7 +27052,7 @@ MonoBehaviour:
   preUnlockMessage: 
   showUnlockedPanelOnStart: 0
   simulateEntry: 0
-  connectedGate: {fileID: 0}
+  connectedGate: {fileID: 8580128933837205543}
   gpsUnlockRadius: 50
   bypassGpsCheck: 1
   activated: 0
@@ -27642,7 +27654,7 @@ TilemapRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 1
   m_ChunkSize: {x: 32, y: 32, z: 32}
   m_ChunkCullingBounds: {x: 0, y: 0, z: 0}
   m_MaxChunkCount: 16
@@ -263060,6 +263072,13 @@ MonoBehaviour:
   - {fileID: 162276950}
   - {fileID: 1085337033}
   - {fileID: 1132677566}
+  buildingGatePairs:
+  - building: {fileID: 1851404770}
+    gate: {fileID: 1496117206}
+  - building: {fileID: 1878086078}
+    gate: {fileID: 7270442483274850398}
+  - building: {fileID: 1602936571}
+    gate: {fileID: 8580128933837205543}
   aros: {fileID: 484128833}
 --- !u!1 &1773150900
 GameObject:
@@ -275249,7 +275268,7 @@ MonoBehaviour:
   preUnlockMessage: 
   showUnlockedPanelOnStart: 0
   simulateEntry: 0
-  connectedGate: {fileID: 7270442483274850398}
+  connectedGate: {fileID: 0}
   gpsUnlockRadius: 50
   bypassGpsCheck: 1
   activated: 0
@@ -275776,7 +275795,7 @@ MonoBehaviour:
   preUnlockMessage: 
   showUnlockedPanelOnStart: 0
   simulateEntry: 0
-  connectedGate: {fileID: 0}
+  connectedGate: {fileID: 7270442483274850398}
   gpsUnlockRadius: 50
   bypassGpsCheck: 1
   activated: 0
@@ -277242,12 +277261,12 @@ PrefabInstance:
     - target: {fileID: 4755777993286910424, guid: cb19daed2fa4048b4b2286af5a1e155b,
         type: 3}
       propertyPath: m_Name
-      value: Gate
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 4755777993286910424, guid: cb19daed2fa4048b4b2286af5a1e155b,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7013091016929523227, guid: cb19daed2fa4048b4b2286af5a1e155b,
         type: 3}
@@ -277604,6 +277623,18 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1092636657}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &8580128933837205543 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7013091016929523227, guid: cb19daed2fa4048b4b2286af5a1e155b,
+    type: 3}
+  m_PrefabInstance: {fileID: 1092636657}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6b8937aa47e8345dbaed170694217e3f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using RamRoutes.Services;
 using Firebase.Auth;
+using System.Collections.Generic;
 
 public class UIManager : MonoBehaviour
 {
@@ -73,6 +74,19 @@ public class UIManager : MonoBehaviour
     
     [Header("Progress Bar")]
     public GameObject[] progressBarImages; // Array of progress bar images to activate sequentially
+
+    [Header("Building Gates")]
+    [Tooltip("Set pairs of BuildingInteraction and its connected Gate. UIManager will unlock the mapped gate when that building is unlocked.")]
+    public BuildingGatePair[] buildingGatePairs;
+
+    [System.Serializable]
+    public class BuildingGatePair
+    {
+        public BuildingInteraction building;
+        public Gate gate;
+    }
+
+    private Dictionary<BuildingInteraction, Gate> buildingGateMap;
 
     private Coroutine typingCoroutine;
     private Coroutine objectiveRepeatCoroutine;
@@ -896,11 +910,45 @@ private void HideObjectsWithTag(string tag)
 
         // Show unlock panel
         building.ShowBuildingUnlockedPanel();
+        
+        // Unlock mapped gate for this building, if any
+        UnlockGateForBuilding(building);
+        
         await building.DisplayUsersWhoUnlocked();
 
         // Keep the flag active so AROS stays visible until manually hidden
         // Note: keepArosVisible will be reset when a new dialog sequence starts
         return true;
+    }
+
+    public void UnlockGateForBuilding(BuildingInteraction building)
+    {
+        if (building == null) return;
+        if (buildingGateMap == null || buildingGateMap.Count == 0)
+        {
+            if (buildingGatePairs != null && buildingGatePairs.Length > 0)
+            {
+                // Build map lazily if needed
+                buildingGateMap = new Dictionary<BuildingInteraction, Gate>();
+                foreach (var pair in buildingGatePairs)
+                {
+                    if (pair != null && pair.building != null && pair.gate != null && !buildingGateMap.ContainsKey(pair.building))
+                    {
+                        buildingGateMap.Add(pair.building, pair.gate);
+                    }
+                }
+            }
+        }
+
+        if (buildingGateMap != null && buildingGateMap.TryGetValue(building, out var gate) && gate != null)
+        {
+            gate.UnlockGate();
+            Debug.Log($"UIManager: Unlocked mapped gate '{gate.gameObject.name}' for building '{building.buildingName}'.");
+        }
+        else
+        {
+            Debug.Log($"UIManager: No mapped gate found for building '{building.buildingName}'.");
+        }
     }
 
     private void UpdateProgressBar()
@@ -947,11 +995,38 @@ private void HideObjectsWithTag(string tag)
                 }
             }
             
+            // NEW: Open gates for any buildings already unlocked
+            var unlockedNames = new HashSet<string>(userUnlockedBuildings.Select(b => b.buildingName));
+            OpenMappedGatesForUnlocked(unlockedNames);
+            
             Debug.Log($"Initialized progress bar with {buildingsUnlockedCount} unlocked buildings");
         }
         catch (System.Exception ex)
         {
             Debug.LogError($"Failed to initialize progress bar: {ex.Message}");
+        }
+    }
+
+    // Unlock any mapped gates for the provided set of unlocked building names
+    private void OpenMappedGatesForUnlocked(HashSet<string> unlockedBuildingNames)
+    {
+        if (unlockedBuildingNames == null || unlockedBuildingNames.Count == 0) return;
+        if (buildingGatePairs == null || buildingGatePairs.Length == 0) return;
+
+        foreach (var pair in buildingGatePairs)
+        {
+            if (pair == null || pair.building == null || pair.gate == null) continue;
+
+            string bName = pair.building.buildingName;
+            if (!string.IsNullOrEmpty(bName) && unlockedBuildingNames.Contains(bName))
+            {
+                if (!pair.gate.IsUnlocked())
+                {
+                    // Silent to avoid dialog spam at startup
+                    pair.gate.UnlockGateSilently();
+                    Debug.Log($"UIManager: Restored gate '{pair.gate.gameObject.name}' for unlocked building '{bName}' (silent).");
+                }
+            }
         }
     }
 

@@ -45,6 +45,7 @@ public class BuildingInteraction : MonoBehaviour
     [SerializeField] private bool simulateEntry = false;
 
     [Header("Gate Integration")]
+    [Tooltip("Deprecated: Gate unlocking is now handled by UIManager via mapping.")]
     [SerializeField] private Gate connectedGate;
 
     [Header("GPS Integration")]
@@ -119,12 +120,7 @@ public class BuildingInteraction : MonoBehaviour
                     uiManager.ResetArosVisibility(true);
                 }
 
-                if (connectedGate != null)
-                {
-                    connectedGate.UnlockGate();
-
-                    Debug.Log($"Unlocked gate connected to building: {buildingName}");
-                }
+                // Gate unlock is now handled centrally in UIManager after unlock
             });
         }
 

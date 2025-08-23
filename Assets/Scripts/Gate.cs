@@ -33,6 +33,9 @@ public class Gate : MonoBehaviour
     
     // UI Manager reference
     private UIManager uiManager;
+
+    // One-shot flag to suppress dialog in UpdateGateState
+    private bool suppressDialogOnce = false;
     
     void Start()
     {
@@ -108,13 +111,17 @@ public class Gate : MonoBehaviour
             gateAnimator.SetBool(unlockAnimParam, isUnlocked);
         }
         
+        // Capture and clear suppression flag for this update
+        bool allowDialog = !suppressDialogOnce;
+        suppressDialogOnce = false;
+        
         // Fire appropriate event and play sound
         if (isUnlocked)
         {
             OnGateUnlocked?.Invoke();
             PlaySound(unlockSound, unlockVolume);
               // Show unlock message and animate AROS
-            if (uiManager != null && !string.IsNullOrEmpty(unlockedMessage))
+            if (allowDialog && uiManager != null && !string.IsNullOrEmpty(unlockedMessage))
             {
                 uiManager.ShowDialog(unlockedMessage, 5f);
             }
@@ -143,6 +150,19 @@ public class Gate : MonoBehaviour
             wasUnlocked = true;
             UpdateGateState();
             Debug.Log($"Gate {gameObject.name} unlocked!");
+        }
+    }
+
+    // Unlock without showing dialog once (used for startup restores)
+    public void UnlockGateSilently()
+    {
+        if (!isUnlocked)
+        {
+            suppressDialogOnce = true;
+            isUnlocked = true;
+            wasUnlocked = true;
+            UpdateGateState();
+            Debug.Log($"Gate {gameObject.name} unlocked silently.");
         }
     }
     
