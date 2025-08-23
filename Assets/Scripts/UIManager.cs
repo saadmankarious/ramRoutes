@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using RamRoutes.Services;
 using Firebase.Auth;
 using System.Collections.Generic;
+using RamRoutes.Model;
 
 public class UIManager : MonoBehaviour
 {
@@ -30,11 +31,7 @@ public class UIManager : MonoBehaviour
     [Header("Celebration Settings")]
     [SerializeField] private float celebrationPlaybackSpeed = 1f; // 1f = normal speed, 2f = double speed, 0.5f = half speed
     [SerializeField] private float celebrationDuration = 2f; // Total duration of celebration in seconds (controls both sound and particles)
-    public Text trashText;
-    public Text bottlesText;
-    public Text treesPlantedText;
-    public Text treesWateredText;
-    public Text levelText;
+
     public Text timerText;
     public Text heldItem;
     public GameObject dialogPanel;
@@ -45,8 +42,6 @@ public class UIManager : MonoBehaviour
     public GameObject trialCompleteMenu;
     public GameObject gamePauseMenu;
 
-    public GameObject endGamePanelNo;
-    public GameObject endGamePanelYes;
     [Header("Timing Settings")]
     [SerializeField] private float typingSpeed = 0.3f;
     [SerializeField] private float objectiveRepeatTime = 60;
@@ -74,7 +69,8 @@ public class UIManager : MonoBehaviour
     
     [Header("Progress Bar")]
     public GameObject[] progressBarImages; // Array of progress bar images to activate sequentially
-
+    public Text currentStageText; // Text to display current game stage (e.g., TC, CC, SC)
+    
     [Header("Building Gates")]
     [Tooltip("Set pairs of BuildingInteraction and its connected Gate. UIManager will unlock the mapped gate when that building is unlocked.")]
     public BuildingGatePair[] buildingGatePairs;
@@ -195,6 +191,40 @@ public class UIManager : MonoBehaviour
 
         // Initialize progress bar based on unlocked buildings
         _ = InitializeProgressBar();
+        
+        // Initialize game stage to TC if not already set
+        _ = InitializeGameStage();
+    }
+
+    private async Task InitializeGameStage()
+    {
+        try
+        {
+            var existing = GameStageService.LoadStageFromPrefs();
+            if (existing == null)
+            {
+                var toSet = GameStage.FromArea(Stage.TC);
+                SetCurrentStageText(toSet);
+                await GameStageService.SetStage(toSet);
+                Debug.Log("UIManager: Initialized game stage to TC");
+            }
+            else
+            {
+                SetCurrentStageText(existing);
+                Debug.Log($"UIManager: Game stage already set to {existing.area}");
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"UIManager: Failed to initialize game stage: {ex.Message}");
+        }
+    }
+
+    private void SetCurrentStageText(GameStage stage)
+    {
+        if (currentStageText == null || stage == null) return;
+        var label = stage.stageDisplayName ?? GameStage.GetDefaultDisplayName(stage.area);
+        currentStageText.text = label;
     }
 
     private async Task GetUserPoints()
@@ -231,75 +261,6 @@ public class UIManager : MonoBehaviour
         // Get and display user points
         _ = GetUserPoints();
 
-        StartTrial();
-    }
-
-    private void StartTrial()
-    {
-        if (GameManager.Instance.currentTrial == null)
-        {
-            Debug.LogError("Cannot start trial - currentTrial is null!");
-            return;
-        }
-
-        
-        int trialNumber = GameManager.Instance.currentTrial.trialNumber;
-        switch (trialNumber)
-        {
-            case 1:
-                ShowObjectsWithTag("CEO");
-
-                HideObjectsWithTag("Spaceship");
-                HideObjectsWithTag("TreeSpot");
-                HideObjectsWithTag("Box");
-                HideObjectsWithTag("Eagle");
-                HideObjectsWithTag("Trial 2 UI");
-                HideObjectsWithTag("Trial 3 UI");
-                break;
-
-            case 2:
-                HideObjectsWithTag("CEO");
-                ShowObjectsWithTag("Trial 2 UI");
-                ShowObjectsWithTag("TreeSpot");
-
-                HideObjectsWithTag("Box");
-                HideObjectsWithTag("Trial 3 UI");
-                HideObjectsWithTag("Eagle");
-                break;
-
-            case 3:
-                ShowObjectsWithTag("Eagle");
-                ShowObjectsWithTag("TreeSpot");
-                ShowObjectsWithTag("Spaceship");
-                ShowObjectsWithTag("Trial 3 UI");
-
-
-                HideObjectsWithTag("Box");
-                HideObjectsWithTag("Trial 2 UI");
-
-                break;
-
-            case 4:
-                ShowObjectsWithTag("Box");
-                ShowObjectsWithTag("Spaceship");
-
-                HideObjectsWithTag("Eagle");
-                HideObjectsWithTag("Trial 2 UI");
-                HideObjectsWithTag("Trial 3 UI");
-                break;
-
-            default:
-                Debug.LogWarning("Unknown trial number: " + trialNumber);
-                break;
-        }
-
-
-        currentTime = 0f;
-        timerRunning = true;
-        UpdateTimerDisplay();
-        
-        objectiveRepeatCoroutine = StartCoroutine(RepeatObjective());
-        timerCoroutine = StartCoroutine(CountdownTimer());
     }
 
     private void ShowObjectsWithTag(string tag)
@@ -623,77 +584,7 @@ private void HideObjectsWithTag(string tag)
         ShowDialog(objectiveMessage, 10f);
     }
 
-    private void Update()
-    {
-
-        var trial = GameManager.Instance.currentTrial;
-        // trashText.text = $"{trial.currentTrash}/{trial.targetTrash}";
-        // bottlesText.text = $"{trial.currentRecycling}/{trial.targetRecycling}";
-        // treesPlantedText.text = $"{trial.currentTreesPlanted}/{trial.targetTreesPlanted}";
-        // treesWateredText.text = $"{trial.currentTreesWatered}/{trial.targetTreesWatered}";
-        // levelText.text = trial.trialName;
-        // if (Input.GetKeyDown(KeyCode.Escape))
-        // {
-        //     TogglePauseMenu();
-        // }
-    }
-
-    public void ContinueToNextTrial()
-    {
-        Time.timeScale = 1f;
-        trialCompleteMenu.SetActive(false);
-        GameManager.Instance.SetGameLevel(GameManager.Instance.gameLevel + 1);
-        StartTrial();
-    }
-
-    public void RetryLevel()
-    {
-        Time.timeScale = 1f;
-        timeUpMenu.SetActive(false);
-        GameManager.Instance.ResetLevel();
-        StartTrial();
-    }
-
-    private void CleanUpLevelObjects()
-    {
-        DestroyAllWithTag("Trash");
-        DestroyAllWithTag("Recyclable");
-    }
-
-    private void DestroyAllWithTag(string tag)
-    {
-        foreach (GameObject obj in GameObject.FindGameObjectsWithTag(tag))
-        {
-            Destroy(obj);
-        }
-    }
-
-    private void StopAllGameCoroutines()
-    {
-        if (typingCoroutine != null) StopCoroutine(typingCoroutine);
-        if (objectiveRepeatCoroutine != null) StopCoroutine(objectiveRepeatCoroutine);
-        if (timerCoroutine != null) StopCoroutine(timerCoroutine);
-        if (dialogCoroutine != null) 
-        {
-            StopCoroutine(dialogCoroutine);
-            CleanupDialog();
-        }
-    }    private void OnDestroy()
-    {
-        StopAllCoroutines();
-        OnTrialComplete.RemoveAllListeners();
-        OnTimeExpired.RemoveAllListeners();
-        Time.timeScale = 1f;
-        
-        // Reset flags and hide AROS when scene ends
-        keepArosVisible = false;
-        if (aros != null)
-        {
-            aros.SetActive(false);
-        }
-    }
-
-    void CelebrationEffect()
+    private void CelebrationEffect()
     {
         Debug.Log("Playing celebration effect with multiple particle systems");
         if (teleportEffect == null)

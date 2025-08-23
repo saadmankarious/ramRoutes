@@ -92,7 +92,7 @@ namespace Platformer.Mechanics
 
         void Awake()
         {
-            Box.OnBoxOpened += HandleBoxOpened;
+            // Removed Box.OnBoxOpened subscription (legacy box feature)
             if (Instance == null)
             {
                 Instance = this;
@@ -271,7 +271,7 @@ namespace Platformer.Mechanics
             foreach (Collider2D hit in hits)
             {
                 if (hit.CompareTag("Trash") || hit.CompareTag("Recyclable") ||
-                   hit.CompareTag("Sapling") || hit.CompareTag("Eagle") || hit.CompareTag("Box"))
+                   hit.CompareTag("Sapling") || hit.CompareTag("Eagle"))
                 {
                     TrashItem trashComponent = hit.GetComponent<TrashItem>();
                     if (trashComponent != null)
@@ -317,25 +317,6 @@ namespace Platformer.Mechanics
                 }
                 heldTrash = null;
             }
-        }
-
-        void HandleBoxOpened()
-        {
-            Debug.Log("The box was opened! Let's do something!");
-            Schedule<PlayerDeath>();
-            StartCoroutine(LeaveAfterDelay());
-        }
-
-        private IEnumerator LeaveAfterDelay()
-        {
-            yield return new WaitForSeconds(4f);
-            PlayerPrefs.DeleteAll();
-            foreach (GameObject obj in GameObject.FindObjectsOfType<GameObject>())
-            {
-                if (obj.scene.name == null) Destroy(obj);
-            }
-            Resources.UnloadUnusedAssets();
-            System.GC.Collect();
         }
     }
 }
