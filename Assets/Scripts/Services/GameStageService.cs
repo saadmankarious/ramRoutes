@@ -24,6 +24,15 @@ namespace RamRoutes.Services
             PlayerPrefs.Save();
         }
 
+        // Clear only the stage-related PlayerPrefs keys
+        public static void ClearStageFromPrefs()
+        {
+            if (PlayerPrefs.HasKey(PrefsKey)) PlayerPrefs.DeleteKey(PrefsKey);
+            if (PlayerPrefs.HasKey(PrefsKeyDisplay)) PlayerPrefs.DeleteKey(PrefsKeyDisplay);
+            PlayerPrefs.Save();
+            Debug.Log("GameStageService: cleared stage from PlayerPrefs");
+        }
+
         // Read from PlayerPrefs; returns null if not set
         public static GameStage LoadStageFromPrefs()
         {

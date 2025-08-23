@@ -2,10 +2,21 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using UnityEngine.SceneManagement;
+using RamRoutes.Services;
+using RamRoutes.Model;
 
 public class OnboardingManager : MonoBehaviour
 {
-    public GameObject[] panels;
+    public GameObject[] panels; // Default panels when no stage set
+
+    // New: Stage-specific panel sets (assign in Inspector)
+    public GameObject[] panelsEasternCampus;
+    public GameObject[] panelsFirstStreet;
+    public GameObject[] panelsPedmall;
+    public GameObject[] panelsTC;
+
+    // Internals
+    private GameObject[] activePanels;
 
     // Audio
     public AudioSource narrationAudioSource;
@@ -36,12 +47,46 @@ public class OnboardingManager : MonoBehaviour
         Time.timeScale = 1f;
         Debug.Log($"OnboardingManager Start - Time.timeScale set to: {Time.timeScale}");
         
-        panelTexts = new Text[panels.Length];
-        narrationCoroutines = new Coroutine[panels.Length];
-
-        for (int i = 0; i < panels.Length; i++)
+        // Decide which panels to use based on game stage. If no stage set, use default panels
+        var stage = GameStageService.LoadStageFromPrefs();
+        if (stage == null)
         {
-            panelTexts[i] = panels[i].GetComponentInChildren<Text>();
+            activePanels = panels;
+            Debug.Log("Onboarding: No stage set. Using default panels.");
+        }
+        else
+        {
+            switch (stage.area)
+            {
+                case Stage.EasternCampus: activePanels = panelsEasternCampus; break;
+                case Stage.FirstStreet: activePanels = panelsFirstStreet; break;
+                case Stage.Pedmall: activePanels = panelsPedmall; break;
+                case Stage.TC: activePanels = panelsTC; break;
+                default: activePanels = panels; break;
+            }
+            if (activePanels == null || activePanels.Length == 0)
+            {
+                activePanels = panels; // fallback
+                Debug.LogWarning($"Onboarding: No panels configured for stage {stage.area}. Falling back to default panels.");
+            }
+            else
+            {
+                Debug.Log($"Onboarding: Using panels for stage {stage.area} (count={activePanels.Length}).");
+            }
+        }
+
+        if (activePanels == null || activePanels.Length == 0)
+        {
+            Debug.LogError("Onboarding: No panels available to display.");
+            return;
+        }
+        
+        panelTexts = new Text[activePanels.Length];
+        narrationCoroutines = new Coroutine[activePanels.Length];
+
+        for (int i = 0; i < activePanels.Length; i++)
+        {
+            panelTexts[i] = activePanels[i].GetComponentInChildren<Text>();
         }
 
         ShowPanel(currentPanelIndex);
@@ -75,15 +120,15 @@ public class OnboardingManager : MonoBehaviour
     private void ShowPanel(int index)
     {
         // Hide all panels first
-        foreach (var panel in panels)
+        foreach (var panel in activePanels)
         {
             panel.SetActive(false);
         }
 
-        if (index >= 0 && index < panels.Length)
+        if (index >= 0 && index < activePanels.Length)
         {
             // Show the current panel
-            panels[index].SetActive(true);
+            activePanels[index].SetActive(true);
 
             // Stop any previously running narration coroutine
             if (narrationCoroutines[index] != null)
@@ -101,7 +146,7 @@ public class OnboardingManager : MonoBehaviour
                 }
                 
                 // Disable play button during narration if it's visible
-                if (playButton != null && index == panels.Length - 1)
+                if (playButton != null && index == activePanels.Length - 1)
                 {
                     playButton.interactable = false;
                 }
@@ -111,7 +156,7 @@ public class OnboardingManager : MonoBehaviour
 
             if (playButton != null)
             {
-                playButton.gameObject.SetActive(index == panels.Length - 1);
+                playButton.gameObject.SetActive(index == activePanels.Length - 1);
             }
         }
     }
@@ -141,11 +186,11 @@ public class OnboardingManager : MonoBehaviour
             float pauseTime = 0.1f / narrationTypingSpeed;
             if (c == '.' || c == '!' || c == '?')
             {
-                pauseTime *= 50f; // Make pause 3x longer for sentence-ending punctuation
+                pauseTime *= 50f; // sentence-ending punctuation
             }
             else if (c == ',' || c == ';' || c == ':')
             {
-                pauseTime *= 25f; // Make pause 1.5x longer for mid-sentence punctuation
+                pauseTime *= 25f; // mid-sentence punctuation
             }
 
             yield return new WaitForSeconds(pauseTime);
@@ -158,7 +203,7 @@ public class OnboardingManager : MonoBehaviour
         }
         
         // Re-enable play button when narration is complete (if it's on the last panel)
-        if (playButton != null && currentPanelIndex == panels.Length - 1)
+        if (playButton != null && currentPanelIndex == activePanels.Length - 1)
         {
             playButton.interactable = true;
         }
@@ -167,7 +212,7 @@ public class OnboardingManager : MonoBehaviour
     private void AdvanceToNextPanel()
     {
         // Stop any previous tick sounds if switching panels quickly
-        if (sfxAudioSource.isPlaying)
+        if (sfxAudioSource != null && sfxAudioSource.isPlaying)
         {
             sfxAudioSource.Stop();
         }
@@ -175,7 +220,7 @@ public class OnboardingManager : MonoBehaviour
         currentPanelIndex++;
 
         // Circular behavior: if past the last panel, loop back to the first
-        if (currentPanelIndex >= panels.Length)
+        if (currentPanelIndex >= activePanels.Length)
         {
             currentPanelIndex = 0;
         }

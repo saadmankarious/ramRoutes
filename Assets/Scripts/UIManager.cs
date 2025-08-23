@@ -75,6 +75,10 @@ public class UIManager : MonoBehaviour
     [Tooltip("Set pairs of BuildingInteraction and its connected Gate. UIManager will unlock the mapped gate when that building is unlocked.")]
     public BuildingGatePair[] buildingGatePairs;
 
+    [Header("Debug / Startup")]
+    [Tooltip("If enabled, clears the saved game stage from PlayerPrefs on startup before initialization.")]
+    [SerializeField] private bool clearStageOnStart = false;
+
     [System.Serializable]
     public class BuildingGatePair
     {
@@ -98,6 +102,11 @@ public class UIManager : MonoBehaviour
     private NpcAutoMovement currentInteractingNPC; // Currently registered NPC for mobile interaction
     
     private bool isPaused = false;
+
+    // New: defer scene change until building unlock flow completes
+    private bool pendingSceneAfterUnlock = false;
+    // New: scene change should only occur after progress bar reveal AND unlock panel is closed
+    private bool readyToLeaveAfterPanelClose = false;
 
     // Call this to toggle pause menu
     public void TogglePauseMenu()
@@ -139,7 +148,9 @@ public class UIManager : MonoBehaviour
     {
         Time.timeScale = 1f; // Just in case it was paused
         SceneManager.LoadScene("Landing");
-    }    private void Awake()
+    }
+
+    private void Awake()
     {
         if (Instance == null)
         {
@@ -186,6 +197,16 @@ public class UIManager : MonoBehaviour
                 {
                     progressImage.SetActive(false);
                 }
+            }
+        }
+
+        // Clear saved stage locally if requested
+        if (clearStageOnStart)
+        {
+            GameStageService.ClearStageFromPrefs();
+            if (currentStageText != null)
+            {
+                currentStageText.text = ""; // clear label; will be set during initialization
             }
         }
 
@@ -802,13 +823,13 @@ private void HideObjectsWithTag(string tag)
         // Show unlock panel
         building.ShowBuildingUnlockedPanel();
         
-        // Unlock mapped gate for this building, if any
+        // Unlock mapped gate for this building, if any (may set a pending scene change)
         UnlockGateForBuilding(building);
         
+        // Wait for any additional UI (like users list) to finish
         await building.DisplayUsersWhoUnlocked();
 
-        // Keep the flag active so AROS stays visible until manually hidden
-        // Note: keepArosVisible will be reset when a new dialog sequence starts
+        // Do not change scene here anymore; it will be handled on progress bar reveal
         return true;
     }
 
@@ -833,7 +854,11 @@ private void HideObjectsWithTag(string tag)
 
         if (buildingGateMap != null && buildingGateMap.TryGetValue(building, out var gate) && gate != null)
         {
-            // New: set game stage based on gate name '1','2','3' before unlocking
+            // First: unlock the mapped gate
+            gate.UnlockGate();
+            Debug.Log($"UIManager: Unlocked mapped gate '{gate.gameObject.name}' for building '{building.buildingName}'.");
+
+            // Then: switch game stage based on gate name '1','2','3' AFTER unlocking
             var gateName = gate.gameObject.name?.Trim();
             if (!string.IsNullOrEmpty(gateName))
             {
@@ -844,15 +869,28 @@ private void HideObjectsWithTag(string tag)
 
                 if (nextStage.HasValue)
                 {
+                    var current = GameStageService.LoadStageFromPrefs();
                     var gs = GameStage.FromArea(nextStage.Value);
-                    SetCurrentStageText(gs); // update UI immediately
-                    _ = GameStageService.SetStage(gs); // persist (fire-and-forget)
-                    Debug.Log($"UIManager: Stage set to {gs.area} based on gate '{gateName}'.");
+
+                    // Update UI
+                    SetCurrentStageText(gs);
+
+                    // Persist locally immediately and remote in background
+                    GameStageService.SaveStageToPrefs(gs);
+                    _ = GameStageService.SaveStageToFirestore(gs);
+
+                    // If stage actually changed, mark for scene change after unlock flow completes
+                    if (current == null || current.area != nextStage.Value)
+                    {
+                        Debug.Log($"UIManager: Stage changed {current?.area} -> {gs.area} after gate unlock. Will load Onboarding on progress bar reveal.");
+                        pendingSceneAfterUnlock = true;
+                    }
+                    else
+                    {
+                        Debug.Log($"UIManager: Stage set to {gs.area} based on gate '{gateName}' after unlocking.");
+                    }
                 }
             }
-
-            gate.UnlockGate();
-            Debug.Log($"UIManager: Unlocked mapped gate '{gate.gameObject.name}' for building '{building.buildingName}'.");
         }
         else
         {
@@ -877,6 +915,30 @@ private void HideObjectsWithTag(string tag)
     public void UpdateProgressBarOnReveal()
     {
         UpdateProgressBar();
+
+        // If a stage change was requested, mark ready but wait until unlock panel is closed
+        if (pendingSceneAfterUnlock)
+        {
+            readyToLeaveAfterPanelClose = true;
+            Debug.Log("UIManager: Progress bar revealed after unlock. Waiting for unlock panel to close before changing scene.");
+        }
+    }
+
+    // Call this when the building unlock panel is closed by the user
+    public void OnUnlockPanelClosed()
+    {
+        // Only transition if both a stage change is pending and we've already revealed the progress bar
+        if (pendingSceneAfterUnlock && readyToLeaveAfterPanelClose)
+        {
+            pendingSceneAfterUnlock = false;
+            readyToLeaveAfterPanelClose = false;
+            SceneManager.LoadScene("Onboarding");
+        }
+        else
+        {
+            // Reset readiness to avoid stale state
+            readyToLeaveAfterPanelClose = false;
+        }
     }
 
     private async Task InitializeProgressBar()
@@ -1090,6 +1152,7 @@ private void HideObjectsWithTag(string tag)
             HideMobileInteractButton();
             
             // Clear button listeners
+            if (mobileInteractButton != null)
             if (mobileInteractButton != null)
             {
                 mobileInteractButton.onClick.RemoveAllListeners();

@@ -118,6 +118,8 @@ public class BuildingInteraction : MonoBehaviour
                 if (uiManager != null)
                 {
                     uiManager.ResetArosVisibility(true);
+                    // Notify UIManager so it can change scene if ready
+                    uiManager.OnUnlockPanelClosed();
                 }
 
                 // Gate unlock is now handled centrally in UIManager after unlock
@@ -432,7 +434,7 @@ public class BuildingInteraction : MonoBehaviour
             }
         }
     }
-    
+
     public async void UnlockBuilding()
     {
         if (uiManager != null)
@@ -449,13 +451,9 @@ public class BuildingInteraction : MonoBehaviour
 
         // Activate building after unlock
         activated = true;
-        
-        // Update progress bar when building is revealed
-        if (uiManager != null)
-        {
-            uiManager.UpdateProgressBarOnReveal();
-        }
-        
+
+
+
         // Play reward sound when building is revealed
         if (rewardSound != null && audioSource != null)
         {
@@ -468,7 +466,7 @@ public class BuildingInteraction : MonoBehaviour
         var userService = new UserService();
         var userProfile = await userService.GetUserProfileCachedOrRemoteAsync(userId);
         string userName = userProfile != null && !string.IsNullOrEmpty(userProfile.name) ? userProfile.name : userId;
-        
+
         // Award points for unlocking the building
         await userService.AddPoints(userId, 100);
         // Update UI with new points
@@ -488,6 +486,11 @@ public class BuildingInteraction : MonoBehaviour
             transform.position
         );
         await service.SaveUnlockedBuildingAsync(record);
+           // Update progress bar when building is revealed
+        if (uiManager != null)
+        {
+            uiManager.UpdateProgressBarOnReveal();
+        }
     }
     
     private bool IsPlayerCloseToBuilding()
