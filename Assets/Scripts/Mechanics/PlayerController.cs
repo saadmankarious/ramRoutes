@@ -15,6 +15,15 @@ namespace Platformer.Mechanics
         // Audio clips
         public AudioClip respawnAudio;
         public AudioClip ouchAudio;
+        
+        // Footstep sounds (assign in Inspector)
+        [Header("Footstep Sounds")]
+        public AudioClip walkSound1;
+        public AudioClip walkSound2;
+        [SerializeField] private float stepInterval = 0.35f; // seconds between steps at default speed
+        [SerializeField] private float stepVolume = 0.8f;
+        private float stepTimer = 0f;
+        private bool playFirstStep = true;
 
         // Movement variables
         public float moveSpeed = 7f;
@@ -191,7 +200,42 @@ namespace Platformer.Mechanics
             {
                 lastMoveDirection = moveInput;
             }
+
+            // Handle walking sounds (alternate two steps)
+            HandleFootsteps();
         }
+
+        // Play alternating footstep sounds when walking
+        private void HandleFootsteps()
+        {
+            // Only play when actually moving and allowed on painted tiles
+            bool isWalking = moveInput.magnitude > 0.1f && IsSteppingOnPaintedTile();
+
+            if (!isWalking)
+            {
+                // Reset timer when not walking so first step triggers quickly when moving again
+                stepTimer = 0f;
+                return;
+            }
+
+            // Optionally scale step interval by speed (faster speed -> faster steps)
+            float speedFactor = Mathf.Max(0.1f, moveSpeed / 7f); // 7f is the default speed in this script
+            float effectiveInterval = stepInterval / speedFactor;
+
+            stepTimer += Time.deltaTime;
+            if (stepTimer >= effectiveInterval)
+            {
+                stepTimer = 0f;
+
+                var clip = playFirstStep ? walkSound1 : walkSound2;
+                if (clip != null && audioSource != null)
+                {
+                    audioSource.PlayOneShot(clip, stepVolume);
+                }
+                playFirstStep = !playFirstStep;
+            }
+        }
+
         [SerializeField] private float offTileGracePeriod = 0.5f; // Time allowed off tiles before stopping
         private float timeOffTile = 0f;
         private bool wasOnTileLastFrame = true;
