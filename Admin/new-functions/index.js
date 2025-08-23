@@ -55,7 +55,7 @@ exports.notifyNewBuildingEvent = onDocumentCreated("building-events/{eventId}", 
 
     // Create notification message
     const message = {
-      topic: "updates", // Send to all users subscribed to "general" topic
+      condition: "'general' in topics || 'updates' in topics", // Send to devices subscribed to either topic
       notification: {
         title: `New Event: ${eventData.eventName}`,
         body: `Check out the new event at ${eventData.buildingName}!`
@@ -84,11 +84,11 @@ exports.notifyNewBuildingEvent = onDocumentCreated("building-events/{eventId}", 
       }
     };
 
-    // Send the notification
+    // Send the notification using topic condition
     const response = await getMessaging().send(message);
-    logger.info("Successfully sent building event notification", {
+    logger.info("Successfully sent building event notification to general OR updates", {
       messageId: response,
-      topic: "updates",
+      condition: "'general' in topics || 'updates' in topics",
       eventName: eventData.eventName
     });
 
@@ -125,7 +125,7 @@ exports.sendUserJoinedNotification = onDocumentUpdated(
 
                 // Create notification message
                 const message = {
-                    topic: 'updates', // Use same topic as building events for consistency
+                    condition: "'general' in topics || 'updates' in topics", // Send to devices subscribed to either topic
                     notification: {
                         title: 'New Player Joined!',
                         body: `${afterData.name || 'A new player'} has joined the game. Welcome them to the community!`
@@ -152,13 +152,15 @@ exports.sendUserJoinedNotification = onDocumentUpdated(
                     }
                 };
                 
-                // Send the notification
+                // Send the notification using topic condition
                 const response = await getMessaging().send(message);
-                logger.info('Successfully sent user joined notification', {
+                logger.info('Successfully sent user joined notification to general OR updates', {
                     messageId: response,
+                    condition: "'general' in topics || 'updates' in topics",
                     userId: userId,
                     userName: afterData.name
                 });
+
                 return response;
             }
             
@@ -173,3 +175,70 @@ exports.sendUserJoinedNotification = onDocumentUpdated(
         }
     }
 );
+
+/**
+ * Notify all users when someone unlocks a building
+ * Triggers when a document is created in the unlocked-trials collection
+ */
+exports.notifyBuildingUnlocked = onDocumentCreated("unlocked-trials/{unlockId}", async (event) => {
+    try {
+        const unlockData = event.data.data();
+        const unlockId = event.params.unlockId;
+        
+        logger.info("Building unlocked by user", {
+            unlockId: unlockId,
+            userName: unlockData.userName,
+            buildingName: unlockData.buildingName,
+            userId: unlockData.userId
+        });
+
+        // Create notification message
+        const message = {
+            condition: "'general' in topics || 'updates' in topics", // Send to devices subscribed to either topic
+            notification: {
+                title: 'New Building Unlocked! 🏢',
+                body: `${unlockData.userName || 'A player'} has unlocked ${unlockData.buildingName || 'a building'}! Check it out!`
+            },
+            data: {
+                unlockId: unlockId,
+                userName: unlockData.userName || "",
+                buildingName: unlockData.buildingName || "",
+                userId: unlockData.userId || "",
+                type: "building_unlocked"
+            },
+            android: {
+                notification: {
+                    icon: "ic_notification",
+                    color: "#FF9800", // Orange color for building unlocks
+                    sound: "default"
+                }
+            },
+            apns: {
+                payload: {
+                    aps: {
+                        badge: 1,
+                        sound: "default"
+                    }
+                }
+            }
+        };
+
+        // Send the notification using topic condition
+        const response = await getMessaging().send(message);
+        logger.info('Successfully sent building unlocked notification to general OR updates', {
+            messageId: response,
+            condition: "'general' in topics || 'updates' in topics",
+            userName: unlockData.userName,
+            buildingName: unlockData.buildingName
+        });
+
+        return response;
+
+    } catch (error) {
+        logger.error('Error sending building unlocked notification', {
+            error: error.message,
+            unlockId: event.params.unlockId
+        });
+        throw error;
+    }
+});
