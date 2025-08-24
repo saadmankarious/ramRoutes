@@ -75,6 +75,51 @@ public class BuildingInteraction : MonoBehaviour
     private UIManager uiManager;
     private BuildingProximityDetector proximityDetector;
 
+    // NEW: Switch into building viewing mode (same behavior as when entering an unlocked building)
+    private void EnterBuildingViewingMode()
+    {
+        // Update title UI
+        if (buildingTitleUnlcoked != null)
+        {
+            var buildingInfo = BuildingDataManager.GetBuildingInfo(buildingName);
+            buildingTitleUnlcoked.text = buildingInfo.displayName;
+        }
+
+        // Notify UI manager that we are in viewing mode
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.SetBuildingViewingMode(true, buildingName);
+        }
+
+        // Spawn NPCs for this building
+        if (NPCSpawner.Instance != null)
+        {
+            NPCSpawner.Instance.SpawnNPCForBuildingOnEnter(buildingName);
+        }
+
+        // Show events panel
+        if (buildingEventsPanel != null)
+        {
+            if (eventsLoaded)
+            {
+                DisplayBuildingEvents();
+            }
+            else
+            {
+                StartCoroutine(ShowEventsWhenReady());
+            }
+        }
+    }
+
+    private IEnumerator ShowEventsWhenReady()
+    {
+        while (!eventsLoaded)
+        {
+            yield return null;
+        }
+        DisplayBuildingEvents();
+    }
+
     void Awake()
     {
         audioSource = GetComponent<AudioSource>();
@@ -118,7 +163,17 @@ public class BuildingInteraction : MonoBehaviour
                 if (uiManager != null)
                 {
                     uiManager.ResetArosVisibility(true);
-                    // Notify UIManager so it can change scene if ready
+                }
+
+                // When the panel closes and the player is already in range of this building, enter viewing mode
+                if (activated && isPlayerInRange)
+                {
+                    EnterBuildingViewingMode();
+                }
+
+                // Notify UIManager so it can change scene if ready (may load another scene)
+                if (uiManager != null)
+                {
                     uiManager.OnUnlockPanelClosed();
                 }
 
@@ -286,23 +341,8 @@ public class BuildingInteraction : MonoBehaviour
             // Display building events and current users when player is in range
             if (activated)
             {
-                // Display building name in unlocked title
-                if (buildingTitleUnlcoked != null)
-                {
-                    var buildingInfo = BuildingDataManager.GetBuildingInfo(buildingName);
-                    buildingTitleUnlcoked.text = buildingInfo.displayName;
-                }
-                
-                // Spawn NPCs when player enters an unlocked building
-                if (NPCSpawner.Instance != null)
-                {
-                    NPCSpawner.Instance.SpawnNPCForBuildingOnEnter(buildingName);
-                }
-                
-                if (buildingEventsPanel != null && eventsLoaded)
-                {
-                    DisplayBuildingEvents();
-                }
+                // Switch to building viewing mode
+                EnterBuildingViewingMode();
             }
             else
             {
@@ -378,6 +418,12 @@ public class BuildingInteraction : MonoBehaviour
             {
                 Debug.LogWarning($"BuildingInteraction: NPCSpawner.Instance is null, cannot despawn NPCs");
             }
+
+            // Leaving range exits viewing mode
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.SetBuildingViewingMode(false);
+            }
         }
     }
 
@@ -452,7 +498,11 @@ public class BuildingInteraction : MonoBehaviour
         // Activate building after unlock
         activated = true;
 
-
+        // If player is already in range, immediately switch to viewing mode
+        if (isPlayerInRange)
+        {
+            EnterBuildingViewingMode();
+        }
 
         // Play reward sound when building is revealed
         if (rewardSound != null && audioSource != null)

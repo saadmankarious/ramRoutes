@@ -108,6 +108,10 @@ public class UIManager : MonoBehaviour
     // New: scene change should only occur after progress bar reveal AND unlock panel is closed
     private bool readyToLeaveAfterPanelClose = false;
 
+    // Viewing mode state (prevents scene changes while inspecting a building)
+    private bool isInBuildingViewingMode = false;
+    private string currentViewedBuilding = null;
+
     // Call this to toggle pause menu
     public void TogglePauseMenu()
     {
@@ -946,18 +950,11 @@ private void HideObjectsWithTag(string tag)
     // Call this when the building unlock panel is closed by the user
     public void OnUnlockPanelClosed()
     {
-        // Only transition if both a stage change is pending and we've already revealed the progress bar
-        if (pendingSceneAfterUnlock && readyToLeaveAfterPanelClose)
-        {
-            pendingSceneAfterUnlock = false;
-            readyToLeaveAfterPanelClose = false;
-            SceneManager.LoadScene("Onboarding");
-        }
-        else
-        {
-            // Reset readiness to avoid stale state
-            readyToLeaveAfterPanelClose = false;
-        }
+        // Defer to unified gate: only transition if not in building viewing mode
+        TryProceedPendingScene();
+
+        // If conditions are not yet met, keep flags; we'll try again when they are
+        // Avoid resetting readiness here to prevent losing intent
     }
 
     private async Task InitializeProgressBar()
@@ -1200,6 +1197,30 @@ private void HideObjectsWithTag(string tag)
         {
             mobileInteractButton.gameObject.SetActive(false);
             Debug.Log("UIManager: Hiding mobile interact button");
+        }
+    }
+
+    // Allows gameplay to announce entering/leaving a building viewing state.
+    // While active, pending onboarding scene transitions are deferred.
+    public void SetBuildingViewingMode(bool active, string buildingName = null)
+    {
+        isInBuildingViewingMode = active;
+        currentViewedBuilding = active ? buildingName : null;
+        if (!active)
+        {
+            // Reattempt any pending transition when viewing ends
+            TryProceedPendingScene();
+        }
+    }
+
+    // Centralized gate for onboarding transition conditions
+    private void TryProceedPendingScene()
+    {
+        if (pendingSceneAfterUnlock && readyToLeaveAfterPanelClose && !isInBuildingViewingMode)
+        {
+            pendingSceneAfterUnlock = false;
+            readyToLeaveAfterPanelClose = false;
+            SceneManager.LoadScene("Onboarding");
         }
     }
 }
