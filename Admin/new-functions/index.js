@@ -45,17 +45,45 @@ exports.notifyNewBuildingEvent = onDocumentCreated("building-events/{eventId}", 
   try {
     const eventData = event.data.data();
     const eventId = event.params.eventId;
+    const creatorUserId = eventData.createdBy || eventData.userId; // Get the user who created the event
     
     logger.info("New building event created", {
       eventId: eventId,
       eventName: eventData.eventName,
       buildingName: eventData.buildingName,
-      date: eventData.date
+      date: eventData.date,
+      createdBy: creatorUserId
     });
+
+    // Get all user FCM tokens except the one who created the event
+    const admin = require('firebase-admin');
+    const db = admin.firestore();
+    
+    let usersQuery = db.collection('users');
+    
+    // Only exclude creator if we have their userId
+    if (creatorUserId) {
+      usersQuery = usersQuery.where(admin.firestore.FieldPath.documentId(), '!=', creatorUserId);
+    }
+    
+    const usersSnapshot = await usersQuery.get();
+    
+    const tokens = [];
+    usersSnapshot.forEach(doc => {
+      const user = doc.data();
+      if (user.fcmToken) {
+        tokens.push(user.fcmToken);
+      }
+    });
+    
+    if (tokens.length === 0) {
+      logger.info("No users to notify about building event", { eventId, creatorUserId });
+      return null;
+    }
 
     // Create notification message
     const message = {
-      condition: "'general' in topics || 'updates' in topics", // Send to devices subscribed to either topic
+      tokens: tokens, // Send to specific tokens instead of topic condition
       notification: {
         title: `New Event: ${eventData.eventName}`,
         body: `Check out the new event at ${eventData.buildingName}!`
@@ -84,12 +112,14 @@ exports.notifyNewBuildingEvent = onDocumentCreated("building-events/{eventId}", 
       }
     };
 
-    // Send the notification using topic condition
-    const response = await getMessaging().send(message);
-    logger.info("Successfully sent building event notification to general OR updates", {
-      messageId: response,
-      condition: "'general' in topics || 'updates' in topics",
-      eventName: eventData.eventName
+    // Send the notification to specific tokens
+    const response = await getMessaging().sendMulticast(message);
+    logger.info("Successfully sent building event notification to other users", {
+      successCount: response.successCount,
+      failureCount: response.failureCount,
+      totalTokens: tokens.length,
+      eventName: eventData.eventName,
+      createdBy: creatorUserId
     });
 
     return response;
@@ -105,67 +135,83 @@ exports.notifyNewBuildingEvent = onDocumentCreated("building-events/{eventId}", 
 
 /**
  * Notify all users when someone joins for the first time
- * Triggers when a user document is updated in the users collection
+ * Triggers when a new user document is created in the users collection
  */
-exports.sendUserJoinedNotification = onDocumentUpdated(
+exports.sendUserJoinedNotification = onDocumentCreated(
     'users/{userId}',
     async (event) => {
         try {
-            const beforeData = event.data.before.data();
-            const afterData = event.data.after.data();
+            const userData = event.data.data();
             const userId = event.params.userId;
             
-            // Check if lastLogin was added for the first time (didn't exist before, exists now)
-            if (!beforeData.lastLogin && afterData.lastLogin) {
-                logger.info("User signed in for the first time. Pushing a notification", {
-                    userId: userId,
-                    userName: afterData.name,
-                    email: afterData.email
-                });
+            logger.info("New user joined the game. Pushing a notification", {
+                userId: userId,
+                userName: userData.name,
+                email: userData.email
+            });
 
-                // Create notification message
-                const message = {
-                    condition: "'general' in topics || 'updates' in topics", // Send to devices subscribed to either topic
+            // Get all user FCM tokens except the one who joined
+            const admin = require('firebase-admin');
+            const db = admin.firestore();
+            
+            // Query all users except the one who just joined to get their FCM tokens
+            const usersSnapshot = await db.collection('users')
+                .where(admin.firestore.FieldPath.documentId(), '!=', userId)
+                .get();
+            
+            const tokens = [];
+            usersSnapshot.forEach(doc => {
+                const user = doc.data();
+                if (user.fcmToken) {
+                    tokens.push(user.fcmToken);
+                }
+            });
+            
+            if (tokens.length === 0) {
+                logger.info("No other users to notify", { userId });
+                return null;
+            }
+
+            // Create notification message
+            const message = {
+                tokens: tokens, // Send to specific tokens instead of topic condition
+                notification: {
+                    title: 'New Player Joined!',
+                    body: `${userData.name || 'A new player'} has joined the game. Welcome them to the community!`
+                },
+                data: {
+                    userId: userId,
+                    userName: userData.name || "",
+                    type: "user_joined"
+                },
+                android: {
                     notification: {
-                        title: 'New Player Joined!',
-                        body: `${afterData.name || 'A new player'} has joined the game. Welcome them to the community!`
-                    },
-                    data: {
-                        userId: userId,
-                        userName: afterData.name || "",
-                        type: "user_joined"
-                    },
-                    android: {
-                        notification: {
-                            icon: "ic_notification",
-                            color: "#4CAF50",
+                        icon: "ic_notification",
+                        color: "#4CAF50",
+                        sound: "default"
+                    }
+                },
+                apns: {
+                    payload: {
+                        aps: {
+                            badge: 1,
                             sound: "default"
                         }
-                    },
-                    apns: {
-                        payload: {
-                            aps: {
-                                badge: 1,
-                                sound: "default"
-                            }
-                        }
                     }
-                };
-                
-                // Send the notification using topic condition
-                const response = await getMessaging().send(message);
-                logger.info('Successfully sent user joined notification to general OR updates', {
-                    messageId: response,
-                    condition: "'general' in topics || 'updates' in topics",
-                    userId: userId,
-                    userName: afterData.name
-                });
-
-                return response;
-            }
+                }
+            };
             
-            // If lastLogin already existed, don't send notification
-            return null;
+            // Send the notification to specific tokens
+            const response = await getMessaging().sendMulticast(message);
+            logger.info('Successfully sent user joined notification to other users', {
+                successCount: response.successCount,
+                failureCount: response.failureCount,
+                totalTokens: tokens.length,
+                userId: userId,
+                userName: userData.name
+            });
+
+            return response;
         } catch (error) {
             logger.error('Error sending user joined notification', {
                 error: error.message,
@@ -184,17 +230,39 @@ exports.notifyBuildingUnlocked = onDocumentCreated("unlocked-trials/{unlockId}",
     try {
         const unlockData = event.data.data();
         const unlockId = event.params.unlockId;
+        const userId = unlockData.userId; // Get the user who unlocked the building
         
         logger.info("Building unlocked by user", {
             unlockId: unlockId,
             userName: unlockData.userName,
             buildingName: unlockData.buildingName,
-            userId: unlockData.userId
+            userId: userId
         });
+
+        // Get all user FCM tokens except the one who unlocked the building
+        const admin = require('firebase-admin');
+        const db = admin.firestore();
+        
+        const usersSnapshot = await db.collection('users')
+            .where(admin.firestore.FieldPath.documentId(), '!=', userId)
+            .get();
+        
+        const tokens = [];
+        usersSnapshot.forEach(doc => {
+            const user = doc.data();
+            if (user.fcmToken) {
+                tokens.push(user.fcmToken);
+            }
+        });
+        
+        if (tokens.length === 0) {
+            logger.info("No other users to notify about building unlock", { userId });
+            return null;
+        }
 
         // Create notification message
         const message = {
-            condition: "'general' in topics || 'updates' in topics", // Send to devices subscribed to either topic
+            tokens: tokens, // Send to specific tokens instead of topic condition
             notification: {
                 title: 'New Building Unlocked! 🏢',
                 body: `${unlockData.userName || 'A player'} has unlocked ${unlockData.buildingName || 'a building'}! Check it out!`
@@ -223,11 +291,12 @@ exports.notifyBuildingUnlocked = onDocumentCreated("unlocked-trials/{unlockId}",
             }
         };
 
-        // Send the notification using topic condition
-        const response = await getMessaging().send(message);
-        logger.info('Successfully sent building unlocked notification to general OR updates', {
-            messageId: response,
-            condition: "'general' in topics || 'updates' in topics",
+        // Send the notification to specific tokens
+        const response = await getMessaging().sendMulticast(message);
+        logger.info('Successfully sent building unlocked notification to other users', {
+            successCount: response.successCount,
+            failureCount: response.failureCount,
+            totalTokens: tokens.length,
             userName: unlockData.userName,
             buildingName: unlockData.buildingName
         });
