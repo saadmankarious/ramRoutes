@@ -21,8 +21,7 @@ namespace Platformer.Gameplay
                 model.virtualCamera.m_LookAt = null;
                 player.controlEnabled = false;
 
-                if (player.audioSource && player.ouchAudio)
-                    player.audioSource.PlayOneShot(player.ouchAudio);
+        
                 player.animator.SetTrigger("hurt");
                 player.animator.SetBool("dead", true);
 

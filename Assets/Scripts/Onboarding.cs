@@ -42,6 +42,23 @@ public class OnboardingManager : MonoBehaviour
     private bool isPaused = false;
     public GameObject gamePauseMenu;
 
+    // Ambient audio layers
+    [Header("Ambient Audio")] 
+    public AudioSource ambientCalmSource;   // soft wind
+    public AudioSource ambientChatterSource; // distant chatter
+    public AudioSource ambientHumSource;    // background hum
+    [Range(0f,1f)] public float ambientBaseVolume = 0.6f;
+    [Range(0f,1f)] public float ambientLowVolume = 0.15f;
+    [SerializeField] private float ambientFadeDuration = 0.75f;
+
+    // Typing fade settings
+    [Header("Typing FX")] 
+    [Range(0.5f,1f)] public float typeFadeStartAlpha = 0.9f;
+    [SerializeField] private float typeFadeDuration = 0.06f;
+
+    private Coroutine typeFlashCoroutine;
+    private Coroutine calmFadeCoroutine, chatterFadeCoroutine, humFadeCoroutine;
+
     private void Start()
     {
         // Ensure time is running properly when scene starts
@@ -163,6 +180,12 @@ public class OnboardingManager : MonoBehaviour
             {
                 narrationCoroutines[index] = StartCoroutine(NarrateText(panelTexts[index]));
             }
+
+            // Determine ambient tone for this panel from its full text
+            if (panelTexts[index] != null)
+            {
+                UpdateAmbientForText(panelTexts[index].text);
+            }
         }
     }
 
@@ -176,6 +199,9 @@ public class OnboardingManager : MonoBehaviour
         foreach (char c in fullText)
         {
             textComponent.text += c;
+
+            // Subtle per-character fade-in
+            TriggerTypeFlash(textComponent);
 
             // Play tick sound based on interval
             if (sfxAudioSource != null && tickClip != null)
@@ -212,6 +238,125 @@ public class OnboardingManager : MonoBehaviour
         {
             playButton.interactable = true;
         }
+    }
+
+    // Subtle overall text alpha flash per typed character
+    private void TriggerTypeFlash(Text t)
+    {
+        if (t == null) return;
+        if (typeFlashCoroutine != null) StopCoroutine(typeFlashCoroutine);
+        typeFlashCoroutine = StartCoroutine(FadeTextAlpha(t, typeFadeStartAlpha, typeFadeDuration));
+    }
+
+    private IEnumerator FadeTextAlpha(Text t, float startAlpha, float duration)
+    {
+        if (t == null) yield break;
+        Color c = t.color;
+        float endAlpha = 1f;
+        float origAlpha = c.a;
+        c.a = Mathf.Min(startAlpha, endAlpha);
+        t.color = c;
+
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float a = Mathf.Lerp(c.a, endAlpha, elapsed / duration);
+            Color cc = t.color; cc.a = a; t.color = cc;
+            yield return null;
+        }
+        Color final = t.color; final.a = endAlpha; t.color = final;
+    }
+
+    // Ambient tone detection and crossfade
+    private enum NarrativeTone { Calm, Social, Tense }
+
+    private void UpdateAmbientForText(string fullText)
+    {
+        var tone = DetectTone(fullText);
+        ApplyAmbientTone(tone);
+    }
+
+    private NarrativeTone DetectTone(string txt)
+    {
+        if (string.IsNullOrEmpty(txt)) return NarrativeTone.Calm;
+        string t = txt.ToLowerInvariant();
+
+        // Simple heuristics
+        if (t.Contains("danger") || t.Contains("hurry") || t.Contains("run") || t.Contains("warning") || t.Contains("!"))
+            return NarrativeTone.Tense;
+        if (t.Contains("welcome") || t.Contains("together") || t.Contains("friends") || t.Contains("community") || t.Contains("market") || t.Contains("gather"))
+            return NarrativeTone.Social;
+        return NarrativeTone.Calm;
+    }
+
+    private void ApplyAmbientTone(NarrativeTone tone)
+    {
+        // Ensure sources are ready
+        EnsureAmbientPlaying(ambientCalmSource);
+        EnsureAmbientPlaying(ambientChatterSource);
+        EnsureAmbientPlaying(ambientHumSource);
+
+        float calmTarget = 0f, chatterTarget = 0f, humTarget = 0f;
+        switch (tone)
+        {
+            case NarrativeTone.Calm:
+                calmTarget = ambientBaseVolume;
+                chatterTarget = 0f;
+                humTarget = ambientLowVolume;
+                break;
+            case NarrativeTone.Social:
+                calmTarget = ambientLowVolume;
+                chatterTarget = ambientBaseVolume;
+                humTarget = 0.1f;
+                break;
+            case NarrativeTone.Tense:
+                calmTarget = 0f;
+                chatterTarget = 0f;
+                humTarget = ambientBaseVolume;
+                break;
+        }
+
+        // Crossfade to targets
+        if (ambientCalmSource != null)
+        {
+            if (calmFadeCoroutine != null) StopCoroutine(calmFadeCoroutine);
+            calmFadeCoroutine = StartCoroutine(CrossfadeVolume(ambientCalmSource, calmTarget, ambientFadeDuration));
+        }
+        if (ambientChatterSource != null)
+        {
+            if (chatterFadeCoroutine != null) StopCoroutine(chatterFadeCoroutine);
+            chatterFadeCoroutine = StartCoroutine(CrossfadeVolume(ambientChatterSource, chatterTarget, ambientFadeDuration));
+        }
+        if (ambientHumSource != null)
+        {
+            if (humFadeCoroutine != null) StopCoroutine(humFadeCoroutine);
+            humFadeCoroutine = StartCoroutine(CrossfadeVolume(ambientHumSource, humTarget, ambientFadeDuration));
+        }
+    }
+
+    private void EnsureAmbientPlaying(AudioSource src)
+    {
+        if (src == null) return;
+        src.loop = true;
+        if (!src.isPlaying)
+        {
+            src.Play();
+        }
+    }
+
+    private IEnumerator CrossfadeVolume(AudioSource src, float targetVolume, float duration)
+    {
+        if (src == null) yield break;
+        float start = src.volume;
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            src.volume = Mathf.Lerp(start, targetVolume, elapsed / duration);
+            yield return null;
+        }
+        src.volume = targetVolume;
     }
 
     private void AdvanceToNextPanel()

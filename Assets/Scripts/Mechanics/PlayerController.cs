@@ -12,9 +12,6 @@ namespace Platformer.Mechanics
         // Singleton instance
         public static PlayerController Instance { get; private set; }
 
-        // Audio clips
-        public AudioClip respawnAudio;
-        public AudioClip ouchAudio;
         
         // Footstep sounds (assign in Inspector)
         [Header("Footstep Sounds")]
