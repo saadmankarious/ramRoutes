@@ -225,6 +225,16 @@ public class NpcAutoMovement : MonoBehaviour
         }
         
         UpdateAnimationParameters();
+        
+        // Keep NPC panel visible while player is in contact or during conversation; hide otherwise
+        if (npcPanel != null)
+        {
+            bool shouldBeVisible = playerNearby || isInConversation;
+            if (npcPanel.gameObject.activeSelf != shouldBeVisible)
+            {
+                npcPanel.gameObject.SetActive(shouldBeVisible);
+            }
+        }
     }
     
     void HandleMovement()
@@ -544,6 +554,12 @@ public class NpcAutoMovement : MonoBehaviour
         if (conversationLines.Length == 0) return;
         if (npcPanel == null || conversationText == null) return;
         
+        // Ensure panel is visible when starting/continuing interaction
+        if (!npcPanel.gameObject.activeSelf)
+        {
+            npcPanel.gameObject.SetActive(true);
+        }
+        
         isInConversation = true;
         currentLineIndex = 0;
         StartTyping();
@@ -656,6 +672,12 @@ public class NpcAutoMovement : MonoBehaviour
             playerNearby = true;
             Debug.Log($"NPC {gameObject.name}: Player entered trigger, starting conversation");
             
+            // Ensure panel visible on contact
+            if (npcPanel != null && !npcPanel.gameObject.activeSelf)
+            {
+                npcPanel.gameObject.SetActive(true);
+            }
+            
             // Switch to normal state if pursuing
             if (currentState == NPCState.PursuingPlayer)
             {
@@ -674,6 +696,12 @@ public class NpcAutoMovement : MonoBehaviour
         {
             playerNearby = true;
             Debug.Log($"NPC {gameObject.name}: Player collision detected, starting conversation");
+            
+            // Ensure panel visible on contact
+            if (npcPanel != null && !npcPanel.gameObject.activeSelf)
+            {
+                npcPanel.gameObject.SetActive(true);
+            }
             
             // Switch to normal state if pursuing
             if (currentState == NPCState.PursuingPlayer)
@@ -698,6 +726,12 @@ public class NpcAutoMovement : MonoBehaviour
                 EndConversation();
             }
             
+            // Hide panel when player is no longer in contact
+            if (npcPanel != null)
+            {
+                npcPanel.gameObject.SetActive(false);
+            }
+            
             // Start return to spawn sequence
             if (currentState == NPCState.Normal)
             {
@@ -718,6 +752,12 @@ public class NpcAutoMovement : MonoBehaviour
                 EndConversation();
             }
             
+            // Hide panel when player is no longer in contact
+            if (npcPanel != null)
+            {
+                npcPanel.gameObject.SetActive(false);
+            }
+            
             // Start return to spawn sequence
             if (currentState == NPCState.Normal)
             {
@@ -725,7 +765,7 @@ public class NpcAutoMovement : MonoBehaviour
             }
         }
     }
-
+    
     void StartReturnToSpawn()
     {
         if (currentState != NPCState.Normal) return;
