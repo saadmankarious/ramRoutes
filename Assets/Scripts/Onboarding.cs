@@ -96,7 +96,7 @@ public class OnboardingManager : MonoBehaviour
 
         if (playButton != null)
         {
-            playButton.gameObject.SetActive(false);
+            // Visibility is controlled by ShowPanel; do not override here.
             playButton.onClick.AddListener(StartGame);
         }
 
@@ -130,6 +130,26 @@ public class OnboardingManager : MonoBehaviour
             // Show the current panel
             activePanels[index].SetActive(true);
 
+            // Configure buttons visibility for this index
+            if (advanceButton != null)
+            {
+                // Hide advance button on last (or single) panel
+                bool showAdvance = index < activePanels.Length - 1;
+                advanceButton.gameObject.SetActive(showAdvance);
+                advanceButton.interactable = false; // will be re-enabled after narration (if shown)
+            }
+
+            if (playButton != null)
+            {
+                // Only show play on the last panel
+                playButton.gameObject.SetActive(index == activePanels.Length - 1);
+                if (index == activePanels.Length - 1)
+                {
+                    // Will be enabled after narration completes
+                    playButton.interactable = false;
+                }
+            }
+
             // Stop any previously running narration coroutine
             if (narrationCoroutines[index] != null)
             {
@@ -139,24 +159,7 @@ public class OnboardingManager : MonoBehaviour
             // Start the narration coroutine for the current panel
             if (panelTexts[index] != null)
             {
-                // Disable advance button during narration
-                if (advanceButton != null)
-                {
-                    advanceButton.interactable = false;
-                }
-                
-                // Disable play button during narration if it's visible
-                if (playButton != null && index == activePanels.Length - 1)
-                {
-                    playButton.interactable = false;
-                }
-                
                 narrationCoroutines[index] = StartCoroutine(NarrateText(panelTexts[index]));
-            }
-
-            if (playButton != null)
-            {
-                playButton.gameObject.SetActive(index == activePanels.Length - 1);
             }
         }
     }
@@ -196,8 +199,8 @@ public class OnboardingManager : MonoBehaviour
             yield return new WaitForSeconds(pauseTime);
         }
         
-        // Re-enable advance button when narration is complete
-        if (advanceButton != null)
+        // Re-enable advance button when narration is complete (only if not on last panel)
+        if (advanceButton != null && currentPanelIndex < activePanels.Length - 1)
         {
             advanceButton.interactable = true;
         }
@@ -217,14 +220,13 @@ public class OnboardingManager : MonoBehaviour
             sfxAudioSource.Stop();
         }
 
-        currentPanelIndex++;
-
-        // Circular behavior: if past the last panel, loop back to the first
-        if (currentPanelIndex >= activePanels.Length)
+        // If already at the last panel, do not loop back
+        if (currentPanelIndex >= activePanels.Length - 1)
         {
-            currentPanelIndex = 0;
+            return;
         }
 
+        currentPanelIndex++;
         ShowPanel(currentPanelIndex);
     }
 
