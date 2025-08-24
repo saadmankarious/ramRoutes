@@ -7,7 +7,8 @@ namespace RamRoutes.Model
         EasternCampus = 0,
         FirstStreet = 1,
         Pedmall = 2,
-        TC = 3
+        TC = 3,
+        Terminal = 4
     }
 
     [System.Serializable]
@@ -37,6 +38,7 @@ namespace RamRoutes.Model
                 case Stage.FirstStreet: return "1st Street";
                 case Stage.Pedmall: return "Pedmall";
                 case Stage.TC: return "TC";
+                case Stage.Terminal: return "Terminal";
                 default: return area.ToString();
             }
         }

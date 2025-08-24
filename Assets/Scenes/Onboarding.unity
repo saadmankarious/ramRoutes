@@ -1097,8 +1097,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0.000010014, y: 59.762}
-  m_SizeDelta: {x: 381.9111, y: 119.5235}
+  m_AnchoredPosition: {x: 326.06, y: 148.82}
+  m_SizeDelta: {x: 99.9293, y: 99.4484}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &735304037
 MonoBehaviour:
@@ -1760,10 +1760,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 735788557}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0.0000047684}
-  m_SizeDelta: {x: 593.2744, y: 310.7252}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: -158.72559, y: -87.27481}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1070270627
 MonoBehaviour:
@@ -1798,10 +1798,11 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Ram\u2026 you\u2019ve done it. His soul is whole, but his heart\u2026
-    still hidden.\nVenus never meant to punish Aros. She meant to protect him.\nFrom
-    what? Or\u2026 from who?\nThe campus trembles, and the true path reveals itself.
-    The journey isn\u2019t over. Not yet."
+  m_Text: "You\u2019ve done it. The fragments are whole.\nAnd yet\u2026 something
+    is wrong.\nVenus never sought to punish Aros. She sought to protect him.\nBut
+    from what, Ram?\nThe campus trembles, and the veil cracks.\nThe truth is not
+    an ending\u2026 it\u2019s a beginning. And the real journey\u2026 is about to
+    begin."
 --- !u!222 &1070270628
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -3693,7 +3694,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0.42242432, y: 0.072631836}
+  m_AnchoredPosition: {x: 0.42236328, y: 0.072631836}
   m_SizeDelta: {x: -50.01001, y: -50.380005}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1792958413
@@ -4168,6 +4169,8 @@ MonoBehaviour:
   panelsPedmall:
   - {fileID: 1630868605}
   panelsTC: []
+  panelsTerminal:
+  - {fileID: 735788556}
   narrationAudioSource: {fileID: 220499362}
   narrationClip: {fileID: 8300000, guid: aa449c171b02d498e8692780c8c04019, type: 3}
   sfxAudioSource: {fileID: 1874204027}
@@ -4226,9 +4229,9 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 735304036}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 1}
-  m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: -325, y: 31}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0.000002861, y: 0.0000057817}
   m_SizeDelta: {x: 97.4026, y: 97.40259}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!95 &2071366472

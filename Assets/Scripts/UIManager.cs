@@ -916,7 +916,26 @@ private void HideObjectsWithTag(string tag)
     {
         UpdateProgressBar();
 
-        // If a stage change was requested, mark ready but wait until unlock panel is closed
+        // If the last building was just unlocked, move to Terminal stage
+        bool isFinalUnlock = buildingsUnlockedCount >= 6 || (progressBarImages != null && buildingsUnlockedCount >= progressBarImages.Length);
+        if (isFinalUnlock)
+        {
+            var current = GameStageService.LoadStageFromPrefs();
+            var target = GameStage.FromArea(Stage.Terminal);
+
+            // Update UI and persist stage to Terminal
+            SetCurrentStageText(target);
+            GameStageService.SaveStageToPrefs(target);
+            _ = GameStageService.SaveStageToFirestore(target);
+
+            // Schedule scene change to Onboarding after unlock panel closes
+            pendingSceneAfterUnlock = true;
+            readyToLeaveAfterPanelClose = true;
+            Debug.Log($"UIManager: Final building unlocked (count={buildingsUnlockedCount}). Stage set to {target.area}. Will load Onboarding after panel closes.");
+            return;
+        }
+
+        // If a stage change was requested earlier (e.g., via gate mapping), mark ready but wait until unlock panel is closed
         if (pendingSceneAfterUnlock)
         {
             readyToLeaveAfterPanelClose = true;

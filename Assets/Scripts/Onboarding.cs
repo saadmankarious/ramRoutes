@@ -14,6 +14,7 @@ public class OnboardingManager : MonoBehaviour
     public GameObject[] panelsFirstStreet;
     public GameObject[] panelsPedmall;
     public GameObject[] panelsTC;
+    public GameObject[] panelsTerminal; // NEW: Terminal stage panels
 
     // Internals
     private GameObject[] activePanels;
@@ -62,6 +63,7 @@ public class OnboardingManager : MonoBehaviour
                 case Stage.FirstStreet: activePanels = panelsFirstStreet; break;
                 case Stage.Pedmall: activePanels = panelsPedmall; break;
                 case Stage.TC: activePanels = panelsTC; break;
+                case Stage.Terminal: activePanels = panelsTerminal; break; // NEW: handle Terminal
                 default: activePanels = panels; break;
             }
             if (activePanels == null || activePanels.Length == 0)
