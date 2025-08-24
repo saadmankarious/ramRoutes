@@ -3,6 +3,7 @@ using Firebase;
 using Firebase.Messaging;
 using Firebase.Firestore;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 #if UNITY_ANDROID && UNITY_NOTIFICATIONS_ANDROID
 using Unity.Notifications.Android;
 #endif
@@ -194,23 +195,74 @@ public class FirebaseMessagingManager : MonoBehaviour
         {
             try
             {
-                DocumentReference docRef = FirebaseFirestore.DefaultInstance
+                // Save to devices collection (keep existing functionality)
+                DocumentReference deviceDocRef = FirebaseFirestore.DefaultInstance
                     .Collection("devices")
-                    .Document(_cachedDeviceId);  // Use the cached version here
+                    .Document(_cachedDeviceId);
 
-                await docRef.SetAsync(new
+                await deviceDocRef.SetAsync(new
                 {
                     token = token,
                     lastUpdated = FieldValue.ServerTimestamp,
                     platform = Application.platform.ToString()
                 });
 
-                Debug.Log("Device token saved to Firestore");
+                Debug.Log("Device token saved to Firestore devices collection");
+
+                // Also update user profile if user is logged in
+                await UpdateUserProfileToken(token);
             }
             catch (System.Exception e)
             {
                 Debug.LogError($"Failed to save token: {e.Message}");
             }
+        }
+    }
+
+    private async Task UpdateUserProfileToken(string token)
+    {
+        try
+        {
+            // Check if user is logged in via Firebase Auth
+            if (Firebase.Auth.FirebaseAuth.DefaultInstance?.CurrentUser != null)
+            {
+                string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser.UserId;
+                
+                DocumentReference userDocRef = FirebaseFirestore.DefaultInstance
+                    .Collection("users")
+                    .Document(userId);
+
+                // Update the user's FCM token
+                await userDocRef.UpdateAsync(new Dictionary<string, object>
+                {
+                    { "notificationToken", token },
+                    { "tokenLastUpdated", FieldValue.ServerTimestamp },
+                    { "platform", Application.platform.ToString() }
+                });
+
+                Debug.Log($"FCM token updated in user profile for userId: {userId}");
+            }
+            else
+            {
+                Debug.Log("User not logged in, skipping user profile token update");
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Failed to update user profile token: {e.Message}");
+        }
+    }
+
+    // Public method to be called from LoginManager when user logs in
+    public async void UpdateCurrentUserToken()
+    {
+        if (!string.IsNullOrEmpty(_deviceToken))
+        {
+            await UpdateUserProfileToken(_deviceToken);
+        }
+        else
+        {
+            Debug.Log("No FCM token available yet, will update when token is received");
         }
     }
 

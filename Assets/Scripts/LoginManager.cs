@@ -633,6 +633,25 @@ public class LoginManager : MonoBehaviour
         var user = await userService.RetrieveAndCacheCurrentUserProfile(userId);
         welcomeText.text = $"Welcome, {user.name.Split(" ")[0]}!";
 
+        // Update FCM token in user profile for notifications
+        try
+        {
+            var firebaseMessaging = FindObjectOfType<FirebaseMessagingManager>();
+            if (firebaseMessaging != null)
+            {
+                firebaseMessaging.UpdateCurrentUserToken();
+                Debug.Log("Triggered FCM token update for user profile");
+            }
+            else
+            {
+                Debug.LogWarning("FirebaseMessagingManager not found, FCM token not updated");
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Failed to trigger FCM token update: {e.Message}");
+        }
+
         // Check if this is a first-time user
         bool isFirstTime = PlayerPrefs.GetInt($"FirstTime_{userId}", 0) == 1;
         
