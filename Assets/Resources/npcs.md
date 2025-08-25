@@ -5,7 +5,18 @@
 **Conversation Lines:**
 • "Healing flows through these halls like gentle rain. The soul sought mending here when hope grew thin."
 • "Body and spirit intertwine—this center tends to both with equal reverence and ancient wisdom."
-• "Aros dwells where healing happens, where broken things are made whole and weary souls find renewal."(International Students)  
+• "Aros dwells where healing happens, where broken things are made whole and weary souls find renewal."
+
+---
+
+## 🏃‍♂️ Small Athletic Center
+**NPC:** The Guardian of Strength  
+- "Iron and sweat forge more than muscle. The soul sought strength here when weakness threatened to consume them."  
+- Clue: Fragment of Memory — *"The soul's greatest victories were not on scoreboards, but in the quiet moments of pushing beyond limits."*
+**Conversation Lines:**
+• "These walls have witnessed countless battles—not against others, but against the voice that whispers 'you cannot.'"
+• "The soul trained here with fierce determination, each rep a defiance against their own doubts and fears."
+• "Aros favors places where strength is born, where sweat becomes prayer and effort transforms into triumph."(International Students)  
 
 
 **NPC:** The Wanderer of Many Tongues  
@@ -121,3 +132,8 @@
 "Here, healing is more than medicine. The soul came here when hope dimmed."
 "Care flows through these halls for body and spirit alike."
 "Aros dwells where broken things are made whole."
+
+🏃‍♂️ Small Athletic Center — The Guardian of Strength
+"Sweat and determination echo through these walls. The soul pushed their limits here, seeking strength within."
+"Every heartbeat, every breath was a battle against their own doubt."
+"Aros thrives where bodies and spirits are forged in fire."
