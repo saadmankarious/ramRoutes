@@ -95,6 +95,12 @@ public class UIManager : MonoBehaviour
     [Header("Scene Transition Settings")]
     [Tooltip("Delay in seconds before executing scene transition after building unlock conditions are met.")]
     [SerializeField] private float sceneTransitionDelay = 10f;
+    
+    [Header("Scene Transition Effects")]
+    [Tooltip("UI Image component to use as fade overlay during scene transitions.")]
+    [SerializeField] private Image fadeOverlay;
+    [Tooltip("Duration of the fade effect before scene transition.")]
+    [SerializeField] private float fadeEffectDuration = 2f;
 
     [System.Serializable]
     public class BuildingGatePair
@@ -253,6 +259,9 @@ public class UIManager : MonoBehaviour
         
         // Initialize game stage to TC if not already set
         _ = InitializeGameStage();
+        
+        // Reset fade overlay to be transparent and inactive at start
+        ResetFadeOverlay();
     }
 
     private async Task InitializeGameStage()
@@ -1492,7 +1501,64 @@ private void HideObjectsWithTag(string tag)
         {
             pendingSceneAfterUnlock = false;
             readyToLeaveAfterPanelClose = false;
-            SceneManager.LoadScene("Onboarding");
+            
+            // Play fade transition effect before changing scene
+            StartCoroutine(PlaySceneTransitionEffect());
+        }
+    }
+    
+    private IEnumerator PlaySceneTransitionEffect()
+    {
+        Debug.Log("UIManager: Starting scene transition effect");
+        
+        // Fade in overlay if assigned
+        if (fadeOverlay != null)
+        {
+            // Make sure overlay is active and starts transparent
+            fadeOverlay.gameObject.SetActive(true);
+            Color startColor = fadeOverlay.color;
+            startColor.a = 0f;
+            fadeOverlay.color = startColor;
+            
+            // Fade to opaque
+            float elapsedTime = 0f;
+            while (elapsedTime < fadeEffectDuration)
+            {
+                elapsedTime += Time.deltaTime;
+                float progress = elapsedTime / fadeEffectDuration;
+                
+                Color currentColor = fadeOverlay.color;
+                currentColor.a = Mathf.Lerp(0f, 1f, progress);
+                fadeOverlay.color = currentColor;
+                
+                yield return null;
+            }
+            
+            // Ensure fully opaque
+            Color finalColor = fadeOverlay.color;
+            finalColor.a = 1f;
+            fadeOverlay.color = finalColor;
+        }
+        else
+        {
+            // If no fade overlay, just wait for the effect duration
+            yield return new WaitForSeconds(fadeEffectDuration);
+        }
+        
+        Debug.Log("UIManager: Fade effect complete, loading Onboarding scene");
+        SceneManager.LoadScene("Onboarding");
+    }
+    
+    private void ResetFadeOverlay()
+    {
+        if (fadeOverlay != null)
+        {
+            // Make overlay transparent and inactive
+            Color color = fadeOverlay.color;
+            color.a = 0f;
+            fadeOverlay.color = color;
+            fadeOverlay.gameObject.SetActive(false);
+            Debug.Log("UIManager: Reset fade overlay to transparent and inactive");
         }
     }
 }
