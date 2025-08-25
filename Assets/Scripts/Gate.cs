@@ -121,10 +121,10 @@ public class Gate : MonoBehaviour
             OnGateUnlocked?.Invoke();
             PlaySound(unlockSound, unlockVolume);
               // Show unlock message and animate AROS
-            if (allowDialog && uiManager != null && !string.IsNullOrEmpty(unlockedMessage))
-            {
-                uiManager.ShowDialog(unlockedMessage, 5f);
-            }
+            // if (allowDialog && uiManager != null && !string.IsNullOrEmpty(unlockedMessage))
+            // {
+            //     uiManager.ShowDialog(unlockedMessage, 5f);
+            // }
         }
         else
         {
