@@ -53,6 +53,17 @@ public class UIManager : MonoBehaviour
     public AudioClip trialCompleteSound;
     public AudioClip typingTickSound;
     public AudioClip timeExpiredSound;
+    
+    [Header("Background Music Settings")]
+    [SerializeField] private AudioClip tcStageMusic;        // Town Center music
+    [SerializeField] private AudioClip easternCampusMusic; // Eastern Campus music
+    [SerializeField] private AudioClip firstStreetMusic;   // First Street music
+    [SerializeField] private AudioClip pedmallMusic;       // Pedmall music
+    [SerializeField] private AudioClip terminalMusic;      // Terminal stage music
+    [SerializeField] private float backgroundMusicVolume = 0.3f; // Lower volume to avoid dramatic pulses
+    [SerializeField] private float musicFadeInDuration = 2f; // Smooth fade in to avoid harsh starts
+    
+    private AudioSource backgroundMusicSource;
 
     [Header("Typing Sound Settings")]
     [SerializeField] private float typingSoundInterval = 0.15f;
@@ -170,6 +181,20 @@ public class UIManager : MonoBehaviour
             audioSource = gameObject.AddComponent<AudioSource>();
         }
         
+        // Initialize background music source separately
+        if (backgroundMusicSource == null)
+        {
+            GameObject musicObject = new GameObject("BackgroundMusic");
+            musicObject.transform.SetParent(transform);
+            backgroundMusicSource = musicObject.AddComponent<AudioSource>();
+            backgroundMusicSource.loop = true;
+            backgroundMusicSource.volume = 0f; // Start at 0 for smooth fade-in
+            backgroundMusicSource.playOnAwake = false;
+        }
+        
+        // Clean up any conflicting audio settings from other scripts
+        CleanupConflictingAudioSettings();
+        
         // Load building data from JSON
         BuildingDataManager.LoadBuildingData();
         
@@ -232,11 +257,17 @@ public class UIManager : MonoBehaviour
                 SetCurrentStageText(toSet);
                 await GameStageService.SetStage(toSet);
                 Debug.Log("UIManager: Initialized game stage to TC");
+                
+                // Set background music for initial TC stage
+                SetBackgroundMusicForStage(toSet.area);
             }
             else
             {
                 SetCurrentStageText(existing);
                 Debug.Log($"UIManager: Game stage already set to {existing.area}");
+                
+                // Set background music for existing stage
+                SetBackgroundMusicForStage(existing.area);
             }
         }
         catch (System.Exception ex)
@@ -250,6 +281,165 @@ public class UIManager : MonoBehaviour
         if (currentStageText == null || stage == null) return;
         var label = stage.stageDisplayName ?? GameStage.GetDefaultDisplayName(stage.area);
         currentStageText.text = label;
+    }
+
+    private void SetBackgroundMusicForStage(Stage stage)
+    {
+        if (backgroundMusicSource == null) return;
+
+        AudioClip stageMusic = GetMusicForStage(stage);
+        
+        if (stageMusic != null)
+        {
+            // If music is already playing and it's the same clip, don't restart
+            if (backgroundMusicSource.clip == stageMusic && backgroundMusicSource.isPlaying)
+            {
+                Debug.Log($"Stage music for {stage} is already playing");
+                return;
+            }
+            
+            // Stop current music if playing
+            if (backgroundMusicSource.isPlaying)
+            {
+                StartCoroutine(CrossfadeToNewMusic(stageMusic));
+            }
+            else
+            {
+                // No music currently playing, start fresh with fade-in
+                backgroundMusicSource.clip = stageMusic;
+                backgroundMusicSource.Play();
+                StartCoroutine(FadeInMusic());
+            }
+            
+            Debug.Log($"Set background music for stage: {stage}");
+        }
+        else
+        {
+            // No music assigned for this stage, fade out current music if playing
+            if (backgroundMusicSource.isPlaying)
+            {
+                StartCoroutine(FadeOutMusic());
+            }
+            Debug.Log($"No background music assigned for stage: {stage}");
+        }
+    }
+
+    private AudioClip GetMusicForStage(Stage stage)
+    {
+        return stage switch
+        {
+            Stage.TC => tcStageMusic,
+            Stage.EasternCampus => easternCampusMusic,
+            Stage.FirstStreet => firstStreetMusic,
+            Stage.Pedmall => pedmallMusic,
+            Stage.Terminal => terminalMusic,
+            _ => null
+        };
+    }
+
+    private IEnumerator FadeInMusic()
+    {
+        float elapsedTime = 0f;
+        float startVolume = 0f;
+        
+        while (elapsedTime < musicFadeInDuration)
+        {
+            elapsedTime += Time.deltaTime;
+            float progress = elapsedTime / musicFadeInDuration;
+            backgroundMusicSource.volume = Mathf.Lerp(startVolume, backgroundMusicVolume, progress);
+            yield return null;
+        }
+        
+        backgroundMusicSource.volume = backgroundMusicVolume;
+    }
+
+    private IEnumerator FadeOutMusic()
+    {
+        float elapsedTime = 0f;
+        float startVolume = backgroundMusicSource.volume;
+        
+        while (elapsedTime < musicFadeInDuration)
+        {
+            elapsedTime += Time.deltaTime;
+            float progress = elapsedTime / musicFadeInDuration;
+            backgroundMusicSource.volume = Mathf.Lerp(startVolume, 0f, progress);
+            yield return null;
+        }
+        
+        backgroundMusicSource.volume = 0f;
+        backgroundMusicSource.Stop();
+    }
+
+    private IEnumerator CrossfadeToNewMusic(AudioClip newMusic)
+    {
+        // Fade out current music
+        float elapsedTime = 0f;
+        float startVolume = backgroundMusicSource.volume;
+        float halfFadeDuration = musicFadeInDuration * 0.5f;
+        
+        while (elapsedTime < halfFadeDuration)
+        {
+            elapsedTime += Time.deltaTime;
+            float progress = elapsedTime / halfFadeDuration;
+            backgroundMusicSource.volume = Mathf.Lerp(startVolume, 0f, progress);
+            yield return null;
+        }
+        
+        // Switch to new music
+        backgroundMusicSource.clip = newMusic;
+        backgroundMusicSource.Play();
+        
+        // Fade in new music
+        elapsedTime = 0f;
+        while (elapsedTime < halfFadeDuration)
+        {
+            elapsedTime += Time.deltaTime;
+            float progress = elapsedTime / halfFadeDuration;
+            backgroundMusicSource.volume = Mathf.Lerp(0f, backgroundMusicVolume, progress);
+            yield return null;
+        }
+        
+        backgroundMusicSource.volume = backgroundMusicVolume;
+    }
+
+    private void CleanupConflictingAudioSettings()
+    {
+        // Find all AudioSources in the scene that might interfere with background music
+        AudioSource[] allAudioSources = FindObjectsOfType<AudioSource>();
+        
+        foreach (AudioSource audioSrc in allAudioSources)
+        {
+            // Skip our own AudioSources
+            if (audioSrc == audioSource || audioSrc == backgroundMusicSource)
+                continue;
+                
+            // Disable playOnAwake for all other AudioSources to prevent auto-playing background music
+            if (audioSrc.playOnAwake && audioSrc.clip != null)
+            {
+                // Check if this looks like background music (long clips that loop)
+                bool likelyBackgroundMusic = audioSrc.clip.length > 30f || audioSrc.loop;
+                
+                if (likelyBackgroundMusic)
+                {
+                    Debug.Log($"UIManager: Disabled auto-play for potentially conflicting audio source on {audioSrc.gameObject.name}");
+                    audioSrc.playOnAwake = false;
+                    audioSrc.Stop(); // Stop if currently playing
+                }
+            }
+            
+            // Lower volume of any AudioSources that might be playing background-like audio
+            if (audioSrc.isPlaying && audioSrc.clip != null && audioSrc.clip.length > 30f)
+            {
+                float originalVolume = audioSrc.volume;
+                if (originalVolume > backgroundMusicVolume)
+                {
+                    audioSrc.volume = backgroundMusicVolume * 0.5f; // Make it quieter than our background music
+                    Debug.Log($"UIManager: Lowered volume of background-like audio on {audioSrc.gameObject.name} from {originalVolume} to {audioSrc.volume}");
+                }
+            }
+        }
+        
+        Debug.Log("UIManager: Cleaned up conflicting audio settings");
     }
 
     private async Task GetUserPoints()
@@ -883,6 +1073,9 @@ private void HideObjectsWithTag(string tag)
                     GameStageService.SaveStageToPrefs(gs);
                     _ = GameStageService.SaveStageToFirestore(gs);
 
+                    // Update background music for the new stage
+                    SetBackgroundMusicForStage(nextStage.Value);
+
                     // If stage actually changed, mark for scene change after unlock flow completes
                     if (current == null || current.area != nextStage.Value)
                     {
@@ -931,6 +1124,9 @@ private void HideObjectsWithTag(string tag)
             SetCurrentStageText(target);
             GameStageService.SaveStageToPrefs(target);
             _ = GameStageService.SaveStageToFirestore(target);
+
+            // Update background music for Terminal stage
+            SetBackgroundMusicForStage(Stage.Terminal);
 
             // Schedule scene change to Onboarding after unlock panel closes
             pendingSceneAfterUnlock = true;

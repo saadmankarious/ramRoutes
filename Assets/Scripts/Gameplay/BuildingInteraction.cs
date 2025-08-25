@@ -122,13 +122,17 @@ public class BuildingInteraction : MonoBehaviour
 
     void Awake()
     {
+        // Initialize AudioSource for SFX only (not background music)
         audioSource = GetComponent<AudioSource>();
-
-        // if (mobileInteractButton != null)
-        // {
-        //     // mobileInteractButton.onClick.AddListener(HandleMobileInteraction);
-        //     mobileInteractButton.gameObject.SetActive(false);
-        // }
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+        }
+        
+        // Ensure this AudioSource doesn't interfere with background music
+        audioSource.playOnAwake = false;
+        audioSource.loop = false;
+        audioSource.volume = 0.5f; // Moderate volume for SFX
 
         sr = GetComponent<SpriteRenderer>();
         if (sr != null)
@@ -507,7 +511,12 @@ public class BuildingInteraction : MonoBehaviour
         // Play reward sound when building is revealed
         if (rewardSound != null && audioSource != null)
         {
+            // Ensure audio source is configured for SFX, not background music
+            audioSource.clip = null; // Clear any assigned clip to prevent auto-play
+            audioSource.loop = false;
+            audioSource.volume = 0.6f; // Good volume for reward SFX
             audioSource.PlayOneShot(rewardSound);
+            Debug.Log($"Playing reward sound for building: {buildingName}");
         }
 
         // Use unified user profile retrieval for points and saving
