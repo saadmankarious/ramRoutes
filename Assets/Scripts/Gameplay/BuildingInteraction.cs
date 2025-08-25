@@ -11,10 +11,6 @@ using System;
 
 public class BuildingInteraction : MonoBehaviour
 {
-    [Header("Dialog Settings")]
-    [SerializeField] private GameObject dialogPanel;
-    [SerializeField] private Text dialogText;
-    [SerializeField] private string[] dialogLines;
 
     [Header("Interaction Settings")]
     [SerializeField] private KeyCode interactKey = KeyCode.J;
@@ -74,10 +70,21 @@ public class BuildingInteraction : MonoBehaviour
     private bool eventsLoaded = false;
     private UIManager uiManager;
     private BuildingProximityDetector proximityDetector;
+    private bool isInViewingMode = false; // Flag to prevent duplicate viewing mode calls
 
     // NEW: Switch into building viewing mode (same behavior as when entering an unlocked building)
     private void EnterBuildingViewingMode()
     {
+        // Prevent duplicate calls
+        if (isInViewingMode)
+        {
+            Debug.Log($"BuildingInteraction: Already in viewing mode for {buildingName}, skipping duplicate call");
+            return;
+        }
+        
+        isInViewingMode = true;
+        Debug.Log($"BuildingInteraction: Entering viewing mode for {buildingName}");
+
         // Update title UI
         if (buildingTitleUnlcoked != null)
         {
@@ -172,6 +179,8 @@ public class BuildingInteraction : MonoBehaviour
                 // When the panel closes and the player is already in range of this building, enter viewing mode
                 if (activated && isPlayerInRange)
                 {
+                    // Reset viewing mode state before entering to ensure clean state
+                    isInViewingMode = false;
                     EnterBuildingViewingMode();
                 }
 
@@ -345,8 +354,11 @@ public class BuildingInteraction : MonoBehaviour
             // Display building events and current users when player is in range
             if (activated)
             {
-                // Switch to building viewing mode
-                EnterBuildingViewingMode();
+                // Switch to building viewing mode (only if not already in viewing mode)
+                if (!isInViewingMode)
+                {
+                    EnterBuildingViewingMode();
+                }
             }
             else
             {
@@ -388,6 +400,13 @@ public class BuildingInteraction : MonoBehaviour
             
             isPlayerInRange = false;
             lastGpsProximityState = false; // Reset GPS proximity state
+            
+            // Exit viewing mode when player leaves
+            if (isInViewingMode)
+            {
+                isInViewingMode = false;
+                Debug.Log($"BuildingInteraction: Exiting viewing mode for {buildingName}");
+            }
             
             // Hide UIManager dialog if it's active
             if (uiManager != null && uiManager.IsDialogActive())
@@ -505,6 +524,8 @@ public class BuildingInteraction : MonoBehaviour
         // If player is already in range, immediately switch to viewing mode
         if (isPlayerInRange)
         {
+            // Reset viewing mode state before entering to ensure clean transition
+            isInViewingMode = false;
             EnterBuildingViewingMode();
         }
 

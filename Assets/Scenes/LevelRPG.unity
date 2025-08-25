@@ -20,7 +20,7 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
+  m_AmbientSkyColor: {r: 0, g: 0.06740715, b: 0.20222136, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 1
@@ -1835,13 +1835,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7b37e9992d7a4c6a87d648bc8a3417d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dialogPanel: {fileID: 0}
-  dialogText: {fileID: 0}
-  dialogLines:
-  - This is one of Cornell's appartment building. You get to live here with people
-    you choseif you are a senior.
-  - This is one of Cornell's appartment building. You get to live here with people
-    you choseif you are a senior.
   interactKey: 118
   rewardSound: {fileID: 8300000, guid: dab7626c0a3474a0aba894ac33d149e7, type: 3}
   buildingTitleUnlcoked: {fileID: 670941118}
@@ -2580,15 +2573,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7b37e9992d7a4c6a87d648bc8a3417d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dialogPanel: {fileID: 0}
-  dialogText: {fileID: 0}
-  dialogLines:
-  - McWethy is the campus art building.
-  - 'It used to be a gymnasium with a pool. '
-  - 'If you take a studio art class, you might learn about dimension and perception
-    and how light interacts with objects. '
-  - 'The four largest moons orbiting Jupiter were discovered by Galileo in 1610 via
-    telescope, a recent invention of the time. '
   interactKey: 118
   rewardSound: {fileID: 8300000, guid: dab7626c0a3474a0aba894ac33d149e7, type: 3}
   buildingTitleUnlcoked: {fileID: 670941118}
@@ -23050,7 +23034,7 @@ PrefabInstance:
         type: 3}
       propertyPath: ambientHumSource
       value: 
-      objectReference: {fileID: 971385386}
+      objectReference: {fileID: 0}
     - target: {fileID: 114230831923080080, guid: 7d60c822c3f1b408ea7a00ecdb5e047a,
         type: 3}
       propertyPath: ambientLowVolume
@@ -23070,7 +23054,7 @@ PrefabInstance:
         type: 3}
       propertyPath: ambientCalmSource
       value: 
-      objectReference: {fileID: 1786837621}
+      objectReference: {fileID: 0}
     - target: {fileID: 114230831923080080, guid: 7d60c822c3f1b408ea7a00ecdb5e047a,
         type: 3}
       propertyPath: stageCheckInterval
@@ -23080,7 +23064,7 @@ PrefabInstance:
         type: 3}
       propertyPath: ambientChatterSource
       value: 
-      objectReference: {fileID: 1310138220}
+      objectReference: {fileID: 0}
     - target: {fileID: 212064061491315838, guid: 7d60c822c3f1b408ea7a00ecdb5e047a,
         type: 3}
       propertyPath: m_Size.x
@@ -23946,135 +23930,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 961153061}
   m_CullTransparentMesh: 1
---- !u!1 &971385385
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 971385387}
-  - component: {fileID: 971385386}
-  m_Layer: 0
-  m_Name: Hum
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!82 &971385386
-AudioSource:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 971385385}
-  m_Enabled: 1
-  serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: b1407df89b3874cc48b629fa1abfa35c, type: 3}
-  m_PlayOnAwake: 1
-  m_Volume: 0.11
-  m_Pitch: 1
-  Loop: 0
-  Mute: 0
-  Spatialize: 0
-  SpatializePostEffects: 0
-  Priority: 128
-  DopplerLevel: 1
-  MinDistance: 1
-  MaxDistance: 500
-  Pan2D: 0
-  rolloffMode: 0
-  BypassEffects: 0
-  BypassListenerEffects: 0
-  BypassReverbZones: 0
-  rolloffCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  panLevelCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  spreadCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  reverbZoneMixCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
---- !u!4 &971385387
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 971385385}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -543.99243, y: -246.95062, z: -2.9822166}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1100828582}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &982327598
 GameObject:
   m_ObjectHideFlags: 0
@@ -24727,10 +24582,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7b37e9992d7a4c6a87d648bc8a3417d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dialogPanel: {fileID: 0}
-  dialogText: {fileID: 0}
-  dialogLines:
-  - This is just a random building on 1st street.
   interactKey: 118
   rewardSound: {fileID: 0}
   buildingTitleUnlcoked: {fileID: 670941118}
@@ -25213,12 +25064,17 @@ PrefabInstance:
     - target: {fileID: 7013091016929523227, guid: cb19daed2fa4048b4b2286af5a1e155b,
         type: 3}
       propertyPath: unlockVolume
-      value: 0.15
+      value: 0.074
+      objectReference: {fileID: 0}
+    - target: {fileID: 7013091016929523227, guid: cb19daed2fa4048b4b2286af5a1e155b,
+        type: 3}
+      propertyPath: blockedVolume
+      value: 0.331
       objectReference: {fileID: 0}
     - target: {fileID: 7013091016929523227, guid: cb19daed2fa4048b4b2286af5a1e155b,
         type: 3}
       propertyPath: unlockedMessage
-      value: Seek Aros on the Pedmall!
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 8436634561298321181, guid: cb19daed2fa4048b4b2286af5a1e155b,
         type: 3}
@@ -25325,40 +25181,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cb19daed2fa4048b4b2286af5a1e155b, type: 3}
---- !u!1 &1100828581
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1100828582}
-  m_Layer: 0
-  m_Name: Audio
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1100828582
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1100828581}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 875.9431, y: 402.77478, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1310138221}
-  - {fileID: 971385387}
-  - {fileID: 1786837622}
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1109458622
 GameObject:
   m_ObjectHideFlags: 0
@@ -26984,135 +26806,6 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
---- !u!1 &1310138219
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1310138221}
-  - component: {fileID: 1310138220}
-  m_Layer: 0
-  m_Name: ambient chatter
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!82 &1310138220
-AudioSource:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1310138219}
-  m_Enabled: 1
-  serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: e37d5091cfd6541e7b8c45b0a2c57bd9, type: 3}
-  m_PlayOnAwake: 1
-  m_Volume: 0.757
-  m_Pitch: 1
-  Loop: 0
-  Mute: 0
-  Spatialize: 0
-  SpatializePostEffects: 0
-  Priority: 128
-  DopplerLevel: 1
-  MinDistance: 1
-  MaxDistance: 500
-  Pan2D: 0
-  rolloffMode: 0
-  BypassEffects: 0
-  BypassListenerEffects: 0
-  BypassReverbZones: 0
-  rolloffCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  panLevelCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  spreadCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  reverbZoneMixCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
---- !u!4 &1310138221
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1310138219}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -543.99243, y: -246.95062, z: -2.9822166}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1100828582}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1316322613
 GameObject:
   m_ObjectHideFlags: 0
@@ -28683,13 +28376,17 @@ PrefabInstance:
     - target: {fileID: 7013091016929523227, guid: cb19daed2fa4048b4b2286af5a1e155b,
         type: 3}
       propertyPath: unlockVolume
-      value: 0.15
+      value: 0.074
+      objectReference: {fileID: 0}
+    - target: {fileID: 7013091016929523227, guid: cb19daed2fa4048b4b2286af5a1e155b,
+        type: 3}
+      propertyPath: blockedVolume
+      value: 0.331
       objectReference: {fileID: 0}
     - target: {fileID: 7013091016929523227, guid: cb19daed2fa4048b4b2286af5a1e155b,
         type: 3}
       propertyPath: unlockedMessage
-      value: "The Eastern Campus awaits\u2014home to some of the coolest dorms, where
-        late-night stories and lifelong bonds begin"
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 8436634561298321181, guid: cb19daed2fa4048b4b2286af5a1e155b,
         type: 3}
@@ -29772,16 +29469,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7b37e9992d7a4c6a87d648bc8a3417d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dialogPanel: {fileID: 0}
-  dialogText: {fileID: 0}
-  dialogLines:
-  - 'Stoner House is home to the InterCultural Life office, an organization on campus
-    that helps students from all walks of life connect with the community. '
-  - "Many groups at Cornell host events here\u2026 "
-  - "the annual BACO (Black Awareness Cultural Organization) Kick-Off Cook Out at
-    the beginning of the year includes fun yard games and a barbecue\u2026 "
-  - "ISA (International Student Association) hosts heart-warming potlucks around
-    the holidays when the weather outside is cold enough to knock your socks off\u2026 "
   interactKey: 118
   rewardSound: {fileID: 8300000, guid: dab7626c0a3474a0aba894ac33d149e7, type: 3}
   buildingTitleUnlcoked: {fileID: 670941118}
@@ -265990,6 +265677,13 @@ MonoBehaviour:
   trialCompleteSound: {fileID: 8300000, guid: 350628f1472794063b974d2cf4f54d8a, type: 3}
   typingTickSound: {fileID: 8300000, guid: 74d71d820e630407db1f8d2de6cc97ca, type: 3}
   timeExpiredSound: {fileID: 8300000, guid: e3f200ed5abfd4d8992cee964c1cb70e, type: 3}
+  tcStageMusic: {fileID: 8300000, guid: aa449c171b02d498e8692780c8c04019, type: 3}
+  easternCampusMusic: {fileID: 8300000, guid: 4e6076a75785a4a47a2f8fe37841e7ac, type: 3}
+  firstStreetMusic: {fileID: 8300000, guid: 4e6076a75785a4a47a2f8fe37841e7ac, type: 3}
+  pedmallMusic: {fileID: 8300000, guid: f5f76d3ed3e4a4ff8a66d2830af962fe, type: 3}
+  terminalMusic: {fileID: 8300000, guid: aa449c171b02d498e8692780c8c04019, type: 3}
+  backgroundMusicVolume: 0.3
+  musicFadeInDuration: 2
   typingSoundInterval: 0.11
   typingSoundVolume: 0.09
   OnTrialComplete:
@@ -277623,135 +277317,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1780903612}
   m_CullTransparentMesh: 1
---- !u!1 &1786837620
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1786837622}
-  - component: {fileID: 1786837621}
-  m_Layer: 0
-  m_Name: Calm Ambient
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!82 &1786837621
-AudioSource:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1786837620}
-  m_Enabled: 1
-  serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 0}
-  m_Resource: {fileID: 8300000, guid: 9656217a0b11c475c9d53157ddf3442c, type: 3}
-  m_PlayOnAwake: 1
-  m_Volume: 0.757
-  m_Pitch: 1
-  Loop: 0
-  Mute: 0
-  Spatialize: 0
-  SpatializePostEffects: 0
-  Priority: 128
-  DopplerLevel: 1
-  MinDistance: 1
-  MaxDistance: 500
-  Pan2D: 0
-  rolloffMode: 0
-  BypassEffects: 0
-  BypassListenerEffects: 0
-  BypassReverbZones: 0
-  rolloffCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 1
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  panLevelCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  spreadCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  reverbZoneMixCustomCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
---- !u!4 &1786837622
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1786837620}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -543.99243, y: -246.95062, z: -2.9822166}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1100828582}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1788714898
 GameObject:
   m_ObjectHideFlags: 0
@@ -278296,13 +277861,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7b37e9992d7a4c6a87d648bc8a3417d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dialogPanel: {fileID: 0}
-  dialogText: {fileID: 0}
-  dialogLines:
-  - This is one of Cornell's appartment building. You get to live here with people
-    you choseif you are a senior.
-  - This is one of Cornell's appartment building. You get to live here with people
-    you choseif you are a senior.
   interactKey: 118
   rewardSound: {fileID: 8300000, guid: dab7626c0a3474a0aba894ac33d149e7, type: 3}
   buildingTitleUnlcoked: {fileID: 670941118}
@@ -278931,15 +278489,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7b37e9992d7a4c6a87d648bc8a3417d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dialogPanel: {fileID: 0}
-  dialogText: {fileID: 0}
-  dialogLines:
-  - This house was built in 1892 by alum William Edward Platner.
-  - "His wife, Alice, wanted the architecture to outshine their cousin\u2019s down
-    the street in Rood House.  "
-  - 'The Platners lived there until 1937, '
-  - it was then converted into a mortuary until 1963 when the house was purchased
-    by Cornell to become Music Practice House.
   interactKey: 118
   rewardSound: {fileID: 8300000, guid: dab7626c0a3474a0aba894ac33d149e7, type: 3}
   buildingTitleUnlcoked: {fileID: 670941118}
@@ -280463,13 +280012,17 @@ PrefabInstance:
     - target: {fileID: 7013091016929523227, guid: cb19daed2fa4048b4b2286af5a1e155b,
         type: 3}
       propertyPath: unlockVolume
-      value: 0.15
+      value: 0.074
+      objectReference: {fileID: 0}
+    - target: {fileID: 7013091016929523227, guid: cb19daed2fa4048b4b2286af5a1e155b,
+        type: 3}
+      propertyPath: blockedVolume
+      value: 0.331
       objectReference: {fileID: 0}
     - target: {fileID: 7013091016929523227, guid: cb19daed2fa4048b4b2286af5a1e155b,
         type: 3}
       propertyPath: unlockedMessage
-      value: "First Street is now open\u2014home to McWeathy, the Art Building, and
-        Stoner House. I cherished these for their color, culture, and connection."
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 8580128932778131415, guid: cb19daed2fa4048b4b2286af5a1e155b,
         type: 3}
@@ -280809,4 +280362,3 @@ SceneRoots:
   - {fileID: 1470091601}
   - {fileID: 321169907}
   - {fileID: 1431704524}
-  - {fileID: 1100828582}
