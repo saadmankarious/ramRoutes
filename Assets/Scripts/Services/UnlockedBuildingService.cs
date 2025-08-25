@@ -25,8 +25,9 @@ namespace RamRoutes.Services
                 { "unlockTime", record.unlockTime.ToString("o") },
                 { "buildingId", record.buildingId },
                 { "userName", record.userName },
-
                 { "buildingName", record.buildingName },
+                { "coinPoints", record.coinPoints },
+                { "knowledgePoints", record.knowledgePoints },
                 { "buildingPosition", new Dictionary<string, object>
                     {
                         { "x", record.buildingPosition.x },
@@ -83,6 +84,8 @@ namespace RamRoutes.Services
                     DateTime unlockTime = data.ContainsKey("unlockTime") ? DateTime.Parse(data["unlockTime"].ToString()) : DateTime.MinValue;
                     string buildingId = data.ContainsKey("buildingId") ? data["buildingId"].ToString() : "";
                     string buildingName = data.ContainsKey("buildingName") ? data["buildingName"].ToString() : "";
+                    int coinPoints = data.ContainsKey("coinPoints") ? Convert.ToInt32(data["coinPoints"]) : 0;
+                    int knowledgePoints = data.ContainsKey("knowledgePoints") ? Convert.ToInt32(data["knowledgePoints"]) : 0;
                     Vector3 buildingPosition = Vector3.zero;
                     if (data.ContainsKey("buildingPosition"))
                     {
@@ -96,7 +99,7 @@ namespace RamRoutes.Services
                         }
                     }
                     string userName = data.ContainsKey("userName") ? data["userName"].ToString() : "";
-                    buildings.Add(new UnlockedBuildingRecord(userId, userName, unlockTime, buildingId, buildingName, buildingPosition));
+                    buildings.Add(new UnlockedBuildingRecord(userId, userName, unlockTime, buildingId, buildingName, buildingPosition, coinPoints, knowledgePoints));
                 }
                 // Save to local storage
                 string json = JsonUtility.ToJson(new UnlockedBuildingListWrapper { buildings = buildings });

@@ -9,6 +9,7 @@ using RamRoutes.Services;
 using Firebase.Auth;
 using System.Collections.Generic;
 using RamRoutes.Model;
+using Cinemachine;
 
 public class UIManager : MonoBehaviour
 {
@@ -16,6 +17,7 @@ public class UIManager : MonoBehaviour
 
     [Header("UI References")]
     public Text coinsText;
+    public Text knowledgePointsText; // New text field for knowledge points
     public ParticleSystem teleportEffect;
     public ParticleSystem celebrationEffect1;
     public ParticleSystem celebrationEffect2;
@@ -89,6 +91,10 @@ public class UIManager : MonoBehaviour
     [Header("Debug / Startup")]
     [Tooltip("If enabled, clears the saved game stage from PlayerPrefs on startup before initialization.")]
     [SerializeField] private bool clearStageOnStart = false;
+    
+    [Header("Scene Transition Settings")]
+    [Tooltip("Delay in seconds before executing scene transition after building unlock conditions are met.")]
+    [SerializeField] private float sceneTransitionDelay = 10f;
 
     [System.Serializable]
     public class BuildingGatePair
@@ -122,6 +128,9 @@ public class UIManager : MonoBehaviour
     // Viewing mode state (prevents scene changes while inspecting a building)
     private bool isInBuildingViewingMode = false;
     private string currentViewedBuilding = null;
+    
+    // Deferred stage change system
+    private Coroutine sceneTransitionDelayCoroutine;
 
     // Call this to toggle pause menu
     public void TogglePauseMenu()
@@ -446,20 +455,47 @@ public class UIManager : MonoBehaviour
     {
         try 
         {
-            var userService = new UserService();
             string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
             if (!string.IsNullOrEmpty(userId))
             {
-                var userProfile = await userService.GetUserProfileCachedOrRemoteAsync(userId);
-                if (userProfile != null)
-                {
-                    UpdateCoins(userProfile.points);
-                }
+                var buildingService = new UnlockedBuildingService();
+                var unlockedBuildings = await buildingService.RetrieveUnlockedBuildings();
+                
+                // Get current user's unlocked buildings and sum their coin points
+                var userUnlockedBuildings = unlockedBuildings.Where(b => b.userId == userId).ToList();
+                int totalCoinPoints = userUnlockedBuildings.Sum(b => b.coinPoints);
+                
+                UpdateCoins(totalCoinPoints);
+                Debug.Log($"Total coin points from {userUnlockedBuildings.Count} unlocked buildings: {totalCoinPoints}");
             }
         }
         catch (System.Exception ex)
         {
             Debug.LogError($"Failed to get user points: {ex.Message}");
+        }
+    }
+
+    private async Task GetUserKnowledgePoints()
+    {
+        try 
+        {
+            string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var buildingService = new UnlockedBuildingService();
+                var unlockedBuildings = await buildingService.RetrieveUnlockedBuildings();
+                
+                // Get current user's unlocked buildings and sum their knowledge points
+                var userUnlockedBuildings = unlockedBuildings.Where(b => b.userId == userId).ToList();
+                int totalKnowledgePoints = userUnlockedBuildings.Sum(b => b.knowledgePoints);
+                
+                UpdateKnowledgePoints(totalKnowledgePoints);
+                Debug.Log($"Total knowledge points from {userUnlockedBuildings.Count} unlocked buildings: {totalKnowledgePoints}");
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Failed to get user knowledge points: {ex.Message}");
         }
     }
 
@@ -475,6 +511,7 @@ public class UIManager : MonoBehaviour
 
         // Get and display user points
         _ = GetUserPoints();
+        _ = GetUserKnowledgePoints();
 
     }
 
@@ -929,6 +966,14 @@ private void HideObjectsWithTag(string tag)
         }
     }
 
+    public void UpdateKnowledgePoints(int knowledgePoints)
+    {
+        if (knowledgePointsText != null)
+        {
+            knowledgePointsText.text = knowledgePoints.ToString();
+        }
+    }
+
     public void PlayBuildingUnlockCelebration()
     {
         if (teleportEffect != null || celebrationEffect1 != null || celebrationEffect2 != null)
@@ -1049,7 +1094,7 @@ private void HideObjectsWithTag(string tag)
         if (buildingGateMap != null && buildingGateMap.TryGetValue(building, out var gate) && gate != null)
         {
             // First: unlock the mapped gate
-            gate.UnlockGate();
+            //gate.UnlockGate();
             Debug.Log($"UIManager: Unlocked mapped gate '{gate.gameObject.name}' for building '{building.buildingName}'.");
 
             // Then: switch game stage based on gate name '1','2','3' AFTER unlocking
@@ -1074,7 +1119,7 @@ private void HideObjectsWithTag(string tag)
                     _ = GameStageService.SaveStageToFirestore(gs);
 
                     // Update background music for the new stage
-                    SetBackgroundMusicForStage(nextStage.Value);
+                    // SetBackgroundMusicForStage(nextStage.Value);
 
                     // If stage actually changed, mark for scene change after unlock flow completes
                     if (current == null || current.area != nextStage.Value)
@@ -1113,6 +1158,10 @@ private void HideObjectsWithTag(string tag)
     {
         UpdateProgressBar();
 
+        // Refresh points display when progress bar is updated
+        _ = GetUserPoints();
+        _ = GetUserKnowledgePoints();
+
         // If the last building was just unlocked, move to Terminal stage
         bool isFinalUnlock = buildingsUnlockedCount >= 6 || (progressBarImages != null && buildingsUnlockedCount >= progressBarImages.Length);
         if (isFinalUnlock)
@@ -1146,11 +1195,35 @@ private void HideObjectsWithTag(string tag)
     // Call this when the building unlock panel is closed by the user
     public void OnUnlockPanelClosed()
     {
-        // Defer to unified gate: only transition if not in building viewing mode
-        TryProceedPendingScene();
+        // Start the delay timer for scene transition
+        StartSceneTransitionDelay();
 
         // If conditions are not yet met, keep flags; we'll try again when they are
         // Avoid resetting readiness here to prevent losing intent
+    }
+
+    private void StartSceneTransitionDelay()
+    {
+        // Cancel any existing delay coroutine
+        if (sceneTransitionDelayCoroutine != null)
+        {
+            StopCoroutine(sceneTransitionDelayCoroutine);
+        }
+        
+        // Start new delay coroutine
+        sceneTransitionDelayCoroutine = StartCoroutine(SceneTransitionDelayCoroutine());
+    }
+    
+    private IEnumerator SceneTransitionDelayCoroutine()
+    {
+        Debug.Log($"UIManager: Starting {sceneTransitionDelay} second delay before scene transition");
+        yield return new WaitForSeconds(sceneTransitionDelay);
+        
+        // After delay, try to proceed with pending scene change
+        TryProceedPendingScene();
+        
+        // Clear the coroutine reference
+        sceneTransitionDelayCoroutine = null;
     }
 
     private async Task InitializeProgressBar()
@@ -1404,8 +1477,11 @@ private void HideObjectsWithTag(string tag)
         currentViewedBuilding = active ? buildingName : null;
         if (!active)
         {
-            // Reattempt any pending transition when viewing ends
-            TryProceedPendingScene();
+            // Reattempt any pending transition when viewing ends (but only if delay has passed)
+            if (sceneTransitionDelayCoroutine == null) // Delay has completed
+            {
+                TryProceedPendingScene();
+            }
         }
     }
 

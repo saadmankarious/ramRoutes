@@ -17,6 +17,8 @@ public class BuildingInteraction : MonoBehaviour
 
     [Header("Reward Settings")]
     [SerializeField] private AudioClip rewardSound;
+    [SerializeField] private int coinPoints = 100;
+    [SerializeField] private int knowledgePoints = 250;
 
     // [Header("Mobile Controls")]
     // [SerializeField] private Button mobileInteractButton;
@@ -498,11 +500,7 @@ public class BuildingInteraction : MonoBehaviour
         // Activate building after unlock
         activated = true;
 
-        // If player is already in range, immediately switch to viewing mode
-        if (isPlayerInRange)
-        {
-            EnterBuildingViewingMode();
-        }
+
 
         // Play reward sound when building is revealed
         if (rewardSound != null && audioSource != null)
@@ -538,13 +536,20 @@ public class BuildingInteraction : MonoBehaviour
             System.DateTime.UtcNow,
             buildingName,
             buildingName,
-            transform.position
+            transform.position,
+            coinPoints,
+            knowledgePoints
         );
         await service.SaveUnlockedBuildingAsync(record);
-           // Update progress bar when building is revealed
+        // Update progress bar when building is revealed
         if (uiManager != null)
         {
             uiManager.UpdateProgressBarOnReveal();
+        }
+          // If player is already in range, immediately switch to viewing mode
+        if (isPlayerInRange)
+        {
+            EnterBuildingViewingMode();
         }
     }
     

@@ -12,9 +12,11 @@ namespace RamRoutes.Model
         public string buildingId;
         public string buildingName;
         public Vector3 buildingPosition;
+        public int coinPoints;
+        public int knowledgePoints;
         // Add other building info fields as needed
 
-        public UnlockedBuildingRecord(string userId, string userName, DateTime unlockTime, string buildingId, string buildingName, Vector3 buildingPosition)
+        public UnlockedBuildingRecord(string userId, string userName, DateTime unlockTime, string buildingId, string buildingName, Vector3 buildingPosition, int coinPoints = 0, int knowledgePoints = 0)
         {
             this.userId = userId;
             this.userName = userName;
@@ -22,6 +24,8 @@ namespace RamRoutes.Model
             this.buildingId = buildingId;
             this.buildingName = buildingName;
             this.buildingPosition = buildingPosition;
+            this.coinPoints = coinPoints;
+            this.knowledgePoints = knowledgePoints;
         }
     }
 }
