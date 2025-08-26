@@ -123,7 +123,7 @@ public class Gate : MonoBehaviour
               // Show unlock message and animate AROS
             // if (allowDialog && uiManager != null && !string.IsNullOrEmpty(unlockedMessage))
             // {
-            //     uiManager.ShowDialog(unlockedMessage, 5f);
+            //     uiManager.ShowDialog(unlockedMessage, 5f, false);
             // }
         }
         else
@@ -212,7 +212,7 @@ public class Gate : MonoBehaviour
             // Show lock message via UI Manager
             if (uiManager != null)
             {
-                uiManager.ShowDialog(lockMessage, 5f);
+                uiManager.ShowDialog(lockMessage, 10f, false);
             }
             else
             {

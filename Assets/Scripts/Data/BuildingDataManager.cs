@@ -10,6 +10,8 @@ public class BuildingInfo
     public string displayName;
     public string unlockedMessage;
     public string description;
+    public int coinsGained;
+    public int kbGained;
 }
 
 [System.Serializable]

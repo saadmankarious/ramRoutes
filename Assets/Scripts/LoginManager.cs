@@ -9,7 +9,8 @@ using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 using UnityEngine.EventSystems;
 using System.Collections;  // Add this for IEnumerator
-
+using RamRoutes.Model;
+using RamRoutes.Services;
 public class LoginManager : MonoBehaviour
 {
     [Header("Login UI")]
@@ -645,7 +646,14 @@ public class LoginManager : MonoBehaviour
             }
             else
             {
-                Debug.Log("No stage found in Firestore for user, using default");
+                // Initialize with Thomas Commons stage
+                var tcStage = new RamRoutes.Model.GameStage
+                {
+                    area = Stage.TC,
+ 
+                };
+                RamRoutes.Services.GameStageService.SaveStageToPrefs(tcStage);
+                Debug.Log("Initialized new user with TC stage");
             }
         }
         catch (System.Exception e)

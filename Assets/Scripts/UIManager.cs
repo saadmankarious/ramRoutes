@@ -29,6 +29,10 @@ public class UIManager : MonoBehaviour
     public Text buildingUnlockedMessage; // Moved from BuildingInteraction
     public Image npcImage;          // NPC image in building unlocked dialog
     public Text npcTitle;           // NPC title in building unlocked dialog
+    public Text coinsGained;           // NPC title in building unlocked dialog
+    public Text kbGained;           // NPC title in building unlocked dialog
+    public Text coinsGainedBuildingStats;           // NPC title in building unlocked dialog
+    public Text kbGainedBuildingStats;           // NPC title in building unlocked dialog
 
     [Header("Celebration Settings")]
     [SerializeField] private float celebrationPlaybackSpeed = 1f; // 1f = normal speed, 2f = double speed, 0.5f = half speed
@@ -37,6 +41,7 @@ public class UIManager : MonoBehaviour
     public Text timerText;
     public Text heldItem;
     public GameObject dialogPanel;
+    public GameObject buildingStats;
     public Text dialogText;
     public Button dialogActionButton; // Action button for dialogs
     public Text dialogActionButtonText; // Text component of the action button
@@ -684,42 +689,73 @@ private void HideObjectsWithTag(string tag)
         }
     }
 
-    private IEnumerator TypeText(string message, float activeFor)
+    private IEnumerator TypeText(string message, float activeFor, bool playNarration)
     {
         dialogText.text = "";
         lastTypingSoundTime = 0f;
-        
-        foreach (char letter in message.ToCharArray())
+
+        if (playNarration)
         {
-            dialogText.text += letter;
-            
-            if (Time.time - lastTypingSoundTime >= typingSoundInterval)
+
+
+            foreach (char letter in message.ToCharArray())
             {
-                PlaySound(typingTickSound);
-                lastTypingSoundTime = Time.time;
+                dialogText.text += letter;
+
+                if (Time.time - lastTypingSoundTime >= typingSoundInterval)
+                {
+                    PlaySound(typingTickSound);
+                    lastTypingSoundTime = Time.time;
+                }
+
+                yield return new WaitForSeconds(typingSpeed);
             }
-            
-            yield return new WaitForSeconds(typingSpeed);
         }
+        else
+        {
+            dialogText.text = message;
+         }
 
         if (activeFor > 0)
-        {
-            yield return new WaitForSeconds(activeFor);
-            HideDialog();
-        }
+            {
+                yield return new WaitForSeconds(activeFor);
+                HideDialog();
+            }
         
         typingCoroutine = null;
     }
 
     // Basic dialog - shows message and hides after specified time
-    public void ShowDialog(string message, float activeFor = 5f)
+    public void ShowDialog(string message, float activeFor = 5f, bool narration = false, bool showBuildingStats = false, string buildingName = null)
     {
-        ShowDialog(message, activeFor, null, null);
+        ShowDialog(message, activeFor, null, null, narration, showBuildingStats, buildingName);
     }
     
     // Dialog with action button - shows message with button, no auto-hide unless activeFor > 0
-    public void ShowDialog(string message, float activeFor, string actionButtonText, System.Action onActionButtonClick)
+    public void ShowDialog(string message, float activeFor, string actionButtonText, System.Action onActionButtonClick, bool narration = false, bool showStats = false, string buildingName = null)
     {
+        if (showStats && buildingStats != null && !string.IsNullOrEmpty(buildingName))
+        {
+            var buildingInfo = BuildingDataManager.GetBuildingInfo(buildingName);
+            if (buildingInfo != null)
+            {
+                // Update coins and knowledge points in building stats
+                if (coinsGainedBuildingStats != null)
+                {
+                    coinsGainedBuildingStats.text = "+" + buildingInfo.coinsGained.ToString();
+                }
+                if (kbGainedBuildingStats != null)
+                {
+                    kbGainedBuildingStats.text = "+" + buildingInfo.kbGained.ToString();
+                }
+            }
+            buildingStats.SetActive(true);
+        }
+        else if (buildingStats != null)
+        {
+            buildingStats.SetActive(false);
+        }
+
         if (dialogPanel != null && dialogText != null)
         {
             // If dialog is already active, stop the current one
@@ -728,12 +764,12 @@ private void HideObjectsWithTag(string tag)
                 StopCoroutine(dialogCoroutine);
                 CleanupDialog();
             }
-            
-            dialogCoroutine = StartCoroutine(ShowDialogSequence(message, activeFor, actionButtonText, onActionButtonClick));
+
+            dialogCoroutine = StartCoroutine(ShowDialogSequence(message, activeFor, actionButtonText, onActionButtonClick, narration));
         }
     }
     
-    private IEnumerator ShowDialogSequence(string message, float activeFor, string actionButtonText, System.Action onActionButtonClick)
+    private IEnumerator ShowDialogSequence(string message, float activeFor, string actionButtonText, System.Action onActionButtonClick, bool narration)
     {
         isDialogActive = true;
         currentDialogAction = onActionButtonClick;
@@ -758,7 +794,11 @@ private void HideObjectsWithTag(string tag)
                 aros.SetActive(true);
             }
             
-            typingCoroutine = StartCoroutine(TypeText(message, activeFor));
+            // Use narration parameter to control whether dialog is narrated
+            // When narration is false, skip narration features
+            // This is a placeholder - implement actual narration control here
+
+            typingCoroutine = StartCoroutine(TypeText(message, activeFor, narration));
             yield return typingCoroutine;
         }
         finally 
@@ -948,6 +988,14 @@ private void HideObjectsWithTag(string tag)
         {
             buildingUnlockedMessage.text = buildingInfo.unlockedMessage;
         }
+         if (coinsGained != null)
+                {
+            coinsGained.text = buildingInfo.coinsGained.ToString();
+                }
+                 if (kbGained != null)
+                {
+            kbGained.text = buildingInfo.kbGained.ToString();
+                }
         
         // Update NPC information from NPCSpawner
         if (NPCSpawner.Instance != null)

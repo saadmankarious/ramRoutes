@@ -362,7 +362,7 @@ public class BuildingInteraction : MonoBehaviour
                         uiManager.ShowDialog(lockedMessage, 10f, "🔓 Unlock", () => {
                             // Trigger unlock logic
                             UnlockBuilding();
-                        });
+                        }, false, true, buildingName);
                     }
                     else
                     {
@@ -371,7 +371,7 @@ public class BuildingInteraction : MonoBehaviour
                             $"This building ({buildingInfo.displayName}) is locked. You need to be physically close to this location to unlock it using GPS.";
                         
                         // Show message without unlock button since player is not close enough
-                        uiManager.ShowDialog(distanceMessage, 10f);
+                        uiManager.ShowDialog(distanceMessage, 10f, false, true, buildingName);
                     }
                 }
             }

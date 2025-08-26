@@ -4,7 +4,6 @@ using System.Collections;
 using UnityEngine.SceneManagement;
 using RamRoutes.Services;
 using RamRoutes.Model;
-
 public class OnboardingManager : MonoBehaviour
 {
     public GameObject[] panels; // Default panels when no stage set
@@ -42,14 +41,20 @@ public class OnboardingManager : MonoBehaviour
     private bool isPaused = false;
     public GameObject gamePauseMenu;
 
-    // Ambient audio layers
-    [Header("Ambient Audio")] 
-    public AudioSource ambientCalmSource;   // soft wind
-    public AudioSource ambientChatterSource; // distant chatter
-    public AudioSource ambientHumSource;    // background hum
-    [Range(0f,1f)] public float ambientBaseVolume = 0.6f;
-    [Range(0f,1f)] public float ambientLowVolume = 0.15f;
-    [SerializeField] private float ambientFadeDuration = 0.75f;
+    [Header("Background Music Settings")]
+    [SerializeField] private AudioClip tcStageMusic;        // Town Center music
+    [SerializeField] private AudioClip easternCampusMusic;  // Eastern Campus music
+    [SerializeField] private AudioClip firstStreetMusic;    // First Street music
+    [SerializeField] private AudioClip pedmallMusic;        // Pedmall music
+    [SerializeField] private AudioClip terminalMusic;       // Terminal stage music
+    [SerializeField] private float backgroundMusicVolume = 0.3f; // Lower volume to avoid dramatic pulses
+    [SerializeField] private float musicFadeInDuration = 2f; // Smooth fade in to avoid harsh starts
+    
+    private AudioSource backgroundMusicSource;
+    [SerializeField] private Stage stageToRender;
+    [SerializeField] private bool debugForceStage = false;
+
+
 
     // Typing fade settings
     [Header("Typing FX")] 
@@ -64,35 +69,52 @@ public class OnboardingManager : MonoBehaviour
         // Ensure time is running properly when scene starts
         Time.timeScale = 1f;
         Debug.Log($"OnboardingManager Start - Time.timeScale set to: {Time.timeScale}");
+
+        // Initialize background music source
+        if (backgroundMusicSource == null)
+        {
+            GameObject musicObject = new GameObject("BackgroundMusic");
+            musicObject.transform.SetParent(transform);
+            backgroundMusicSource = musicObject.AddComponent<AudioSource>();
+            backgroundMusicSource.loop = true;
+            backgroundMusicSource.volume = 0f; // Start at 0 for smooth fade-in
+            backgroundMusicSource.playOnAwake = false;
+        }
         
         // Decide which panels to use based on game stage. If no stage set, use default panels
         var stage = GameStageService.LoadStageFromPrefs();
-        if (stage == null)
+        if (debugForceStage)
         {
-            activePanels = panels;
-            Debug.Log("Onboarding: No stage set. Using default panels.");
+            stage.area = stageToRender;
         }
-        else
-        {
-            switch (stage.area)
+        if (stage == null)
             {
-                case Stage.EasternCampus: activePanels = panelsEasternCampus; break;
-                case Stage.FirstStreet: activePanels = panelsFirstStreet; break;
-                case Stage.Pedmall: activePanels = panelsPedmall; break;
-                case Stage.TC: activePanels = panelsTC; break;
-                case Stage.Terminal: activePanels = panelsTerminal; break; // NEW: handle Terminal
-                default: activePanels = panels; break;
-            }
-            if (activePanels == null || activePanels.Length == 0)
-            {
-                activePanels = panels; // fallback
-                Debug.LogWarning($"Onboarding: No panels configured for stage {stage.area}. Falling back to default panels.");
+                activePanels = panels;
+                Debug.Log("Onboarding: No stage set. Using default panels.");
+                SetBackgroundMusicForStage(Stage.TC); // Default to TC music
             }
             else
             {
-                Debug.Log($"Onboarding: Using panels for stage {stage.area} (count={activePanels.Length}).");
+                switch (stage.area)
+                {
+                    case Stage.EasternCampus: activePanels = panelsEasternCampus; break;
+                    case Stage.FirstStreet: activePanels = panelsFirstStreet; break;
+                    case Stage.Pedmall: activePanels = panelsPedmall; break;
+                    case Stage.TC: activePanels = panelsTC; break;
+                    case Stage.Terminal: activePanels = panelsTerminal; break;
+                    default: activePanels = panels; break;
+                }
+                SetBackgroundMusicForStage(stage.area);
+                if (activePanels == null || activePanels.Length == 0)
+                {
+                    activePanels = panels; // fallback
+                    Debug.LogWarning($"Onboarding: No panels configured for stage {stage.area}. Falling back to default panels.");
+                }
+                else
+                {
+                    Debug.Log($"Onboarding: Using panels for stage {stage.area} (count={activePanels.Length}).");
+                }
             }
-        }
 
         if (activePanels == null || activePanels.Length == 0)
         {
@@ -269,94 +291,9 @@ public class OnboardingManager : MonoBehaviour
     }
 
     // Ambient tone detection and crossfade
-    private enum NarrativeTone { Calm, Social, Tense }
-
     private void UpdateAmbientForText(string fullText)
     {
-        var tone = DetectTone(fullText);
-        ApplyAmbientTone(tone);
-    }
-
-    private NarrativeTone DetectTone(string txt)
-    {
-        if (string.IsNullOrEmpty(txt)) return NarrativeTone.Calm;
-        string t = txt.ToLowerInvariant();
-
-        // Simple heuristics
-        if (t.Contains("danger") || t.Contains("hurry") || t.Contains("run") || t.Contains("warning") || t.Contains("!"))
-            return NarrativeTone.Tense;
-        if (t.Contains("welcome") || t.Contains("together") || t.Contains("friends") || t.Contains("community") || t.Contains("market") || t.Contains("gather"))
-            return NarrativeTone.Social;
-        return NarrativeTone.Calm;
-    }
-
-    private void ApplyAmbientTone(NarrativeTone tone)
-    {
-        // Ensure sources are ready
-        EnsureAmbientPlaying(ambientCalmSource);
-        EnsureAmbientPlaying(ambientChatterSource);
-        EnsureAmbientPlaying(ambientHumSource);
-
-        float calmTarget = 0f, chatterTarget = 0f, humTarget = 0f;
-        switch (tone)
-        {
-            case NarrativeTone.Calm:
-                calmTarget = ambientBaseVolume;
-                chatterTarget = 0f;
-                humTarget = ambientLowVolume;
-                break;
-            case NarrativeTone.Social:
-                calmTarget = ambientLowVolume;
-                chatterTarget = ambientBaseVolume;
-                humTarget = 0.1f;
-                break;
-            case NarrativeTone.Tense:
-                calmTarget = 0f;
-                chatterTarget = 0f;
-                humTarget = ambientBaseVolume;
-                break;
-        }
-
-        // Crossfade to targets
-        if (ambientCalmSource != null)
-        {
-            if (calmFadeCoroutine != null) StopCoroutine(calmFadeCoroutine);
-            calmFadeCoroutine = StartCoroutine(CrossfadeVolume(ambientCalmSource, calmTarget, ambientFadeDuration));
-        }
-        if (ambientChatterSource != null)
-        {
-            if (chatterFadeCoroutine != null) StopCoroutine(chatterFadeCoroutine);
-            chatterFadeCoroutine = StartCoroutine(CrossfadeVolume(ambientChatterSource, chatterTarget, ambientFadeDuration));
-        }
-        if (ambientHumSource != null)
-        {
-            if (humFadeCoroutine != null) StopCoroutine(humFadeCoroutine);
-            humFadeCoroutine = StartCoroutine(CrossfadeVolume(ambientHumSource, humTarget, ambientFadeDuration));
-        }
-    }
-
-    private void EnsureAmbientPlaying(AudioSource src)
-    {
-        if (src == null) return;
-        src.loop = true;
-        if (!src.isPlaying)
-        {
-            src.Play();
-        }
-    }
-
-    private IEnumerator CrossfadeVolume(AudioSource src, float targetVolume, float duration)
-    {
-        if (src == null) yield break;
-        float start = src.volume;
-        float elapsed = 0f;
-        while (elapsed < duration)
-        {
-            elapsed += Time.deltaTime;
-            src.volume = Mathf.Lerp(start, targetVolume, elapsed / duration);
-            yield return null;
-        }
-        src.volume = targetVolume;
+        // No longer needed with new music system
     }
 
     private void AdvanceToNextPanel()
@@ -432,5 +369,124 @@ public class OnboardingManager : MonoBehaviour
     {
         Time.timeScale = 1f;
         SceneManager.LoadScene("LevelRPG");
+    }
+
+    private AudioClip GetMusicForStage(Stage stage)
+    {
+        return stage switch
+        {
+            Stage.TC => tcStageMusic,
+            Stage.EasternCampus => easternCampusMusic,
+            Stage.FirstStreet => firstStreetMusic,
+            Stage.Pedmall => pedmallMusic,
+            Stage.Terminal => terminalMusic,
+            _ => null
+        };
+    }
+
+    private IEnumerator FadeInMusic()
+    {
+        float elapsedTime = 0f;
+        float startVolume = 0f;
+        
+        while (elapsedTime < musicFadeInDuration)
+        {
+            elapsedTime += Time.deltaTime;
+            float progress = elapsedTime / musicFadeInDuration;
+            backgroundMusicSource.volume = Mathf.Lerp(startVolume, backgroundMusicVolume, progress);
+            yield return null;
+        }
+        
+        backgroundMusicSource.volume = backgroundMusicVolume;
+    }
+
+    private IEnumerator FadeOutMusic()
+    {
+        float elapsedTime = 0f;
+        float startVolume = backgroundMusicSource.volume;
+        
+        while (elapsedTime < musicFadeInDuration)
+        {
+            elapsedTime += Time.deltaTime;
+            float progress = elapsedTime / musicFadeInDuration;
+            backgroundMusicSource.volume = Mathf.Lerp(startVolume, 0f, progress);
+            yield return null;
+        }
+        
+        backgroundMusicSource.volume = 0f;
+        backgroundMusicSource.Stop();
+    }
+
+    private void SetBackgroundMusicForStage(Stage stage)
+    {
+        if (backgroundMusicSource == null) return;
+
+        AudioClip stageMusic = GetMusicForStage(stage);
+        
+        if (stageMusic != null)
+        {
+            // If music is already playing and it's the same clip, don't restart
+            if (backgroundMusicSource.clip == stageMusic && backgroundMusicSource.isPlaying)
+            {
+                Debug.Log($"Stage music for {stage} is already playing");
+                return;
+            }
+            
+            // Stop current music if playing
+            if (backgroundMusicSource.isPlaying)
+            {
+                StartCoroutine(CrossfadeToNewMusic(stageMusic));
+            }
+            else
+            {
+                // No music currently playing, start fresh with fade-in
+                backgroundMusicSource.clip = stageMusic;
+                backgroundMusicSource.Play();
+                StartCoroutine(FadeInMusic());
+            }
+            
+            Debug.Log($"Set background music for stage: {stage}");
+        }
+        else
+        {
+            // No music assigned for this stage, fade out current music if playing
+            if (backgroundMusicSource.isPlaying)
+            {
+                StartCoroutine(FadeOutMusic());
+            }
+            Debug.Log($"No background music assigned for stage: {stage}");
+        }
+    }
+
+    private IEnumerator CrossfadeToNewMusic(AudioClip newMusic)
+    {
+        // Fade out current music
+        float elapsedTime = 0f;
+        float startVolume = backgroundMusicSource.volume;
+        float halfFadeDuration = musicFadeInDuration * 0.5f;
+        
+        while (elapsedTime < halfFadeDuration)
+        {
+            elapsedTime += Time.deltaTime;
+            float progress = elapsedTime / halfFadeDuration;
+            backgroundMusicSource.volume = Mathf.Lerp(startVolume, 0f, progress);
+            yield return null;
+        }
+        
+        // Switch to new music
+        backgroundMusicSource.clip = newMusic;
+        backgroundMusicSource.Play();
+        
+        // Fade in new music
+        elapsedTime = 0f;
+        while (elapsedTime < halfFadeDuration)
+        {
+            elapsedTime += Time.deltaTime;
+            float progress = elapsedTime / halfFadeDuration;
+            backgroundMusicSource.volume = Mathf.Lerp(0f, backgroundMusicVolume, progress);
+            yield return null;
+        }
+        
+        backgroundMusicSource.volume = backgroundMusicVolume;
     }
 }
