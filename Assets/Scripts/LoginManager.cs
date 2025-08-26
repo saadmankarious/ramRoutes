@@ -7,6 +7,7 @@ using System;
 using System.Threading.Tasks;
 using UnityEngine.SceneManagement;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine.EventSystems;
 using System.Collections;  // Add this for IEnumerator
 using RamRoutes.Model;
@@ -47,8 +48,14 @@ public class LoginManager : MonoBehaviour
 
     [Header("Leaderboard")]
     public Text firstPlaceText;
+    public Text firstPlaceCoinsText;
+    public Text firstPlaceKBText;
     public Text secondPlaceText;
+    public Text secondPlaceCoinsText;
+    public Text secondPlaceKBText;
     public Text thirdPlaceText;
+    public Text thirdPlaceCoinsText;
+    public Text thirdPlaceKBText;
 
     [Header("Event List")]
     public ScrollRect trialsScrollView;
@@ -946,33 +953,75 @@ public class LoginManager : MonoBehaviour
     {
         try
         {
-            // Get all users ordered by points
             var db = FirebaseFirestore.DefaultInstance;
+            
+            // Get all users
             var querySnapshot = await db.Collection("users")
-                .OrderByDescending("points")
-                .Limit(3)
+                .Limit(20)  // Get more users initially as we'll need to recalculate points
                 .GetSnapshotAsync();
 
-            var leaderboardTexts = new[] { firstPlaceText, secondPlaceText, thirdPlaceText };
+            // List to store user stats
+            var userStats = new List<(string userId, string name, int coins, int kb)>();
 
-            // Clear all texts first
-            foreach (var text in leaderboardTexts)
-            {
-                if (text != null) text.text = "";
-            }
-
-            int index = 0;
+            // Calculate points for each user from unlocked-trials
             foreach (var doc in querySnapshot.Documents)
             {
-                if (index < leaderboardTexts.Length && leaderboardTexts[index] != null)
-                {
-                    var userData = doc.ToDictionary();
-                    string name = userData.ContainsKey("name") ? userData["name"].ToString() : "Unknown";
-                    long points = userData.ContainsKey("points") ? Convert.ToInt64(userData["points"]) : 0;
+                var userData = doc.ToDictionary();
+                string userId = doc.Id;
+                string name = userData.ContainsKey("name") ? userData["name"].ToString() : "Unknown";
 
-                    leaderboardTexts[index].text = $"{name}";
+                // Get unlocked buildings for this user
+                var unlocksSnapshot = await db.Collection("unlocked-trials")
+                    .WhereEqualTo("userId", userId)
+                    .GetSnapshotAsync();
+
+                int totalCoins = 0;
+                int totalKB = 0;
+
+                foreach (var unlockDoc in unlocksSnapshot.Documents)
+                {
+                    var unlockData = unlockDoc.ToDictionary();
+                    if (unlockData.ContainsKey("coinPoints"))
+                    {
+                        totalCoins += Convert.ToInt32(unlockData["coinPoints"]);
+                    }
+                    if (unlockData.ContainsKey("knowledgePoints"))
+                    {
+                        totalKB += Convert.ToInt32(unlockData["knowledgePoints"]);
+                    }
                 }
-                index++;
+
+                userStats.Add((userId, name, totalCoins, totalKB));
+            }
+
+            // Sort by total coins (primary) and knowledge points (secondary)
+            userStats.Sort((a, b) => {
+                int coinCompare = b.coins.CompareTo(a.coins);
+                return coinCompare != 0 ? coinCompare : b.kb.CompareTo(a.kb);
+            });
+
+            // Take top 3
+            var topThree = userStats.Take(3).ToList();
+
+            // Update UI
+            Text[] nameTexts = { firstPlaceText, secondPlaceText, thirdPlaceText };
+            Text[] coinTexts = { firstPlaceCoinsText, secondPlaceCoinsText, thirdPlaceCoinsText };
+            Text[] kbTexts = { firstPlaceKBText, secondPlaceKBText, thirdPlaceKBText };
+
+            // Clear all texts first
+            for (int i = 0; i < 3; i++)
+            {
+                if (nameTexts[i] != null) nameTexts[i].text = "";
+                if (coinTexts[i] != null) coinTexts[i].text = "0";
+                if (kbTexts[i] != null) kbTexts[i].text = "0";
+            }
+
+            // Update with new values
+            for (int i = 0; i < topThree.Count; i++)
+            {
+                if (nameTexts[i] != null) nameTexts[i].text = topThree[i].name;
+                if (coinTexts[i] != null) coinTexts[i].text = topThree[i].coins.ToString();
+                if (kbTexts[i] != null) kbTexts[i].text = topThree[i].kb.ToString();
             }
         }
         catch (System.Exception e)
@@ -1079,7 +1128,7 @@ public class LoginManager : MonoBehaviour
 
                     if (entryText != null)
                     {
-                        entryText.text = $"{entry.text}\n{entry.time.ToLocalTime():MMM dd, yyyy h:mm tt}";
+                        entryText.text = $"{entry.text} at {entry.time.ToLocalTime():MMM dd, yyyy h:mm tt}";
                     }
                 }            }       
             {
