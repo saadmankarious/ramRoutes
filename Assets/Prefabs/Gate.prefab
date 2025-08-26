@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 7013091016929523227}
   m_Layer: 0
   m_Name: Gate
-  m_TagString: Untagged
+  m_TagString: Gate
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -201,6 +201,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isUnlocked: 0
   pushForce: 1000
+  lockMessage: This gate is locked. Find a way to unlock it.
+  unlockedMessage: The gate is now open!
   gateAnimator: {fileID: 0}
   unlockAnimParam: unlock
   unlockSound: {fileID: 8300000, guid: b9293480c3e1e448db928e9070dfead6, type: 3}

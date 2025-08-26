@@ -264,10 +264,24 @@ public class LightManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Activates terminal night mode - turns on night light and disables all other lights
+    /// Activates terminal night mode - turns on night light, disables all other lights, and hides poles
     /// </summary>
     private IEnumerator ActivateTerminalNightMode()
     {
+        // Hide all objects tagged with "Pole"
+        GameObject[] poles = GameObject.FindGameObjectsWithTag("Pole");
+                GameObject[] gates = GameObject.FindGameObjectsWithTag("Gate");
+
+        foreach (GameObject pole in poles)
+        {
+            pole.SetActive(false);
+        }
+        foreach (GameObject gate in gates)
+        {
+            gate.SetActive(false);
+        }
+        Debug.Log($"LightManager: Hidden {poles.Length} poles and {gates.Length} gates for Terminal stage");
+
         // Turn on the night light if assigned
         if (nightLight != null)
         {
@@ -326,6 +340,14 @@ public class LightManager : MonoBehaviour
         
         if (stage == Stage.Terminal)
         {
+            // Hide all objects tagged with "Pole"
+            GameObject[] poles = GameObject.FindGameObjectsWithTag("Pole");
+            foreach (GameObject pole in poles)
+            {
+                pole.SetActive(false);
+            }
+            Debug.Log($"LightManager: Hidden {poles.Length} poles for Terminal stage");
+
             // For Terminal stage, activate night mode immediately
             if (nightLight != null)
             {
@@ -376,6 +398,13 @@ public class LightManager : MonoBehaviour
     /// </summary>
     private void TurnOffAllLights()
     {
+        // Show all poles that might have been hidden in Terminal stage
+        GameObject[] poles = GameObject.FindGameObjectsWithTag("Pole");
+        foreach (GameObject pole in poles)
+        {
+            pole.SetActive(true);
+        }
+        
         // Collect all lights from all stage arrays
         List<Light2D> allLightsList = new List<Light2D>();
         
