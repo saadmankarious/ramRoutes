@@ -3,28 +3,33 @@ using UnityEngine.Rendering.Universal;
 using RamRoutes.Services;
 using RamRoutes.Model;
 using System.Collections;
+using System.Collections.Generic;
 
 public class LightManager : MonoBehaviour
 {
     [Header("Stage Lights")]
-    [Tooltip("Light to activate when in Town Center (TC) stage")]
-    [SerializeField] private Light2D tcStageLight;
+    [Tooltip("Lights to activate when in Town Center (TC) stage")]
+    [SerializeField] private Light2D[] tcStageLights;
     
-    [Tooltip("Light to activate when in Eastern Campus stage")]
-    [SerializeField] private Light2D easternCampusLight;
+    [Tooltip("Lights to activate when in Eastern Campus stage")]
+    [SerializeField] private Light2D[] easternCampusLights;
     
-    [Tooltip("Light to activate when in First Street stage")]
-    [SerializeField] private Light2D firstStreetLight;
+    [Tooltip("Lights to activate when in First Street stage")]
+    [SerializeField] private Light2D[] firstStreetLights;
 
-    [Tooltip("Light to activate when in Pedmall stage")]
-    [SerializeField] private Light2D pedmallLight;
+    [Tooltip("Lights to activate when in Pedmall stage")]
+    [SerializeField] private Light2D[] pedmallLights;
 
-    [Tooltip("Light to activate when in Terminal stage")]
-    [SerializeField] private Light2D terminalLight;
+    [Tooltip("Lights to activate when in Terminal stage")]
+    [SerializeField] private Light2D[] terminalLights;
     
     [Header("Settings")]
     [Tooltip("Duration for smooth light transitions between stages")]
     [SerializeField] private float transitionDuration = 1f;
+    
+    [Header("Terminal Stage Special Lighting")]
+    [Tooltip("Special night light that turns on only during Terminal stage")]
+    [SerializeField] private Light2D nightLight;
     
     private Stage currentStage;
     private Coroutine transitionCoroutine;
@@ -69,16 +74,16 @@ public class LightManager : MonoBehaviour
         
         if (stage == Stage.Terminal)
         {
-            // For Terminal stage, turn on all lights
-            transitionCoroutine = StartCoroutine(TransitionAllLights());
+            // For Terminal stage, activate night mode
+            transitionCoroutine = StartCoroutine(ActivateTerminalNightMode());
         }
         else
         {
-            // For other stages, turn on specific light
-            Light2D targetLight = GetLightForStage(stage);
-            if (targetLight != null)
+            // For other stages, turn on specific stage lights
+            Light2D[] targetLights = GetLightsForStage(stage);
+            if (targetLights != null && targetLights.Length > 0)
             {
-                transitionCoroutine = StartCoroutine(TransitionToLight(targetLight));
+                transitionCoroutine = StartCoroutine(TransitionToLights(targetLights));
             }
         }
         
@@ -86,19 +91,19 @@ public class LightManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Gets the light component assigned to the specified stage
+    /// Gets the light components assigned to the specified stage
     /// </summary>
     /// <param name="stage">The game stage</param>
-    /// <returns>The Light2D component for the stage, or null if not assigned</returns>
-    private Light2D GetLightForStage(Stage stage)
+    /// <returns>The Light2D array for the stage, or null if not assigned</returns>
+    private Light2D[] GetLightsForStage(Stage stage)
     {
         return stage switch
         {
-            Stage.TC => tcStageLight,
-            Stage.EasternCampus => easternCampusLight,
-            Stage.FirstStreet => firstStreetLight,
-            Stage.Pedmall => pedmallLight,
-            Stage.Terminal => null, // Terminal stage uses all lights, not a specific one
+            Stage.TC => tcStageLights,
+            Stage.EasternCampus => easternCampusLights,
+            Stage.FirstStreet => firstStreetLights,
+            Stage.Pedmall => pedmallLights,
+            Stage.Terminal => null, // Terminal stage uses all lights, not a specific set
             _ => null
         };
     }
@@ -140,21 +145,92 @@ public class LightManager : MonoBehaviour
     }
     
     /// <summary>
+    /// Smoothly transitions multiple lights to full intensity
+    /// </summary>
+    /// <param name="targetLights">The lights to turn on</param>
+    private IEnumerator TransitionToLights(Light2D[] targetLights)
+    {
+        if (targetLights == null || targetLights.Length == 0) yield break;
+        
+        // Store starting intensities for all lights
+        float[] startIntensities = new float[targetLights.Length];
+        for (int i = 0; i < targetLights.Length; i++)
+        {
+            if (targetLights[i] != null)
+            {
+                startIntensities[i] = targetLights[i].intensity;
+                targetLights[i].enabled = true;
+            }
+        }
+        
+        float elapsed = 0f;
+        float targetIntensity = 1f;
+        
+        // Transition phase: fade in all lights
+        while (elapsed < transitionDuration)
+        {
+            elapsed += Time.deltaTime;
+            float progress = elapsed / transitionDuration;
+            
+            // Fade in all lights
+            for (int i = 0; i < targetLights.Length; i++)
+            {
+                if (targetLights[i] != null)
+                {
+                    targetLights[i].intensity = Mathf.Lerp(startIntensities[i], targetIntensity, progress);
+                }
+            }
+            
+            yield return null;
+        }
+        
+        // Ensure final state for all lights
+        foreach (Light2D light in targetLights)
+        {
+            if (light != null)
+            {
+                light.intensity = targetIntensity;
+                light.enabled = true;
+            }
+        }
+        
+        transitionCoroutine = null;
+        
+        Debug.Log($"LightManager: Lights transition complete for {targetLights.Length} lights in {currentStage} stage");
+    }
+    
+    /// <summary>
     /// Smoothly transitions all lights to full intensity (used for Terminal stage)
     /// </summary>
     private IEnumerator TransitionAllLights()
     {
-        Light2D[] allLights = { tcStageLight, easternCampusLight, firstStreetLight, pedmallLight, terminalLight };
+        // Collect all lights from all stages
+        List<Light2D> allLightsList = new List<Light2D>();
+        
+        // Add lights from each stage array
+        if (tcStageLights != null) allLightsList.AddRange(tcStageLights);
+        if (easternCampusLights != null) allLightsList.AddRange(easternCampusLights);
+        if (firstStreetLights != null) allLightsList.AddRange(firstStreetLights);
+        if (pedmallLights != null) allLightsList.AddRange(pedmallLights);
+        if (terminalLights != null) allLightsList.AddRange(terminalLights);
+        
+        // Remove null references
+        allLightsList.RemoveAll(light => light == null);
+        
+        if (allLightsList.Count == 0)
+        {
+            Debug.LogWarning("LightManager: No lights found for Terminal stage transition");
+            yield break;
+        }
+        
+        Light2D[] allLights = allLightsList.ToArray();
         
         // Store starting intensities for all lights
         float[] startIntensities = new float[allLights.Length];
         for (int i = 0; i < allLights.Length; i++)
         {
-            if (allLights[i] != null)
-            {
-                startIntensities[i] = allLights[i].intensity;
-                allLights[i].enabled = true;
-            }
+            startIntensities[i] = allLights[i].intensity;
+            allLights[i].enabled = true;
         }
         
         float elapsed = 0f;
@@ -169,10 +245,7 @@ public class LightManager : MonoBehaviour
             // Fade in all lights
             for (int i = 0; i < allLights.Length; i++)
             {
-                if (allLights[i] != null)
-                {
-                    allLights[i].intensity = Mathf.Lerp(startIntensities[i], targetIntensity, progress);
-                }
+                allLights[i].intensity = Mathf.Lerp(startIntensities[i], targetIntensity, progress);
             }
             
             yield return null;
@@ -181,22 +254,65 @@ public class LightManager : MonoBehaviour
         // Ensure final state for all lights
         foreach (Light2D light in allLights)
         {
-            if (light != null)
-            {
-                light.intensity = targetIntensity;
-                light.enabled = true;
-            }
+            light.intensity = targetIntensity;
+            light.enabled = true;
         }
         
         transitionCoroutine = null;
         
-        Debug.Log("LightManager: All lights transition complete for Terminal stage");
+        Debug.Log($"LightManager: All {allLights.Length} lights transition complete for Terminal stage");
     }
     
     /// <summary>
-    /// Immediately sets a specific stage light to on
+    /// Activates terminal night mode - turns on night light and disables all other lights
     /// </summary>
-    /// <param name="stage">The stage whose light should be turned on</param>
+    private IEnumerator ActivateTerminalNightMode()
+    {
+        // Turn on the night light if assigned
+        if (nightLight != null)
+        {
+            nightLight.enabled = true;
+            // Smoothly transition night light to full intensity
+            float elapsed = 0f;
+            float startIntensity = nightLight.intensity;
+            
+            while (elapsed < transitionDuration)
+            {
+                elapsed += Time.deltaTime;
+                float progress = elapsed / transitionDuration;
+                nightLight.intensity = Mathf.Lerp(startIntensity, 1f, progress);
+                yield return null;
+            }
+            
+            nightLight.intensity = 1f;
+            Debug.Log("LightManager: Night light activated for Terminal stage");
+        }
+        
+        // Find all Light2D components in the scene and disable them (except the night light)
+        Light2D[] allSceneLights = FindObjectsOfType<Light2D>();
+        int disabledCount = 0;
+        
+        foreach (Light2D light in allSceneLights)
+        {
+            // Skip the night light - we want it to stay on
+            if (light == nightLight) continue;
+            
+            // Disable all other lights by setting intensity to 0
+            if (light.intensity > 0)
+            {
+                light.intensity = 0f;
+                disabledCount++;
+            }
+        }
+        
+        transitionCoroutine = null;
+        Debug.Log($"LightManager: Terminal night mode activated - disabled {disabledCount} scene lights, night light on");
+    }
+    
+    /// <summary>
+    /// Immediately sets a specific stage lights to on
+    /// </summary>
+    /// <param name="stage">The stage whose lights should be turned on</param>
     public void SetLightingImmediately(Stage stage)
     {
         // Stop any ongoing transition
@@ -210,28 +326,48 @@ public class LightManager : MonoBehaviour
         
         if (stage == Stage.Terminal)
         {
-            // For Terminal stage, turn on all lights immediately
-            Light2D[] allLights = { tcStageLight, easternCampusLight, firstStreetLight, pedmallLight, terminalLight };
-            foreach (Light2D light in allLights)
+            // For Terminal stage, activate night mode immediately
+            if (nightLight != null)
             {
-                if (light != null)
+                nightLight.enabled = true;
+                nightLight.intensity = 1f;
+            }
+            
+            // Find all Light2D components in the scene and disable them (except the night light)
+            Light2D[] allSceneLights = FindObjectsOfType<Light2D>();
+            int disabledCount = 0;
+            
+            foreach (Light2D light in allSceneLights)
+            {
+                // Skip the night light - we want it to stay on
+                if (light == nightLight) continue;
+                
+                // Disable all other lights by setting intensity to 0
+                if (light.intensity > 0)
                 {
-                    light.enabled = true;
-                    light.intensity = 1f;
+                    light.intensity = 0f;
+                    disabledCount++;
                 }
             }
-            Debug.Log("LightManager: Immediately turned on all lights for Terminal stage");
+            
+            Debug.Log($"LightManager: Immediately activated Terminal night mode - disabled {disabledCount} scene lights, night light on");
         }
         else
         {
-            // For other stages, turn on specific light
-            Light2D targetLight = GetLightForStage(stage);
-            if (targetLight != null)
+            // For other stages, turn on specific stage lights
+            Light2D[] targetLights = GetLightsForStage(stage);
+            if (targetLights != null)
             {
-                targetLight.enabled = true;
-                targetLight.intensity = 1f; // Set to full intensity
+                foreach (Light2D light in targetLights)
+                {
+                    if (light != null)
+                    {
+                        light.enabled = true;
+                        light.intensity = 1f; // Set to full intensity
+                    }
+                }
+                Debug.Log($"LightManager: Immediately set {targetLights.Length} lights on for stage {stage}");
             }
-            Debug.Log($"LightManager: Immediately set light on for stage {stage}");
         }
     }
     
@@ -240,9 +376,16 @@ public class LightManager : MonoBehaviour
     /// </summary>
     private void TurnOffAllLights()
     {
-        Light2D[] allLights = { tcStageLight, easternCampusLight, firstStreetLight, pedmallLight, terminalLight };
+        // Collect all lights from all stage arrays
+        List<Light2D> allLightsList = new List<Light2D>();
         
-        foreach (Light2D light in allLights)
+        if (tcStageLights != null) allLightsList.AddRange(tcStageLights);
+        if (easternCampusLights != null) allLightsList.AddRange(easternCampusLights);
+        if (firstStreetLights != null) allLightsList.AddRange(firstStreetLights);
+        if (pedmallLights != null) allLightsList.AddRange(pedmallLights);
+        if (terminalLights != null) allLightsList.AddRange(terminalLights);
+        
+        foreach (Light2D light in allLightsList)
         {
             if (light != null)
             {
@@ -250,6 +393,8 @@ public class LightManager : MonoBehaviour
                 light.intensity = 0f;
             }
         }
+        
+        Debug.Log($"LightManager: Turned off {allLightsList.Count} lights");
     }
     
     /// <summary>
@@ -262,19 +407,23 @@ public class LightManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Checks if a light is assigned for the specified stage
+    /// Checks if lights are assigned for the specified stage
     /// </summary>
     /// <param name="stage">The stage to check</param>
-    /// <returns>True if a light is assigned, false otherwise</returns>
+    /// <returns>True if lights are assigned, false otherwise</returns>
     public bool HasLightForStage(Stage stage)
     {
         if (stage == Stage.Terminal)
         {
             // Terminal stage uses all lights, so check if any are assigned
-            return tcStageLight != null || easternCampusLight != null || firstStreetLight != null || 
-                   pedmallLight != null || terminalLight != null;
+            return (tcStageLights != null && tcStageLights.Length > 0) ||
+                   (easternCampusLights != null && easternCampusLights.Length > 0) ||
+                   (firstStreetLights != null && firstStreetLights.Length > 0) ||
+                   (pedmallLights != null && pedmallLights.Length > 0) ||
+                   (terminalLights != null && terminalLights.Length > 0);
         }
         
-        return GetLightForStage(stage) != null;
+        Light2D[] stageLights = GetLightsForStage(stage);
+        return stageLights != null && stageLights.Length > 0;
     }
 }

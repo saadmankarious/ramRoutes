@@ -1172,7 +1172,7 @@ private void HideObjectsWithTag(string tag)
         _ = GetUserKnowledgePoints();
 
         // If the last building was just unlocked, move to Terminal stage
-        bool isFinalUnlock = buildingsUnlockedCount >= 6 || (progressBarImages != null && buildingsUnlockedCount >= progressBarImages.Length);
+        bool isFinalUnlock = buildingsUnlockedCount >= 7 || (progressBarImages != null && buildingsUnlockedCount >= progressBarImages.Length);
         if (isFinalUnlock)
         {
             var current = GameStageService.LoadStageFromPrefs();

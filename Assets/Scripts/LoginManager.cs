@@ -633,6 +633,26 @@ public class LoginManager : MonoBehaviour
         var user = await userService.RetrieveAndCacheCurrentUserProfile(userId);
         welcomeText.text = $"Welcome, {user.name.Split(" ")[0]}!";
 
+        // Fetch and cache user's game stage from Firestore
+        try
+        {
+            var userStage = await RamRoutes.Services.GameStageService.LoadStageFromFirestore();
+            if (userStage != null)
+            {
+                // Update local cache with stage from Firestore
+                RamRoutes.Services.GameStageService.SaveStageToPrefs(userStage);
+                Debug.Log($"Successfully loaded and cached user stage: {userStage.area}");
+            }
+            else
+            {
+                Debug.Log("No stage found in Firestore for user, using default");
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Failed to fetch user stage from Firestore: {e.Message}");
+        }
+
         // Update FCM token in user profile for notifications
         try
         {
