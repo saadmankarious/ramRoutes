@@ -308,7 +308,7 @@ public class BuildingInteraction : MonoBehaviour
                 $"You've moved away from {buildingInfo.displayName}. You need to be physically close to this location to unlock it.";
             
             // Show message without unlock button since player is not close enough
-            uiManager.ShowDialog(distanceMessage, 5f);
+            uiManager.ShowDialog(distanceMessage, 15f);
         }
     }
 
@@ -368,10 +368,10 @@ public class BuildingInteraction : MonoBehaviour
                     {
                         var buildingInfo = BuildingDataManager.GetBuildingInfo(buildingName);
                         string distanceMessage = !string.IsNullOrEmpty(preUnlockMessage) ? preUnlockMessage : 
-                            $"This building ({buildingInfo.displayName}) is locked. You need to be physically close to this location to unlock it using GPS.";
+                            $"{buildingInfo.displayName} requires GPS to unlock. Walk to the building to unlock it.";
                         
                         // Show message without unlock button since player is not close enough
-                        uiManager.ShowDialog(distanceMessage, 10f, false, true, buildingName);
+                        uiManager.ShowDialog(distanceMessage, 15f, false, true, buildingName);
                     }
                 }
             }

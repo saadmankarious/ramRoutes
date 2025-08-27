@@ -84,7 +84,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 2.375, y: 2.25}
+  m_Size: {x: 1.1875, y: 1.125}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -133,10 +133,11 @@ MonoBehaviour:
   spawnPoint: {fileID: 0}
   npcSpawner: {fileID: 0}
   conversationLines:
-  - Here, healing is more than medicine. The soul came here when hope dimmed.
-  - Care flows through these halls for body and spirit alike.
-  - Aros dwells where broken things are made whole
-  textDisplaySpeed: 0.05
+  - Sweat and determination echo through these walls. The soul pushed their limits
+    here, seeking strength within.
+  - Every heartbeat, every breath was a battle against their own doubt.
+  - Aros thrives where bodies and spirits are forged in fire.
+  textDisplaySpeed: 0.025
   continueKey: 32
   npcPanel: {fileID: 0}
   npcNameText: {fileID: 0}
@@ -145,7 +146,9 @@ MonoBehaviour:
   npcName: Unknown NPC
   npcSound: {fileID: 8300000, guid: bf527d825758e5b4ca7b69f5a02d9a56, type: 3}
   typingTickSound: {fileID: 8300000, guid: 74d71d820e630407db1f8d2de6cc97ca, type: 3}
-  typingSoundInterval: 0.15
+  typingSoundInterval: 0.1
+  maxLifetime: 30
+  mobileInteractPressed: 0
 --- !u!61 &3979548990149366905
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -185,7 +188,7 @@ BoxCollider2D:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
     oldSize: {x: 2.375, y: 2.25}
-    newSize: {x: 2.375, y: 2.25}
+    newSize: {x: 1.1875, y: 1.125}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0

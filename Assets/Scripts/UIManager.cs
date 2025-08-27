@@ -990,11 +990,11 @@ private void HideObjectsWithTag(string tag)
         }
          if (coinsGained != null)
                 {
-            coinsGained.text = buildingInfo.coinsGained.ToString();
+            coinsGained.text = "+" + buildingInfo.coinsGained.ToString();
                 }
                  if (kbGained != null)
                 {
-            kbGained.text = buildingInfo.kbGained.ToString();
+            kbGained.text = "+" + buildingInfo.kbGained.ToString();
                 }
         
         // Update NPC information from NPCSpawner

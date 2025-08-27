@@ -137,7 +137,7 @@ MonoBehaviour:
     them.
   - TC still hums with echoes of shared meals and quiet debates.
   - Seek Aros where joy once flowed freely.
-  textDisplaySpeed: 0.05
+  textDisplaySpeed: 0.025
   continueKey: 32
   npcPanel: {fileID: 0}
   npcNameText: {fileID: 0}
@@ -147,6 +147,8 @@ MonoBehaviour:
   npcSound: {fileID: 8300000, guid: bf527d825758e5b4ca7b69f5a02d9a56, type: 3}
   typingTickSound: {fileID: 8300000, guid: 74d71d820e630407db1f8d2de6cc97ca, type: 3}
   typingSoundInterval: 0.1
+  maxLifetime: 30
+  mobileInteractPressed: 0
 --- !u!61 &3979548990149366905
 BoxCollider2D:
   m_ObjectHideFlags: 0

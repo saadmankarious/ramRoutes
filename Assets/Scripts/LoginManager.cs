@@ -67,6 +67,11 @@ public class LoginManager : MonoBehaviour
     private bool isScrollingPaused = false;
     private bool isResetting = false;
 
+    [Header("Background Music")]
+    [SerializeField] private AudioClip backgroundMusic;
+    [SerializeField] private float musicVolume = 0.3f;
+    private AudioSource musicSource;
+
     private FirebaseAuth auth;
     private string playerName = "";
     private bool isSignupMode = false;
@@ -82,6 +87,9 @@ public class LoginManager : MonoBehaviour
 
     private async void Start()
     {
+        // Setup background music
+        SetupBackgroundMusic();
+
         // Initialize UI
         loginPanel.SetActive(true);
         signupPanel.SetActive(false);
@@ -166,6 +174,28 @@ public class LoginManager : MonoBehaviour
         // await UpdateEventList();
     }
 
+    private void SetupBackgroundMusic()
+    {
+        if (backgroundMusic != null)
+        {
+            // Create a new GameObject to hold the AudioSource
+            GameObject musicObject = new GameObject("BackgroundMusic");
+            musicSource = musicObject.AddComponent<AudioSource>();
+            
+            // Configure the AudioSource
+            musicSource.clip = backgroundMusic;
+            musicSource.volume = musicVolume;
+            musicSource.loop = true;
+            musicSource.playOnAwake = false;
+            
+            // Don't destroy the music object when changing scenes
+            DontDestroyOnLoad(musicObject);
+            
+            // Start playing the music
+            musicSource.Play();
+        }
+    }
+
     private async Task InitializeFirebase()
     {
         try
@@ -230,12 +260,12 @@ public class LoginManager : MonoBehaviour
     {
         if (toggleText != null)
         {
-            toggleText.text = isSignupMode ? "Already have an account? Login" : "Create Account";
+            toggleText.text = isSignupMode ? "Already registered? Login" : "Create Account";
         }
         
         if (signupToggleText != null)
         {
-            signupToggleText.text = "Already have an account? Login";
+            signupToggleText.text = "Already registered? Login";
         }
     }
     
@@ -1005,7 +1035,7 @@ public class LoginManager : MonoBehaviour
 
             // Update UI
             Text[] nameTexts = { firstPlaceText, secondPlaceText, thirdPlaceText };
-            Text[] coinTexts = { firstPlaceCoinsText, secondPlaceCoinsText, thirdPlaceCoinsText };
+            Text[] coinTexts = { firstPlaceCoinsText, secondPlaceCoinsText, thirdPlaceKBText };
             Text[] kbTexts = { firstPlaceKBText, secondPlaceKBText, thirdPlaceKBText };
 
             // Clear all texts first
@@ -1166,6 +1196,13 @@ public class LoginManager : MonoBehaviour
         if (auth != null)
         {
             auth.StateChanged -= AuthStateChanged;
+        }
+
+        // Clean up background music
+        if (musicSource != null)
+        {
+            musicSource.Stop();
+            Destroy(musicSource.gameObject);
         }
     }    void Update()
     {
