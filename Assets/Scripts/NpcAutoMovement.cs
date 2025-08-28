@@ -36,6 +36,10 @@ public class NpcAutoMovement : MonoBehaviour
     [Header("NPC Info")]
     public string npcName = "Unknown NPC"; // Will be set by spawner
     
+    [Header("Rewards")]
+    [SerializeField] private int coinReward = 50;
+    [SerializeField] private int knowledgePointReward = 50;
+    
     [Header("Animation")]
     private Animator animator;
     private string movingXParam = "moveX";
@@ -643,11 +647,42 @@ public class NpcAutoMovement : MonoBehaviour
         }
     }
     
-    void EndConversation()
+    async void EndConversation()
     {
         isInConversation = false;
         currentLineIndex = 0;
         isWaiting = false; // Resume movement when conversation ends
+        
+        // Check if player has already been rewarded by this NPC
+        string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+        if (string.IsNullOrEmpty(userId)) return;
+        
+        string npcKey = $"NPC_Rewarded_{gameObject.name}_{userId}";
+        if (!PlayerPrefs.HasKey(npcKey))
+        {
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var userService = new RamRoutes.Services.UserService();
+                
+                // Update both points in Firebase
+                await userService.UpdateUserCoins(userId, coinReward);
+                await userService.UpdateUserKnowledgePoints(userId, knowledgePointReward);
+                var points = await userService.GetUserCoins(userId);
+                var kb = await userService.GetUserKnowledgePoints(userId);
+                // Update UI
+                if (UIManager.Instance != null)
+                {
+
+                    UIManager.Instance.UpdateCoins(points);
+                    UIManager.Instance.UpdateKnowledgePoints(kb);
+                    UIManager.Instance.ShowDialog($"Gained {knowledgePointReward} Knowledge Points and {coinReward} Coins!", 2f, false);
+                }
+                
+                // Mark NPC as having given reward
+                PlayerPrefs.SetInt(npcKey, 1);
+                PlayerPrefs.Save();
+            }
+        }
         
         // Hide mobile interact button when conversation ends
         if (UIManager.Instance != null)

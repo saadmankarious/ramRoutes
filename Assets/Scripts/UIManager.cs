@@ -472,15 +472,10 @@ public class UIManager : MonoBehaviour
             string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
             if (!string.IsNullOrEmpty(userId))
             {
-                var buildingService = new UnlockedBuildingService();
-                var unlockedBuildings = await buildingService.RetrieveUnlockedBuildings();
-                
-                // Get current user's unlocked buildings and sum their coin points
-                var userUnlockedBuildings = unlockedBuildings.Where(b => b.userId == userId).ToList();
-                int totalCoinPoints = userUnlockedBuildings.Sum(b => b.coinPoints);
-                
-                UpdateCoins(totalCoinPoints);
-                Debug.Log($"Total coin points from {userUnlockedBuildings.Count} unlocked buildings: {totalCoinPoints}");
+                var userService = new RamRoutes.Services.UserService();
+                int coins = await userService.GetUserCoins(userId);
+                UpdateCoins(coins);
+                Debug.Log($"Retrieved user coins: {coins}");
             }
         }
         catch (System.Exception ex)
@@ -496,15 +491,10 @@ public class UIManager : MonoBehaviour
             string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
             if (!string.IsNullOrEmpty(userId))
             {
-                var buildingService = new UnlockedBuildingService();
-                var unlockedBuildings = await buildingService.RetrieveUnlockedBuildings();
-                
-                // Get current user's unlocked buildings and sum their knowledge points
-                var userUnlockedBuildings = unlockedBuildings.Where(b => b.userId == userId).ToList();
-                int totalKnowledgePoints = userUnlockedBuildings.Sum(b => b.knowledgePoints);
-                
-                UpdateKnowledgePoints(totalKnowledgePoints);
-                Debug.Log($"Total knowledge points from {userUnlockedBuildings.Count} unlocked buildings: {totalKnowledgePoints}");
+                var userService = new RamRoutes.Services.UserService();
+                int points = await userService.GetUserKnowledgePoints(userId);
+                UpdateKnowledgePoints(points);
+                Debug.Log($"Retrieved user knowledge points: {points}");
             }
         }
         catch (System.Exception ex)
@@ -1211,13 +1201,20 @@ private void HideObjectsWithTag(string tag)
         }
     }
 
-    public void UpdateProgressBarOnReveal()
+    public async Task UpdateProgressBarOnReveal()
     {
         UpdateProgressBar();
 
         // Refresh points display when progress bar is updated
-        _ = GetUserPoints();
-        _ = GetUserKnowledgePoints();
+        var userService = new UserService();
+        string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+        if (!string.IsNullOrEmpty(userId))
+        {
+            int coins = await userService.GetUserCoins(userId);
+            int knowledgePoints = await userService.GetUserKnowledgePoints(userId);
+            UpdateCoins(coins);
+            UpdateKnowledgePoints(knowledgePoints);
+        }
 
         // If the last building was just unlocked, move to Terminal stage
         bool isFinalUnlock = buildingsUnlockedCount >= 7 || (progressBarImages != null && buildingsUnlockedCount >= progressBarImages.Length);

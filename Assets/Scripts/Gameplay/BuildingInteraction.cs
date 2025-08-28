@@ -521,10 +521,10 @@ public class BuildingInteraction : MonoBehaviour
         string userName = userProfile != null && !string.IsNullOrEmpty(userProfile.name) ? userProfile.name : userId;
 
         // Award points for unlocking the building
-        await userService.AddPoints(userId, 100);
+       // await userService.AddPoints(userId, 100);
         // Update UI with new points
-        var updatedPoints = await userService.GetPoints(userId);
-        UIManager.Instance.UpdateCoins(updatedPoints);
+        // var updatedPoints = await userService.GetPoints(userId);
+        // UIManager.Instance.UpdateCoins(updatedPoints);
 
         // Update user's current building
         await userService.UpdateCurrentBuilding(userId, buildingName);
@@ -541,6 +541,11 @@ public class BuildingInteraction : MonoBehaviour
             knowledgePoints
         );
         await service.SaveUnlockedBuildingAsync(record);
+
+        // Update coins and knowledge points in Firebase using new utilities
+        await userService.UpdateUserCoins(userId, coinPoints);
+        await userService.UpdateUserKnowledgePoints(userId, knowledgePoints);
+
         // Update progress bar when building is revealed
         if (uiManager != null)
         {

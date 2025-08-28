@@ -74,11 +74,11 @@ namespace RamRoutes.Services
         public async Task<List<BuildingEvent>> GetBuildingEventsAsync(bool forceRefresh = false)
         {
             // Return cached data if available and not forcing refresh
-            if (!forceRefresh && cachedEvents != null && cachedEvents.Count > 0)
-            {
-                Debug.Log("Returning building events from cache");
-                return cachedEvents;
-            }
+            // if (!forceRefresh && cachedEvents != null && cachedEvents.Count > 0)
+            // {
+            //     Debug.Log("Returning building events from cache");
+            //     return cachedEvents;
+            // }
 
             try
             {
