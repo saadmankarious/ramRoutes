@@ -647,7 +647,7 @@ public class NpcAutoMovement : MonoBehaviour
         }
     }
     
-    async void EndConversation()
+    async void EndConversation()//ensure three lines of dialogue before rewarding
     {
         isInConversation = false;
         currentLineIndex = 0;

@@ -47,7 +47,7 @@ public class BuildingInteraction : MonoBehaviour
     [SerializeField] private Gate connectedGate;
 
     [Header("GPS Integration")]
-    [SerializeField] private float gpsUnlockRadius = 50f;
+    // [SerializeField] private float gpsUnlockRadius = 50f;
     [SerializeField] private bool bypassGpsCheck = false;
 
     private bool isPlayerInRange = false;
@@ -607,9 +607,9 @@ public class BuildingInteraction : MonoBehaviour
             targetBuilding.entranceGPS.y
         );
         
-        Debug.Log($"GPS Distance to {buildingName}: {distance:F1}m (threshold: {gpsUnlockRadius}m)");
+        Debug.Log($"GPS Distance to {buildingName}: {distance:F1}m (threshold: {targetBuilding.detectionRadius}m)");
         
-        return distance <= gpsUnlockRadius;
+        return distance <= targetBuilding.detectionRadius;
     }
 
     // Make DisplayUsersWhoUnlocked return a Task for parallel execution

@@ -1096,9 +1096,12 @@ public class LoginManager : MonoBehaviour
                 string buildingName = data.ContainsKey("buildingName") ? data["buildingName"].ToString() : "Unknown Building";
                 var time = data.ContainsKey("unlockTime") && data["unlockTime"] is Timestamp timestamp
                     ? timestamp.ToDateTime()
-                    : DateTime.MinValue;
+                    : (DateTime?)null;
 
-                allEntries.Add((time, $"{userName} unlocked {buildingName}"));
+                if (time.HasValue)
+                {
+                    allEntries.Add((time.Value, $"{userName} unlocked {buildingName}"));
+                }
             }
 
             // Process events
@@ -1110,14 +1113,16 @@ public class LoginManager : MonoBehaviour
                 string eventDetails = data.ContainsKey("details") ? data["details"].ToString() : "";
                 var time = data.ContainsKey("date") && data["date"] is Timestamp timestamp
                     ? timestamp.ToDateTime()
-                    : DateTime.MinValue;
+                    : (DateTime?)null;
 
-                // Format the event text with more details if available
-                string eventText = string.IsNullOrEmpty(eventDetails)
-                    ? $"Event: {eventName} at {buildingName}"
-                    : $"Event: {eventName} at {buildingName} - {eventDetails}";
-                allEntries.Add((time, eventText));
-
+                if (time.HasValue)
+                {
+                    // Format the event text with more details if available
+                    string eventText = string.IsNullOrEmpty(eventDetails)
+                        ? $"Event: {eventName} at {buildingName}"
+                        : $"Event: {eventName} at {buildingName} - {eventDetails}";
+                    allEntries.Add((time.Value, eventText));
+                }
             }
 
             // Sort all entries by time
@@ -1158,7 +1163,11 @@ public class LoginManager : MonoBehaviour
 
                     if (entryText != null)
                     {
-                        entryText.text = $"{entry.text} at {entry.time.ToLocalTime():MMM dd, yyyy h:mm tt}";
+                        // Ensure the date is only displayed if it's not the minimum value
+                        string dateText = entry.time != DateTime.MinValue 
+                            ? $" at {entry.time.ToLocalTime():MMM dd, yyyy h:mm tt}" 
+                            : "";
+                        entryText.text = $"{entry.text}{dateText}";
                     }
                 }            }       
             {
