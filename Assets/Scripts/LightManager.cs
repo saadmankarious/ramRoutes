@@ -31,8 +31,18 @@ public class LightManager : MonoBehaviour
     [Tooltip("Special night light that turns on only during Terminal stage")]
     [SerializeField] private Light2D nightLight;
     
+    [Header("Pedmall Stage Spooky Lighting")]
+    [Tooltip("Controls how quickly the lights flicker (higher values = faster flickering)")]
+    [Range(1f, 10f)]
+    [SerializeField] private float flickerSpeed = 5f;
+    
+    [Tooltip("Controls how intense the flickering effect is (higher values = more dramatic changes)")]
+    [Range(0.1f, 1f)]
+    [SerializeField] private float flickerIntensity = 0.3f;
+    
     private Stage currentStage;
     private Coroutine transitionCoroutine;
+    private Coroutine flickerCoroutine;
     
     private void Start()
     {
@@ -72,6 +82,26 @@ public class LightManager : MonoBehaviour
             StopCoroutine(transitionCoroutine);
         }
         
+        // Stop any ongoing flicker effect
+        StopFlickerEffect();
+        
+        // Adjust night light intensity based on stage
+        if (nightLight != null)
+        {
+            float nightLightIntensity = stage switch
+            {
+                Stage.TC => 0f,
+                Stage.EasternCampus => 0.05f,
+                Stage.FirstStreet => 0.1f,
+                Stage.Pedmall => 0f,
+                Stage.Terminal => 1f,
+                _ => 0f
+            };
+            
+            nightLight.intensity = nightLightIntensity;
+            nightLight.enabled = nightLightIntensity > 0;
+        }
+        
         if (stage == Stage.Terminal)
         {
             // For Terminal stage, activate night mode
@@ -84,10 +114,32 @@ public class LightManager : MonoBehaviour
             if (targetLights != null && targetLights.Length > 0)
             {
                 transitionCoroutine = StartCoroutine(TransitionToLights(targetLights));
+                
+                // Start spooky flickering effect specifically for Pedmall (stage 4)
+                if (stage == Stage.Pedmall)
+                {
+                    // Wait for the transition to complete before starting the flicker effect
+                    StartCoroutine(StartFlickerAfterTransition());
+                }
             }
         }
         
         Debug.Log($"LightManager: Set lighting for stage {stage}");
+    }
+    
+    /// <summary>
+    /// Starts the flicker effect after the light transition is complete
+    /// </summary>
+    private IEnumerator StartFlickerAfterTransition()
+    {
+        // Wait for the transition to complete
+        while (transitionCoroutine != null)
+        {
+            yield return null;
+        }
+        
+        // Start the flickering effect
+        flickerCoroutine = StartCoroutine(CreateSpookyFlickerEffect());
     }
     
     /// <summary>
@@ -336,25 +388,44 @@ public class LightManager : MonoBehaviour
             transitionCoroutine = null;
         }
         
+        // Stop any ongoing flicker effect
+        StopFlickerEffect();
+        
         currentStage = stage;
+        
+        // Adjust night light intensity based on stage
+        if (nightLight != null)
+        {
+            float nightLightIntensity = stage switch
+            {
+                Stage.TC => 0f,
+                Stage.EasternCampus => 0.05f,
+                Stage.FirstStreet => 0.1f,
+                Stage.Pedmall => 0f,
+                Stage.Terminal => 1f,
+                _ => 0f
+            };
+            
+            nightLight.intensity = nightLightIntensity;
+            nightLight.enabled = nightLightIntensity > 0;
+        }
         
         if (stage == Stage.Terminal)
         {
             // Hide all objects tagged with "Pole"
             GameObject[] poles = GameObject.FindGameObjectsWithTag("Pole");
+            GameObject[] gates = GameObject.FindGameObjectsWithTag("Gate");
+
             foreach (GameObject pole in poles)
             {
                 pole.SetActive(false);
             }
-            Debug.Log($"LightManager: Hidden {poles.Length} poles for Terminal stage");
-
-            // For Terminal stage, activate night mode immediately
-            if (nightLight != null)
+            foreach (GameObject gate in gates)
             {
-                nightLight.enabled = true;
-                nightLight.intensity = 1f;
+                gate.SetActive(false);
             }
-            
+            Debug.Log($"LightManager: Hidden {poles.Length} poles and {gates.Length} gates for Terminal stage");
+
             // Find all Light2D components in the scene and disable them (except the night light)
             Light2D[] allSceneLights = FindObjectsOfType<Light2D>();
             int disabledCount = 0;
@@ -389,6 +460,12 @@ public class LightManager : MonoBehaviour
                     }
                 }
                 Debug.Log($"LightManager: Immediately set {targetLights.Length} lights on for stage {stage}");
+                
+                // Start spooky flickering effect specifically for Pedmall (stage 4)
+                if (stage == Stage.Pedmall)
+                {
+                    flickerCoroutine = StartCoroutine(CreateSpookyFlickerEffect());
+                }
             }
         }
     }
@@ -435,6 +512,82 @@ public class LightManager : MonoBehaviour
         return currentStage;
     }
     
+    /// <summary>
+    /// Creates a spooky flickering effect for Pedmall (stage 4) lights
+    /// </summary>
+    private IEnumerator CreateSpookyFlickerEffect()
+    {
+        if (pedmallLights == null || pedmallLights.Length == 0)
+        {
+            Debug.LogWarning("LightManager: No Pedmall lights assigned for flickering effect");
+            yield break;
+        }
+        
+        Debug.Log("LightManager: Starting spooky flickering effect for Pedmall lights");
+        
+        // Store original intensity values to use as baseline
+        float[] baseIntensities = new float[pedmallLights.Length];
+        for (int i = 0; i < pedmallLights.Length; i++)
+        {
+            if (pedmallLights[i] != null)
+            {
+                baseIntensities[i] = pedmallLights[i].intensity;
+            }
+        }
+        
+        // Keep flickering until told to stop
+        while (true)
+        {
+            // Generate random values for each light
+            for (int i = 0; i < pedmallLights.Length; i++)
+            {
+                if (pedmallLights[i] != null)
+                {
+                    // Create a perlin noise value that changes over time for a more natural flicker
+                    float noise = Mathf.PerlinNoise(Time.time * flickerSpeed + i * 0.3f, i * 0.3f);
+                    
+                    // Map the noise to a useful range and apply intensity control
+                    float intensityVariation = (noise * 2 - 1) * flickerIntensity;
+                    
+                    // Apply the variation to the base intensity, keeping it in a reasonable range
+                    float newIntensity = Mathf.Clamp(baseIntensities[i] + intensityVariation, 
+                                                    baseIntensities[i] * (1 - flickerIntensity), 
+                                                    baseIntensities[i] * (1 + flickerIntensity * 0.5f));
+                    
+                    pedmallLights[i].intensity = newIntensity;
+                }
+            }
+            
+            // Wait a frame before updating again
+            yield return null;
+        }
+    }
+    
+    /// <summary>
+    /// Stops the flickering effect if it's running
+    /// </summary>
+    private void StopFlickerEffect()
+    {
+        if (flickerCoroutine != null)
+        {
+            StopCoroutine(flickerCoroutine);
+            flickerCoroutine = null;
+            Debug.Log("LightManager: Stopped spooky flickering effect");
+            
+            // Reset lights to their original intensity
+            if (pedmallLights != null)
+            {
+                foreach (Light2D light in pedmallLights)
+                {
+                    if (light != null)
+                    {
+                        light.intensity = 1f;
+                    }
+                }
+            }
+        }
+    }
+
     /// <summary>
     /// Checks if lights are assigned for the specified stage
     /// </summary>

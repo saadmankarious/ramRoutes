@@ -28813,6 +28813,18 @@ Transform:
   - {fileID: 1090240300}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1336165304 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8420681935382918955, guid: 60792b188c3284b2dbd04ae998ed47e4,
+    type: 3}
+  m_PrefabInstance: {fileID: 770823531}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 073797afb82c5a1438f328866b10b3f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1337515531
 GameObject:
   m_ObjectHideFlags: 0
@@ -268610,10 +268622,14 @@ MonoBehaviour:
   - {fileID: 249193146}
   - {fileID: 1755570087}
   - {fileID: 1897186311}
-  - {fileID: 1897186311}
+  - {fileID: 1814128545}
+  - {fileID: 1336165304}
+  - {fileID: 1153671931}
   terminalLights: []
   transitionDuration: 1
   nightLight: {fileID: 12250711}
+  flickerSpeed: 7.98
+  flickerIntensity: 0.72
 --- !u!114 &1754240617
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -281691,6 +281707,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1788714898}
   m_CullTransparentMesh: 1
+--- !u!114 &1814128545 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8420681935382918955, guid: 60792b188c3284b2dbd04ae998ed47e4,
+    type: 3}
+  m_PrefabInstance: {fileID: 1160497335}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 073797afb82c5a1438f328866b10b3f0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1816677714
 GameObject:
   m_ObjectHideFlags: 0
