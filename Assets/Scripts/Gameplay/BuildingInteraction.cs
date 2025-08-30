@@ -15,7 +15,13 @@ public class BuildingInteraction : MonoBehaviour
     [Header("Interaction Settings")]
     [SerializeField] private KeyCode interactKey = KeyCode.J;
 
-    [Header("Reward Settings")]
+    [Header("Popup")]
+    [SerializeField] private bool doesTheBuildingHavePopup = false;
+    [SerializeField] private GameObject popupPrefab;
+    [SerializeField] private GameObject popupLocation;
+
+
+    [Header("Josie Settings")]
     [SerializeField] private AudioClip rewardSound;
     [SerializeField] private int coinPoints = 100;
     [SerializeField] private int knowledgePoints = 250;
@@ -521,7 +527,7 @@ public class BuildingInteraction : MonoBehaviour
         string userName = userProfile != null && !string.IsNullOrEmpty(userProfile.name) ? userProfile.name : userId;
 
         // Award points for unlocking the building
-       // await userService.AddPoints(userId, 100);
+        // await userService.AddPoints(userId, 100);
         // Update UI with new points
         // var updatedPoints = await userService.GetPoints(userId);
         // UIManager.Instance.UpdateCoins(updatedPoints);
@@ -551,10 +557,19 @@ public class BuildingInteraction : MonoBehaviour
         {
             uiManager.UpdateProgressBarOnReveal();
         }
-          // If player is already in range, immediately switch to viewing mode
+        // If player is already in range, immediately switch to viewing mode
         if (isPlayerInRange)
         {
             EnterBuildingViewingMode();
+        }
+        
+        if(doesTheBuildingHavePopup && popupPrefab != null)
+        {
+            // Instantiate the popup prefab at the building's position
+            GameObject popupInstance = Instantiate(popupPrefab, popupLocation.transform.position, Quaternion.identity);
+
+            // Optionally, set the popup to destroy itself after a few seconds
+            // Destroy(popupInstance, 5f); // Destroy after 5 seconds
         }
     }
     

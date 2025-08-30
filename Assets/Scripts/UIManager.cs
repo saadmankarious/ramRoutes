@@ -13,6 +13,15 @@ using Cinemachine;
 
 public class UIManager : MonoBehaviour
 {
+    // Stage-specific time limits (seconds)
+    private Dictionary<Stage, int> stageTimeLimits = new Dictionary<Stage, int>
+    {
+        { Stage.TC, 0 },
+        { Stage.EasternCampus, 0 },
+        { Stage.FirstStreet, 0 },
+        { Stage.Pedmall, 180 },
+        { Stage.Terminal, 0 }
+    };
     public static UIManager Instance { get; private set; }
 
     [Header("UI References")]
@@ -517,6 +526,12 @@ public class UIManager : MonoBehaviour
         _ = GetUserPoints();
         _ = GetUserKnowledgePoints();
 
+        // Start countdown if current stage has a time limit > 0
+        var currentStage = GameStageService.LoadStageFromPrefs();
+        if (currentStage != null && stageTimeLimits.TryGetValue(currentStage.area, out int stageLimit) && stageLimit > 0)
+        {
+            StartCountdown(timerText, stageLimit);
+        }
     }
 
     private void ShowObjectsWithTag(string tag)
@@ -590,6 +605,50 @@ private void HideObjectsWithTag(string tag)
             OnTimeExpired.Invoke();
         }
     }
+    
+    /// <summary>
+    /// Starts a countdown timer with a specified text component and duration
+    /// </summary>
+    /// <param name="textComponent">The Text component to display the countdown</param>
+    /// <param name="seconds">The number of seconds to count down from</param>
+    public void StartCountdown(Text textComponent, int seconds)
+    {
+        if (textComponent == null) return;
+        
+        // Stop any existing countdown
+        if (timerCoroutine != null)
+        {
+            StopCoroutine(timerCoroutine);
+        }
+        
+        // Use the existing CountdownTimer logic but with new parameters
+        timerRunning = true;
+        currentTime = 0;
+        
+        // Store the original timerText reference
+        Text originalTimerText = timerText;
+        
+        // Temporarily set timerText to the provided text component
+        timerText = textComponent;
+        
+        // Set the time limit to the provided seconds
+        GameManager.Instance.currentTrial.timeLimit = seconds;
+        
+        // Start the timer
+        timerCoroutine = StartCoroutine(CountdownTimer());
+        
+        // Reset the timerText reference after the timer completes
+        StartCoroutine(ResetTimerAfterCountdown(originalTimerText));
+    }
+    
+    private IEnumerator ResetTimerAfterCountdown(Text originalTimerText)
+    {
+        // Wait until the timer is no longer running
+        yield return new WaitUntil(() => !timerRunning);
+        
+        // Reset the timer text reference
+        timerText = originalTimerText;
+    }
 
     private void UpdateTimerDisplay()
     {
@@ -606,12 +665,17 @@ private void HideObjectsWithTag(string tag)
 
     private void TimeUp()
     {
-        timerRunning = false;
+        var stage = GameStageService.LoadStageFromPrefs();
+        if (stage.area == Stage.Pedmall)
+        {
+               timerRunning = false;
         StopAllCoroutines();
         timeUpMenu.SetActive(true);
         timerText.text = "00:00";
         Time.timeScale = 0f;
-        PlaySound(timeExpiredSound);
+        PlaySound(timeExpiredSound); 
+        }
+        
     }
 
 
