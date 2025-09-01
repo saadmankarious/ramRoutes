@@ -13,6 +13,9 @@ using Cinemachine;
 
 public class UIManager : MonoBehaviour
 {
+    [Header("Audio Clips")]
+    public AudioClip collectableSound;
+
     // Stage-specific time limits (seconds)
     private Dictionary<Stage, int> stageTimeLimits = new Dictionary<Stage, int>
     {
@@ -50,6 +53,8 @@ public class UIManager : MonoBehaviour
     public Text timerText;
     public Text heldItem;
     public GameObject dialogPanel;
+    public GameObject quickUpdatePanel;
+    public Text quickUpdateText;
     public GameObject buildingStats;
     public Text dialogText;
     public Button dialogActionButton; // Action button for dialogs
@@ -784,6 +789,11 @@ private void HideObjectsWithTag(string tag)
     {
         ShowDialog(message, activeFor, null, null, narration, showBuildingStats, buildingName);
     }
+
+    public void ShowQuickUpdate(string message)
+    {
+        StartCoroutine(ShowQuickUpdateSequence(message));
+    }
     
     // Dialog with action button - shows message with button, no auto-hide unless activeFor > 0
     public void ShowDialog(string message, float activeFor, string actionButtonText, System.Action onActionButtonClick, bool narration = false, bool showStats = false, string buildingName = null)
@@ -823,31 +833,51 @@ private void HideObjectsWithTag(string tag)
         }
     }
     
+    private IEnumerator ShowQuickUpdateSequence(string message)
+    {
+        if (quickUpdateText == null) yield break;
+
+        quickUpdateText.text = message;
+        quickUpdatePanel.SetActive(true);
+
+        // Play collectable sound
+        if (collectableSound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(collectableSound);
+        }
+
+        // Animate popup effect
+        yield return StartCoroutine(AnimatePanelPopup(quickUpdatePanel));
+
+        yield return new WaitForSeconds(2f);
+
+        quickUpdatePanel.SetActive(false);
+    }
     private IEnumerator ShowDialogSequence(string message, float activeFor, string actionButtonText, System.Action onActionButtonClick, bool narration)
     {
         isDialogActive = true;
         currentDialogAction = onActionButtonClick;
-        
+
         // Reset the keep AROS visible flag for new dialog sequences
         // Unless this is part of an unlock sequence (action button present)
         if (onActionButtonClick == null)
         {
             keepArosVisible = false;
         }
-        
-        try 
+
+        try
         {
             dialogPanel.SetActive(true);
-            
+
             // Setup action button if provided
             SetupActionButton(actionButtonText, onActionButtonClick);
-            
+
             // Show AROS without animation if not already visible
             if (aros != null)
             {
                 aros.SetActive(true);
             }
-            
+
             // Use narration parameter to control whether dialog is narrated
             // When narration is false, skip narration features
             // This is a placeholder - implement actual narration control here
@@ -855,7 +885,7 @@ private void HideObjectsWithTag(string tag)
             typingCoroutine = StartCoroutine(TypeText(message, activeFor, narration));
             yield return typingCoroutine;
         }
-        finally 
+        finally
         {
             CleanupDialog();
         }

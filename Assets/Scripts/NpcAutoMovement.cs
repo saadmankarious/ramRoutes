@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 #if UNITY_EDITOR
@@ -587,7 +588,7 @@ public class NpcAutoMovement : MonoBehaviour
         lastTypingSoundTime = 0f; // Reset typing sound timer for new line
     }
     
-    void HandleConversation()
+    async Task HandleConversation()
     {
         if (isTyping)
         {
@@ -623,7 +624,37 @@ public class NpcAutoMovement : MonoBehaviour
             {
                 mobileInteractPressed = false;
             }
-            
+
+            // Reward for reading this line (only once per line)
+            string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                string lineKey = $"NPC_Rewarded_{gameObject.name}_Line{currentLineIndex}_{userId}";
+                if (!PlayerPrefs.HasKey(lineKey))
+                {
+                    var userService = new RamRoutes.Services.UserService();
+                    // var points = await userService.UpdateUserCoins(userId, 10);
+                    // var kb = await userService.UpdateUserKnowledgePoints(userId, 10);
+                  
+                   await userService.UpdateUserCoins(userId, coinReward);
+                await userService.UpdateUserKnowledgePoints(userId, knowledgePointReward);
+                var points = await userService.GetUserCoins(userId);
+                var kb = await userService.GetUserKnowledgePoints(userId);
+                  
+                  
+                    PlayerPrefs.SetInt(lineKey, 1);
+                    
+                    PlayerPrefs.Save();
+                    if (UIManager.Instance != null)
+                    {
+                         UIManager.Instance.UpdateCoins(points);
+                         UIManager.Instance.UpdateKnowledgePoints(kb);
+                        //UIManager.Instance.ShowDialog($"Gained 10 Knowledge Points and 10 Coins!", 1.5f, false);
+                        UIManager.Instance.ShowQuickUpdate("+10 KP +10 Coins");
+                    }
+                }
+            }
+
             if (isTyping)
             {
                 // Skip typing animation and show full text
@@ -652,37 +683,35 @@ public class NpcAutoMovement : MonoBehaviour
         isInConversation = false;
         currentLineIndex = 0;
         isWaiting = false; // Resume movement when conversation ends
-        
-        // Check if player has already been rewarded by this NPC
         string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
         if (string.IsNullOrEmpty(userId)) return;
-        
-        string npcKey = $"NPC_Rewarded_{gameObject.name}_{userId}";
-        if (!PlayerPrefs.HasKey(npcKey))
-        {
-            if (!string.IsNullOrEmpty(userId))
-            {
-                var userService = new RamRoutes.Services.UserService();
-                
-                // Update both points in Firebase
-                await userService.UpdateUserCoins(userId, coinReward);
-                await userService.UpdateUserKnowledgePoints(userId, knowledgePointReward);
-                var points = await userService.GetUserCoins(userId);
-                var kb = await userService.GetUserKnowledgePoints(userId);
-                // Update UI
-                if (UIManager.Instance != null)
-                {
-
-                    UIManager.Instance.UpdateCoins(points);
-                    UIManager.Instance.UpdateKnowledgePoints(kb);
-                    UIManager.Instance.ShowDialog($"Gained {knowledgePointReward} Knowledge Points and {coinReward} Coins!", 2f, false);
-                }
-                
-                // Mark NPC as having given reward
-                PlayerPrefs.SetInt(npcKey, 1);
-                PlayerPrefs.Save();
-            }
-        }
+        var userService = new RamRoutes.Services.UserService();
+        int totalCoinsGained = 0;
+        int totalKbGained = 0;
+        // for (int i = 0; i < conversationLines.Length; i++)
+        // {
+        //     string lineKey = $"NPC_Rewarded_{gameObject.name}_Line{i}_{userId}";
+        //     if (!PlayerPrefs.HasKey(lineKey))
+        //     {
+        //         await userService.UpdateUserCoins(userId, 10);
+        //         await userService.UpdateUserKnowledgePoints(userId, 10);
+        //         PlayerPrefs.SetInt(lineKey, 1);
+        //         totalCoinsGained += 10;
+        //         totalKbGained += 10;
+        //     }
+        // }
+        // if (totalCoinsGained > 0 || totalKbGained > 0)
+        // {
+        //     var points = await userService.GetUserCoins(userId);
+        //     var kb = await userService.GetUserKnowledgePoints(userId);
+        //     if (UIManager.Instance != null)
+        //     {
+        //         UIManager.Instance.UpdateCoins(points);
+        //         UIManager.Instance.UpdateKnowledgePoints(kb);
+        //         UIManager.Instance.ShowDialog($"Gained {totalKbGained} Knowledge Points and {totalCoinsGained} Coins!", 2f, false);
+        //     }
+        //     PlayerPrefs.Save();
+        // }
         
         // Hide mobile interact button when conversation ends
         if (UIManager.Instance != null)

@@ -415,13 +415,17 @@ public class LoginManager : MonoBehaviour
         else
         {
             // Original behavior - validate username format (no spaces, special characters)
-            if (username.Contains(" ") || username.Contains("@"))
+            if ((username.Contains(" ") || username.Contains("@")))
             {
                 ShowSignupStatus("Username cannot contain spaces or @ symbol");
                 return;
             }
-            // Convert username to Cornell College email format
+            // Convert username to Cornell College or RamRoutes email format
             email = $"{username}@cornellcollege.edu";
+            if (username.EndsWith(".rr"))
+            {
+                email = $"{username.Replace(".rr","")}@ramroutes.com";
+            }
         }
 
         ShowSignupStatus("Creating account...");
@@ -458,12 +462,15 @@ public class LoginManager : MonoBehaviour
             }
 
             // Send verification email (use whichever user instance is available)
-            var userToVerify = firebaseUser ?? auth.CurrentUser;
-            if (userToVerify == null)
+            if (!email.EndsWith("@ramroutes.com"))
             {
-                throw new System.Exception("Failed to access new user instance to send verification email");
+                var userToVerify = firebaseUser ?? auth.CurrentUser;
+                if (userToVerify == null)
+                {
+                    throw new System.Exception("Failed to access new user instance to send verification email");
+                }
+                await userToVerify.SendEmailVerificationAsync();
             }
-            await userToVerify.SendEmailVerificationAsync();
 
             // Store for resend
             lastSignupUserId = userId;
@@ -613,13 +620,13 @@ public class LoginManager : MonoBehaviour
         if (auth.CurrentUser != null)
         {
             await auth.CurrentUser.ReloadAsync(); // Refresh to get latest verification status
-            
-            if (auth.CurrentUser.IsEmailVerified)
+
+            if (auth.CurrentUser.IsEmailVerified || auth.CurrentUser.Email.EndsWith("@ramroutes.com"))
             {
                 // User is signed in and email is verified
                 HandleSuccessfulLogin(auth.CurrentUser.Email);
             }
-            else
+            else if (!auth.CurrentUser.Email.EndsWith("@ramroutes.com"))
             {
                 // User is signed in but email is not verified
                 statusText.text = "Please verify your email before accessing the app.";
@@ -634,11 +641,11 @@ public class LoginManager : MonoBehaviour
         {
             await auth.CurrentUser.ReloadAsync(); // Refresh to get latest verification status
             
-            if (auth.CurrentUser.IsEmailVerified)
+            if (auth.CurrentUser.IsEmailVerified || auth.CurrentUser.Email.EndsWith("@ramroutes.com"))
             {
                 HandleSuccessfulLogin(auth.CurrentUser.Email);
             }
-            else
+            else if (!auth.CurrentUser.Email.EndsWith("@ramroutes.com"))
             {
                 statusText.text = "Please verify your email before accessing the app.";
                 auth.SignOut();
@@ -742,7 +749,7 @@ public class LoginManager : MonoBehaviour
 
     private async void OnLoginClicked()
     {
-        string usernameOrEmail = emailInput.text;
+        string usernameOrEmail = emailInput.text.Trim();
         string password = passwordInput.text;
 
         if (string.IsNullOrEmpty(usernameOrEmail) || string.IsNullOrEmpty(password))
@@ -772,16 +779,21 @@ public class LoginManager : MonoBehaviour
         {
             email = $"{usernameOrEmail}@cornellcollege.edu";
         }
+        
+        if(usernameOrEmail.EndsWith(".rr"))
+        {
+            email = $"{usernameOrEmail.Replace(".rr","")}@ramroutes.com";
+        }
 
         try
         {
             var result = await auth.SignInWithEmailAndPasswordAsync(email, password);
             var user = result.User;
-            
+
             // Check if email is verified
             await user.ReloadAsync(); // Refresh user data to get latest verification status
-            
-            if (!user.IsEmailVerified)
+
+            if (!user.IsEmailVerified && !email.EndsWith("@ramroutes.com"))
             {
                 statusText.text = "Email not verified";
                 // Provide option to resend verification email
@@ -790,13 +802,13 @@ public class LoginManager : MonoBehaviour
                 {
                     statusText.text = "Please verify your email before logging in. Check your inbox for the verification link.";
                 }
-                
+
                 // Sign out the user
                 auth.SignOut();
                 loginButton.interactable = true;
                 return;
             }
-            
+
             // Email is verified, proceed with login
             // AuthStateChanged will handle the UI update
         }
