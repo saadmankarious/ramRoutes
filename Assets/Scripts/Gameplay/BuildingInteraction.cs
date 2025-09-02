@@ -113,6 +113,12 @@ public class BuildingInteraction : MonoBehaviour
                 StartCoroutine(ShowEventsWhenReady());
             }
         }
+
+        // Show current users panel through UIManager
+        if (uiManager != null)
+        {
+            uiManager.DisplayCurrentUsersForBuilding(buildingName);
+        }
     }
 
     private IEnumerator ShowEventsWhenReady()
@@ -404,6 +410,8 @@ public class BuildingInteraction : MonoBehaviour
             {
                 buildingEventsPanel.SetActive(false);
             }
+
+            // Current users panel is handled by UIManager when leaving building view mode
 
             // Clean up user location indicators
             foreach (var indicator in activeUserLocations.Values)

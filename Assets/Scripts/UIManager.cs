@@ -46,6 +46,11 @@ public class UIManager : MonoBehaviour
     public Text coinsGainedBuildingStats;           // NPC title in building unlocked dialog
     public Text kbGainedBuildingStats;           // NPC title in building unlocked dialog
 
+    [Header("Current Users Display")]
+    public GameObject currentUsersPanel;
+    public Transform currentUsersContentParent;
+    public GameObject currentUserPrefab;
+
     [Header("Celebration Settings")]
     [SerializeField] private float celebrationPlaybackSpeed = 1f; // 1f = normal speed, 2f = double speed, 0.5f = half speed
     [SerializeField] private float celebrationDuration = 2f; // Total duration of celebration in seconds (controls both sound and particles)
@@ -88,6 +93,10 @@ public class UIManager : MonoBehaviour
 
     [Header("Typing Sound Settings")]
     [SerializeField] private float typingSoundInterval = 0.15f;
+    
+    // Static cache for current users per building
+    private static Dictionary<string, List<User>> cachedCurrentUsersPerBuilding = new Dictionary<string, List<User>>();
+    private static Dictionary<string, bool> currentUsersLoadedPerBuilding = new Dictionary<string, bool>();
     private float lastTypingSoundTime;
     [SerializeField] private float typingSoundVolume = 0.3f;
 
@@ -1625,6 +1634,9 @@ private void HideObjectsWithTag(string tag)
         currentViewedBuilding = active ? buildingName : null;
         if (!active)
         {
+            // Hide current users panel when leaving building view
+            HideCurrentUsersPanel();
+            
             // Reattempt any pending transition when viewing ends (but only if delay has passed)
             if (sceneTransitionDelayCoroutine == null) // Delay has completed
             {
@@ -1698,6 +1710,112 @@ private void HideObjectsWithTag(string tag)
             fadeOverlay.color = color;
             fadeOverlay.gameObject.SetActive(false);
             Debug.Log("UIManager: Reset fade overlay to transparent and inactive");
+        }
+    }
+
+    // Public method to be called from BuildingInteraction
+    public async void DisplayCurrentUsersForBuilding(string buildingName)
+    {
+        // Only display if we're in building viewing mode for this building
+        if (!isInBuildingViewingMode || currentViewedBuilding != buildingName)
+        {
+            Debug.Log($"Not displaying current users: viewing mode={isInBuildingViewingMode}, current building={currentViewedBuilding}, requested building={buildingName}");
+            return;
+        }
+
+        // Check if data is already loaded for this building
+        bool isLoaded = currentUsersLoadedPerBuilding.ContainsKey(buildingName) && currentUsersLoadedPerBuilding[buildingName];
+        
+        if (!isLoaded)
+        {
+            await FetchCurrentUsersForBuilding(buildingName);
+        }
+        
+        DisplayCurrentUsersUI(buildingName);
+    }
+
+    private async Task FetchCurrentUsersForBuilding(string buildingName)
+    {
+        try
+        {
+            var userService = new UserService();
+            
+            // Get users currently in this building using a targeted query
+            var buildingUsers = await userService.GetUsersInBuilding(buildingName);
+            cachedCurrentUsersPerBuilding[buildingName] = buildingUsers;
+            Debug.Log($"UIManager: Fetching current users for building {buildingName}: {buildingUsers.Count} users found");
+
+            currentUsersLoadedPerBuilding[buildingName] = true;
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"UIManager: Failed to fetch current users for building {buildingName}: {ex.Message}");
+            cachedCurrentUsersPerBuilding[buildingName] = new List<User>();
+            currentUsersLoadedPerBuilding[buildingName] = true;
+        }
+    }
+
+    private void DisplayCurrentUsersUI(string buildingName)
+    {
+        if (currentUsersContentParent == null || currentUserPrefab == null)
+        {
+            Debug.LogError("UIManager: Current users UI components not set up!");
+            return;
+        }
+
+        // Clear previous entries
+        foreach (Transform child in currentUsersContentParent)
+        {
+            Destroy(child.gameObject);
+        }
+
+        // Get the cached users for this specific building
+        List<User> buildingUsers = null;
+        if (cachedCurrentUsersPerBuilding.ContainsKey(buildingName))
+        {
+            buildingUsers = cachedCurrentUsersPerBuilding[buildingName];
+        }
+
+        if (buildingUsers != null && buildingUsers.Count > 0 && currentUsersPanel != null)
+        {
+            currentUsersPanel.SetActive(true);
+            // Animate the panel appearing
+            StartCoroutine(AnimatePanelPopup(currentUsersPanel));
+
+            foreach (var user in buildingUsers)
+            {
+                GameObject userGO = Instantiate(currentUserPrefab, currentUsersContentParent);
+                
+                // Get the single text component for user name
+                Text nameText = userGO.GetComponentInChildren<Text>();
+                
+                if (nameText != null)
+                {
+                    string displayName = !string.IsNullOrEmpty(user.name) ? user.name : "Anonymous User";
+                    nameText.text = displayName;
+                    
+                    if (nameText.supportRichText)
+                    {
+                        nameText.text = $"<b>{displayName}</b>";
+                    }
+                }
+                else
+                {
+                    Debug.LogError("UIManager: No Text component found in current user prefab!");
+                }
+            }
+        }
+        else if (currentUsersPanel != null)
+        {
+            currentUsersPanel.SetActive(false);
+        }
+    }
+
+    public void HideCurrentUsersPanel()
+    {
+        if (currentUsersPanel != null)
+        {
+            currentUsersPanel.SetActive(false);
         }
     }
 }
