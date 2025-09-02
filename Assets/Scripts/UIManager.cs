@@ -629,6 +629,12 @@ private void HideObjectsWithTag(string tag)
     {
         if (textComponent == null) return;
         
+        // Ensure the timer text component is visible
+        if (!textComponent.gameObject.activeInHierarchy)
+        {
+            textComponent.gameObject.SetActive(true);
+        }
+        
         // Stop any existing countdown
         if (timerCoroutine != null)
         {
@@ -666,8 +672,17 @@ private void HideObjectsWithTag(string tag)
 
     private void UpdateTimerDisplay()
     {
-        float timeLeft = GameManager.Instance.currentTrial.timeLimit - currentTime;
-        timerText.text = FormatTime(timeLeft);
+        if (timerText != null)
+        {
+            // Ensure timer text is visible when updating
+            if (!timerText.gameObject.activeInHierarchy)
+            {
+                timerText.gameObject.SetActive(true);
+            }
+            
+            float timeLeft = GameManager.Instance.currentTrial.timeLimit - currentTime;
+            timerText.text = FormatTime(timeLeft);
+        }
     }
 
     private string FormatTime(float time)
@@ -682,14 +697,23 @@ private void HideObjectsWithTag(string tag)
         var stage = GameStageService.LoadStageFromPrefs();
         if (stage.area == Stage.Pedmall)
         {
-               timerRunning = false;
-        StopAllCoroutines();
-        timeUpMenu.SetActive(true);
-        timerText.text = "00:00";
-        Time.timeScale = 0f;
-        PlaySound(timeExpiredSound); 
+            timerRunning = false;
+            StopAllCoroutines();
+            timeUpMenu.SetActive(true);
+            
+            // Ensure timer text is visible when showing final time
+            if (timerText != null)
+            {
+                if (!timerText.gameObject.activeInHierarchy)
+                {
+                    timerText.gameObject.SetActive(true);
+                }
+                timerText.text = "00:00";
+            }
+            
+            Time.timeScale = 0f;
+            PlaySound(timeExpiredSound); 
         }
-        
     }
 
 
