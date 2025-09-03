@@ -55,35 +55,9 @@ exports.notifyNewBuildingEvent = onDocumentCreated("building-events/{eventId}", 
       createdBy: creatorUserId
     });
 
-    // Get all user FCM tokens except the one who created the event
-    const admin = require('firebase-admin');
-    const db = admin.firestore();
-    
-    let usersQuery = db.collection('users');
-    
-    // Only exclude creator if we have their userId
-    if (creatorUserId) {
-      usersQuery = usersQuery.where(admin.firestore.FieldPath.documentId(), '!=', creatorUserId);
-    }
-    
-    const usersSnapshot = await usersQuery.get();
-    
-    const tokens = [];
-    usersSnapshot.forEach(doc => {
-      const user = doc.data();
-      if (user.fcmToken) {
-        tokens.push(user.fcmToken);
-      }
-    });
-    
-    if (tokens.length === 0) {
-      logger.info("No users to notify about building event", { eventId, creatorUserId });
-      return null;
-    }
-
-    // Create notification message
+    // Send notification to all users subscribed to 'updates' topic
     const message = {
-      tokens: tokens, // Send to specific tokens instead of topic condition
+      topic: 'updates',
       notification: {
         title: `New Event: ${eventData.eventName}`,
         body: `Check out the new event at ${eventData.buildingName}!`
@@ -112,12 +86,9 @@ exports.notifyNewBuildingEvent = onDocumentCreated("building-events/{eventId}", 
       }
     };
 
-    // Send the notification to specific tokens
-    const response = await getMessaging().sendMulticast(message);
-    logger.info("Successfully sent building event notification to other users", {
-      successCount: response.successCount,
-      failureCount: response.failureCount,
-      totalTokens: tokens.length,
+    const response = await getMessaging().send(message);
+    logger.info("Successfully sent building event notification to 'updates' topic", {
+      messageId: response,
       eventName: eventData.eventName,
       createdBy: creatorUserId
     });
@@ -150,31 +121,9 @@ exports.sendUserJoinedNotification = onDocumentCreated(
                 email: userData.email
             });
 
-            // Get all user FCM tokens except the one who joined
-            const admin = require('firebase-admin');
-            const db = admin.firestore();
-            
-            // Query all users except the one who just joined to get their FCM tokens
-            const usersSnapshot = await db.collection('users')
-                .where(admin.firestore.FieldPath.documentId(), '!=', userId)
-                .get();
-            
-            const tokens = [];
-            usersSnapshot.forEach(doc => {
-                const user = doc.data();
-                if (user.fcmToken) {
-                    tokens.push(user.fcmToken);
-                }
-            });
-            
-            if (tokens.length === 0) {
-                logger.info("No other users to notify", { userId });
-                return null;
-            }
-
-            // Create notification message
+            // Send notification to all users subscribed to 'updates' topic
             const message = {
-                tokens: tokens, // Send to specific tokens instead of topic condition
+                topic: 'updates',
                 notification: {
                     title: 'New Player Joined!',
                     body: `${userData.name || 'A new player'} has joined the game. Welcome them to the community!`
@@ -201,12 +150,9 @@ exports.sendUserJoinedNotification = onDocumentCreated(
                 }
             };
             
-            // Send the notification to specific tokens
-            const response = await getMessaging().sendMulticast(message);
-            logger.info('Successfully sent user joined notification to other users', {
-                successCount: response.successCount,
-                failureCount: response.failureCount,
-                totalTokens: tokens.length,
+            const response = await getMessaging().send(message);
+            logger.info("Successfully sent user joined notification to 'updates' topic", {
+                messageId: response,
                 userId: userId,
                 userName: userData.name
             });
@@ -239,30 +185,9 @@ exports.notifyBuildingUnlocked = onDocumentCreated("unlocked-trials/{unlockId}",
             userId: userId
         });
 
-        // Get all user FCM tokens except the one who unlocked the building
-        const admin = require('firebase-admin');
-        const db = admin.firestore();
-        
-        const usersSnapshot = await db.collection('users')
-            .where(admin.firestore.FieldPath.documentId(), '!=', userId)
-            .get();
-        
-        const tokens = [];
-        usersSnapshot.forEach(doc => {
-            const user = doc.data();
-            if (user.fcmToken) {
-                tokens.push(user.fcmToken);
-            }
-        });
-        
-        if (tokens.length === 0) {
-            logger.info("No other users to notify about building unlock", { userId });
-            return null;
-        }
-
-        // Create notification message
+        // Send notification to all users subscribed to 'updates' topic
         const message = {
-            tokens: tokens, // Send to specific tokens instead of topic condition
+            topic: 'updates',
             notification: {
                 title: 'New Building Unlocked! 🏢',
                 body: `${unlockData.userName || 'A player'} has unlocked ${unlockData.buildingName || 'a building'}! Check it out!`
@@ -291,14 +216,12 @@ exports.notifyBuildingUnlocked = onDocumentCreated("unlocked-trials/{unlockId}",
             }
         };
 
-        // Send the notification to specific tokens
-        const response = await getMessaging().sendMulticast(message);
-        logger.info('Successfully sent building unlocked notification to other users', {
-            successCount: response.successCount,
-            failureCount: response.failureCount,
-            totalTokens: tokens.length,
-            userName: unlockData.userName,
-            buildingName: unlockData.buildingName
+        const response = await getMessaging().send(message);
+        logger.info("Successfully sent building unlocked notification to 'updates' topic", {
+            messageId: response,
+            unlockId: unlockId,
+            buildingName: unlockData.buildingName,
+            userId: unlockData.userId
         });
 
         return response;
