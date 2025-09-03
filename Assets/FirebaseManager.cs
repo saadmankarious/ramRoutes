@@ -4,6 +4,11 @@ using Firebase.Messaging;
 using Firebase.Firestore;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+using UnityEngine.Android;
+#endif
+
 #if UNITY_ANDROID && UNITY_NOTIFICATIONS_ANDROID
 using Unity.Notifications.Android;
 #endif
@@ -62,13 +67,129 @@ public class FirebaseMessagingManager : MonoBehaviour
             Debug.Log("Notification permission requested (iOS)");
             RequestToken();
         });
+#elif UNITY_ANDROID && !UNITY_EDITOR
+        // Android: Check and request notification permissions first
+        RequestAndroidNotificationPermissions().ContinueWith(task =>
+        {
+            RequestToken();
+            FirebaseMessaging.RequestPermissionAsync().ContinueWith(permissionTask =>
+            {
+                Debug.Log("Firebase notification permission requested (Android)");
+            });
+        });
 #else
-        // Non-iOS: it's safe to request token immediately
+        // Other platforms or Editor: request token immediately
         RequestToken();
         FirebaseMessaging.RequestPermissionAsync().ContinueWith(task =>
         {
-            Debug.Log("Notification permission requested (non-iOS)");
+            Debug.Log("Notification permission requested");
         });
+#endif
+    }
+
+    private async Task RequestAndroidNotificationPermissions()
+    {
+#if UNITY_ANDROID && !UNITY_EDITOR
+        try
+        {
+            // For Android 13 (API level 33) and above, we need explicit permission
+            string notificationPermission = "android.permission.POST_NOTIFICATIONS";
+            
+            if (!Permission.HasUserAuthorizedPermission(notificationPermission))
+            {
+                Debug.Log("Requesting notification permission for Android 13+");
+                
+                Permission.RequestUserPermission(notificationPermission);
+                
+                // Wait for user response (up to 10 seconds)
+                int attempts = 0;
+                while (!Permission.HasUserAuthorizedPermission(notificationPermission) && attempts < 100)
+                {
+                    await Task.Delay(100);
+                    attempts++;
+                }
+                
+                if (Permission.HasUserAuthorizedPermission(notificationPermission))
+                {
+                    Debug.Log("Android notification permission granted");
+                }
+                else
+                {
+                    Debug.LogWarning("Android notification permission denied. Notifications may not work properly.");
+                }
+            }
+            else
+            {
+                Debug.Log("Android notification permission already granted");
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Error requesting Android notification permissions: {e.Message}");
+        }
+#else
+        await Task.CompletedTask;
+        Debug.Log("Not on Android platform, notification permissions handled automatically");
+#endif
+    }
+
+    public bool AreNotificationsEnabled()
+    {
+#if UNITY_ANDROID && !UNITY_EDITOR
+        string notificationPermission = "android.permission.POST_NOTIFICATIONS";
+        return Permission.HasUserAuthorizedPermission(notificationPermission);
+#else
+        return true; // On other platforms, assume notifications work
+#endif
+    }
+
+    public void OpenNotificationSettings()
+    {
+#if UNITY_ANDROID && !UNITY_EDITOR
+        try
+        {
+            // Open the app's notification settings
+            using (var unityClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
+            using (var currentActivity = unityClass.GetStatic<AndroidJavaObject>("currentActivity"))
+            {
+                var intent = new AndroidJavaObject("android.content.Intent");
+                intent.Call<AndroidJavaObject>("setAction", "android.settings.APP_NOTIFICATION_SETTINGS");
+                intent.Call<AndroidJavaObject>("putExtra", "android.provider.extra.APP_PACKAGE", 
+                    currentActivity.Call<string>("getPackageName"));
+                
+                currentActivity.Call("startActivity", intent);
+            }
+            Debug.Log("Opened notification settings");
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Failed to open notification settings: {e.Message}");
+            
+            // Fallback: Open general app settings
+            try
+            {
+                using (var unityClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
+                using (var currentActivity = unityClass.GetStatic<AndroidJavaObject>("currentActivity"))
+                using (var uriClass = new AndroidJavaClass("android.net.Uri"))
+                {
+                    var intent = new AndroidJavaObject("android.content.Intent");
+                    intent.Call<AndroidJavaObject>("setAction", "android.settings.APPLICATION_DETAILS_SETTINGS");
+                    
+                    string packageName = currentActivity.Call<string>("getPackageName");
+                    var uri = uriClass.CallStatic<AndroidJavaObject>("parse", "package:" + packageName);
+                    intent.Call<AndroidJavaObject>("setData", uri);
+                    
+                    currentActivity.Call("startActivity", intent);
+                }
+                Debug.Log("Opened app settings as fallback");
+            }
+            catch (System.Exception fallbackError)
+            {
+                Debug.LogError($"Failed to open app settings: {fallbackError.Message}");
+            }
+        }
+#else
+        Debug.Log("Notification settings only available on Android");
 #endif
     }
 
