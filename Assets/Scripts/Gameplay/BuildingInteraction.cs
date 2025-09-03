@@ -722,9 +722,21 @@ public class BuildingInteraction : MonoBehaviour
             buildingEventsPanel.SetActive(true);
               // Animate the panel appearing
             StartCoroutine(uiManager.AnimatePanelPopup(buildingEventsPanel));
-            // Sort events by date (most recent first)
+            // Sort events by priority: Always > Recurring > Scheduled (by date)
             var sortedEvents = new List<BuildingEvent>(cachedBuildingEvents);
-            sortedEvents.Sort((a, b) => b.date.CompareTo(a.date));
+            sortedEvents.Sort((a, b) => {
+                // Always-happening events go first
+                if (a.IsAlwaysHappening && !b.IsAlwaysHappening) return -1;
+                if (!a.IsAlwaysHappening && b.IsAlwaysHappening) return 1;
+                if (a.IsAlwaysHappening && b.IsAlwaysHappening) return 0;
+                
+                // Recurring events go next
+                if (a.IsRecurring && !b.IsRecurring) return -1;
+                if (!a.IsRecurring && b.IsRecurring) return 1;
+                
+                // For events of same type, sort by date (most recent first)
+                return b.date.CompareTo(a.date);
+            });
               foreach (var evt in sortedEvents)
             {
                 GameObject eventGO = Instantiate(eventPrefab, eventsContentParent);
@@ -763,8 +775,8 @@ public class BuildingInteraction : MonoBehaviour
                     titleText = textComponents[0];
                 }
                 
-                // Format and set text
-                string formattedDate = evt.date.ToString("MMM dd, yyyy h:mm tt");
+                // Format and set text using the helper method
+                string formattedDate = evt.GetDisplayDate();
                 
                 if (titleText != null)
                 {

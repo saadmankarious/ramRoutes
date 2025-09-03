@@ -1,27 +1,38 @@
 import React, { useState } from 'react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 
-// Generate a buildingId in the format "BEeee65f46"
-const generateBuildingId = () => {
-  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-  let id = 'BE'; // Start with "BE"
-  for (let i = 0; i < 8; i++) {
-    id += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return id;
-};
-
-function BuildingEventForm({ user, onEventCreated }) {
+function EventEdit({ event, onCancel, onSave }) {
   const [formData, setFormData] = useState({
-    buildingName: '',
-    eventName: '',
-    eventType: 'scheduled', // 'scheduled', 'always', 'weekly', 'daily', 'monthly'
-    date: ''
+    buildingName: event.buildingName || '',
+    eventName: event.eventName || '',
+    eventType: event.eventType || (event.date ? 'scheduled' : 'always'), // Use explicit eventType or infer from date
+    date: event.date ? formatDateForInput(event.date) : ''
   });
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
+
+  function formatDateForInput(date) {
+    if (!date) return '';
+    
+    let dateObj;
+    if (date instanceof Date) {
+      dateObj = date;
+    } else if (date.toDate) {
+      dateObj = date.toDate();
+    } else {
+      dateObj = new Date(date);
+    }
+    
+    // Format as YYYY-MM-DDTHH:MM for datetime-local input
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    const hours = String(dateObj.getHours()).padStart(2, '0');
+    const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
 
   const handleChange = (e) => {
     setFormData({
@@ -34,66 +45,70 @@ function BuildingEventForm({ user, onEventCreated }) {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setSuccess(false);
 
     try {
-      console.log('Starting building event creation...');
+      console.log('Updating event:', event.id);
+      console.log('Form data:', formData);
+
       const { buildingName, eventName, eventType, date } = formData;
 
-      // Generate a unique buildingId
-      const buildingId = generateBuildingId();
-
-      // Create building event document in Firestore - Firebase will auto-generate the document ID
-      const eventData = {
-        buildingId,
+      // Create update data - preserve buildingId from original event
+      const updateData = {
         buildingName,
         eventName,
-        eventType, // Store the event type explicitly
-        createdBy: user?.uid || 'unknown', // Track who created the event
-        createdAt: serverTimestamp()
+        eventType, // Include the event type in updates
+        updatedAt: serverTimestamp()
       };
 
-      // Add date field based on event type
+      // Preserve the original buildingId and createdBy if they exist
+      if (event.buildingId) {
+        updateData.buildingId = event.buildingId;
+      }
+      if (event.createdBy) {
+        updateData.createdBy = event.createdBy;
+      }
+
+      // Handle date based on event type
       if (eventType === 'scheduled' && date) {
-        eventData.date = new Date(date);
-        console.log('Scheduled event with date:', eventData.date);
+        updateData.date = new Date(date);
+        console.log('Scheduled event with date:', updateData.date);
       } else if (eventType === 'always') {
         // For always happening events, set date to null
-        eventData.date = null;
+        updateData.date = null;
         console.log('Always happening event - no specific date');
       } else if ((eventType === 'weekly' || eventType === 'daily' || eventType === 'monthly') && date) {
         // For recurring events, store the pattern date/time
-        eventData.date = new Date(date);
-        console.log(`${eventType} recurring event with pattern date:`, eventData.date);
+        updateData.date = new Date(date);
+        console.log(`${eventType} recurring event with pattern date:`, updateData.date);
       }
-      
-      console.log('Event data to be added:', eventData);
-      console.log('Adding to Firestore collection: building-events');
-      
-      const docRef = await addDoc(collection(db, 'building-events'), eventData);
-      console.log('Building event created successfully with Firebase ID:', docRef.id);
-      console.log('Building event buildingId:', buildingId);
 
-      setSuccess(true);
+      console.log('Update data:', updateData);
 
-      // Reset form
-      setFormData({
-        buildingName: '',
-        eventName: '',
-        eventType: 'scheduled',
-        date: ''
+      // Update the document in Firestore
+      await updateDoc(doc(db, 'building-events', event.id), updateData);
+      
+      console.log('Event updated successfully');
+      onSave({
+        ...event,
+        ...updateData,
+        updatedAt: new Date()
       });
 
-      // Callback for parent component
-      if (onEventCreated) {
-        onEventCreated(docRef.id);
-      }
-
     } catch (error) {
-      console.error('Error creating building event:', error);
+      console.error('Error updating event:', error);
       console.error('Error code:', error.code);
       console.error('Error message:', error.message);
-      setError(error.message);
+      
+      let userFriendlyError = 'Failed to update building event. ';
+      if (error.code === 'permission-denied') {
+        userFriendlyError += 'Permission denied. You may not have permission to edit this event.';
+      } else if (error.code === 'not-found') {
+        userFriendlyError += 'Event not found.';
+      } else {
+        userFriendlyError += error.message;
+      }
+      
+      setError(userFriendlyError);
     } finally {
       setLoading(false);
     }
@@ -102,28 +117,17 @@ function BuildingEventForm({ user, onEventCreated }) {
   return (
     <div className="form-container">
       <div className="form-card">
-        <h2 className="form-title">Create Building Event</h2>
+        <div className="form-header">
+          <h2 className="form-title">Edit Building Event</h2>
+          <div className="event-id-display">
+            <span className="detail-label">Event ID:</span>
+            <span className="detail-value event-id">{event.id}</span>
+          </div>
+        </div>
         
         {error && (
           <div className="alert alert-error">
             <strong>Error:</strong> {error}
-          </div>
-        )}
-
-        {success && (
-          <div className="alert alert-success">
-            <strong>Success!</strong> Building event created successfully!
-            {onEventCreated && (
-              <div style={{ marginTop: '1rem' }}>
-                <button 
-                  className="form-button" 
-                  style={{ fontSize: '0.9rem', padding: '0.5rem 1rem' }}
-                  onClick={() => onEventCreated('view')}
-                >
-                  View My Events
-                </button>
-              </div>
-            )}
           </div>
         )}
 
@@ -234,24 +238,35 @@ function BuildingEventForm({ user, onEventCreated }) {
             </div>
           )}
 
-          <button 
-            type="submit" 
-            className={`form-button ${loading ? 'loading' : ''}`}
-            disabled={loading}
-          >
-            {loading ? (
-              <>
-                <span className="spinner"></span>
-                Creating Event...
-              </>
-            ) : (
-              'Create Building Event'
-            )}
-          </button>
+          <div className="form-actions">
+            <button 
+              type="button"
+              className="form-button cancel-button"
+              onClick={onCancel}
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            
+            <button 
+              type="submit" 
+              className={`form-button save-button ${loading ? 'loading' : ''}`}
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <span className="spinner"></span>
+                  Saving Changes...
+                </>
+              ) : (
+                'Save Changes'
+              )}
+            </button>
+          </div>
         </form>
       </div>
     </div>
   );
 }
 
-export default BuildingEventForm;
+export default EventEdit;

@@ -1,0 +1,250 @@
+import React, { useState, useEffect } from 'react';
+import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, orderBy } from 'firebase/firestore';
+import { db } from '../firebase';
+
+function EventList({ user, onEditEvent }) {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+
+  useEffect(() => {
+    loadEvents();
+  }, [user]);
+
+  const loadEvents = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('Loading events for user:', user.uid);
+      
+      let eventsQuery;
+      if (user.role === 'superadmin') {
+        // Super admin can see all events - just order by createdAt
+        eventsQuery = query(
+          collection(db, 'building-events'),
+          orderBy('createdAt', 'desc')
+        );
+      } else {
+        // Regular admins - filter by createdBy without ordering to avoid index requirement
+        eventsQuery = query(
+          collection(db, 'building-events'),
+          where('createdBy', '==', user.uid)
+        );
+      }
+      
+      const querySnapshot = await getDocs(eventsQuery);
+      const eventsList = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        eventsList.push({
+          id: doc.id,
+          ...data,
+          // Convert Firestore timestamp to Date for display
+          createdAt: data.createdAt?.toDate(),
+          date: data.date?.toDate ? data.date.toDate() : data.date
+        });
+      });
+      
+      // Sort client-side for regular admins to avoid needing composite index
+      if (user.role !== 'superadmin') {
+        eventsList.sort((a, b) => {
+          if (!a.createdAt) return 1;
+          if (!b.createdAt) return -1;
+          return b.createdAt.getTime() - a.createdAt.getTime();
+        });
+      }
+      
+      console.log('Loaded events:', eventsList);
+      setEvents(eventsList);
+      
+    } catch (error) {
+      console.error('Error loading events:', error);
+      setError('Failed to load events: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (eventId) => {
+    try {
+      await deleteDoc(doc(db, 'building-events', eventId));
+      console.log('Event deleted:', eventId);
+      
+      // Remove from local state
+      setEvents(events.filter(event => event.id !== eventId));
+      setDeleteConfirm(null);
+      
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      setError('Failed to delete event: ' + error.message);
+    }
+  };
+
+  const formatDate = (date) => {
+    if (!date) return 'N/A';
+    if (date instanceof Date) {
+      return date.toLocaleString();
+    }
+    return new Date(date).toLocaleString();
+  };
+
+  const formatEventType = (event) => {
+    // Use explicit eventType if available, otherwise infer from date
+    const type = event.eventType || (event.date ? 'scheduled' : 'always');
+    
+    switch (type) {
+      case 'always':
+        return <span className="event-type always">Always Happening</span>;
+      case 'weekly':
+        return <span className="event-type weekly">Weekly</span>;
+      case 'daily':
+        return <span className="event-type daily">Daily</span>;
+      case 'monthly':
+        return <span className="event-type monthly">Monthly</span>;
+      case 'scheduled':
+      default:
+        return <span className="event-type scheduled">Scheduled</span>;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="form-container">
+        <div className="form-card">
+          <div className="loading-spinner">
+            <span className="spinner"></span>
+            <p>Loading events...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="form-container">
+      <div className="form-card events-list-card">
+        <div className="events-header">
+          <h2 className="form-title">
+            {user.role === 'superadmin' ? 'All Building Events' : 'My Building Events'}
+          </h2>
+          <button 
+            className="refresh-button"
+            onClick={loadEvents}
+            disabled={loading}
+          >
+            🔄 Refresh
+          </button>
+        </div>
+
+        {error && (
+          <div className="alert alert-error">
+            <strong>Error:</strong> {error}
+          </div>
+        )}
+
+        {events.length === 0 ? (
+          <div className="empty-state">
+            <p>No building events found.</p>
+            {user.role !== 'superadmin' && (
+              <p>Create your first building event to see it here.</p>
+            )}
+          </div>
+        ) : (
+          <div className="events-grid">
+            {events.map((event) => (
+              <div key={event.id} className="event-card">
+                <div className="event-header">
+                  <h3 className="event-name">{event.eventName}</h3>
+                  {formatEventType(event)}
+                </div>
+                
+                <div className="event-details">
+                  <div className="event-detail">
+                    <span className="detail-label">Building:</span>
+                    <span className="detail-value">{event.buildingName}</span>
+                  </div>
+                  
+                  {event.buildingId && (
+                    <div className="event-detail">
+                      <span className="detail-label">Building ID:</span>
+                      <span className="detail-value event-id">{event.buildingId}</span>
+                    </div>
+                  )}
+                  
+                  {event.date && (
+                    <div className="event-detail">
+                      <span className="detail-label">Date:</span>
+                      <span className="detail-value">{formatDate(event.date)}</span>
+                    </div>
+                  )}
+                  
+                  <div className="event-detail">
+                    <span className="detail-label">Created:</span>
+                    <span className="detail-value">{formatDate(event.createdAt)}</span>
+                  </div>
+                  
+                  {event.createdBy && (
+                    <div className="event-detail">
+                      <span className="detail-label">Created By:</span>
+                      <span className="detail-value">{event.createdBy}</span>
+                    </div>
+                  )}
+                  
+                  <div className="event-detail">
+                    <span className="detail-label">Document ID:</span>
+                    <span className="detail-value event-id">{event.id}</span>
+                  </div>
+                </div>
+
+                <div className="event-actions">
+                  <button
+                    className="action-button edit-button"
+                    onClick={() => onEditEvent(event)}
+                  >
+                    ✏️ Edit
+                  </button>
+                  
+                  <button
+                    className="action-button delete-button"
+                    onClick={() => setDeleteConfirm(event.id)}
+                  >
+                    🗑️ Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {deleteConfirm && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <h3>Confirm Delete</h3>
+              <p>Are you sure you want to delete this building event? This action cannot be undone.</p>
+              <div className="modal-actions">
+                <button 
+                  className="form-button cancel-button"
+                  onClick={() => setDeleteConfirm(null)}
+                >
+                  Cancel
+                </button>
+                <button 
+                  className="form-button delete-button"
+                  onClick={() => handleDelete(deleteConfirm)}
+                >
+                  Delete Event
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default EventList;

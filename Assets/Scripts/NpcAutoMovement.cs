@@ -546,11 +546,6 @@ public class NpcAutoMovement : MonoBehaviour
         animator.SetFloat(movingYParam, moveInput.y);
         animator.SetBool(idleParam, moveInput.magnitude < 0.1f);
         
-        // Debug animation state during pursuit
-        if (currentState == NPCState.PursuingPlayer && currentVelocity.magnitude > 0.1f)
-        {
-            Debug.Log($"NPC {gameObject.name}: Pursuit animation - X: {moveInput.x:F1}, Y: {moveInput.y:F1}, Idle: {moveInput.magnitude < 0.1f}");
-        }
     }
     
     // Conversation System

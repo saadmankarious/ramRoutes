@@ -88,11 +88,19 @@ namespace RamRoutes.Services
                 foreach (DocumentSnapshot doc in querySnapshot.Documents)
                 {
                     var data = doc.ToDictionary();
+                    
+                    // Parse event type and handle date accordingly
+                    RamRoutes.Model.EventType eventType = ParseEventType(data);
+                    DateTime eventDate = ParseEventDate(data, eventType);
+                    string recurrenceData = data.ContainsKey("recurrenceData") ? data["recurrenceData"]?.ToString() : null;
+                    
                     var buildingEvent = new BuildingEvent(
                         data["buildingId"].ToString(),
                         data["buildingName"].ToString(),
                         data["eventName"].ToString(),
-                        ((Timestamp)data["date"]).ToDateTime()
+                        eventDate,
+                        eventType,
+                        recurrenceData
                     );
                     events.Add(buildingEvent);
                 }
@@ -132,11 +140,19 @@ namespace RamRoutes.Services
                 if (doc != null)
                 {
                     var data = doc.ToDictionary();
+                    
+                    // Parse event type and handle date accordingly
+                    RamRoutes.Model.EventType eventType = ParseEventType(data);
+                    DateTime eventDate = ParseEventDate(data, eventType);
+                    string recurrenceData = data.ContainsKey("recurrenceData") ? data["recurrenceData"]?.ToString() : null;
+                    
                     return new BuildingEvent(
                         data["buildingId"].ToString(),
                         data["buildingName"].ToString(),
                         data["eventName"].ToString(),
-                        ((Timestamp)data["date"]).ToDateTime()
+                        eventDate,
+                        eventType,
+                        recurrenceData
                     );
                 }
             }
@@ -146,6 +162,60 @@ namespace RamRoutes.Services
             }
 
             return null;
+        }
+
+        private RamRoutes.Model.EventType ParseEventType(System.Collections.Generic.Dictionary<string, object> data)
+        {
+            // Check if we have explicit event type data from newer admin panel
+            if (data.ContainsKey("eventType"))
+            {
+                string typeString = data["eventType"]?.ToString();
+                switch (typeString?.ToLower())
+                {
+                    case "always": return RamRoutes.Model.EventType.Always;
+                    case "weekly": return RamRoutes.Model.EventType.Weekly;
+                    case "daily": return RamRoutes.Model.EventType.Daily;
+                    case "monthly": return RamRoutes.Model.EventType.Monthly;
+                    case "scheduled":
+                    default: return RamRoutes.Model.EventType.Scheduled;
+                }
+            }
+            
+            // Fallback: determine type based on date field (for backward compatibility)
+            if (!data.ContainsKey("date") || data["date"] == null)
+            {
+                return RamRoutes.Model.EventType.Always;
+            }
+            
+            return RamRoutes.Model.EventType.Scheduled;
+        }
+
+        private DateTime ParseEventDate(System.Collections.Generic.Dictionary<string, object> data, RamRoutes.Model.EventType eventType)
+        {
+            switch (eventType)
+            {
+                case RamRoutes.Model.EventType.Always:
+                    return DateTime.MaxValue;
+                    
+                case RamRoutes.Model.EventType.Weekly:
+                case RamRoutes.Model.EventType.Daily:
+                case RamRoutes.Model.EventType.Monthly:
+                    // For recurring events, use the base date/time pattern
+                    if (data.ContainsKey("date") && data["date"] != null)
+                    {
+                        return ((Timestamp)data["date"]).ToDateTime();
+                    }
+                    // Fallback for recurring events without date
+                    return DateTime.Today.AddHours(12); // Default to noon today
+                    
+                case RamRoutes.Model.EventType.Scheduled:
+                default:
+                    if (data.ContainsKey("date") && data["date"] != null)
+                    {
+                        return ((Timestamp)data["date"]).ToDateTime();
+                    }
+                    return DateTime.MaxValue; // Treat as always-happening if no date
+            }
         }
 
         public void ClearCache()

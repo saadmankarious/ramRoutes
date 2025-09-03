@@ -1,46 +1,213 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
-import UserForm from './components/UserForm';
+import React, { useState, useEffect } from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { auth, db } from './firebase';
+import Login from './components/Login';
+import Header from './components/Header';
+import AdminForm from './components/AdminForm';
+import AdminList from './components/AdminList';
+import AdminEdit from './components/AdminEdit';
 import BuildingEventForm from './components/BuildingEventForm';
+import EventList from './components/EventList';
+import EventEdit from './components/EventEdit';
 import './App.css';
 
-function Navigation() {
-  const location = useLocation();
+function App() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [currentView, setCurrentView] = useState('events');
+  const [editingEvent, setEditingEvent] = useState(null);
+  const [editingAdmin, setEditingAdmin] = useState(null);
 
-  return (
-    <nav className="nav">
-      <div className="nav-content">
-        <h1>RamRoutes Admin Panel</h1>
-        <div className="nav-links">
-          <Link 
-            to="/" 
-            className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}
-          >
-            Create User
-          </Link>
-          <Link 
-            to="/building-event" 
-            className={`nav-link ${location.pathname === '/building-event' ? 'active' : ''}`}
-          >
-            Create Building Event
-          </Link>
+  useEffect(() => {
+    console.log('Setting up auth state listener...');
+    
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      try {
+        if (firebaseUser) {
+          console.log('Firebase user found:', firebaseUser.email);
+          
+          // Check if this is the super admin account
+          if (firebaseUser.email === 'root@ramroutes.com') {
+            console.log('Super admin authenticated');
+            setUser({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              role: 'superadmin',
+              name: 'Super Administrator'
+            });
+          } else {
+            // For regular admin users, get role from Firestore
+            const userDoc = await getDoc(doc(db, 'admins', firebaseUser.uid));
+            
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              setUser({
+                uid: firebaseUser.uid,
+                email: firebaseUser.email,
+                role: userData.role || 'admin',
+                name: userData.name
+              });
+              console.log('Admin user authenticated with role:', userData.role);
+            } else {
+              console.log('User not found in admin database, logging out...');
+              setUser(null);
+            }
+          }
+        } else {
+          console.log('No Firebase user found');
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('Error checking user auth:', error);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogin = (userData) => {
+    console.log('User logged in:', userData);
+    setUser(userData);
+    
+    // Set default view based on role
+    if (userData.role === 'superadmin') {
+      setCurrentView('view-admins');
+    } else {
+      setCurrentView('events');
+    }
+  };
+
+  const handleLogout = () => {
+    console.log('User logged out');
+    setUser(null);
+    setCurrentView('events');
+    setEditingEvent(null);
+    setEditingAdmin(null);
+  };
+
+  const handleEditAdmin = (admin) => {
+    console.log('Editing admin:', admin);
+    setEditingAdmin(admin);
+    setCurrentView('edit-admin');
+  };
+
+  const handleSaveAdmin = () => {
+    console.log('Admin saved');
+    setEditingAdmin(null);
+    setCurrentView('view-admins');
+  };
+
+  const handleCancelAdminEdit = () => {
+    console.log('Admin edit cancelled');
+    setEditingAdmin(null);
+    setCurrentView('view-admins');
+  };
+
+  const handleEditEvent = (event) => {
+    console.log('Editing event:', event);
+    setEditingEvent(event);
+    setCurrentView('edit-event');
+  };
+
+  const handleSaveEvent = (updatedEvent) => {
+    console.log('Event saved:', updatedEvent);
+    setEditingEvent(null);
+    setCurrentView('view-events');
+  };
+
+  const handleCancelEdit = () => {
+    console.log('Edit cancelled');
+    setEditingEvent(null);
+    setCurrentView('view-events');
+  };
+
+  const handleEventCreated = (eventId) => {
+    console.log('Event created, navigating to events list:', eventId);
+    if (eventId === 'view') {
+      setCurrentView('view-events');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner">
+          <span className="spinner"></span>
+          <p>Loading...</p>
         </div>
       </div>
-    </nav>
-  );
-}
+    );
+  }
 
-function App() {
+  if (!user) {
+    return <Login onLogin={handleLogin} />;
+  }
+
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case 'admins':
+        if (user.role === 'superadmin') {
+          return <AdminForm />;
+        }
+        return <div className="access-denied">Access denied. Super admin role required.</div>;
+      
+      case 'view-admins':
+        if (user.role === 'superadmin') {
+          return <AdminList user={user} onEditAdmin={handleEditAdmin} />;
+        }
+        return <div className="access-denied">Access denied. Super admin role required.</div>;
+      
+      case 'edit-admin':
+        if (user.role === 'superadmin' && editingAdmin) {
+          return (
+            <AdminEdit 
+              adminToEdit={editingAdmin}
+              onCancel={handleCancelAdminEdit}
+              onSave={handleSaveAdmin}
+            />
+          );
+        }
+        return <div className="access-denied">Access denied or no admin selected for editing.</div>;
+      
+      case 'events':
+        return <BuildingEventForm user={user} onEventCreated={handleEventCreated} />;
+      
+      case 'view-events':
+        return <EventList user={user} onEditEvent={handleEditEvent} />;
+      
+      case 'edit-event':
+        if (editingEvent) {
+          return (
+            <EventEdit 
+              event={editingEvent}
+              onCancel={handleCancelEdit}
+              onSave={handleSaveEvent}
+            />
+          );
+        }
+        return <div className="access-denied">No event selected for editing.</div>;
+      
+      default:
+        return <BuildingEventForm user={user} onEventCreated={handleEventCreated} />;
+    }
+  };
+
   return (
-    <Router>
-      <div className="App">
-        <Navigation />
-        <Routes>
-          <Route path="/" element={<UserForm />} />
-          <Route path="/building-event" element={<BuildingEventForm />} />
-        </Routes>
-      </div>
-    </Router>
+    <div className="app">
+      <Header 
+        user={user} 
+        currentView={currentView} 
+        setCurrentView={setCurrentView}
+        onLogout={handleLogout}
+      />
+      <main className="app-main">
+        {renderCurrentView()}
+      </main>
+    </div>
   );
 }
 

@@ -3,16 +3,17 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-// TODO: Replace with your Firebase config
-// You can find this in your Firebase Console -> Project Settings -> General -> Your apps
+// Firebase configuration extracted from google-services.json
 const firebaseConfig = {
-  apiKey: "your-api-key",
-  authDomain: "your-project-id.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project-id.appspot.com",
-  messagingSenderId: "your-sender-id",
-  appId: "your-app-id"
+  apiKey: "AIzaSyBoyfyjD7mnV5Ne27N4_T0LSUFC13muuWI",
+  authDomain: "trials-of-venus.firebaseapp.com",
+  projectId: "trials-of-venus",
+  storageBucket: "trials-of-venus.firebasestorage.app",
+  messagingSenderId: "460631177881",
+  appId: "1:460631177881:web:app-id" // Web app ID would be different but this structure works
 };
+
+console.log('Initializing Firebase with project:', firebaseConfig.projectId);
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -20,7 +21,9 @@ const app = initializeApp(firebaseConfig);
 // Initialize Firebase Authentication and get a reference to the service
 export const auth = getAuth(app);
 
-// Initialize Cloud Firestore and get a reference to the service
+// Initialize Cloud Firestore and get a reference to the service  
 export const db = getFirestore(app);
+
+console.log('Firebase initialized successfully');
 
 export default app;

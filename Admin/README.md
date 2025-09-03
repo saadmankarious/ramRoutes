@@ -1,14 +1,36 @@
 # RamRoutes Admin Panel - React App
 
-This is a React-based admin panel for managing users and building events in the RamRoutes application.
+This is a React-based admin panel for managing users and building events in the RamRoutes application with role-based authentication.
 
 ## Features
 
-- Create new users with Firebase Authentication
-- Store user data in Firestore
-- Create building events with auto-generated IDs
-- Modern React UI with routing
-- Form validation and error handling
+- **Role-based Authentication**: Super Admin and Admin roles with different permissions
+- **Super Admin Features**: Can create admin users
+- **Admin Features**: Can create building events  
+- **Firebase Integration**: Uses Firestore for data storage and Firebase Auth for authentication
+- **Modern UI**: Clean, responsive design with form validation
+- **Auto-generated IDs**: Building events use Firebase auto-generated document IDs
+
+## Authentication System
+
+### User Roles
+
+1. **Super Admin**
+   - Fixed credentials: `root` / `ramroutes2025ll`
+   - Can create admin users
+   - Can create building events
+   - Full system access
+
+2. **Admin**
+   - Created by Super Admin
+   - Can create building events
+   - Limited to event management
+
+### Login Process
+
+- Landing page requires authentication
+- Super Admin uses fixed credentials
+- Admin users use credentials provided by Super Admin
 
 ## Setup Instructions
 
@@ -18,54 +40,38 @@ This is a React-based admin panel for managing users and building events in the 
 npm install
 ```
 
-### 2. Configure Firebase
+### 2. Firebase Configuration
 
-1. Go to your Firebase Console (https://console.firebase.google.com/)
-2. Select your RamRoutes project
-3. Go to Project Settings > General
-4. Scroll down to "Your apps" section
-5. If you don't have a web app, click "Add app" and select Web
-6. Copy your Firebase configuration object
+The app is already configured with your Firebase project:
+- **Project ID**: `trials-of-venus`
+- **API Key**: Already configured
+- **Authentication**: Email/Password enabled
 
-### 3. Update Firebase Configuration
+### 3. Firebase Security Rules
 
-Edit `src/firebase.js` and replace the placeholder values with your actual Firebase configuration:
+Ensure your Firestore has appropriate security rules:
 
 ```javascript
-const firebaseConfig = {
-  apiKey: "your-actual-api-key",
-  authDomain: "your-project-id.firebaseapp.com",
-  projectId: "your-actual-project-id",
-  storageBucket: "your-project-id.appspot.com",
-  messagingSenderId: "your-actual-sender-id",
-  appId: "your-actual-app-id"
-};
-```
-
-### 4. Firebase Security Rules
-
-Make sure your Firestore has appropriate security rules. For development, you can use:
-
-```javascript
-// Firestore Security Rules
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow read/write access on all documents to any user signed in to the application
+    // Allow authenticated users to read/write
     match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Admin-specific collection
+    match /admins/{adminId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Building events collection
+    match /building-events/{eventId} {
       allow read, write: if request.auth != null;
     }
   }
 }
 ```
-
-For production, implement more restrictive rules based on your needs.
-
-### 5. Firebase Authentication Setup
-
-1. In Firebase Console, go to Authentication > Sign-in method
-2. Enable "Email/Password" provider
-3. Optionally enable "Email link (passwordless sign-in)" if needed
 
 ## Running the Application
 
@@ -75,9 +81,7 @@ For production, implement more restrictive rules based on your needs.
 npm start
 ```
 
-This runs the app in development mode. Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes. You may also see any lint errors in the console.
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 ### Build for Production
 
@@ -85,80 +89,102 @@ The page will reload when you make changes. You may also see any lint errors in 
 npm run build
 ```
 
-Builds the app for production to the `build` folder. It correctly bundles React in production mode and optimizes the build for the best performance.
+## Usage Guide
 
-## Usage
+### First-Time Setup
 
-### Creating Users
+1. **Super Admin Login**: Use `root` / `ramroutes2025ll`
+2. **Create Admin Users**: Navigate to "Manage Admins" 
+3. **Provide Credentials**: Share generated credentials with admin users
 
-1. Navigate to the "Create User" tab
-2. Fill in the required fields:
-   - Email Address
-   - Full Name
-   - Residence Hall
-   - Password (optional - auto-generated if left blank)
-3. Click "Create User"
-4. The generated password will be displayed - make sure to save it!
+### Creating Admin Users (Super Admin Only)
+
+1. Click "Manage Admins" in the navigation
+2. Fill in the admin details:
+   - **Username**: Will become `username@admin.local`
+   - **Full Name**: Display name for the admin
+   - **Password**: Optional (auto-generated if blank)
+3. Save the generated credentials securely
+4. Share credentials with the new admin
 
 ### Creating Building Events
 
-1. Navigate to the "Create Building Event" tab
-2. Fill in the required fields:
-   - Building ID (auto-generated, can be regenerated)
-   - Building Name (select from dropdown)
-   - Event Name
-   - Event Date
+1. Click "Building Events" in the navigation
+2. Fill in the event details:
+   - **Building Name**: Select from available options (McWethy, TC, Ebersole, SAW, Library, PR, Stoner)
+   - **Event Name**: Descriptive name for the event
+   - **Event Type**: 
+     - **Scheduled Event**: Requires specific date/time
+     - **Always Happening**: No date required, perpetual event
 3. Click "Create Building Event"
+4. Firebase will auto-generate a unique document ID
 
 ## File Structure
 
 ```
 src/
   components/
-    UserForm.js          # User creation form
-    BuildingEventForm.js # Building event creation form
-  App.js                 # Main app component with routing
-  firebase.js            # Firebase configuration
-  index.js              # App entry point
-  index.css             # Global styles
-  App.css               # App-specific styles
+    Login.js              # Authentication component
+    Header.js             # Navigation and user info
+    AdminForm.js          # Create admin users (Super Admin only)
+    BuildingEventForm.js  # Create building events
+  App.js                  # Main app with auth state management
+  firebase.js             # Firebase configuration
+  App.css                 # Comprehensive styling
+  index.js               # App entry point
 
-public/
-  index.html            # HTML template
-
-package.json            # Dependencies and scripts
+Firebase Collections:
+  admins/                 # Admin user data
+  building-events/        # Event data with auto-generated IDs
 ```
 
-## Migration Notes
+## Security Features
 
-This React app replaces the previous Express.js server-based admin panel. Key changes:
+- **Authentication Required**: All functionality requires login
+- **Role-based Access**: Different permissions for Super Admin vs Admin
+- **Session Management**: Automatic logout handling
+- **Firebase Auth**: Secure user authentication
+- **Input Validation**: Form validation and error handling
 
-- **Client-side**: Now runs entirely in the browser
-- **Firebase SDK**: Uses the web SDK instead of the admin SDK
-- **Authentication**: Uses Firebase Auth for user creation
-- **UI**: Modern React-based interface with routing
-- **Real-time**: Can be extended with real-time Firestore listeners
+## UI/UX Improvements
+
+- **Modern Design**: Clean, professional interface
+- **Responsive Layout**: Works on desktop and mobile
+- **Loading States**: Visual feedback during operations
+- **Error Handling**: Clear error messages
+- **Success Feedback**: Confirmation of successful operations
+- **Intuitive Navigation**: Role-appropriate menu options
+
+## Migration from Express.js
+
+This replaces the previous server-based admin panel with:
+- **Client-side Architecture**: Runs entirely in browser
+- **Firebase Web SDK**: Instead of admin SDK
+- **Role-based Security**: Multi-tiered access control
+- **Modern React UI**: Better user experience
+- **Auto-generated IDs**: Simplified ID management
 
 ## Troubleshooting
 
-### Common Issues
+### Login Issues
+- Super Admin: Ensure exact credentials `root` / `ramroutes2025ll`
+- Admin: Verify credentials were created correctly
+- Check Firebase Console for authentication logs
 
-1. **Firebase configuration errors**: Make sure all config values are correct
-2. **Authentication errors**: Ensure Email/Password is enabled in Firebase Console
-3. **Permission errors**: Check Firestore security rules
-4. **Build errors**: Make sure all dependencies are installed with `npm install`
+### Permission Errors
+- Verify Firestore security rules allow authenticated access
+- Check user exists in `admins` collection
+- Ensure proper role assignment
 
-### Development Tips
+### Firebase Connection
+- Check browser console for Firebase errors
+- Verify internet connection
+- Check Firebase project status
 
-- Use browser developer tools to debug Firebase operations
-- Check the Firebase Console for created users and documents
-- Monitor the browser console for any JavaScript errors
+## Future Enhancements
 
-## Next Steps
-
-Potential enhancements:
-- Add user listing and management
-- Add building event listing and editing
-- Implement user authentication for admin panel access
-- Add data validation and better error handling
-- Add export functionality for user lists
+- **User Management**: List and edit existing admin users
+- **Event Management**: View and edit existing building events
+- **Audit Logging**: Track admin actions
+- **Bulk Operations**: Import/export functionality
+- **Real-time Updates**: Live data synchronization
