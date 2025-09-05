@@ -94,13 +94,27 @@ namespace RamRoutes.Services
                     DateTime eventDate = ParseEventDate(data, eventType);
                     string recurrenceData = data.ContainsKey("recurrenceData") ? data["recurrenceData"]?.ToString() : null;
                     
+                    // Get attendees list if available
+                    List<string> attendees = new List<string>();
+                    if (data.ContainsKey("attendees") && data["attendees"] is IEnumerable<object> attendeesList)
+                    {
+                        foreach (var item in attendeesList)
+                        {
+                            if (item != null)
+                            {
+                                attendees.Add(item.ToString());
+                            }
+                        }
+                    }
+                    
                     var buildingEvent = new BuildingEvent(
                         data["buildingId"].ToString(),
                         data["buildingName"].ToString(),
                         data["eventName"].ToString(),
                         eventDate,
                         eventType,
-                        recurrenceData
+                        recurrenceData,
+                        attendees
                     );
                     events.Add(buildingEvent);
                 }
@@ -223,6 +237,45 @@ namespace RamRoutes.Services
             PlayerPrefs.DeleteKey(CACHE_KEY);
             cachedEvents = new List<BuildingEvent>();
             Debug.Log("Building events cache cleared");
+        }
+        
+        public async Task<bool> RecordAttendanceAsync(string eventId, string playerId)
+        {
+            try
+            {
+                // First get the document reference
+                DocumentReference eventRef = db.Collection("building-events").Document(eventId);
+                DocumentSnapshot eventSnap = await eventRef.GetSnapshotAsync();
+                
+                if (!eventSnap.Exists)
+                {
+                    Debug.LogError($"Event {eventId} not found when recording attendance");
+                    return false;
+                }
+                
+                // Update the attendees array with the new player ID
+                await eventRef.UpdateAsync("attendees", FieldValue.ArrayUnion(playerId));
+                
+                // Also update our local cache
+                var evt = cachedEvents?.FirstOrDefault(e => e.buildingId == eventId);
+                if (evt != null && !evt.attendees.Contains(playerId))
+                {
+                    evt.attendees.Add(playerId);
+                }
+                
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Error recording attendance: {ex.Message}");
+                return false;
+            }
+        }
+        
+        public bool HasPlayerAttended(string eventId, string playerId)
+        {
+            var evt = cachedEvents?.FirstOrDefault(e => e.buildingId == eventId);
+            return evt != null && evt.attendees.Contains(playerId);
         }
     }
 }

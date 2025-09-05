@@ -1,6 +1,6 @@
 using System;
 using UnityEngine;
-
+using System.Collections.Generic;
 namespace RamRoutes.Model
 {
     public enum EventType
@@ -21,8 +21,11 @@ namespace RamRoutes.Model
         public DateTime date  { set; get; }
         public EventType eventType { set; get; }
         public string recurrenceData { set; get; } // JSON string for complex recurrence patterns
+        public List<string> attendees { set; get; } // List of player IDs who have checked in
 
-        public BuildingEvent(string buildingId, string buildingName, string eventName, DateTime date, EventType eventType = EventType.Scheduled, string recurrenceData = null)
+        public BuildingEvent(string buildingId, string buildingName, string eventName, DateTime date, 
+                            EventType eventType = EventType.Scheduled, string recurrenceData = null, 
+                            List<string> attendees = null)
         {
             this.buildingId = buildingId;
             this.buildingName = buildingName;
@@ -30,6 +33,7 @@ namespace RamRoutes.Model
             this.date = date;
             this.eventType = eventType;
             this.recurrenceData = recurrenceData;
+            this.attendees = attendees ?? new List<string>();
         }
         
         // Helper property to check if this is an always-happening event
