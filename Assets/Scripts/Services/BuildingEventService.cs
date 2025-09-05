@@ -89,6 +89,10 @@ namespace RamRoutes.Services
                 {
                     var data = doc.ToDictionary();
                     
+                    // Get the document ID from Firestore (this is the actual event ID)
+                    string documentId = doc.Id;
+                    Debug.Log($"Processing event document with ID: {documentId}");
+                    
                     // Parse event type and handle date accordingly
                     RamRoutes.Model.EventType eventType = ParseEventType(data);
                     DateTime eventDate = ParseEventDate(data, eventType);
@@ -108,13 +112,14 @@ namespace RamRoutes.Services
                     }
                     
                     var buildingEvent = new BuildingEvent(
-                        data["buildingId"].ToString(),
-                        data["buildingName"].ToString(),
-                        data["eventName"].ToString(),
+                        data.ContainsKey("buildingId") ? data["buildingId"].ToString() : string.Empty,
+                        data.ContainsKey("buildingName") ? data["buildingName"].ToString() : string.Empty,
+                        data.ContainsKey("eventName") ? data["eventName"].ToString() : string.Empty,
                         eventDate,
                         eventType,
                         recurrenceData,
-                        attendees
+                        attendees,
+                        documentId  // Pass the document ID as the event ID
                     );
                     events.Add(buildingEvent);
                 }
@@ -243,7 +248,9 @@ namespace RamRoutes.Services
         {
             try
             {
-                // First get the document reference
+                Debug.Log($"RecordAttendanceAsync: Trying to record attendance for event {eventId}, player {playerId}");
+                
+                // First get the document reference using the event ID (document ID in Firestore)
                 DocumentReference eventRef = db.Collection("building-events").Document(eventId);
                 DocumentSnapshot eventSnap = await eventRef.GetSnapshotAsync();
                 
@@ -253,11 +260,14 @@ namespace RamRoutes.Services
                     return false;
                 }
                 
+                Debug.Log($"Found event document in Firestore, updating attendees list");
+                
                 // Update the attendees array with the new player ID
                 await eventRef.UpdateAsync("attendees", FieldValue.ArrayUnion(playerId));
                 
-                // Also update our local cache
-                var evt = cachedEvents?.FirstOrDefault(e => e.buildingId == eventId);
+                // Also update our local cache - try to find by eventId first, then buildingId as fallback
+                var evt = cachedEvents?.FirstOrDefault(e => e.eventId == eventId) ?? 
+                          cachedEvents?.FirstOrDefault(e => e.buildingId == eventId);
                 if (evt != null && !evt.attendees.Contains(playerId))
                 {
                     evt.attendees.Add(playerId);
@@ -274,8 +284,11 @@ namespace RamRoutes.Services
         
         public bool HasPlayerAttended(string eventId, string playerId)
         {
-            var evt = cachedEvents?.FirstOrDefault(e => e.buildingId == eventId);
-            return evt != null && evt.attendees.Contains(playerId);
+            // Try to find by eventId first, then by buildingId as fallback
+            var evt = cachedEvents?.FirstOrDefault(e => e.eventId == eventId) ?? 
+                      cachedEvents?.FirstOrDefault(e => e.buildingId == eventId);
+                      
+            return evt != null && evt.attendees != null && evt.attendees.Contains(playerId);
         }
     }
 }

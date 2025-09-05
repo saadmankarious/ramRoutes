@@ -18,6 +18,7 @@ public class EventCheckin : MonoBehaviour
     
     private BuildingEventService eventService;
     private readonly TimeZoneInfo easternZone = TimeZoneInfo.FindSystemTimeZoneById("America/New_York");
+    private List<BuildingEvent> currentEvents; // Track currently displayed events
 
     private DateTime NormalizeDate(DateTime date)
     {
@@ -89,6 +90,9 @@ public class EventCheckin : MonoBehaviour
             return;
         }
         
+        // Store the current events list for index-based access
+        currentEvents = new List<BuildingEvent>(events);
+        
         if (buildingTitleText != null)
         {
             buildingTitleText.text = $"Now happening at {buildingName}";
@@ -133,18 +137,16 @@ public class EventCheckin : MonoBehaviour
                 Button checkInButton = eventItem.GetComponentInChildren<Button>();
                 if (checkInButton != null)
                 {
-                    BuildingEvent capturedEvent = evt;
-                    checkInButton.onClick.AddListener(() => CheckInToEvent(capturedEvent));
-                    
-                    // Get player ID for checking attendance
-                    string playerId = PlayerPrefs.GetString("PlayerId", SystemInfo.deviceUniqueIdentifier);
-                    
-                    // If player has already attended, disable the check-in button
-                    if (evt.attendees != null && evt.attendees.Contains(playerId))
+                    // Get or add EventItemButton component
+                    EventItemButton itemButton = checkInButton.gameObject.GetComponent<EventItemButton>();
+                    if (itemButton == null)
                     {
-                        checkInButton.interactable = false;
-                        checkInButton.GetComponentInChildren<Text>().text = "Checked In";
+                        itemButton = checkInButton.gameObject.AddComponent<EventItemButton>();
                     }
+                    
+                    // Setup the button with the index in the current events list
+                    int eventIndex = events.IndexOf(evt);
+                    itemButton.Setup(this, eventIndex);
                 }
             }
             
@@ -203,8 +205,11 @@ public class EventCheckin : MonoBehaviour
     
     private async void CheckInToEvent(BuildingEvent evt)
     {
+        Debug.Log($"CheckInToEvent method called for event: {evt.eventName}");
+        
         // Get the current player ID from PlayerPrefs or other source
         string playerId = PlayerPrefs.GetString("PlayerId", SystemInfo.deviceUniqueIdentifier);
+        Debug.Log($"Player ID for check-in: {playerId}");
         
         // Check if player already checked in
         if (evt.attendees != null && evt.attendees.Contains(playerId))
@@ -213,47 +218,68 @@ public class EventCheckin : MonoBehaviour
             return;
         }
         
-        // Record the attendance
-        bool success = await eventService.RecordAttendanceAsync(evt.buildingId, playerId);
+        // Use eventId if available, otherwise fallback to buildingId
+        string eventId = !string.IsNullOrEmpty(evt.eventId) ? evt.eventId : evt.buildingId;
+        Debug.Log($"Attempting to record attendance for event: {evt.eventName} with ID: {eventId}");
         
-        if (success)
+        try
         {
-            Debug.Log($"Successfully checked in to event: {evt.eventName}");
+            // Use the FirestoreUtility to record attendance
+            bool success = await FirestoreUtility.RecordEventAttendance(
+                eventId, 
+                playerId, 
+                evt.eventName, 
+                evt.buildingName
+            );
             
-            // Visual feedback for successful check-in
-            if (eventsPanel != null)
+            if (success)
             {
-                // Update UI to reflect the check-in
-                // For example, disable the check-in button or show a confirmation
-                RefreshEventDisplay(evt);
+                Debug.Log($"Successfully checked in to event: {evt.eventName}");
+                
+                // Add player to attendees list locally
+                if (evt.attendees == null)
+                {
+                    evt.attendees = new List<string>();
+                }
+                evt.attendees.Add(playerId);
+                
+                // Update the UI
+                RefreshAllEventItems();
+            }
+            else
+            {
+                Debug.LogError($"Failed to check in to event: {evt.eventName}");
             }
         }
-        else
+        catch (Exception ex)
         {
-            Debug.LogError($"Failed to check in to event: {evt.eventName}");
+            Debug.LogError($"Exception during check-in: {ex.Message}");
         }
     }
     
-    // Helper method to refresh a specific event's display after check-in
-    private void RefreshEventDisplay(BuildingEvent evt)
+    // Refresh all event items in the UI - simpler approach
+    private void RefreshAllEventItems()
     {
-        // Find the event display in the UI and update it
-        foreach (Transform child in eventsContentParent)
+        Debug.Log("RefreshAllEventItems: Recreating all event UI items");
+        
+        // Store the current building name
+        string currentBuildingName = buildingTitleText != null ? 
+            buildingTitleText.text.Replace("Now happening at ", "") : "";
+            
+        // Just redisplay all events with updated attendance data
+        DisplayEvents(currentEvents, currentBuildingName);
+    }
+    
+    // Public method to check in to an event by index
+    public void CheckInToEventByIndex(int index)
+    {
+        if (currentEvents != null && index >= 0 && index < currentEvents.Count)
         {
-            // Find the event item corresponding to this event
-            Button checkInButton = child.GetComponentInChildren<Button>();
-            if (checkInButton != null)
-            {
-                // Get player ID for checking attendance
-                string playerId = PlayerPrefs.GetString("PlayerId", SystemInfo.deviceUniqueIdentifier);
-                
-                // If player has attended, disable the check-in button
-                if (eventService.HasPlayerAttended(evt.buildingId, playerId))
-                {
-                    checkInButton.interactable = false;
-                    checkInButton.GetComponentInChildren<Text>().text = "Checked In";
-                }
-            }
+            CheckInToEvent(currentEvents[index]);
+        }
+        else
+        {
+            Debug.LogError($"Invalid event index: {index}. Current events count: {(currentEvents != null ? currentEvents.Count : 0)}");
         }
     }
     
