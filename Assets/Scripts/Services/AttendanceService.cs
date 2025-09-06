@@ -427,6 +427,65 @@ namespace RamRoutes.Services
         }
 
         /// <summary>
+        /// Check if a player has already checked in to a specific event today
+        /// </summary>
+        /// <param name="eventId">The event ID</param>
+        /// <param name="playerId">The player ID</param>
+        /// <returns>True if player has already checked in today</returns>
+        public static async Task<bool> HasPlayerCheckedInTodayAsync(string eventId, string playerId)
+        {
+            try
+            {
+                // 1. Find all attendance records of the player for this event
+                QuerySnapshot snapshot = await DB.Collection(COLLECTION_NAME)
+                    .WhereEqualTo("eventId", eventId)
+                    .WhereEqualTo("playerId", playerId)
+                    .GetSnapshotAsync();
+
+                if (snapshot.Documents.Count() == 0)
+                {
+                    return false; // No records found, player hasn't checked in
+                }
+
+                // 2. Find most recent date
+                DateTime mostRecentCheckIn = DateTime.MinValue;
+                foreach (DocumentSnapshot document in snapshot.Documents)
+                {
+                    if (document.Exists)
+                    {
+                        var data = document.ToDictionary();
+                        if (data.ContainsKey("checkInDate") && data["checkInDate"] is Timestamp timestamp)
+                        {
+                            DateTime checkInDate = timestamp.ToDateTime();
+                            if (checkInDate > mostRecentCheckIn)
+                            {
+                                mostRecentCheckIn = checkInDate;
+                            }
+                        }
+                    }
+                }
+
+                // 3. Compare with today - if it is one day or more behind today, return false. otherwise return true.
+                DateTime today = DateTime.Today;
+                DateTime mostRecentDate = mostRecentCheckIn.Date;
+                
+                // If most recent check-in was today, return true
+                if (mostRecentDate == today)
+                {
+                    return true;
+                }
+                
+                // If most recent check-in was one day or more behind today, return false
+                return false;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Error checking daily attendance: {e.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
         /// Get attendance count for a specific event
         /// </summary>
         /// <param name="eventId">The event ID</param>

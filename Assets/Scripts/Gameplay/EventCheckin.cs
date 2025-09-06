@@ -60,39 +60,6 @@ public class EventCheckin : MonoBehaviour
             closeButton.onClick.AddListener(HideEventsPanel);
         }
     }
-
-    async void OnBuildingEntered(BuildingProximityDetector.Building building)
-    {
-        var events = await eventService.GetBuildingEventsAsync(true);
-        var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, easternZone);
-        var earliestTime = now.AddMinutes(-15);
-        var latestTime = now.AddMinutes(15);
-
-        List<BuildingEvent> relevantEvents = new List<BuildingEvent>();
-        foreach (var evt in events)
-        {
-            if (evt.buildingName != building.name) continue;
-
-            if (evt.eventType == RamRoutes.Model.EventType.Scheduled) 
-            {
-                DateTime normalizedEventDate = NormalizeDate(evt.date);
-                if (normalizedEventDate >= earliestTime && normalizedEventDate <= latestTime)
-                {
-                    relevantEvents.Add(evt);
-                }
-            }
-            else if (evt.IsAlwaysHappening)
-            {
-                relevantEvents.Add(evt);
-            }
-            else if (evt.IsRecurring && evt.IsActiveAt(now))
-            {
-                relevantEvents.Add(evt);
-            }
-        }
-    
-        DisplayEvents(relevantEvents, building.name);
-    }
     
     private async void DisplayEvents(List<BuildingEvent> events, string buildingName)
     {
@@ -109,24 +76,32 @@ public class EventCheckin : MonoBehaviour
             userId = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
         }
         
-        // Filter out events the player has already checked into (check both systems)
+        // Filter out events the player has already checked into
         List<BuildingEvent> availableEvents = new List<BuildingEvent>();
         foreach (var evt in events)
         {
-            bool checkedInOldSystem = evt.attendees != null && evt.attendees.Contains(userId);
-            bool checkedInNewSystem = false;
+            bool canCheckIn = true;
             
             try
             {
                 string checkEventId = !string.IsNullOrEmpty(evt.eventId) ? evt.eventId : evt.buildingId;
-                checkedInNewSystem = await AttendanceService.HasPlayerCheckedInAsync(checkEventId, userId);
+                
+                if (evt.eventType == RamRoutes.Model.EventType.Daily)
+                {
+                    // For daily events, check if player already checked in today
+                    canCheckIn = !await AttendanceService.HasPlayerCheckedInTodayAsync(checkEventId, userId);
+                }
+                else
+                {
+                    // For non-daily events, check if player has ever checked in
+                    canCheckIn = !await AttendanceService.HasPlayerCheckedInAsync(checkEventId, userId);
+                }
             }
             catch (Exception ex)
             {
             }
             
-            // Only add if not checked in to either system
-            if (!checkedInOldSystem && !checkedInNewSystem)
+            if (canCheckIn)
             {
                 availableEvents.Add(evt);
             }
@@ -270,25 +245,37 @@ public class EventCheckin : MonoBehaviour
             return;
         }
         
-        // Check if player already checked in (check both systems)
-        bool alreadyCheckedInOldSystem = evt.attendees != null && evt.attendees.Contains(playerId);
-        bool alreadyCheckedInNewSystem = false;
+        // Check if player can check in
+        bool canCheckIn = true;
         
         try
         {
             string checkEventId = !string.IsNullOrEmpty(evt.eventId) ? evt.eventId : evt.buildingId;
-            alreadyCheckedInNewSystem = await AttendanceService.HasPlayerCheckedInAsync(checkEventId, playerId);
+            
+            if (evt.eventType == RamRoutes.Model.EventType.Daily)
+            {
+                // For daily events, check if player already checked in today
+                canCheckIn = !await AttendanceService.HasPlayerCheckedInTodayAsync(checkEventId, playerId);
+            }
+            else
+            {
+                // For non-daily events, check if player has ever checked in
+                canCheckIn = !await AttendanceService.HasPlayerCheckedInAsync(checkEventId, playerId);
+            }
         }
         catch (Exception ex)
         {
         }
         
-        if (alreadyCheckedInOldSystem || alreadyCheckedInNewSystem)
+        if (!canCheckIn)
         {
             if (uiManager != null)
             {
                 HideEventsPanel();
-                uiManager.ShowDialog($"You've already checked in to this event!", 3f, false);
+                string message = evt.eventType == RamRoutes.Model.EventType.Daily ? 
+                    "You've already checked in to this event today!" : 
+                    "You've already checked in to this event!";
+                uiManager.ShowDialog(message, 3f, false);
             }
             return;
         }
@@ -457,7 +444,7 @@ public class EventCheckin : MonoBehaviour
         }
         
         var events = await eventService.GetBuildingEventsAsync(true);
-        var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, easternZone);
+        var now = DateTime.Now;
         var earliestTime = now.AddMinutes(-15);
         var latestTime = now.AddMinutes(15);
 
@@ -502,24 +489,32 @@ public class EventCheckin : MonoBehaviour
                 userId = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
             }
             
-            // Filter out events the player has already checked into (check both systems)
+            // Filter out events the player has already checked into
             List<BuildingEvent> availableEvents = new List<BuildingEvent>();
             foreach (var evt in relevantEvents)
             {
-                bool checkedInOldSystem = evt.attendees != null && evt.attendees.Contains(userId);
-                bool checkedInNewSystem = false;
+                bool canCheckIn = true;
                 
                 try
                 {
                     string checkEventId = !string.IsNullOrEmpty(evt.eventId) ? evt.eventId : evt.buildingId;
-                    checkedInNewSystem = await AttendanceService.HasPlayerCheckedInAsync(checkEventId, userId);
+                    
+                    if (evt.eventType == RamRoutes.Model.EventType.Daily)
+                    {
+                        // For daily events, check if player already checked in today
+                        canCheckIn = !await AttendanceService.HasPlayerCheckedInTodayAsync(checkEventId, userId);
+                    }
+                    else
+                    {
+                        // For non-daily events, check if player has ever checked in
+                        canCheckIn = !await AttendanceService.HasPlayerCheckedInAsync(checkEventId, userId);
+                    }
                 }
                 catch (Exception ex)
                 {
                 }
                 
-                // Only add if not checked in to either system
-                if (!checkedInOldSystem && !checkedInNewSystem)
+                if (canCheckIn)
                 {
                     availableEvents.Add(evt);
                 }
