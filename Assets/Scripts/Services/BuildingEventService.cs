@@ -222,7 +222,9 @@ namespace RamRoutes.Services
                     // For recurring events, use the base date/time pattern
                     if (data.ContainsKey("date") && data["date"] != null)
                     {
-                        return ((Timestamp)data["date"]).ToDateTime();
+                        // Convert UTC to local time
+                        DateTime utcDateTime = ((Timestamp)data["date"]).ToDateTime();
+                        return utcDateTime.ToLocalTime();
                     }
                     // Fallback for recurring events without date
                     return DateTime.Today.AddHours(12); // Default to noon today
@@ -231,7 +233,9 @@ namespace RamRoutes.Services
                 default:
                     if (data.ContainsKey("date") && data["date"] != null)
                     {
-                        return ((Timestamp)data["date"]).ToDateTime();
+                        // Convert UTC to local time
+                        DateTime utcDateTime = ((Timestamp)data["date"]).ToDateTime();
+                        return utcDateTime.ToLocalTime();
                     }
                     return DateTime.MaxValue; // Treat as always-happening if no date
             }
