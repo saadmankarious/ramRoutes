@@ -51,6 +51,7 @@ public class EventCheckin : MonoBehaviour
         BuildingInteraction.OnVirtualBuildingEntered += OnVirtualBuildingEntered;
         BuildingInteraction.OnVirtualBuildingExited += OnVirtualBuildingExited;
         eventService = new BuildingEventService();
+        
         proximityDetector = FindObjectOfType<BuildingProximityDetector>();
         uiManager = FindObjectOfType<UIManager>();
         
@@ -93,7 +94,7 @@ public class EventCheckin : MonoBehaviour
         DisplayEvents(relevantEvents, building.name);
     }
     
-    private void DisplayEvents(List<BuildingEvent> events, string buildingName)
+    private async void DisplayEvents(List<BuildingEvent> events, string buildingName)
     {
         if (eventsContentParent == null || eventPrefab == null)
         {
@@ -108,11 +109,24 @@ public class EventCheckin : MonoBehaviour
             userId = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
         }
         
-        // Filter out events the player has already checked into
+        // Filter out events the player has already checked into (check both systems)
         List<BuildingEvent> availableEvents = new List<BuildingEvent>();
         foreach (var evt in events)
         {
-            if (evt.attendees == null || !evt.attendees.Contains(userId))
+            bool checkedInOldSystem = evt.attendees != null && evt.attendees.Contains(userId);
+            bool checkedInNewSystem = false;
+            
+            try
+            {
+                string checkEventId = !string.IsNullOrEmpty(evt.eventId) ? evt.eventId : evt.buildingId;
+                checkedInNewSystem = await AttendanceService.HasPlayerCheckedInAsync(checkEventId, userId);
+            }
+            catch (Exception ex)
+            {
+            }
+            
+            // Only add if not checked in to either system
+            if (!checkedInOldSystem && !checkedInNewSystem)
             {
                 availableEvents.Add(evt);
             }
@@ -256,8 +270,20 @@ public class EventCheckin : MonoBehaviour
             return;
         }
         
-        // Check if player already checked in
-        if (evt.attendees != null && evt.attendees.Contains(playerId))
+        // Check if player already checked in (check both systems)
+        bool alreadyCheckedInOldSystem = evt.attendees != null && evt.attendees.Contains(playerId);
+        bool alreadyCheckedInNewSystem = false;
+        
+        try
+        {
+            string checkEventId = !string.IsNullOrEmpty(evt.eventId) ? evt.eventId : evt.buildingId;
+            alreadyCheckedInNewSystem = await AttendanceService.HasPlayerCheckedInAsync(checkEventId, playerId);
+        }
+        catch (Exception ex)
+        {
+        }
+        
+        if (alreadyCheckedInOldSystem || alreadyCheckedInNewSystem)
         {
             if (uiManager != null)
             {
@@ -272,33 +298,43 @@ public class EventCheckin : MonoBehaviour
 
         try
         {
-            bool success = await eventService.RecordAttendanceAsync(eventId, playerId);
+            bool eventServiceSuccess = await eventService.RecordAttendanceAsync(eventId, playerId);
             
-            if (success)
+            var user = await userService.RetrieveUserById(playerId);
+            string username = user?.name ?? $"Player_{playerId.Substring(0, Math.Min(8, playerId.Length))}";
+
+            var attendanceRecord = new AttendanceRecord(
+                eventId,
+                evt.eventName,
+                evt.buildingName,
+                username,
+                DateTime.Now,
+                playerId,
+                evt.buildingId
+            );
+
+            await AttendanceService.RecordAttendanceAsync(attendanceRecord);
+            
+            HideEventsPanel();
+
+            if (userService != null)
             {
-                HideEventsPanel();
+                await userService.UpdateUserCoins(playerId, 50);
+                await userService.UpdateUserKnowledgePoints(playerId, 50);
+                var points = await userService.GetUserCoins(playerId);
+                var kb = await userService.GetUserKnowledgePoints(playerId);
 
-                // Award points to the user (50 coins and 50 knowledge points)
-                if (userService != null)
-                {
-                    await userService.UpdateUserCoins(playerId, 50);
-                    await userService.UpdateUserKnowledgePoints(playerId, 50);
-                    var points = await userService.GetUserCoins(playerId);
-                    var kb = await userService.GetUserKnowledgePoints(playerId);
-
-                    uiManager.UpdateCoins(points);
-                    uiManager.UpdateKnowledgePoints(kb);
-                }
-                
-                if (uiManager != null)
-                {
-                    uiManager.ShowDialog($"You've checked in to {evt.eventName}! +50 coins, +50 knowledge points", 3f, false);
-                }
+                uiManager.UpdateCoins(points);
+                uiManager.UpdateKnowledgePoints(kb);
+            }
+            
+            if (uiManager != null)
+            {
+                uiManager.ShowDialog($"You've checked in to {evt.eventName}! +50 coins, +50 knowledge points", 3f, false);
             }
         }
         catch (Exception ex)
         {
-            Debug.LogError($"Exception during check-in: {ex.Message}");
         }
     }
     
@@ -466,11 +502,24 @@ public class EventCheckin : MonoBehaviour
                 userId = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
             }
             
-            // Filter out events the player has already checked into
+            // Filter out events the player has already checked into (check both systems)
             List<BuildingEvent> availableEvents = new List<BuildingEvent>();
             foreach (var evt in relevantEvents)
             {
-                if (evt.attendees == null || !evt.attendees.Contains(userId))
+                bool checkedInOldSystem = evt.attendees != null && evt.attendees.Contains(userId);
+                bool checkedInNewSystem = false;
+                
+                try
+                {
+                    string checkEventId = !string.IsNullOrEmpty(evt.eventId) ? evt.eventId : evt.buildingId;
+                    checkedInNewSystem = await AttendanceService.HasPlayerCheckedInAsync(checkEventId, userId);
+                }
+                catch (Exception ex)
+                {
+                }
+                
+                // Only add if not checked in to either system
+                if (!checkedInOldSystem && !checkedInNewSystem)
                 {
                     availableEvents.Add(evt);
                 }

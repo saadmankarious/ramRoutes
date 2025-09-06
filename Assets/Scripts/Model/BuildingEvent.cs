@@ -102,5 +102,19 @@ namespace RamRoutes.Model
                     return false;
             }
         }
+        
+        // Helper method to create an attendance record for this event
+        public AttendanceRecord CreateAttendanceRecord(string playerName, string playerId = null)
+        {
+            return new AttendanceRecord(
+                this.eventId,
+                this.eventName,
+                this.buildingName,
+                playerName,
+                DateTime.Now,
+                playerId,
+                this.buildingId
+            );
+        }
     }
 }
