@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, orderBy } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, deleteDoc, orderBy, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import '../styles/Attendees.css';
 
 function EventList({ user, onEditEvent }) {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [expandedEvents, setExpandedEvents] = useState({});
+  const [attendeeData, setAttendeeData] = useState({});
 
   useEffect(() => {
     loadEvents();
@@ -89,6 +92,51 @@ function EventList({ user, onEditEvent }) {
       return date.toLocaleString();
     }
     return new Date(date).toLocaleString();
+  };
+
+  const toggleEventExpanded = async (eventId) => {
+    const isExpanded = expandedEvents[eventId];
+    const newExpandedState = {...expandedEvents, [eventId]: !isExpanded};
+    setExpandedEvents(newExpandedState);
+    
+    // If we're expanding and don't have attendee data yet, fetch it
+    if (!isExpanded && events.find(e => e.id === eventId)?.attendees?.length > 0) {
+      await loadAttendeeData(eventId);
+    }
+  };
+  
+  const loadAttendeeData = async (eventId) => {
+    const event = events.find(e => e.id === eventId);
+    if (!event || !event.attendees || event.attendees.length === 0) return;
+    
+    try {
+      const attendees = {};
+      
+      for (const userId of event.attendees) {
+        // Check if we already have this user's data
+        if (!attendeeData[userId]) {
+          const userDoc = await getDoc(doc(db, 'users', userId));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            attendees[userId] = {
+              id: userId,
+              name: userData.name || 'No Name',
+              email: userData.email || 'No Email',
+              major: userData.major || 'Not specified',
+              graduationYear: userData.graduationYear || 'Not specified',
+              // knowledgePoints: userData.knowledgePoints || 0,
+              // coins: userData.coins || 0
+            };
+          } else {
+            attendees[userId] = { id: userId, name: 'Unknown User', email: 'User not found' };
+          }
+        }
+      }
+      
+      setAttendeeData(prevData => ({...prevData, ...attendees}));
+    } catch (error) {
+      console.error('Error loading attendee data:', error);
+    }
   };
 
   const formatEventType = (event) => {
@@ -197,7 +245,66 @@ function EventList({ user, onEditEvent }) {
                     <span className="detail-label">Document ID:</span>
                     <span className="detail-value event-id">{event.id}</span>
                   </div>
+                  
+                  <div className="event-detail">
+                    <span className="detail-label">Attendees:</span>
+                    <span className="detail-value">
+                      {event.attendees?.length || 0} student(s)
+                      {event.attendees?.length > 0 && (
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleEventExpanded(event.id);
+                          }}
+                          className="toggle-button"
+                        >
+                          {expandedEvents[event.id] ? 'Hide details' : 'Show details'}
+                        </button>
+                      )}
+                    </span>
+                  </div>
                 </div>
+
+                {expandedEvents[event.id] && event.attendees?.length > 0 && (
+                  <div className="attendees-section">
+                    <h4>Attendee Information</h4>
+                    {event.attendees.map(attendeeId => {
+                      const attendee = attendeeData[attendeeId] || { name: 'Loading...', email: 'Loading...' };
+                      return (
+                        <div key={attendeeId} className="attendee-card">
+                          <div className="attendee-detail">
+                            <span className="attendee-label">Name:</span>
+                            <span className="attendee-value">{attendee.name}</span>
+                          </div>
+                          <div className="attendee-detail">
+                            <span className="attendee-label">Email:</span>
+                            <span className="attendee-value">{attendee.email}</span>
+                          </div>
+                          {attendee.major && (
+                            <div className="attendee-detail">
+                              <span className="attendee-label">Major:</span>
+                              <span className="attendee-value">{attendee.major}</span>
+                            </div>
+                          )}
+                          {attendee.graduationYear && (
+                            <div className="attendee-detail">
+                              <span className="attendee-label">Graduation Year:</span>
+                              <span className="attendee-value">{attendee.graduationYear}</span>
+                            </div>
+                          )}
+                          {/* <div className="attendee-detail">
+                            <span className="attendee-label">Knowledge Points:</span>
+                            <span className="attendee-value">{attendee.knowledgePoints}</span>
+                          </div>
+                          <div className="attendee-detail">
+                            <span className="attendee-label">Coins:</span>
+                            <span className="attendee-value">{attendee.coins}</span>
+                          </div> */}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
 
                 <div className="event-actions">
                   <button

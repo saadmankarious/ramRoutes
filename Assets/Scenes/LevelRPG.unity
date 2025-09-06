@@ -3430,14 +3430,14 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 543864026}
-  - {fileID: 1507285776}
   - {fileID: 195424822}
   - {fileID: 1503913376}
   - {fileID: 403309916}
   - {fileID: 448837307}
   - {fileID: 1860212004}
   - {fileID: 133642104}
+  - {fileID: 1507285776}
+  - {fileID: 543864026}
   - {fileID: 541286880}
   m_Father: {fileID: 2050128707}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -26748,7 +26748,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 4:49
+  m_Text: 
 --- !u!222 &1039524164
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -31662,7 +31662,7 @@ MonoBehaviour:
   simulateGpsEnabled: 1
   buildings:
   - name: TC
-    entranceGPS: {x: 38.89998, y: -77.04933}
+    entranceGPS: {x: 38.900494, y: -76.99689}
     detectionRadius: 80
     closeProximityRadius: 50
     debugColor: {r: 0.6226415, g: 0.13040228, b: 0.44183475, a: 1}
@@ -284293,7 +284293,7 @@ MonoBehaviour:
   showUnlockedPanelOnStart: 0
   simulateEntry: 0
   connectedGate: {fileID: 0}
-  bypassGpsCheck: 0
+  bypassGpsCheck: 1
   activated: 0
   buildingName: TC
   usersScrollView: {fileID: 1017116444}
