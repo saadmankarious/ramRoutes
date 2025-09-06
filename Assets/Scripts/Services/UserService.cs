@@ -377,5 +377,40 @@ namespace RamRoutes.Services
                 Debug.LogError($"Failed to update knowledge points for user {userId}: {ex.Message}");
             }
         }
+
+        public async Task<int> GetUserRank(string userId)
+        {
+            try
+            {
+                // Get both knowledge points and coins
+                int knowledgePoints = await GetUserKnowledgePoints(userId);
+                int coins = await GetUserCoins(userId);
+                
+                // Calculate the combined total (sophisticated algorithm that considers both types of points)
+                int totalPoints = knowledgePoints + (coins / 2); // Coins count as half the value of knowledge points
+                
+                Debug.Log($"Rank calculation - KB: {knowledgePoints}, Coins: {coins}, Total: {totalPoints}");
+                
+                // Calculate rank based on the combined total, keeping same thresholds
+                if (totalPoints >= 2000)
+                {
+                    return 3; // Rank 3: 2000+ total points
+                }
+                else if (totalPoints >= 1000)
+                {
+                    return 2; // Rank 2: 1000-1999 total points
+                }
+                else
+                {
+                    return 1; // Rank 1: 0-999 total points
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Failed to calculate rank for user {userId}: {ex.Message}");
+                return 1; // Default to rank 1 if an error occurs
+            }
+        }
+
     }
 }

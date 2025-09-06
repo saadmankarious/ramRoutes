@@ -47,6 +47,13 @@ public class UIManager : MonoBehaviour
     public Text kbGained;           // NPC title in building unlocked dialog
     public Text coinsGainedBuildingStats;           // NPC title in building unlocked dialog
     public Text kbGainedBuildingStats;           // NPC title in building unlocked dialog
+    
+    [Header("User Avatar")]
+    public Image userAvatarImage;   // Reference to the user avatar image component
+    public Sprite defaultAvatarSprite; // Default avatar sprite (rank 0 or undefined)
+    public Sprite rank1AvatarSprite; // Rank 1 avatar sprite (0-999 combined points)
+    public Sprite rank2AvatarSprite; // Rank 2 avatar sprite (1000-1999 combined points)
+    public Sprite rank3AvatarSprite; // Rank 3 avatar sprite (2000+ combined points)
 
     [Header("Current Users Display")]
     public GameObject currentUsersPanel;
@@ -489,6 +496,52 @@ public class UIManager : MonoBehaviour
         
         Debug.Log("UIManager: Cleaned up conflicting audio settings");
     }
+    
+    /// <summary>
+    /// Updates the user's avatar sprite based on their rank.
+    /// </summary>
+    /// <param name="rank">The user's current rank</param>
+    public void UpdateUserAvatar(int rank)
+    {
+        // Verify we have a user avatar image component
+        if (userAvatarImage == null)
+        {
+            Debug.LogWarning("User avatar image component not assigned in UIManager");
+            return;
+        }
+        
+        // Select the appropriate sprite based on rank
+        Sprite selectedSprite;
+        
+        switch (rank)
+        {
+            case 1:
+                selectedSprite = rank1AvatarSprite;
+                break;
+            case 2:
+                selectedSprite = rank2AvatarSprite;
+                break;
+            case 3:
+                selectedSprite = rank3AvatarSprite ?? rank2AvatarSprite; // Use rank2 sprite if rank3 isn't defined
+                break;
+            case 0:
+            default:
+                selectedSprite = defaultAvatarSprite;
+                break;
+        }
+        
+        // If the selected sprite is null, use the default sprite
+        if (selectedSprite == null)
+        {
+            Debug.LogWarning($"Avatar sprite for rank {rank} is not assigned. Using default sprite.");
+            selectedSprite = defaultAvatarSprite;
+        }
+        
+        // Update the avatar image
+        userAvatarImage.sprite = selectedSprite;
+        
+        Debug.Log($"Updated user avatar to rank {rank} sprite");
+    }
 
     private void UpdateUsernameAndHall()
     {
@@ -512,7 +565,13 @@ public class UIManager : MonoBehaviour
                 var userService = new RamRoutes.Services.UserService();
                 int coins = await userService.GetUserCoins(userId);
                 UpdateCoins(coins);
-                Debug.Log($"Retrieved user coins: {coins}");
+                
+                // Get user's knowledge points and calculate rank (based on combined points)
+                int knowledgePoints = await userService.GetUserKnowledgePoints(userId);
+                int rank = await userService.GetUserRank(userId);
+                UpdateUserAvatar(rank);
+                
+                Debug.Log($"Retrieved user coins: {coins}, knowledge points: {knowledgePoints}, calculated rank: {rank}");
             }
         }
         catch (System.Exception ex)
