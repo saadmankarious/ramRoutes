@@ -29,6 +29,8 @@ public class UIManager : MonoBehaviour
 
     [Header("UI References")]
     public Text coinsText;
+    public Text usernameAndHallText; // New text field for username and hall
+
     public Text knowledgePointsText; // New text field for knowledge points
     public ParticleSystem teleportEffect;
     public ParticleSystem celebrationEffect1;
@@ -488,6 +490,18 @@ public class UIManager : MonoBehaviour
         Debug.Log("UIManager: Cleaned up conflicting audio settings");
     }
 
+    private void UpdateUsernameAndHall()
+    {
+        if (usernameAndHallText != null)
+        {
+            // Simple implementation using PlayerPrefs
+            string userName = PlayerPrefs.GetString("UserName", "Anonymous User");
+            string hall = PlayerPrefs.GetString("ResidenceHall", "No Hall");
+            
+            usernameAndHallText.text = $"@{userName} - {hall}";
+        }
+    }
+    
     private async Task GetUserPoints()
     {
         try 
@@ -539,6 +553,9 @@ public class UIManager : MonoBehaviour
         // Get and display user points
         _ = GetUserPoints();
         _ = GetUserKnowledgePoints();
+        
+        // Update username and hall display
+        UpdateUsernameAndHall();
 
         // Start countdown if current stage has a time limit > 0
         var currentStage = GameStageService.LoadStageFromPrefs();

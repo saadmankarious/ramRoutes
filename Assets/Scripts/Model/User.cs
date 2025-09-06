@@ -14,6 +14,7 @@ namespace RamRoutes.Model
         public int coins { set; get; }
         public int knowledgePoints { set; get; }
         public string currentBuilding { set; get; }
+        public string residenceHall { set; get; }
         public User(string userId, string notificationToken, string name, string email)
         {
             this.userId = userId;

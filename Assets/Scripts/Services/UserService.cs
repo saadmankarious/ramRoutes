@@ -56,10 +56,12 @@ namespace RamRoutes.Services
                     int coins = data.ContainsKey("coins") ? Convert.ToInt32(data["coins"]) : 0;
                     int knowledgePoints = data.ContainsKey("knowledgePoints") ? Convert.ToInt32(data["knowledgePoints"]) : 0;
                     string currentBuilding = data.ContainsKey("currentBuilding") && data["currentBuilding"] != null ? data["currentBuilding"].ToString() : "";
+                    string residenceHall = data.ContainsKey("residenceHall") && data["residenceHall"] != null ? data["residenceHall"].ToString() : "Not specified";
                     var user = new User(id, token, name, email);
                     user.coins = coins;
                     user.knowledgePoints = knowledgePoints;
                     user.currentBuilding = currentBuilding;
+                    user.residenceHall = residenceHall;
                     Debug.Log($"User {id} retrieved from Firestore");
                     return user;
                 }

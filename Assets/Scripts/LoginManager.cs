@@ -480,6 +480,10 @@ public class LoginManager : MonoBehaviour
             var userService = new RamRoutes.Services.UserService();
             await userService.CreateUser(userId, username, email, residenceHall);
             
+            // Store user info in PlayerPrefs for easy access
+            PlayerPrefs.SetString("UserName", username);
+            PlayerPrefs.SetString("ResidenceHall", residenceHall);
+            
             // Mark this as a new user for onboarding
             PlayerPrefs.SetInt($"FirstTime_{userId}", 1);
             PlayerPrefs.Save();
@@ -663,6 +667,24 @@ public class LoginManager : MonoBehaviour
         var userService = new RamRoutes.Services.UserService();
         string userId = auth.CurrentUser != null ? auth.CurrentUser.UserId : "unknown";
         
+        // Fetch user profile and store in PlayerPrefs
+        try
+        {
+            var user = await userService.GetUserProfileCachedOrRemoteAsync(userId);
+            if (user != null)
+            {
+                // Store user name and residence hall in PlayerPrefs for easy access
+                PlayerPrefs.SetString("UserName", !string.IsNullOrEmpty(user.name) ? user.name : playerName);
+                PlayerPrefs.SetString("ResidenceHall", !string.IsNullOrEmpty(user.residenceHall) ? user.residenceHall : "No Hall");
+                PlayerPrefs.Save();
+                Debug.Log($"Stored user profile in PlayerPrefs: {user.name}, {user.residenceHall}");
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Failed to retrieve user profile: {e.Message}");
+        }
+        
         // Update last login timestamp
         try
         {
@@ -675,10 +697,8 @@ public class LoginManager : MonoBehaviour
         }
         
         // Retrieve user profile after updating login time
-        var user = await userService.RetrieveAndCacheCurrentUserProfile(userId);
-        welcomeText.text = $"Welcome, {user.name.Split(" ")[0]}!";
-
-        // Fetch and cache user's game stage from Firestore
+        var userProfile = await userService.RetrieveAndCacheCurrentUserProfile(userId);
+        welcomeText.text = $"Welcome, {userProfile.name.Split(" ")[0]}!";        // Fetch and cache user's game stage from Firestore
         FetchAndCacheUserGameStage(userId);
 
         // Update FCM token in user profile for notifications

@@ -49,6 +49,7 @@ public class EventCheckin : MonoBehaviour
     {
         // BuildingProximityDetector.OnEnterBuilding += OnBuildingEntered;
         BuildingInteraction.OnVirtualBuildingEntered += OnVirtualBuildingEntered;
+        BuildingInteraction.OnVirtualBuildingExited += OnVirtualBuildingExited;
         eventService = new BuildingEventService();
         proximityDetector = FindObjectOfType<BuildingProximityDetector>();
         uiManager = FindObjectOfType<UIManager>();
@@ -388,6 +389,7 @@ public class EventCheckin : MonoBehaviour
     {
         // BuildingProximityDetector.OnEnterBuilding -= OnBuildingEntered;
         BuildingInteraction.OnVirtualBuildingEntered -= OnVirtualBuildingEntered;
+        BuildingInteraction.OnVirtualBuildingExited -= OnVirtualBuildingExited;
         
         if (closeButton != null)
         {
@@ -495,5 +497,11 @@ public class EventCheckin : MonoBehaviour
         
         // Display the events since we're close enough
         DisplayEvents(relevantEvents, buildingName);
+    }
+    
+    void OnVirtualBuildingExited(BuildingInteraction buildingData)
+    {
+        // Hide the events panel when player leaves the building
+        HideEventsPanel();
     }
 }

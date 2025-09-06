@@ -78,9 +78,10 @@ public class BuildingInteraction : MonoBehaviour
     private UIManager uiManager;
     private BuildingProximityDetector proximityDetector;
     
-    // Event for virtual building entry
+    // Event for virtual building entry/exit
     public delegate void VirtualBuildingEntryEvent(BuildingInteraction buildingData);
     public static event VirtualBuildingEntryEvent OnVirtualBuildingEntered;
+    public static event VirtualBuildingEntryEvent OnVirtualBuildingExited;
     
     // NEW: Switch into building viewing mode (same behavior as when entering an unlocked building)
     private void EnterBuildingViewingMode(bool showEventsHappening = true)
@@ -417,6 +418,9 @@ public class BuildingInteraction : MonoBehaviour
             {
                 buildingEventsPanel.SetActive(false);
             }
+            
+            // Trigger virtual building exit event
+            OnVirtualBuildingExited?.Invoke(this);
 
             // Current users panel is handled by UIManager when leaving building view mode
 
