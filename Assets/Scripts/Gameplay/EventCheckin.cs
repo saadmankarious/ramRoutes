@@ -304,7 +304,7 @@ public class EventCheckin : MonoBehaviour
     private void RefreshAllEventItems()
     {
         string currentBuildingName = buildingTitleText != null ? 
-            buildingTitleText.text.Replace("Now happening at ", "") : "";
+            buildingTitleText.text.Replace("NOW happening at ", "") : "";
             
         DisplayEvents(currentEvents, currentBuildingName);
     }
@@ -482,7 +482,7 @@ public class EventCheckin : MonoBehaviour
                 string messageSuffix = availableEvents.Count == 1 ? "it" : "them";
                 if (uiManager != null)
                 {
-                    uiManager.ShowDialog($"{messagePrefix} {eventCountText} happening at {buildingName}, but you need to be closer in real life to see {messageSuffix}", 3f, false);
+                    uiManager.ShowDialog($"{messagePrefix} {eventCountText} happening NOW at {buildingName}, but you need to be closer in real life to see {messageSuffix}", 3f, false);
                 }
             }
             return;

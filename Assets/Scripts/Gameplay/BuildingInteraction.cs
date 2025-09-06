@@ -83,7 +83,7 @@ public class BuildingInteraction : MonoBehaviour
     public static event VirtualBuildingEntryEvent OnVirtualBuildingEntered;
     
     // NEW: Switch into building viewing mode (same behavior as when entering an unlocked building)
-    private void EnterBuildingViewingMode()
+    private void EnterBuildingViewingMode(bool showEventsHappening = true)
     {
         // Update title UI
         if (buildingTitleUnlcoked != null)
@@ -94,7 +94,7 @@ public class BuildingInteraction : MonoBehaviour
 
         // Trigger virtual building entry event
         var buildingData = GetComponent<BuildingInteraction>();
-        OnVirtualBuildingEntered?.Invoke(buildingData);
+        if(showEventsHappening) OnVirtualBuildingEntered?.Invoke(buildingData);
 
         // Notify UI manager that we are in viewing mode
         if (UIManager.Instance != null)
@@ -575,7 +575,7 @@ public class BuildingInteraction : MonoBehaviour
         // If player is already in range, immediately switch to viewing mode
         if (isPlayerInRange)
         {
-            EnterBuildingViewingMode();
+            EnterBuildingViewingMode(false);
         }
         
         if(doesTheBuildingHavePopup && popupPrefab != null)
