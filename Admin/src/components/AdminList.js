@@ -108,17 +108,16 @@ function AdminList({ user, onEditAdmin }) {
 
   return (
     <div className="admin-list-container">
-      <div className="admin-list-header">
-        <h2>Admin Users</h2>
-        <p className="admin-list-description">
-          Manage administrator accounts that can create and manage building events.
-        </p>
-        <button className="form-button" onClick={fetchAdmins}>
-          Refresh List
-        </button>
-      </div>
-
-      {admins.length === 0 ? (
+        <div className="admin-list-header">
+          <h2>Admin Users</h2>
+          <p className="admin-list-description">
+            Manage administrator accounts that can create and manage building events.
+          </p>
+          
+          <button className="form-button refresh-button" onClick={fetchAdmins}>
+            🔄 Refresh List
+          </button>
+        </div>      {admins.length === 0 ? (
         <div className="no-admins">
           <div className="empty-state">
             <div className="empty-icon">👥</div>
@@ -172,7 +171,7 @@ function AdminList({ user, onEditAdmin }) {
           ))}
         </div>
       )}
-
+      
       <div className="admin-list-footer">
         <p className="help-text">
           📝 <strong>Note:</strong> Deleting an admin removes their access to the admin panel, 

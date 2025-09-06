@@ -675,46 +675,6 @@ body {
   box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .header-container {
-    flex-direction: column;
-    gap: 1rem;
-    text-align: center;
-  }
-  
-  .header-nav {
-    order: -1;
-  }
-  
-  .app-main {
-    padding: 1rem;
-  }
-  
-  .form-card, .login-card {
-    padding: 1.5rem;
-  }
-  
-  .login-container {
-    padding: 1rem 0.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .app-title {
-    font-size: 1.3rem;
-  }
-  
-  .header-nav {
-    flex-direction: column;
-    width: 100%;
-  }
-  
-  .nav-button {
-    width: 100%;
-  }
-}
-
 /* Admin Management Styles */
 .admin-list-container {
   max-width: 1000px;
@@ -968,32 +928,190 @@ body {
   border-top: 1px solid #e9ecef;
 }
 
-/* Responsive Admin Styles */
+/* Events List Filter Controls */
+.events-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.events-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.events-controls .filter-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.events-controls .filter-label {
+  font-weight: 500;
+  color: #495057;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.events-controls .filter-select {
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  background: white;
+  color: #495057;
+  font-size: 0.9rem;
+  min-width: 150px;
+  transition: all 0.2s ease;
+}
+
+.events-controls .filter-select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.events-controls .filter-select:hover {
+  border-color: #007bff;
+}
+
+.events-controls .refresh-button {
+  white-space: nowrap;
+}
+
+/* Results summary for events */
+.events-grid ~ .results-summary,
+.events-grid + .results-summary {
+  margin-bottom: 1rem;
+}
+
+/* Responsive adjustments for events controls */
 @media (max-width: 768px) {
-  .admin-list {
-    grid-template-columns: 1fr;
+  .events-header {
+    flex-direction: column;
+    align-items: stretch;
   }
   
-  .admin-card {
+  .events-controls {
     flex-direction: column;
+    align-items: stretch;
     gap: 1rem;
   }
   
-  .admin-actions {
-    flex-direction: row;
-    justify-content: flex-end;
-  }
-  
-  .edit-modal {
-    margin: 1rem;
-    max-width: none;
-  }
-  
-  .form-actions {
+  .events-controls .filter-section {
     flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
   }
   
-  .form-actions button {
+  .events-controls .filter-select {
+    min-width: auto;
     width: 100%;
+  }
+}
+
+/* Admin List Filter Controls */
+.admin-list-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.filter-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.filter-label {
+  font-weight: 500;
+  color: #495057;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.filter-select {
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  background: white;
+  color: #495057;
+  font-size: 0.9rem;
+  min-width: 150px;
+  transition: all 0.2s ease;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.filter-select:hover {
+  border-color: #007bff;
+}
+
+.results-summary {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  background: #e8f4fd;
+  border: 1px solid #bee5eb;
+  border-radius: 6px;
+}
+
+.results-text {
+  margin: 0;
+  color: #0c5460;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* Enhanced empty state for filtered views */
+.empty-state .form-button-secondary {
+  margin-top: 1rem;
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.empty-state .form-button-secondary:hover {
+  background: #5a6268;
+  box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
+}
+
+/* Responsive adjustments for filter controls */
+@media (max-width: 768px) {
+  .admin-list-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .filter-section {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  
+  .filter-select {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .results-summary {
+    text-align: center;
   }
 }

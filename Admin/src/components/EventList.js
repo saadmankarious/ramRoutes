@@ -5,15 +5,26 @@ import '../styles/Attendees.css';
 
 function EventList({ user, onEditEvent }) {
   const [events, setEvents] = useState([]);
+  const [filteredEvents, setFilteredEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [expandedEvents, setExpandedEvents] = useState({});
   const [attendeeData, setAttendeeData] = useState({});
+  const [selectedBuilding, setSelectedBuilding] = useState('all');
+
+  // Building options - same as in BuildingEventForm
+  const buildingOptions = [
+    'McWethy', 'TC', 'Ebersole', 'SAW', 'Library', 'PR', 'Stoner'
+  ];
 
   useEffect(() => {
     loadEvents();
   }, [user]);
+
+  useEffect(() => {
+    filterEvents();
+  }, [events, selectedBuilding]);
 
   const loadEvents = async () => {
     try {
@@ -69,6 +80,21 @@ function EventList({ user, onEditEvent }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const filterEvents = () => {
+    if (selectedBuilding === 'all') {
+      setFilteredEvents(events);
+    } else {
+      const filtered = events.filter(event => 
+        event.buildingName === selectedBuilding
+      );
+      setFilteredEvents(filtered);
+    }
+  };
+
+  const handleBuildingFilterChange = (e) => {
+    setSelectedBuilding(e.target.value);
   };
 
   const handleDelete = async (eventId) => {
@@ -178,13 +204,35 @@ function EventList({ user, onEditEvent }) {
           <h2 className="form-title">
             {user.role === 'superadmin' ? 'All Building Events' : 'My Building Events'}
           </h2>
-          <button 
-            className="refresh-button"
-            onClick={loadEvents}
-            disabled={loading}
-          >
-            🔄 Refresh
-          </button>
+          
+          <div className="events-controls">
+            <div className="filter-section">
+              <label htmlFor="building-filter" className="filter-label">
+                Filter by Building:
+              </label>
+              <select
+                id="building-filter"
+                value={selectedBuilding}
+                onChange={handleBuildingFilterChange}
+                className="filter-select"
+              >
+                <option value="all">All Buildings</option>
+                {buildingOptions.map(building => (
+                  <option key={building} value={building}>
+                    {building}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <button 
+              className="refresh-button"
+              onClick={loadEvents}
+              disabled={loading}
+            >
+              🔄 Refresh
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -193,16 +241,37 @@ function EventList({ user, onEditEvent }) {
           </div>
         )}
 
-        {events.length === 0 ? (
+        {filteredEvents.length === 0 ? (
           <div className="empty-state">
-            <p>No building events found.</p>
-            {user.role !== 'superadmin' && (
+            <p>
+              {selectedBuilding === 'all' 
+                ? 'No building events found.' 
+                : `No events found for ${selectedBuilding}.`
+              }
+            </p>
+            {user.role !== 'superadmin' && selectedBuilding === 'all' && (
               <p>Create your first building event to see it here.</p>
+            )}
+            {selectedBuilding !== 'all' && (
+              <button 
+                className="form-button-secondary"
+                onClick={() => setSelectedBuilding('all')}
+              >
+                Show All Events
+              </button>
             )}
           </div>
         ) : (
-          <div className="events-grid">
-            {events.map((event) => (
+          <div>
+            <div className="results-summary">
+              <p className="results-text">
+                Showing {filteredEvents.length} of {events.length} event{events.length !== 1 ? 's' : ''}
+                {selectedBuilding !== 'all' && ` for ${selectedBuilding}`}
+              </p>
+            </div>
+            
+            <div className="events-grid">
+              {filteredEvents.map((event) => (
               <div key={event.id} className="event-card">
                 <div className="event-header">
                   <h3 className="event-name">{event.eventName}</h3>
@@ -323,6 +392,7 @@ function EventList({ user, onEditEvent }) {
                 </div>
               </div>
             ))}
+            </div>
           </div>
         )}
 
