@@ -53,7 +53,7 @@ public class BuildingInteraction : MonoBehaviour
 
     [Header("GPS Integration")]
     // [SerializeField] private float gpsUnlockRadius = 50f;
-    [SerializeField] private bool bypassGpsCheck = false;
+    [SerializeField] public bool bypassGpsCheck = false;
 
     private bool isPlayerInRange = false;
     private int currentLineIndex = 0;
@@ -79,7 +79,7 @@ public class BuildingInteraction : MonoBehaviour
     private BuildingProximityDetector proximityDetector;
     
     // Event for virtual building entry
-    public delegate void VirtualBuildingEntryEvent(string buildingName);
+    public delegate void VirtualBuildingEntryEvent(BuildingInteraction buildingData);
     public static event VirtualBuildingEntryEvent OnVirtualBuildingEntered;
     
     // NEW: Switch into building viewing mode (same behavior as when entering an unlocked building)
@@ -91,9 +91,10 @@ public class BuildingInteraction : MonoBehaviour
             var buildingInfo = BuildingDataManager.GetBuildingInfo(buildingName);
             buildingTitleUnlcoked.text = buildingInfo.displayName;
         }
-        
+
         // Trigger virtual building entry event
-        OnVirtualBuildingEntered?.Invoke(buildingName);
+        var buildingData = GetComponent<BuildingInteraction>();
+        OnVirtualBuildingEntered?.Invoke(buildingData);
 
         // Notify UI manager that we are in viewing mode
         if (UIManager.Instance != null)
