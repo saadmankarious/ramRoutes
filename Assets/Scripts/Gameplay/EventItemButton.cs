@@ -30,9 +30,5 @@ public class EventItemButton : MonoBehaviour
         {
             eventCheckin.CheckInToEventByIndex(eventIndex);
         }
-        else
-        {
-            Debug.LogError("EventCheckin reference is null");
-        }
     }
 }

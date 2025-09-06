@@ -117,7 +117,7 @@ public static async Task<bool> RecordEventAttendance(string eventId, string play
 {
     try 
     {
-        string docId = $"{eventId}_{playerId}"; // Create unique document ID
+        string docId = $"{eventId}_{playerId}";
         var attendanceData = new Dictionary<string, object>
         {
             { "eventId", eventId },
@@ -129,7 +129,6 @@ public static async Task<bool> RecordEventAttendance(string eventId, string play
         };
         
         await db.Collection("event-attendees").Document(docId).SetAsync(attendanceData);
-        Debug.Log($"Successfully recorded attendance for event {eventId}");
         return true;
     }
     catch (System.Exception ex) 

@@ -248,9 +248,6 @@ namespace RamRoutes.Services
         {
             try
             {
-                Debug.Log($"RecordAttendanceAsync: Trying to record attendance for event {eventId}, player {playerId}");
-                
-                // First get the document reference using the event ID (document ID in Firestore)
                 DocumentReference eventRef = db.Collection("building-events").Document(eventId);
                 DocumentSnapshot eventSnap = await eventRef.GetSnapshotAsync();
                 
@@ -260,12 +257,10 @@ namespace RamRoutes.Services
                     return false;
                 }
                 
-                Debug.Log($"Found event document in Firestore, updating attendees list");
-                
-                // Update the attendees array with the new player ID
+                // Use FieldValue.ArrayUnion to add the player ID to the attendees array without affecting other fields
                 await eventRef.UpdateAsync("attendees", FieldValue.ArrayUnion(playerId));
                 
-                // Also update our local cache - try to find by eventId first, then buildingId as fallback
+                // Update local cache
                 var evt = cachedEvents?.FirstOrDefault(e => e.eventId == eventId) ?? 
                           cachedEvents?.FirstOrDefault(e => e.buildingId == eventId);
                 if (evt != null && !evt.attendees.Contains(playerId))

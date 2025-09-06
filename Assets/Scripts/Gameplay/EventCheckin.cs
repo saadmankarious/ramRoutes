@@ -6,6 +6,7 @@ using System.Linq;
 using System.Globalization;
 using RamRoutes.Services;
 using RamRoutes.Model;
+using Firebase.Auth;
 
 public class EventCheckin : MonoBehaviour
 {
@@ -90,8 +91,24 @@ public class EventCheckin : MonoBehaviour
             return;
         }
         
-        // Store the current events list for index-based access
-        currentEvents = new List<BuildingEvent>(events);
+        // Get the current authenticated user ID for filtering events
+        string userId = "unknown";
+        if (FirebaseAuth.DefaultInstance?.CurrentUser != null) 
+        {
+            userId = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
+        }
+        
+        // Filter out events the player has already checked into
+        List<BuildingEvent> availableEvents = new List<BuildingEvent>();
+        foreach (var evt in events)
+        {
+            if (evt.attendees == null || !evt.attendees.Contains(userId))
+            {
+                availableEvents.Add(evt);
+            }
+        }
+        
+        currentEvents = new List<BuildingEvent>(availableEvents);
         
         if (buildingTitleText != null)
         {
@@ -103,9 +120,9 @@ public class EventCheckin : MonoBehaviour
             Destroy(child.gameObject);
         }
         
-        if (events.Any())
+        if (currentEvents.Any())
         {
-            foreach (var evt in events)
+            foreach (var evt in currentEvents)
             {
                 GameObject eventItem = Instantiate(eventPrefab, eventsContentParent);
                 
@@ -134,19 +151,11 @@ public class EventCheckin : MonoBehaviour
                 {
                     eventDateText.text = evt.GetDisplayDate();
                 }
-                Button checkInButton = eventItem.GetComponentInChildren<Button>();
+                ButtonHandler checkInButton = eventItem.GetComponentInChildren<ButtonHandler>();
                 if (checkInButton != null)
                 {
-                    // Get or add EventItemButton component
-                    EventItemButton itemButton = checkInButton.gameObject.GetComponent<EventItemButton>();
-                    if (itemButton == null)
-                    {
-                        itemButton = checkInButton.gameObject.AddComponent<EventItemButton>();
-                    }
-                    
-                    // Setup the button with the index in the current events list
-                    int eventIndex = events.IndexOf(evt);
-                    itemButton.Setup(this, eventIndex);
+                    //Setup
+        checkInButton.Initialize("data", () => CheckInToEvent(evt));
                 }
             }
             
@@ -182,7 +191,11 @@ public class EventCheckin : MonoBehaviour
             
             if (noEventsMainText != null)
             {
-                noEventsMainText.text = "No events happening soon";
+                // Check if we filtered out all events because user attended them all
+                bool allEventsFiltered = events.Any() && !currentEvents.Any();
+                noEventsMainText.text = allEventsFiltered ? 
+                    "You've already checked in to all events here" : 
+                    "No events happening soon";
             }
             
             if (noEventsSubText != null)
@@ -203,52 +216,78 @@ public class EventCheckin : MonoBehaviour
         }
     }
     
+    private UIManager uiManager;
+    private RamRoutes.Services.UserService userService;
+    
+    void Awake()
+    {
+        // Find or get UIManager
+        uiManager = FindObjectOfType<UIManager>();
+        if (uiManager == null)
+        {
+            uiManager = UIManager.Instance;
+        }
+        
+        // Initialize UserService
+        userService = new RamRoutes.Services.UserService();
+    }
+    
     private async void CheckInToEvent(BuildingEvent evt)
     {
-        Debug.Log($"CheckInToEvent method called for event: {evt.eventName}");
-        
-        // Get the current player ID from PlayerPrefs or other source
-        string playerId = PlayerPrefs.GetString("PlayerId", SystemInfo.deviceUniqueIdentifier);
-        Debug.Log($"Player ID for check-in: {playerId}");
+        // Get the current authenticated user ID from Firebase Auth
+        string playerId = "unknown";
+        if (FirebaseAuth.DefaultInstance?.CurrentUser != null) 
+        {
+            playerId = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
+        } 
+        else 
+        {
+            if (uiManager != null)
+            {
+                HideEventsPanel();
+                uiManager.ShowDialog("Please sign in to check in to events", 3f, false);
+            }
+            return;
+        }
         
         // Check if player already checked in
         if (evt.attendees != null && evt.attendees.Contains(playerId))
         {
-            Debug.Log($"Player {playerId} already checked in to event {evt.eventName}");
+            if (uiManager != null)
+            {
+                HideEventsPanel();
+                uiManager.ShowDialog($"You've already checked in to this event!", 3f, false);
+            }
             return;
         }
         
         // Use eventId if available, otherwise fallback to buildingId
         string eventId = !string.IsNullOrEmpty(evt.eventId) ? evt.eventId : evt.buildingId;
-        Debug.Log($"Attempting to record attendance for event: {evt.eventName} with ID: {eventId}");
-        
+
         try
         {
-            // Use the FirestoreUtility to record attendance
-            bool success = await FirestoreUtility.RecordEventAttendance(
-                eventId, 
-                playerId, 
-                evt.eventName, 
-                evt.buildingName
-            );
+            bool success = await eventService.RecordAttendanceAsync(eventId, playerId);
             
             if (success)
             {
-                Debug.Log($"Successfully checked in to event: {evt.eventName}");
-                
-                // Add player to attendees list locally
-                if (evt.attendees == null)
+                HideEventsPanel();
+
+                // Award points to the user (50 coins and 50 knowledge points)
+                if (userService != null)
                 {
-                    evt.attendees = new List<string>();
+                    await userService.UpdateUserCoins(playerId, 50);
+                    await userService.UpdateUserKnowledgePoints(playerId, 50);
+                    var points = await userService.GetUserCoins(playerId);
+                    var kb = await userService.GetUserKnowledgePoints(playerId);
+
+                    uiManager.UpdateCoins(points);
+                    uiManager.UpdateKnowledgePoints(kb);
                 }
-                evt.attendees.Add(playerId);
                 
-                // Update the UI
-                RefreshAllEventItems();
-            }
-            else
-            {
-                Debug.LogError($"Failed to check in to event: {evt.eventName}");
+                if (uiManager != null)
+                {
+                    uiManager.ShowDialog($"You've checked in to {evt.eventName}! +50 coins, +50 knowledge points", 3f, false);
+                }
             }
         }
         catch (Exception ex)
@@ -257,16 +296,11 @@ public class EventCheckin : MonoBehaviour
         }
     }
     
-    // Refresh all event items in the UI - simpler approach
     private void RefreshAllEventItems()
     {
-        Debug.Log("RefreshAllEventItems: Recreating all event UI items");
-        
-        // Store the current building name
         string currentBuildingName = buildingTitleText != null ? 
             buildingTitleText.text.Replace("Now happening at ", "") : "";
             
-        // Just redisplay all events with updated attendance data
         DisplayEvents(currentEvents, currentBuildingName);
     }
     
