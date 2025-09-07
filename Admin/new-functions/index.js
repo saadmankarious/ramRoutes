@@ -47,6 +47,27 @@ exports.notifyNewBuildingEvent = onDocumentCreated("building-events/{eventId}", 
     const eventId = event.params.eventId;
     const creatorUserId = eventData.createdBy || eventData.userId; // Get the user who created the event
     
+    // Check if the creator is a guest user (email ending with @ramroutes.com)
+    if (creatorUserId) {
+      const admin = require("firebase-admin");
+      const db = admin.firestore();
+      const userDoc = await db.collection("users").doc(creatorUserId).get();
+      
+      if (userDoc.exists) {
+        const userData = userDoc.data();
+        const userEmail = userData.email || '';
+        
+        if (userEmail.endsWith('@ramroutes.com')) {
+          logger.info("Skipping notification for guest user", {
+            eventId: eventId,
+            creatorUserId: creatorUserId,
+            email: userEmail
+          });
+          return null;
+        }
+      }
+    }
+    
     logger.info("New building event created", {
       eventId: eventId,
       eventName: eventData.eventName,
@@ -114,6 +135,16 @@ exports.sendUserJoinedNotification = onDocumentCreated(
         try {
             const userData = event.data.data();
             const userId = event.params.userId;
+            const userEmail = userData.email || '';
+            
+            // Skip notification for guest users with @ramroutes.com emails
+            if (userEmail.endsWith('@ramroutes.com')) {
+                logger.info("Skipping user joined notification for guest user", {
+                    userId: userId,
+                    email: userEmail
+                });
+                return null;
+            }
             
             logger.info("New user joined the game. Pushing a notification", {
                 userId: userId,
@@ -178,6 +209,27 @@ exports.notifyBuildingUnlocked = onDocumentCreated("unlocked-trials/{unlockId}",
         const unlockId = event.params.unlockId;
         const userId = unlockData.userId; // Get the user who unlocked the building
         
+        // Check if the user is a guest user (email ending with @ramroutes.com)
+        if (userId) {
+            const admin = require("firebase-admin");
+            const db = admin.firestore();
+            const userDoc = await db.collection("users").doc(userId).get();
+            
+            if (userDoc.exists) {
+                const userData = userDoc.data();
+                const userEmail = userData.email || '';
+                
+                if (userEmail.endsWith('@ramroutes.com')) {
+                    logger.info("Skipping building unlocked notification for guest user", {
+                        unlockId: unlockId,
+                        userId: userId,
+                        email: userEmail
+                    });
+                    return null;
+                }
+            }
+        }
+        
         logger.info("Building unlocked by user", {
             unlockId: unlockId,
             userName: unlockData.userName,
@@ -230,6 +282,140 @@ exports.notifyBuildingUnlocked = onDocumentCreated("unlocked-trials/{unlockId}",
         logger.error('Error sending building unlocked notification', {
             error: error.message,
             unlockId: event.params.unlockId
+        });
+        throw error;
+    }
+});
+
+/**
+ * Notify all users when someone reaches a higher rank
+ * Triggers when a user document is updated in the users collection
+ * Monitors changes to knowledgePoints and coins to detect rank changes
+ */
+exports.notifyRankAchievement = onDocumentUpdated("users/{userId}", async (event) => {
+    try {
+        const beforeData = event.data.before.data();
+        const afterData = event.data.after.data();
+        const userId = event.params.userId;
+        const userEmail = afterData.email || '';
+        
+        // Skip notification for guest users with @ramroutes.com emails
+        if (userEmail.endsWith('@ramroutes.com')) {
+            logger.info("Skipping rank achievement notification for guest user", {
+                userId: userId,
+                email: userEmail
+            });
+            return null;
+        }
+        
+        // Get point values before and after the update
+        const beforeCoins = beforeData.coins || 0;
+        const beforeKnowledgePoints = beforeData.knowledgePoints || 0;
+        const beforeTotalPoints = beforeCoins + beforeKnowledgePoints;
+        
+        const afterCoins = afterData.coins || 0;
+        const afterKnowledgePoints = afterData.knowledgePoints || 0;
+        const afterTotalPoints = afterCoins + afterKnowledgePoints;
+        
+        // Calculate ranks using the same logic as GetUserAvatarBasedOnPoints
+        const calculateRank = (totalPoints) => {
+            if (totalPoints >= 2000) {
+                return 3;
+            } else if (totalPoints >= 1000) {
+                return 2;
+            } else if (totalPoints > 0) {
+                return 1;
+            } else {
+                return 0;
+            }
+        };
+        
+        const beforeRank = calculateRank(beforeTotalPoints);
+        const afterRank = calculateRank(afterTotalPoints);
+        
+        // Only send notification if rank increased
+        if (afterRank > beforeRank) {
+            const userName = afterData.name || 'A player';
+            const rankNames = {
+                0: 'Beginner',
+                1: 'Gold',
+                2: 'Silver',
+                3: 'Platinum'
+            };
+            
+            logger.info("User achieved higher rank", {
+                userId: userId,
+                userName: userName,
+                beforeRank: beforeRank,
+                afterRank: afterRank,
+                beforeTotalPoints: beforeTotalPoints,
+                afterTotalPoints: afterTotalPoints,
+                rankName: rankNames[afterRank]
+            });
+
+            // Send notification to all users subscribed to 'updates' topic
+            const message = {
+                topic: 'updates',
+                notification: {
+                    title: `🏆 ${userName} Reached ${rankNames[afterRank]} Rank!`,
+                    body: `🎉 Amazing achievement! ${userName} just leveled up to ${rankNames[afterRank]} rank with an impressive ${afterTotalPoints} points! Who's next? 🚀`
+                },
+                data: {
+                    userId: userId,
+                    userName: userName,
+                    newRank: afterRank.toString(),
+                    rankName: rankNames[afterRank],
+                    totalPoints: afterTotalPoints.toString(),
+                    coins: afterCoins.toString(),
+                    knowledgePoints: afterKnowledgePoints.toString(),
+                    type: "rank_achievement"
+                },
+                android: {
+                    notification: {
+                        icon: "ic_notification",
+                        color: "#FFD700", // Gold color for rank achievements
+                        sound: "default"
+                    }
+                },
+                apns: {
+                    payload: {
+                        aps: {
+                            badge: 1,
+                            sound: "default"
+                        }
+                    }
+                }
+            };
+
+            const response = await getMessaging().send(message);
+            logger.info("Successfully sent rank achievement notification to 'updates' topic", {
+                messageId: response,
+                userId: userId,
+                userName: userName,
+                newRank: afterRank,
+                rankName: rankNames[afterRank],
+                totalPoints: afterTotalPoints
+            });
+
+            return response;
+        } else {
+            // No rank change, log for debugging but don't send notification
+            logger.info("User points updated but no rank change", {
+                userId: userId,
+                userName: afterData.name,
+                beforeRank: beforeRank,
+                afterRank: afterRank,
+                beforeTotalPoints: beforeTotalPoints,
+                afterTotalPoints: afterTotalPoints
+            });
+            
+            return null;
+        }
+
+    } catch (error) {
+        logger.error('Error processing rank achievement notification', {
+            error: error.message,
+            userId: event.params.userId
         });
         throw error;
     }
