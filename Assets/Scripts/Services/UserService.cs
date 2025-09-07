@@ -221,6 +221,50 @@ namespace RamRoutes.Services
             }
         }
 
+        /// <summary>
+        /// Gets users currently in a building with their complete point data for live display
+        /// </summary>
+        /// <param name="buildingName">The name of the building to query</param>
+        /// <returns>List of users with coins and knowledge points included</returns>
+        public async Task<List<User>> GetUsersInBuildingWithPoints(string buildingName)
+        {
+            try
+            {
+                var users = new List<User>();
+                var querySnapshot = await db.Collection("users")
+                    .WhereEqualTo("currentBuilding", buildingName)
+                    .GetSnapshotAsync();
+
+                foreach (var doc in querySnapshot.Documents)
+                {
+                    var data = doc.ToDictionary();
+                    string id = data.ContainsKey("id") && data["id"] != null ? data["id"].ToString() : "";
+                    string token = data.ContainsKey("notificationToken") && data["notificationToken"] != null ? data["notificationToken"].ToString() : "";
+                    string name = data.ContainsKey("name") && data["name"] != null ? data["name"].ToString() : "";
+                    string email = data.ContainsKey("email") && data["email"] != null ? data["email"].ToString() : "";
+                    int coins = data.ContainsKey("coins") ? Convert.ToInt32(data["coins"]) : 0;
+                    int knowledgePoints = data.ContainsKey("knowledgePoints") ? Convert.ToInt32(data["knowledgePoints"]) : 0;
+                    string currentBuilding = data.ContainsKey("currentBuilding") && data["currentBuilding"] != null ? data["currentBuilding"].ToString() : "";
+                    string residenceHall = data.ContainsKey("residenceHall") && data["residenceHall"] != null ? data["residenceHall"].ToString() : "";
+
+                    var user = new User(id, token, name, email);
+                    user.coins = coins;
+                    user.knowledgePoints = knowledgePoints;
+                    user.currentBuilding = currentBuilding;
+                    user.residenceHall = residenceHall;
+                    users.Add(user);
+                }
+
+                Debug.Log($"Found {users.Count} users in building {buildingName} with complete point data");
+                return users;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Failed to retrieve users with points in building {buildingName}: {ex.Message}");
+                return new List<User>();
+            }
+        }
+
         public async Task UpdateLastLogin(string userId)
         {
             try

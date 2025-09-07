@@ -679,6 +679,7 @@ public class BuildingInteraction : MonoBehaviour
                 // Instantiate the prefab
                 GameObject userGO = Instantiate(userPrefab, usersContentParent);
                 Text userNameText = userGO.GetComponentInChildren<Text>(true);
+                Image userImage = userGO.GetComponentInChildren<Image>(true);
 
                 if (userNameText != null)
                 {
@@ -696,6 +697,14 @@ public class BuildingInteraction : MonoBehaviour
                 else
                 {
                     Debug.LogError("No Text component found in prefab or its children!");
+                }
+
+                // Set user avatar based on points (using UIManager's approach)
+                if (userImage != null && uiManager != null)
+                {
+                    var userService = new UserService();
+                    var userPoints = await userService.GetUserCoins(record.userId);
+                    userImage.sprite = uiManager.GetUserAvatarBasedOnPoints(userPoints);
                 }
             }
         }

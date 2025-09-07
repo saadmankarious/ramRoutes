@@ -1823,39 +1823,11 @@ private void HideObjectsWithTag(string tag)
             return;
         }
 
-        // Check if data is already loaded for this building
-        bool isLoaded = currentUsersLoadedPerBuilding.ContainsKey(buildingName) && currentUsersLoadedPerBuilding[buildingName];
-        
-        if (!isLoaded)
-        {
-            await FetchCurrentUsersForBuilding(buildingName);
-        }
-        
-        DisplayCurrentUsersUI(buildingName);
+        // Fetch and display live data from Firebase
+        await DisplayCurrentUsersUI(buildingName);
     }
 
-    private async Task FetchCurrentUsersForBuilding(string buildingName)
-    {
-        try
-        {
-            var userService = new UserService();
-            
-            // Get users currently in this building using a targeted query
-            var buildingUsers = await userService.GetUsersInBuilding(buildingName);
-            cachedCurrentUsersPerBuilding[buildingName] = buildingUsers;
-            Debug.Log($"UIManager: Fetching current users for building {buildingName}: {buildingUsers.Count} users found");
-
-            currentUsersLoadedPerBuilding[buildingName] = true;
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError($"UIManager: Failed to fetch current users for building {buildingName}: {ex.Message}");
-            cachedCurrentUsersPerBuilding[buildingName] = new List<User>();
-            currentUsersLoadedPerBuilding[buildingName] = true;
-        }
-    }
-
-    private void DisplayCurrentUsersUI(string buildingName)
+    private async Task DisplayCurrentUsersUI(string buildingName)
     {
         if (currentUsersContentParent == null || currentUserPrefab == null)
         {
@@ -1869,11 +1841,18 @@ private void HideObjectsWithTag(string tag)
             Destroy(child.gameObject);
         }
 
-        // Get the cached users for this specific building
+        // Get live user data from Firebase
         List<User> buildingUsers = null;
-        if (cachedCurrentUsersPerBuilding.ContainsKey(buildingName))
+        try
         {
-            buildingUsers = cachedCurrentUsersPerBuilding[buildingName];
+            var userService = new UserService();
+            buildingUsers = await userService.GetUsersInBuildingWithPoints(buildingName);
+            Debug.Log($"UIManager: Fetched {buildingUsers.Count} users live from Firebase for building {buildingName}");
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"UIManager: Failed to fetch live users for building {buildingName}: {ex.Message}");
+            buildingUsers = new List<User>();
         }
 
         if (buildingUsers != null && buildingUsers.Count > 0 && currentUsersPanel != null)
@@ -1903,6 +1882,19 @@ private void HideObjectsWithTag(string tag)
                 {
                     Debug.LogError("UIManager: No Text component found in current user prefab!");
                 }
+                
+                // Display rank frame based on user's points using the same function
+                Image avatarImage = userGO.GetComponentInChildren<Image>();
+                if (avatarImage != null)
+                {
+                    int totalPoints = user.coins + user.knowledgePoints;
+                    Sprite rankSprite = GetUserAvatarBasedOnPoints(totalPoints);
+                    avatarImage.sprite = rankSprite;
+                                    }
+                else
+                {
+                    Debug.LogWarning($"No Image component found in user prefab for rank display");
+                }
             }
         }
         else if (currentUsersPanel != null)
@@ -1917,5 +1909,58 @@ private void HideObjectsWithTag(string tag)
         {
             currentUsersPanel.SetActive(false);
         }
+    }
+
+    /// <summary>
+    /// Gets the appropriate avatar sprite based on user's points.
+    /// </summary>
+    /// <param name="points">The user's total points (coins + knowledge points)</param>
+    /// <returns>The appropriate sprite for the user's point level</returns>
+    public Sprite GetUserAvatarBasedOnPoints(int points)
+    {
+        // Determine rank based on points
+        int rank = 0; // Default rank
+        
+        if (points >= 2000)
+        {
+            rank = 3;
+        }
+        else if (points >= 1000)
+        {
+            rank = 2;
+        }
+        else if (points > 0)
+        {
+            rank = 1;
+        }
+        
+        // Select the appropriate sprite based on rank
+        Sprite selectedSprite;
+        
+        switch (rank)
+        {
+            case 1:
+                selectedSprite = rank1AvatarSprite;
+                break;
+            case 2:
+                selectedSprite = rank2AvatarSprite;
+                break;
+            case 3:
+                selectedSprite = rank3AvatarSprite ?? rank2AvatarSprite; // Use rank2 sprite if rank3 isn't defined
+                break;
+            case 0:
+            default:
+                selectedSprite = defaultAvatarSprite;
+                break;
+        }
+        
+        // If the selected sprite is null, use the default sprite
+        if (selectedSprite == null)
+        {
+            Debug.LogWarning($"Avatar sprite for rank {rank} (points: {points}) is not assigned. Using default sprite.");
+            selectedSprite = defaultAvatarSprite;
+        }
+        
+        return selectedSprite;
     }
 }
