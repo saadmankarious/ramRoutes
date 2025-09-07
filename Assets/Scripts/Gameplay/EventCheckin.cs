@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Globalization;
+using System.Threading.Tasks;
 using RamRoutes.Services;
 using RamRoutes.Model;
 using Firebase.Auth;
@@ -448,25 +449,18 @@ public class EventCheckin : MonoBehaviour
         var earliestTime = now.AddMinutes(-15);
         var latestTime = now.AddMinutes(15);
 
-        // Determine relevant events first
+        // Get the current authenticated user ID for filtering events
+        string userId = "unknown";
+        if (FirebaseAuth.DefaultInstance?.CurrentUser != null) 
+        {
+            userId = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
+        }
+
+        // Determine relevant events using the new eligibility function
         List<BuildingEvent> relevantEvents = new List<BuildingEvent>();
         foreach (var evt in events)
         {
-            if (evt.buildingName != buildingName) continue;
-            
-            if (evt.eventType == RamRoutes.Model.EventType.Scheduled)
-            {
-                DateTime normalizedEventDate = NormalizeDate(evt.date);
-                if (normalizedEventDate >= earliestTime && normalizedEventDate <= latestTime)
-                {
-                    relevantEvents.Add(evt);
-                }
-            }
-            else if (evt.IsAlwaysHappening)
-            {
-                relevantEvents.Add(evt);
-            }
-            else if (evt.IsRecurring && evt.IsActiveAt(now))
+            if (await IsEventEligibleForCheckInRightNow(evt, buildingName, userId, now, earliestTime, latestTime))
             {
                 relevantEvents.Add(evt);
             }
@@ -482,50 +476,12 @@ public class EventCheckin : MonoBehaviour
         // Check if player is close to the building
         if (!IsPlayerCloseToBuilding(buildingName, buildingData.bypassGpsCheck))
         {
-            // Get the current authenticated user ID for filtering events
-            string userId = "unknown";
-            if (FirebaseAuth.DefaultInstance?.CurrentUser != null) 
+            // Only show proximity message if there are events available
+            if (relevantEvents.Count > 0)
             {
-                userId = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
-            }
-            
-            // Filter out events the player has already checked into
-            List<BuildingEvent> availableEvents = new List<BuildingEvent>();
-            foreach (var evt in relevantEvents)
-            {
-                bool canCheckIn = true;
-                
-                try
-                {
-                    string checkEventId = !string.IsNullOrEmpty(evt.eventId) ? evt.eventId : evt.buildingId;
-                    
-                    if (evt.eventType == RamRoutes.Model.EventType.Daily)
-                    {
-                        // For daily events, check if player already checked in today
-                        canCheckIn = !await AttendanceService.HasPlayerCheckedInTodayAsync(checkEventId, userId);
-                    }
-                    else
-                    {
-                        // For non-daily events, check if player has ever checked in
-                        canCheckIn = !await AttendanceService.HasPlayerCheckedInAsync(checkEventId, userId);
-                    }
-                }
-                catch (Exception ex)
-                {
-                }
-                
-                if (canCheckIn)
-                {
-                    availableEvents.Add(evt);
-                }
-            }
-            
-            // Only show proximity message if there are events the player hasn't checked into yet
-            if (availableEvents.Count > 0)
-            {
-                string eventCountText = availableEvents.Count == 1 ? "1 event" : $"{availableEvents.Count} events";
-                string messagePrefix = availableEvents.Count == 1 ? "There is" : "There are";
-                string messageSuffix = availableEvents.Count == 1 ? "it" : "them";
+                string eventCountText = relevantEvents.Count == 1 ? "1 event" : $"{relevantEvents.Count} events";
+                string messagePrefix = relevantEvents.Count == 1 ? "There is" : "There are";
+                string messageSuffix = relevantEvents.Count == 1 ? "it" : "them";
                 if (uiManager != null)
                 {
                     uiManager.ShowDialog($"{messagePrefix} {eventCountText} happening NOW at {buildingName}, but you need to be closer in real life to see {messageSuffix}", 3f, false);
@@ -547,5 +503,47 @@ public class EventCheckin : MonoBehaviour
     {
         // Hide the events panel when player leaves the building
         HideEventsPanel();
+    }
+
+    private async Task<bool> IsEventEligibleForCheckInRightNow(BuildingEvent evt, string buildingName, string userId, DateTime now, DateTime earliestTime, DateTime latestTime)
+    {
+        // Event MUST be in the correct building
+        if (evt.buildingName != buildingName) 
+            return false;
+
+        // Player cannot check in for same event twice a day regardless of type
+        try
+        {
+            string checkEventId = !string.IsNullOrEmpty(evt.eventId) ? evt.eventId : evt.buildingId;
+            bool hasCheckedInToday = await AttendanceService.HasPlayerCheckedInTodayAsync(checkEventId, userId);
+            if (hasCheckedInToday)
+                return false;
+        }
+        catch (Exception ex)
+        {
+            return false;
+        }
+
+        // Event MUST be happening within 15 minutes regardless of type (except always happening)
+        if (evt.IsAlwaysHappening)
+        {
+            return true;
+        }
+        else if (evt.eventType == RamRoutes.Model.EventType.Scheduled)
+        {
+            DateTime normalizedEventDate = NormalizeDate(evt.date);
+            return normalizedEventDate >= earliestTime && normalizedEventDate <= latestTime;
+        }
+        else if (evt.eventType == RamRoutes.Model.EventType.Daily)
+        {
+            DateTime normalizedEventDate = NormalizeDate(evt.date);
+            return normalizedEventDate >= earliestTime && normalizedEventDate <= latestTime;
+        }
+        else if (evt.IsRecurring && evt.IsActiveAt(now))
+        {
+            return true;
+        }
+
+        return false;
     }
 }
