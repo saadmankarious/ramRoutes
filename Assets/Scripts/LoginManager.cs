@@ -47,15 +47,12 @@ public class LoginManager : MonoBehaviour
     public bool allowExternalDomains = false;
 
     [Header("Leaderboard")]
-    public Text firstPlaceText;
-    public Text firstPlaceCoinsText;
-    public Text firstPlaceKBText;
-    public Text secondPlaceText;
-    public Text secondPlaceCoinsText;
-    public Text secondPlaceKBText;
-    public Text thirdPlaceText;
-    public Text thirdPlaceCoinsText;
-    public Text thirdPlaceKBText;
+    [Tooltip("Panel containing the leaderboard with a Vertical Layout Group")]
+    public GameObject leaderboardPanel;
+    [Tooltip("Transform that acts as parent for leaderboard entries (should have Vertical Layout Group component)")]
+    public Transform leaderboardContentParent;
+    [Tooltip("Prefab for leaderboard entry. Expected child objects: NameText, PointsText/CoinsText, KBText/KnowledgeText, HallText/ResidenceText, RankImage/AvatarImage, PositionText, RankText/RankNameText")]
+    public GameObject leaderboardEntryPrefab;
 
     [Header("Event List")]
     public ScrollRect trialsScrollView;
@@ -1016,6 +1013,63 @@ public class LoginManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Calculates user rank based on total points (same logic as UIManager)
+    /// </summary>
+    private int CalculateRank(int totalPoints)
+    {
+        if (totalPoints >= 2000)
+        {
+            return 3;
+        }
+        else if (totalPoints >= 1000)
+        {
+            return 2;
+        }
+        else if (totalPoints > 0)
+        {
+            return 1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    /// <summary>
+    /// Gets the appropriate rank sprite based on user's points (same logic as UIManager)
+    /// </summary>
+    private Sprite GetRankSprite(int points)
+    {
+        // Get UIManager instance to access rank sprites
+        var uiManager = FindObjectOfType<UIManager>();
+        if (uiManager != null)
+        {
+            return uiManager.GetUserAvatarBasedOnPoints(points);
+        }
+        
+        // Fallback: return null if UIManager not found
+        Debug.LogWarning("UIManager not found, cannot get rank sprite");
+        return null;
+    }
+
+    /// <summary>
+    /// Gets rank name based on rank number for display purposes
+    /// </summary>
+    private string GetRankName(int rank)
+    {
+        return rank switch
+        {
+            0 => "Beginner",
+            1 => "Gold",
+            2 => "Silver", 
+            3 => "Platinum",
+            _ => "Unknown"
+        };
+    }
+
+
+
     private async Task UpdateLeaderboard()
     {
         try
@@ -1027,8 +1081,8 @@ public class LoginManager : MonoBehaviour
                 .Limit(20)  // Get more users initially as we'll need to recalculate points
                 .GetSnapshotAsync();
 
-            // List to store user stats
-            var userStats = new List<(string userId, string name, int coins, int kb)>();
+            // List to store user stats with residence hall
+            var userStats = new List<(string userId, string name, string residenceHall, int coins, int kb)>();
 
             // Calculate points for each user from unlocked-trials
             foreach (var doc in querySnapshot.Documents)
@@ -1036,6 +1090,13 @@ public class LoginManager : MonoBehaviour
                 var userData = doc.ToDictionary();
                 string userId = doc.Id;
                 string name = userData.ContainsKey("name") ? userData["name"].ToString() : "Unknown";
+                string residenceHall = userData.ContainsKey("residenceHall") ? userData["residenceHall"].ToString() : "Unknown Hall";
+
+                // Skip users with .rr ending (exclude from leaderboard)
+                if (name.EndsWith(".rr"))
+                {
+                    continue;
+                }
 
                 // Get unlocked buildings for this user
                 var unlocksSnapshot = await db.Collection("unlocked-trials")
@@ -1058,7 +1119,7 @@ public class LoginManager : MonoBehaviour
                     }
                 }
 
-                userStats.Add((userId, name, totalCoins, totalKB));
+                userStats.Add((userId, name, residenceHall, totalCoins, totalKB));
             }
 
             // Sort by total coins (primary) and knowledge points (secondary)
@@ -1070,32 +1131,58 @@ public class LoginManager : MonoBehaviour
             // Take top 3
             var topThree = userStats.Take(3).ToList();
 
-            // Update UI
-            Text[] nameTexts = { firstPlaceText, secondPlaceText, thirdPlaceText };
-            Text[] coinTexts = { firstPlaceCoinsText, secondPlaceCoinsText, thirdPlaceKBText };
-            Text[] kbTexts = { firstPlaceKBText, secondPlaceKBText, thirdPlaceKBText };
-
-            // Clear all texts first
-            for (int i = 0; i < 3; i++)
+            // Create leaderboard entries using prefab
+            if (leaderboardEntryPrefab != null && leaderboardContentParent != null)
             {
-                if (nameTexts[i] != null) nameTexts[i].text = "";
-                if (coinTexts[i] != null) coinTexts[i].text = "0";
-                if (kbTexts[i] != null) kbTexts[i].text = "0";
+                for (int i = 0; i < topThree.Count; i++)
+                {
+                    var user = topThree[i];
+                    int totalPoints = user.coins + user.kb;
+                    int rank = CalculateRank(totalPoints);
+                    string rankName = GetRankName(rank);
+                    Sprite rankSprite = GetRankSprite(totalPoints);
+
+                    GameObject entryObject = Instantiate(leaderboardEntryPrefab, leaderboardContentParent);
+                    
+                    // Try to find components with multiple possible names
+                    Text nameText = entryObject.transform.Find("name")?.GetComponent<Text>();
+                    
+                    Text pointsText = entryObject.transform.Find("coins")?.GetComponent<Text>();
+                    
+                    Text kbText = entryObject.transform.Find("kb")?.GetComponent<Text>();
+                    
+                    Text hallText = entryObject.transform.Find("hall")?.GetComponent<Text>();
+                    
+                    UnityEngine.UI.Image rankImage = entryObject.transform.Find("profile")?.GetComponent<UnityEngine.UI.Image>();
+                    
+                    Text positionText = entryObject.transform.Find("PositionText")?.GetComponent<Text>();
+
+                    Text rankText = entryObject.transform.Find("rank")?.GetComponent<Text>() ;
+
+                    // Set the data
+                    if (nameText != null) nameText.text = user.name;
+                    if (pointsText != null) pointsText.text = user.coins.ToString();
+                    if (kbText != null) kbText.text = user.kb.ToString();
+                    if (hallText != null) hallText.text = user.residenceHall;
+                    if (rankImage != null && rankSprite != null) rankImage.sprite = rankSprite;
+                    if (positionText != null) positionText.text = $"#{i + 1}";
+                    if (rankText != null) rankText.text = rankName;
+
+                    Debug.Log($"Created leaderboard entry for {user.name} at position {i + 1} with rank {rankName}");
+                }
             }
-
-            // Update with new values
-            for (int i = 0; i < topThree.Count; i++)
+            else
             {
-                if (nameTexts[i] != null) nameTexts[i].text = topThree[i].name;
-                if (coinTexts[i] != null) coinTexts[i].text = topThree[i].coins.ToString();
-                if (kbTexts[i] != null) kbTexts[i].text = topThree[i].kb.ToString();
+                Debug.LogWarning("Leaderboard prefab or content parent is not assigned!");
             }
         }
         catch (System.Exception e)
         {
             Debug.LogError($"Failed to update leaderboard: {e.Message}");
         }
-    } private async Task UpdateUnlockHistory()
+    }
+
+    private async Task UpdateUnlockHistory()
     {
         try
         {
