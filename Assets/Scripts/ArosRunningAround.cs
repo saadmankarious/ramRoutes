@@ -135,7 +135,7 @@ public class ArosRunningAround : MonoBehaviour
         // Show dialog after disappearing
         if (uiManager != null)
         {
-            uiManager.ShowDialog("Eros is near!", 3f, false);
+            uiManager.ShowQuickUpdate("Eros is near!");
         }
     }
 

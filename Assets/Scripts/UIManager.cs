@@ -60,6 +60,11 @@ public class UIManager : MonoBehaviour
     public Transform currentUsersContentParent;
     public GameObject currentUserPrefab;
 
+    [Header("Rank Up Panel")]
+    public GameObject rankUpPanel;
+    public Text rankUpText;
+    public Button rankUpCloseButton;
+
     [Header("Celebration Settings")]
     [SerializeField] private float celebrationPlaybackSpeed = 1f; // 1f = normal speed, 2f = double speed, 0.5f = half speed
     [SerializeField] private float celebrationDuration = 2f; // Total duration of celebration in seconds (controls both sound and particles)
@@ -550,11 +555,63 @@ public class UIManager : MonoBehaviour
             // Simple implementation using PlayerPrefs
             string userName = PlayerPrefs.GetString("UserName", "Anonymous User");
             string hall = PlayerPrefs.GetString("ResidenceHall", "No Hall");
-            
+
             usernameAndHallText.text = $"@{userName} - {hall}";
         }
+        var userRank = PlayerPrefs.GetInt("UserRank", 0);
+        UpdateUserAvatar(userRank);
+
     }
     
+    /// <summary>
+    /// Public method to check for rank increases after user gains points.
+    /// This should be called whenever the user's points are updated in the game.
+    /// </summary>
+    public async Task CheckAndUpdateUserRank()
+    {
+        try 
+        {
+            string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+            if (string.IsNullOrEmpty(userId))
+            {
+                Debug.LogWarning("UIManager: Cannot check rank - no user ID");
+                return;
+            }
+
+            var userService = new RamRoutes.Services.UserService();
+            int coins = await userService.GetUserCoins(userId);
+            int knowledgePoints = await userService.GetUserKnowledgePoints(userId);
+            int totalPoints = coins + knowledgePoints;
+            
+            // Update UI with current points
+            UpdateCoins(coins);
+            UpdateKnowledgePoints(knowledgePoints);
+            
+            // Get previously saved rank for comparison
+            int previousRank = PlayerPrefs.GetInt("UserRank", 0);
+            
+            // Calculate current rank and update avatar (this also persists the new rank)
+            GetUserAvatarBasedOnPoints(totalPoints, true);
+            
+            // Get the newly saved rank
+            int currentRank = CalculateRank(totalPoints);
+            
+            // Check if rank has increased and show rank up panel if so
+            if (currentRank > previousRank)
+            {
+                ShowRankUpPanel(currentRank);
+                Debug.Log($"Rank increased from {previousRank} to {currentRank}! (Total points: {totalPoints})");
+            }
+            
+            // Update the username display which includes the avatar
+            UpdateUsernameAndHall();
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Failed to check and update user rank: {ex.Message}");
+        }
+    }
+
     private async Task GetUserPoints()
     {
         try 
@@ -564,14 +621,12 @@ public class UIManager : MonoBehaviour
             {
                 var userService = new RamRoutes.Services.UserService();
                 int coins = await userService.GetUserCoins(userId);
-                UpdateCoins(coins);
-                
-                // Get user's knowledge points and calculate rank (based on combined points)
                 int knowledgePoints = await userService.GetUserKnowledgePoints(userId);
-                int rank = await userService.GetUserRank(userId);
-                UpdateUserAvatar(rank);
                 
-                Debug.Log($"Retrieved user coins: {coins}, knowledge points: {knowledgePoints}, calculated rank: {rank}");
+                UpdateCoins(coins);
+                UpdateKnowledgePoints(knowledgePoints);
+                
+                Debug.Log($"Retrieved user coins: {coins}, knowledge points: {knowledgePoints}");
             }
         }
         catch (System.Exception ex)
@@ -580,22 +635,55 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    private async Task GetUserKnowledgePoints()
+    /// <summary>
+    /// Gets user points from Firebase, updates UI, persists current rank, and checks for rank increases
+    /// </summary>
+    private async Task InitializeUserRankSystem()
     {
         try 
         {
             string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
-            if (!string.IsNullOrEmpty(userId))
+            if (string.IsNullOrEmpty(userId))
             {
-                var userService = new RamRoutes.Services.UserService();
-                int points = await userService.GetUserKnowledgePoints(userId);
-                UpdateKnowledgePoints(points);
-                Debug.Log($"Retrieved user knowledge points: {points}");
+                Debug.LogWarning("UIManager: Cannot initialize rank system - no user ID");
+                return;
+            }
+
+            var userService = new RamRoutes.Services.UserService();
+            int coins = await userService.GetUserCoins(userId);
+            int knowledgePoints = await userService.GetUserKnowledgePoints(userId);
+            int totalPoints = coins + knowledgePoints;
+            
+            // Update UI
+            UpdateCoins(coins);
+            UpdateKnowledgePoints(knowledgePoints);
+            
+            // Get previously saved rank for comparison
+            int previousRank = PlayerPrefs.GetInt("UserRank", 0);
+
+            // Calculate current rank and update avatar (this also persists the new rank)
+            if(userAvatarImage != null)
+            {
+                userAvatarImage.sprite = GetUserAvatarBasedOnPoints(totalPoints, true); // reset to default while loading
+            }
+
+            // Get the newly saved rank
+            int currentRank = CalculateRank(totalPoints);
+            
+            // Check if rank has increased and show rank up panel if so
+            if (currentRank > previousRank)
+            {
+                ShowRankUpPanel(currentRank);
+                Debug.Log($"Rank increased from {previousRank} to {currentRank}! (Total points: {totalPoints})");
+            }
+            else
+            {
+                Debug.Log($"Rank initialized: {currentRank} (Previous: {previousRank}, Total points: {totalPoints})");
             }
         }
         catch (System.Exception ex)
         {
-            Debug.LogError($"Failed to get user knowledge points: {ex.Message}");
+            Debug.LogError($"Failed to initialize user rank system: {ex.Message}");
         }
     }
 
@@ -609,9 +697,8 @@ public class UIManager : MonoBehaviour
         OnTrialComplete.AddListener(() => StartCoroutine(CompleteTrial()));
         OnTimeExpired.AddListener(TimeUp);
 
-        // Get and display user points
-        _ = GetUserPoints();
-        _ = GetUserKnowledgePoints();
+        // Initialize user rank system (gets Firebase data, updates UI, persists rank, checks for increases)
+        _ = InitializeUserRankSystem();
         
         // Update username and hall display
         UpdateUsernameAndHall();
@@ -621,6 +708,46 @@ public class UIManager : MonoBehaviour
         if (currentStage != null && stageTimeLimits.TryGetValue(currentStage.area, out int stageLimit) && stageLimit > 0)
         {
             StartCountdown(timerText, stageLimit);
+        }
+
+        // Initialize progress bar based on unlocked buildings
+        _ = InitializeProgressBar();
+
+        // Setup background music for current stage
+        if (currentStage != null)
+        {
+            SetBackgroundMusicForStage(currentStage.area);
+        }
+
+        // Initialize building-gate mapping
+        InitializeBuildingGateMapping();
+        
+        // Reset the fade overlay if it exists
+        ResetFadeOverlay();
+    }
+
+    /// <summary>
+    /// Initializes the building-gate mapping dictionary from the configured pairs
+    /// </summary>
+    private void InitializeBuildingGateMapping()
+    {
+        if (buildingGatePairs != null && buildingGatePairs.Length > 0)
+        {
+            buildingGateMap = new Dictionary<BuildingInteraction, Gate>();
+            foreach (var pair in buildingGatePairs)
+            {
+                if (pair != null && pair.building != null && pair.gate != null && !buildingGateMap.ContainsKey(pair.building))
+                {
+                    buildingGateMap.Add(pair.building, pair.gate);
+                    Debug.Log($"UIManager: Mapped building '{pair.building.buildingName}' to gate '{pair.gate.gameObject.name}'");
+                }
+            }
+            Debug.Log($"UIManager: Initialized building-gate mapping with {buildingGateMap.Count} pairs");
+        }
+        else
+        {
+            buildingGateMap = new Dictionary<BuildingInteraction, Gate>();
+            Debug.Log("UIManager: No building-gate pairs configured");
         }
     }
 
@@ -1915,8 +2042,9 @@ private void HideObjectsWithTag(string tag)
     /// Gets the appropriate avatar sprite based on user's points.
     /// </summary>
     /// <param name="points">The user's total points (coins + knowledge points)</param>
+    /// <param name="oneself">If true, saves the current rank for rank increase detection</param>
     /// <returns>The appropriate sprite for the user's point level</returns>
-    public Sprite GetUserAvatarBasedOnPoints(int points)
+    public Sprite GetUserAvatarBasedOnPoints(int points, bool oneself = false)
     {
         // Determine rank based on points
         int rank = 0; // Default rank
@@ -1932,6 +2060,16 @@ private void HideObjectsWithTag(string tag)
         else if (points > 0)
         {
             rank = 1;
+        }
+        
+        // If this is for the current user, save the rank for future comparison
+        if (oneself)
+        {
+            int previousRank = PlayerPrefs.GetInt("UserRank", 0);
+            PlayerPrefs.SetInt("UserRank", rank);
+            PlayerPrefs.Save();
+            
+            Debug.Log($"Updated user rank: {previousRank} -> {rank} (points: {points})");
         }
         
         // Select the appropriate sprite based on rank
@@ -1962,5 +2100,79 @@ private void HideObjectsWithTag(string tag)
         }
         
         return selectedSprite;
+    }
+    
+    /// <summary>
+    /// Calculates rank based on total points
+    /// </summary>
+    /// <param name="totalPoints">Total points (coins + knowledge points)</param>
+    /// <returns>Rank number (0-3)</returns>
+    private int CalculateRank(int totalPoints)
+    {
+        if (totalPoints >= 2000)
+        {
+            return 3;
+        }
+        else if (totalPoints >= 1000)
+        {
+            return 2;
+        }
+        else if (totalPoints > 0)
+        {
+            return 1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    
+    /// <summary>
+    /// Shows the rank up panel with the new rank information
+    /// </summary>
+    /// <param name="newRank">The new rank achieved</param>
+    private void ShowRankUpPanel(int newRank)
+    {
+        if (rankUpPanel == null)
+        {
+            Debug.LogWarning("UIManager: Rank up panel not assigned!");
+            return;
+        }
+        
+        // Map rank numbers to names (matching the Firebase function)
+        string[] rankNames = { "Beginner", "Gold", "Silver", "Platinum" };
+        string rankName = rankNames[Mathf.Clamp(newRank, 0, rankNames.Length - 1)];
+        
+        // Set the rank up text
+        if (rankUpText != null)
+        {
+            rankUpText.text = rankName;
+        }
+        
+        // Setup close button
+        if (rankUpCloseButton != null)
+        {
+            rankUpCloseButton.onClick.RemoveAllListeners();
+            rankUpCloseButton.onClick.AddListener(HideRankUpPanel);
+        }
+        
+        // Show the panel
+        rankUpPanel.SetActive(true);
+        
+        // Animate the panel appearing
+        StartCoroutine(AnimatePanelPopup(rankUpPanel));
+        
+        Debug.Log($"Showing rank up panel for {rankName} rank (rank {newRank})");
+    }
+    
+    /// <summary>
+    /// Hides the rank up panel
+    /// </summary>
+    public void HideRankUpPanel()
+    {
+        if (rankUpPanel != null)
+        {
+            rankUpPanel.SetActive(false);
+        }
     }
 }
