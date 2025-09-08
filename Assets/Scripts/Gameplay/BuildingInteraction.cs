@@ -766,33 +766,46 @@ public class BuildingInteraction : MonoBehaviour
                 Text titleText = null;
                 Text dateText = null;
                 
-                // Assign the correct text component based on name or order
-                if (textComponents.Length >= 2)
+                // Look specifically for Text components tagged as "MainText" and "SubText"
+                foreach (var text in textComponents)
+                {
+                    if (text.gameObject.CompareTag("MainText"))
+                    {
+                        titleText = text;
+                    }
+                    else if (text.gameObject.CompareTag("SubText"))
+                    {
+                        dateText = text;
+                    }
+                }
+                
+                // Fallback logic if tags are not found
+                if (titleText == null || dateText == null)
                 {
                     // If we have names to identify them
                     foreach (var text in textComponents)
                     {
-                        if (text.gameObject.name.Contains("Title") || text.gameObject.name.Contains("Event"))
+                        if (titleText == null && (text.gameObject.name.Contains("Title") || text.gameObject.name.Contains("Event")))
                         {
                             titleText = text;
                         }
-                        else if (text.gameObject.name.Contains("Date") || text.gameObject.name.Contains("Time"))
+                        else if (dateText == null && (text.gameObject.name.Contains("Date") || text.gameObject.name.Contains("Time")))
                         {
                             dateText = text;
                         }
                     }
                     
-                    // If names don't match, just use the first two
-                    if (titleText == null && dateText == null)
+                    // If we still don't have both and there are at least 2 components, use the first two
+                    if ((titleText == null || dateText == null) && textComponents.Length >= 2)
                     {
-                        titleText = textComponents[0];
-                        dateText = textComponents[1];
+                        if (titleText == null) titleText = textComponents[0];
+                        if (dateText == null) dateText = textComponents[1];
                     }
-                }
-                else if (textComponents.Length == 1)
-                {
-                    // Fallback if there's only one text component
-                    titleText = textComponents[0];
+                    else if (textComponents.Length == 1)
+                    {
+                        // Fallback if there's only one text component
+                        titleText = textComponents[0];
+                    }
                 }
                 
                 // Format and set text using the helper method
