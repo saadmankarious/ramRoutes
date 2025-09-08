@@ -26,6 +26,20 @@ public class LoginManager : MonoBehaviour
     public Text welcomeText;
     public Text resetPasswordText;
 
+    [Header("Welcome Panel User Info")]
+    public Text usernameText;
+    public Text userCoinsText;
+    public Text userKBText;
+    public UnityEngine.UI.Image userAvatarImage;
+    public Text userHallText;
+    public Text userStageText;
+
+      [Header("User Avatar")]
+    public Sprite rank1AvatarSprite; // Rank 1 avatar sprite (0-999 combined points)
+    public Sprite rank2AvatarSprite; // Rank 2 avatar sprite (1000-1999 combined points)
+    public Sprite rank3AvatarSprite; // Rank 3 avatar sprite (2000+ combined points)
+
+
     [Header("Reset Password UI")]
     public InputField resetUsernameInput;
     public Button resetPasswordButton;
@@ -257,12 +271,12 @@ public class LoginManager : MonoBehaviour
     {
         if (toggleText != null)
         {
-            toggleText.text = isSignupMode ? "Already registered? Login" : "Create Account";
+            toggleText.text = isSignupMode ? "Login Instead" : "Create Account";
         }
         
         if (signupToggleText != null)
         {
-            signupToggleText.text = "Already registered? Login";
+            signupToggleText.text = "Login Instead";
         }
     }
     
@@ -695,7 +709,10 @@ public class LoginManager : MonoBehaviour
         
         // Retrieve user profile after updating login time
         var userProfile = await userService.RetrieveAndCacheCurrentUserProfile(userId);
-        welcomeText.text = $"Welcome, {userProfile.name.Split(" ")[0]}!";        // Fetch and cache user's game stage from Firestore
+        
+        // Update welcome panel with user information instead of just welcome text
+        await UpdateWelcomePanelUserInfo(userId, userProfile);
+        
         FetchAndCacheUserGameStage(userId);
 
         // Update FCM token in user profile for notifications
@@ -738,6 +755,110 @@ public class LoginManager : MonoBehaviour
         }
 
         // Ensure Firebase Messaging is initialized
+    }
+
+    /// <summary>
+    /// Updates the welcome panel with detailed user information
+    /// </summary>
+    private async Task UpdateWelcomePanelUserInfo(string userId, RamRoutes.Model.User userProfile)
+    {
+        try
+        {
+            // Set username
+            if (usernameText != null)
+            {
+                usernameText.text = userProfile.name ?? "Unknown User";
+            }
+
+            // Set residence hall
+            if (userHallText != null)
+            {
+                userHallText.text = userProfile.residenceHall ?? "No Hall";
+            }
+
+            // Get user's points from unlocked-trials
+            var db = FirebaseFirestore.DefaultInstance;
+            var unlocksSnapshot = await db.Collection("unlocked-trials")
+                .WhereEqualTo("userId", userId)
+                .GetSnapshotAsync();
+
+            int totalCoins = 0;
+            int totalKB = 0;
+
+            foreach (var unlockDoc in unlocksSnapshot.Documents)
+            {
+                var unlockData = unlockDoc.ToDictionary();
+                if (unlockData.ContainsKey("coinPoints"))
+                {
+                    totalCoins += Convert.ToInt32(unlockData["coinPoints"]);
+                }
+                if (unlockData.ContainsKey("knowledgePoints"))
+                {
+                    totalKB += Convert.ToInt32(unlockData["knowledgePoints"]);
+                }
+            }
+
+            // Set coins and KB
+            if (userCoinsText != null)
+            {
+                userCoinsText.text = $"{totalCoins}";
+            }
+
+            if (userKBText != null)
+            {
+                userKBText.text = $"{totalKB}";
+            }
+
+            // Set user avatar based on total points
+            if (userAvatarImage != null)
+            {
+                int totalPoints = totalCoins + totalKB;
+                Sprite avatarSprite = GetRankSprite(totalPoints);
+                if (avatarSprite != null)
+                {
+                    userAvatarImage.sprite = avatarSprite;
+                }
+            }
+
+            // Set current stage
+            if (userStageText != null)
+            {
+                try
+                {
+                    var currentStage = RamRoutes.Services.GameStageService.LoadStageFromPrefs();
+                    if (currentStage != null)
+                    {
+                        userStageText.text = $"{currentStage.area}";
+                    }
+                    else
+                    {
+                        userStageText.text = "Thomas Commons";
+                    }
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"Failed to get current stage: {e.Message}");
+                    userStageText.text = "Current Stage: Unknown";
+                }
+            }
+
+            // Hide the old welcome text
+            if (welcomeText != null)
+            {
+                welcomeText.gameObject.SetActive(false);
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Failed to update welcome panel user info: {e.Message}");
+            
+            // Fallback to simple welcome message
+            if (welcomeText != null)
+            {
+                welcomeText.text = $"Welcome, {userProfile.name?.Split(" ")[0] ?? "User"}!";
+                welcomeText.gameObject.SetActive(true);
+            }
+        }
     }
     
     private async void FetchAndCacheUserGameStage(string userId)
@@ -1041,16 +1162,11 @@ public class LoginManager : MonoBehaviour
     /// </summary>
     private Sprite GetRankSprite(int points)
     {
-        // Get UIManager instance to access rank sprites
-        var uiManager = FindObjectOfType<UIManager>();
-        if (uiManager != null)
-        {
-            return uiManager.GetUserAvatarBasedOnPoints(points);
-        }
-        
-        // Fallback: return null if UIManager not found
-        Debug.LogWarning("UIManager not found, cannot get rank sprite");
-        return null;
+        // Implement the same rank logic directly in LoginManager
+        // Load rank sprites as public SerializeField references in LoginManager
+        if (points >= 2000) return rank3AvatarSprite;
+        else if (points >= 1000) return rank2AvatarSprite;
+        else  return rank1AvatarSprite;
     }
 
     /// <summary>
