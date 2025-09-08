@@ -83,9 +83,6 @@ public class LoginManager : MonoBehaviour
     [SerializeField] private float musicVolume = 0.3f;
     private AudioSource musicSource;
 
-    [Header("Animation Settings")]
-    [SerializeField] private float fadeInDuration = 0.3f;
-
     private FirebaseAuth auth;
     private string playerName = "";
     private bool isSignupMode = false;
@@ -210,63 +207,6 @@ public class LoginManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Simple fade-in animation for any GameObject with optional CanvasGroup
-    /// </summary>
-    private void FadeInPanel(GameObject panel)
-    {
-        if (panel == null) return;
-
-        // Get or add CanvasGroup for alpha animation
-        CanvasGroup canvasGroup = panel.GetComponent<CanvasGroup>();
-        if (canvasGroup == null)
-        {
-            canvasGroup = panel.AddComponent<CanvasGroup>();
-        }
-
-        // Start fade-in animation
-        StartCoroutine(FadeInAnimation(canvasGroup));
-    }
-
-    /// <summary>
-    /// Coroutine to handle fade-in animation
-    /// </summary>
-    private IEnumerator FadeInAnimation(CanvasGroup canvasGroup)
-    {
-        float elapsed = 0f;
-        canvasGroup.alpha = 0f;
-
-        while (elapsed < fadeInDuration)
-        {
-            elapsed += Time.deltaTime;
-            canvasGroup.alpha = Mathf.Lerp(0f, 1f, elapsed / fadeInDuration);
-            yield return null;
-        }
-
-        canvasGroup.alpha = 1f;
-    }
-
-    /// <summary>
-    /// Coroutine to handle delayed fade-in animation for prefabs
-    /// </summary>
-    private IEnumerator DelayedFadeIn(GameObject target, float delay)
-    {
-        if (target == null) yield break;
-
-        // Wait for delay
-        yield return new WaitForSeconds(delay);
-
-        // Get or add CanvasGroup
-        CanvasGroup canvasGroup = target.GetComponent<CanvasGroup>();
-        if (canvasGroup == null)
-        {
-            canvasGroup = target.AddComponent<CanvasGroup>();
-        }
-
-        // Start fade-in
-        yield return StartCoroutine(FadeInAnimation(canvasGroup));
-    }
-
     private async Task InitializeFirebase()
     {
         try
@@ -371,20 +311,6 @@ public class LoginManager : MonoBehaviour
         loginPanel.SetActive(!isSignupMode && !isResetPasswordMode);
         signupPanel.SetActive(isSignupMode && !isResetPasswordMode);
         resetPasswordPanel.SetActive(isResetPasswordMode);
-        
-        // Apply fade-in animation to the active panel
-        if (!isSignupMode && !isResetPasswordMode && loginPanel.activeInHierarchy)
-        {
-            FadeInPanel(loginPanel);
-        }
-        else if (isSignupMode && !isResetPasswordMode && signupPanel.activeInHierarchy)
-        {
-            FadeInPanel(signupPanel);
-        }
-        else if (isResetPasswordMode && resetPasswordPanel.activeInHierarchy)
-        {
-            FadeInPanel(resetPasswordPanel);
-        }
         
         // Clear all status texts when toggling
         ClearSignupStatus();
@@ -820,11 +746,10 @@ public class LoginManager : MonoBehaviour
         }
         else
         {
-            // Returning user - show welcome screen with fade-in
+            // Returning user - show welcome screen
             loginPanel.SetActive(false);
             signupPanel.SetActive(false);
             welcomePanel.SetActive(true);
-            FadeInPanel(welcomePanel);
             playButton.interactable = true;
             statusText.text = "";
         }
@@ -1267,21 +1192,6 @@ public class LoginManager : MonoBehaviour
         {
             var db = FirebaseFirestore.DefaultInstance;
             
-            // Clear any existing entries first
-            if (leaderboardContentParent != null)
-            {
-                foreach (Transform child in leaderboardContentParent)
-                {
-                    Destroy(child.gameObject);
-                }
-            }
-
-            // Add fade-in animation to the leaderboard panel
-            if (leaderboardPanel != null)
-            {
-                FadeInPanel(leaderboardPanel);
-            }
-            
             // Get all users
             var querySnapshot = await db.Collection("users")
                 .Limit(20)  // Get more users initially as we'll need to recalculate points
@@ -1349,9 +1259,6 @@ public class LoginManager : MonoBehaviour
                     Sprite rankSprite = GetRankSprite(totalPoints);
 
                     GameObject entryObject = Instantiate(leaderboardEntryPrefab, leaderboardContentParent);
-                    
-                    // Add fade-in animation to the entry
-                    StartCoroutine(DelayedFadeIn(entryObject, i * 0.1f)); // Stagger animations
                     
                     // Try to find components with multiple possible names
                     Text nameText = entryObject.transform.Find("name")?.GetComponent<Text>();
@@ -1462,7 +1369,6 @@ public class LoginManager : MonoBehaviour
             //allEntries.Sort((a, b) => b.time.CompareTo(a.time));
             allEntries.Shuffle();
             // Create entries in scroll view
-            int entryIndex = 0;
             foreach (var entry in allEntries)
             {
                 if (unlockPrefab != null && eventPrefab != null && trialContentParent != null)
@@ -1492,10 +1398,6 @@ public class LoginManager : MonoBehaviour
                             continue;
                         }
                     }
-
-                    // Add fade-in animation with staggered delay
-                    StartCoroutine(DelayedFadeIn(listEntry, entryIndex * 0.05f));
-                    entryIndex++;
 
                     Text entryText = listEntry.GetComponentInChildren<Text>();
 
