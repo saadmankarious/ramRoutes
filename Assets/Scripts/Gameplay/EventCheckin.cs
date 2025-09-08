@@ -536,12 +536,25 @@ public class EventCheckin : MonoBehaviour
         }
         else if (evt.eventType == RamRoutes.Model.EventType.Daily)
         {
-            DateTime normalizedEventDate = NormalizeDate(evt.date);
-            return normalizedEventDate >= earliestTime && normalizedEventDate <= latestTime;
+            // For daily events, check if the time of day matches (within 15 minutes)
+            // DateTime normalizedEventDate = NormalizeDate(evt.date);
+            TimeSpan eventTimeOfDay = evt.date.TimeOfDay;
+            TimeSpan currentTimeOfDay = now.TimeOfDay;
+            
+            // Check if current time is within 15 minutes of the event time
+            TimeSpan timeDifference = (currentTimeOfDay - eventTimeOfDay).Duration();
+            return timeDifference <= TimeSpan.FromMinutes(15);
         }
         else if (evt.IsRecurring && evt.IsActiveAt(now))
         {
-            return true;
+            // For recurring events (weekly, monthly), check if the time of day matches
+            DateTime normalizedEventDate = NormalizeDate(evt.date);
+            TimeSpan eventTimeOfDay = normalizedEventDate.TimeOfDay;
+            TimeSpan currentTimeOfDay = now.TimeOfDay;
+            
+            // Check if current time is within 15 minutes of the event time
+            TimeSpan timeDifference = (currentTimeOfDay - eventTimeOfDay).Duration();
+            return timeDifference <= TimeSpan.FromMinutes(15);
         }
 
         return false;
