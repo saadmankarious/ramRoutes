@@ -612,28 +612,28 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    private async Task GetUserPoints()
-    {
-        try 
-        {
-            string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
-            if (!string.IsNullOrEmpty(userId))
-            {
-                var userService = new RamRoutes.Services.UserService();
-                int coins = await userService.GetUserCoins(userId);
-                int knowledgePoints = await userService.GetUserKnowledgePoints(userId);
+    // private async Task GetUserPoints()
+    // {
+    //     try 
+    //     {
+    //         string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+    //         if (!string.IsNullOrEmpty(userId))
+    //         {
+    //             var userService = new RamRoutes.Services.UserService();
+    //             int coins = await userService.GetUserCoins(userId);
+    //             int knowledgePoints = await userService.GetUserKnowledgePoints(userId);
                 
-                UpdateCoins(coins);
-                UpdateKnowledgePoints(knowledgePoints);
+    //             UpdateCoins(coins);
+    //             UpdateKnowledgePoints(knowledgePoints);
                 
-                Debug.Log($"Retrieved user coins: {coins}, knowledge points: {knowledgePoints}");
-            }
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError($"Failed to get user points: {ex.Message}");
-        }
-    }
+    //             Debug.Log($"Retrieved user coins: {coins}, knowledge points: {knowledgePoints}");
+    //         }
+    //     }
+    //     catch (System.Exception ex)
+    //     {
+    //         Debug.LogError($"Failed to get user points: {ex.Message}");
+    //     }
+    // }
 
     /// <summary>
     /// Gets user points from Firebase, updates UI, persists current rank, and checks for rank increases

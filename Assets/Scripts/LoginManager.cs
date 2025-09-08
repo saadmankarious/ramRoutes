@@ -775,44 +775,26 @@ public class LoginManager : MonoBehaviour
             {
                 userHallText.text = userProfile.residenceHall ?? "No Hall";
             }
+                 var userService = new RamRoutes.Services.UserService();
 
-            // Get user's points from unlocked-trials
-            var db = FirebaseFirestore.DefaultInstance;
-            var unlocksSnapshot = await db.Collection("unlocked-trials")
-                .WhereEqualTo("userId", userId)
-                .GetSnapshotAsync();
-
-            int totalCoins = 0;
-            int totalKB = 0;
-
-            foreach (var unlockDoc in unlocksSnapshot.Documents)
-            {
-                var unlockData = unlockDoc.ToDictionary();
-                if (unlockData.ContainsKey("coinPoints"))
-                {
-                    totalCoins += Convert.ToInt32(unlockData["coinPoints"]);
-                }
-                if (unlockData.ContainsKey("knowledgePoints"))
-                {
-                    totalKB += Convert.ToInt32(unlockData["knowledgePoints"]);
-                }
-            }
+            int coins = await userService.GetUserCoins(userId);
+            int kb = await userService.GetUserKnowledgePoints(userId);
 
             // Set coins and KB
             if (userCoinsText != null)
             {
-                userCoinsText.text = $"{totalCoins}";
+                userCoinsText.text = $"{coins}";
             }
 
             if (userKBText != null)
             {
-                userKBText.text = $"{totalKB}";
+                userKBText.text = $"{kb}";
             }
 
             // Set user avatar based on total points
             if (userAvatarImage != null)
             {
-                int totalPoints = totalCoins + totalKB;
+                int totalPoints = coins + kb;
                 Sprite avatarSprite = GetRankSprite(totalPoints);
                 if (avatarSprite != null)
                 {
