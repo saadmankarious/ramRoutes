@@ -1117,29 +1117,6 @@ public class LoginManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Calculates user rank based on total points (same logic as UIManager)
-    /// </summary>
-    private int CalculateRank(int totalPoints)
-    {
-        if (totalPoints >= 2000)
-        {
-            return 3;
-        }
-        else if (totalPoints >= 1000)
-        {
-            return 2;
-        }
-        else if (totalPoints > 0)
-        {
-            return 1;
-        }
-        else
-        {
-            return 0;
-        }
-    }
-
-    /// <summary>
     /// Gets the appropriate rank sprite based on user's points (same logic as UIManager)
     /// </summary>
     private Sprite GetRankSprite(int points)
@@ -1236,7 +1213,9 @@ public class LoginManager : MonoBehaviour
                 {
                     var user = topThree[i];
                     int totalPoints = user.coins + user.kb;
-                    int rank = CalculateRank(totalPoints);
+                                     var userService = new RamRoutes.Services.UserService();
+
+                    int rank = userService.CalculateUserRank(user.coins, user.kb);
                     string rankName = GetRankName(rank);
                     Sprite rankSprite = GetRankSprite(totalPoints);
 

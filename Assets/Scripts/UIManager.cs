@@ -594,8 +594,8 @@ public class UIManager : MonoBehaviour
             GetUserAvatarBasedOnPoints(totalPoints, true);
             
             // Get the newly saved rank
-            int currentRank = CalculateRank(totalPoints);
-            
+            int currentRank = userService.CalculateUserRank(coins, knowledgePoints);
+
             // Check if rank has increased and show rank up panel if so
             if (currentRank > previousRank)
             {
@@ -668,8 +668,8 @@ public class UIManager : MonoBehaviour
             }
 
             // Get the newly saved rank
-            int currentRank = CalculateRank(totalPoints);
-            
+            int currentRank = userService.CalculateUserRank(coins, knowledgePoints);
+
             // Check if rank has increased and show rank up panel if so
             if (currentRank > previousRank)
             {
@@ -2102,31 +2102,7 @@ private void HideObjectsWithTag(string tag)
         return selectedSprite;
     }
     
-    /// <summary>
-    /// Calculates rank based on total points
-    /// </summary>
-    /// <param name="totalPoints">Total points (coins + knowledge points)</param>
-    /// <returns>Rank number (0-3)</returns>
-    private int CalculateRank(int totalPoints)
-    {
-        if (totalPoints >= 2000)
-        {
-            return 3;
-        }
-        else if (totalPoints >= 1000)
-        {
-            return 2;
-        }
-        else if (totalPoints > 0)
-        {
-            return 1;
-        }
-        else
-        {
-            return 0;
-        }
-    }
-    
+
     /// <summary>
     /// Shows the rank up panel with the new rank information
     /// </summary>
