@@ -319,14 +319,14 @@ exports.notifyRankAchievement = onDocumentUpdated("users/{userId}", async (event
         
         // Calculate ranks using the same logic as GetUserAvatarBasedOnPoints
         const calculateRank = (totalPoints) => {
-            if (totalPoints >= 2000) {
+            const weightedScore = (0.7 * totalPoints.knowledgePoints) + (0.3 * totalPoints.coins);
+            
+            if (weightedScore >= 3000) {
                 return 3;
-            } else if (totalPoints >= 1000) {
+            } else if (weightedScore >= 1500) {
                 return 2;
-            } else if (totalPoints > 0) {
-                return 1;
             } else {
-                return 0;
+                return 1;
             }
         };
         
