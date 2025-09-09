@@ -1615,11 +1615,13 @@ private void HideObjectsWithTag(string tag)
         try
         {
             var buildingService = new UnlockedBuildingService();
-            var unlockedBuildings = await buildingService.RetrieveUnlockedBuildings();
-            
-            // Get current user's unlocked buildings
-            string userId = FirebaseAuth.DefaultInstance.CurrentUser?.UserId ?? "unknown";
-            var userUnlockedBuildings = unlockedBuildings.Where(b => b.userId == userId).ToList();
+            string userId = FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+            if (string.IsNullOrEmpty(userId))
+            {
+                Debug.LogWarning("Cannot initialize progress bar: User not logged in");
+                return;
+            }
+            var userUnlockedBuildings = await buildingService.RetrieveUnlockedBuildings(userId);
             
             // Set the buildings unlocked count and activate corresponding progress images
             buildingsUnlockedCount = userUnlockedBuildings.Count;
@@ -1994,15 +1996,20 @@ private void HideObjectsWithTag(string tag)
                 
                 // Get the single text component for user name
                 Text nameText = userGO.GetComponentInChildren<Text>();
-                
+
                 if (nameText != null)
                 {
                     string displayName = !string.IsNullOrEmpty(user.name) ? user.name : "Anonymous User";
                     nameText.text = displayName;
-                    
+
                     if (nameText.supportRichText)
                     {
                         nameText.text = $"<b>{displayName}</b>";
+                    }
+                    if (user.userId == FirebaseAuth.DefaultInstance.CurrentUser?.UserId)
+                    {
+                        nameText.text += " (You)";
+                     
                     }
                 }
                 else
@@ -2149,6 +2156,25 @@ private void HideObjectsWithTag(string tag)
         if (rankUpPanel != null)
         {
             rankUpPanel.SetActive(false);
+        }
+    }
+    
+    /// <summary>
+    /// Clears all static cache data in UIManager upon logout
+    /// </summary>
+    public static void ClearStaticCache()
+    {
+        try
+        {
+            // Clear static cache for current users per building
+            cachedCurrentUsersPerBuilding.Clear();
+            currentUsersLoadedPerBuilding.Clear();
+            
+            Debug.Log("UIManager: Cleared static cache data");
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"UIManager: Failed to clear static cache: {ex.Message}");
         }
     }
 }

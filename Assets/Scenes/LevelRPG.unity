@@ -2053,6 +2053,7 @@ GameObject:
   - component: {fileID: 185559589}
   - component: {fileID: 185559590}
   - component: {fileID: 185559591}
+  - component: {fileID: 185559592}
   m_Layer: 8
   m_Name: Library
   m_TagString: Untagged
@@ -2167,6 +2168,7 @@ MonoBehaviour:
   simulateEntry: 0
   connectedGate: {fileID: 0}
   bypassGpsCheck: 0
+  isPlayerInRange: 0
   activated: 0
   buildingName: Library
   usersScrollView: {fileID: 1017116444}
@@ -2317,6 +2319,24 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 5.800054, y: 10.401958}
   m_EdgeRadius: 0
+--- !u!114 &185559592
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 185559586}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cbd82e369599a4f5cb25be2231bf97d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ramPrefab: {fileID: 3470250536520970455, guid: 35dc22a450e568046b548ae2924ae151,
+    type: 3}
+  spawnParent: {fileID: 1681770776}
+  spawnRadius: 2
+  maxRams: 6
+  spawnSound: {fileID: 8300000, guid: b228ee252c52410b8a858ec13aa9f6c5, type: 3}
 --- !u!224 &188230579 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 3973655090500800096, guid: 7dc17e83f4e9ac545b4fae3cc84cb6cc,
@@ -2851,6 +2871,7 @@ GameObject:
   - component: {fileID: 211162576}
   - component: {fileID: 211162577}
   - component: {fileID: 211162578}
+  - component: {fileID: 211162579}
   m_Layer: 8
   m_Name: McWethy
   m_TagString: Untagged
@@ -3017,6 +3038,7 @@ MonoBehaviour:
   simulateEntry: 0
   connectedGate: {fileID: 1496117206}
   bypassGpsCheck: 1
+  isPlayerInRange: 0
   activated: 0
   buildingName: McWethy
   usersScrollView: {fileID: 1017116444}
@@ -3121,6 +3143,24 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &211162579
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 211162573}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cbd82e369599a4f5cb25be2231bf97d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ramPrefab: {fileID: 3470250536520970455, guid: 35dc22a450e568046b548ae2924ae151,
+    type: 3}
+  spawnParent: {fileID: 423005919}
+  spawnRadius: 2
+  maxRams: 6
+  spawnSound: {fileID: 8300000, guid: b228ee252c52410b8a858ec13aa9f6c5, type: 3}
 --- !u!114 &222550447 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8420681935382918955, guid: 60792b188c3284b2dbd04ae998ed47e4,
@@ -4226,7 +4266,7 @@ Transform:
   m_GameObject: {fileID: 316913357}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.41, y: -4.02, z: -59.36315}
+  m_LocalPosition: {x: 0.4, y: -4.52, z: -59.36315}
   m_LocalScale: {x: 1.4479324, y: 1.4479324, z: 1.4479324}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4476,8 +4516,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -16.298, y: -0.0000011921}
-  m_SizeDelta: {x: 32.5956, y: 32.5968}
+  m_AnchoredPosition: {x: -19.3, y: 0.00000047684}
+  m_SizeDelta: {x: 41.9819, y: 41.9834}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &333380998
 MonoBehaviour:
@@ -17176,6 +17216,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1213308513}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &423005918
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 423005919}
+  m_Layer: 0
+  m_Name: Rams spawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &423005919
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 423005918}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -18.03, y: 11.62, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1711022877}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!224 &428236437 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 2992548454231099791, guid: aa8074167b57d47b0a2e3c78841a8e28,
@@ -19612,7 +19683,7 @@ Transform:
   m_GameObject: {fileID: 697916729}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 9.21, y: -4.18, z: -0}
+  m_LocalPosition: {x: 8.95, y: -4.15, z: -0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -21052,7 +21123,7 @@ Transform:
   m_GameObject: {fileID: 833470304}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -2.97, y: -4.76, z: 2.7515619}
+  m_LocalPosition: {x: -4.78, y: -2.96, z: 2.7515619}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -23109,6 +23180,7 @@ GameObject:
   - component: {fileID: 1046268212}
   - component: {fileID: 1046268214}
   - component: {fileID: 1046268215}
+  - component: {fileID: 1046268216}
   m_Layer: 8
   m_Name: Ebersole
   m_TagString: Untagged
@@ -23268,6 +23340,7 @@ MonoBehaviour:
   simulateEntry: 0
   connectedGate: {fileID: 0}
   bypassGpsCheck: 1
+  isPlayerInRange: 0
   activated: 0
   buildingName: Ebersole
   usersScrollView: {fileID: 1017116444}
@@ -23275,6 +23348,24 @@ MonoBehaviour:
   userPrefab: {fileID: 8987667154442864685, guid: ba4005a013b4d9f4f9bb7f88891f4e60,
     type: 3}
   usersWhoUnlockedPanel: {fileID: 632281518}
+--- !u!114 &1046268216
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1046268211}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cbd82e369599a4f5cb25be2231bf97d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ramPrefab: {fileID: 3470250536520970455, guid: 35dc22a450e568046b548ae2924ae151,
+    type: 3}
+  spawnParent: {fileID: 316913358}
+  spawnRadius: 2
+  maxRams: 6
+  spawnSound: {fileID: 8300000, guid: b228ee252c52410b8a858ec13aa9f6c5, type: 3}
 --- !u!1 &1050557106
 GameObject:
   m_ObjectHideFlags: 0
@@ -27183,7 +27274,7 @@ Transform:
   m_GameObject: {fileID: 1353312975}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 4.55, y: 6.31, z: 2.7515619}
+  m_LocalPosition: {x: 3.62, y: 10.45, z: 2.7515619}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -30170,6 +30261,7 @@ GameObject:
   - component: {fileID: 1602936571}
   - component: {fileID: 1602936572}
   - component: {fileID: 1602936573}
+  - component: {fileID: 1602936574}
   m_Layer: 8
   m_Name: Stoner
   m_TagString: Untagged
@@ -30285,6 +30377,7 @@ MonoBehaviour:
   simulateEntry: 0
   connectedGate: {fileID: 8580128933837205543}
   bypassGpsCheck: 1
+  isPlayerInRange: 0
   activated: 0
   buildingName: Stoner
   usersScrollView: {fileID: 1017116444}
@@ -30435,6 +30528,24 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &1602936574
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1602936568}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cbd82e369599a4f5cb25be2231bf97d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ramPrefab: {fileID: 3470250536520970455, guid: 35dc22a450e568046b548ae2924ae151,
+    type: 3}
+  spawnParent: {fileID: 1353312976}
+  spawnRadius: 2
+  maxRams: 6
+  spawnSound: {fileID: 8300000, guid: b228ee252c52410b8a858ec13aa9f6c5, type: 3}
 --- !u!1 &1613157385
 GameObject:
   m_ObjectHideFlags: 0
@@ -36810,7 +36921,7 @@ Transform:
   m_GameObject: {fileID: 1681770775}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.25513858, z: -0, w: 0.9669045}
-  m_LocalPosition: {x: 29.84, y: -8.2, z: -47.45}
+  m_LocalPosition: {x: 30.67, y: -5.85, z: -46.98}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -37022,6 +37133,7 @@ GameObject:
   - component: {fileID: 1711022878}
   - component: {fileID: 1711022880}
   - component: {fileID: 1711022879}
+  - component: {fileID: 1711022881}
   m_Layer: 0
   m_Name: SAW_Top_Down
   m_TagString: Untagged
@@ -37043,6 +37155,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1940202910}
+  - {fileID: 423005919}
   m_Father: {fileID: 1187746829}
   m_LocalEulerAnglesHint: {x: 0, y: 30.043, z: 0}
 --- !u!212 &1711022878
@@ -37181,6 +37294,7 @@ MonoBehaviour:
   simulateEntry: 0
   connectedGate: {fileID: 0}
   bypassGpsCheck: 0
+  isPlayerInRange: 0
   activated: 0
   buildingName: SAW
   usersScrollView: {fileID: 1017116444}
@@ -37188,6 +37302,24 @@ MonoBehaviour:
   userPrefab: {fileID: 8987667154442864685, guid: ba4005a013b4d9f4f9bb7f88891f4e60,
     type: 3}
   usersWhoUnlockedPanel: {fileID: 632281518}
+--- !u!114 &1711022881
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1711022876}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cbd82e369599a4f5cb25be2231bf97d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ramPrefab: {fileID: 3470250536520970455, guid: 35dc22a450e568046b548ae2924ae151,
+    type: 3}
+  spawnParent: {fileID: 423005919}
+  spawnRadius: 5
+  maxRams: 10
+  spawnSound: {fileID: 8300000, guid: b228ee252c52410b8a858ec13aa9f6c5, type: 3}
 --- !u!1 &1715557442
 GameObject:
   m_ObjectHideFlags: 0
@@ -279889,6 +280021,56 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
+  - first: {x: -41, y: -23, z: 0}
+    second:
+      serializedVersion: 2
+      m_TileIndex: 1
+      m_TileSpriteIndex: 1
+      m_TileMatrixIndex: 0
+      m_TileColorIndex: 0
+      m_TileObjectToInstantiateIndex: 65535
+      dummyAlignment: 0
+      m_AllTileFlags: 1073741825
+  - first: {x: -40, y: -23, z: 0}
+    second:
+      serializedVersion: 2
+      m_TileIndex: 1
+      m_TileSpriteIndex: 1
+      m_TileMatrixIndex: 0
+      m_TileColorIndex: 0
+      m_TileObjectToInstantiateIndex: 65535
+      dummyAlignment: 0
+      m_AllTileFlags: 1073741825
+  - first: {x: -39, y: -23, z: 0}
+    second:
+      serializedVersion: 2
+      m_TileIndex: 1
+      m_TileSpriteIndex: 1
+      m_TileMatrixIndex: 0
+      m_TileColorIndex: 0
+      m_TileObjectToInstantiateIndex: 65535
+      dummyAlignment: 0
+      m_AllTileFlags: 1073741825
+  - first: {x: -38, y: -23, z: 0}
+    second:
+      serializedVersion: 2
+      m_TileIndex: 1
+      m_TileSpriteIndex: 1
+      m_TileMatrixIndex: 0
+      m_TileColorIndex: 0
+      m_TileObjectToInstantiateIndex: 65535
+      dummyAlignment: 0
+      m_AllTileFlags: 1073741825
+  - first: {x: -37, y: -23, z: 0}
+    second:
+      serializedVersion: 2
+      m_TileIndex: 1
+      m_TileSpriteIndex: 1
+      m_TileMatrixIndex: 0
+      m_TileColorIndex: 0
+      m_TileObjectToInstantiateIndex: 65535
+      dummyAlignment: 0
+      m_AllTileFlags: 1073741825
   - first: {x: -74, y: -22, z: 0}
     second:
       serializedVersion: 2
@@ -280013,7 +280195,7 @@ Tilemap:
   m_TileAssetArray:
   - m_RefCount: 3
     m_Data: {fileID: 11400000, guid: 152b01880b684854bb32e3ea9ad22bf9, type: 2}
-  - m_RefCount: 518
+  - m_RefCount: 523
     m_Data: {fileID: 11400000, guid: 25c158898828f0f4cb48733ac16db354, type: 2}
   - m_RefCount: 6
     m_Data: {fileID: 11400000, guid: 4265410347f7b824a914ca016cc760d0, type: 2}
@@ -280094,7 +280276,7 @@ Tilemap:
   m_TileSpriteArray:
   - m_RefCount: 3
     m_Data: {fileID: -2011505386, guid: 673f776fb40d06c4c871d2ddc764074e, type: 3}
-  - m_RefCount: 518
+  - m_RefCount: 523
     m_Data: {fileID: -1305726761, guid: 673f776fb40d06c4c871d2ddc764074e, type: 3}
   - m_RefCount: 6
     m_Data: {fileID: 1548563744, guid: 673f776fb40d06c4c871d2ddc764074e, type: 3}
@@ -280179,7 +280361,7 @@ Tilemap:
     m_Data: {fileID: 5587722799419507660, guid: bdef81957eb07164cb1eae6c291686e4,
       type: 3}
   m_TileMatrixArray:
-  - m_RefCount: 1186
+  - m_RefCount: 1191
     m_Data:
       e00: 1
       e01: 0
@@ -280198,7 +280380,7 @@ Tilemap:
       e32: 0
       e33: 1
   m_TileColorArray:
-  - m_RefCount: 1186
+  - m_RefCount: 1191
     m_Data: {r: 1, g: 1, b: 1, a: 1}
   m_TileObjectToInstantiateArray: []
   m_AnimationFrameRate: 1
@@ -280914,6 +281096,7 @@ GameObject:
   - component: {fileID: 1851404769}
   - component: {fileID: 1851404768}
   - component: {fileID: 1851404772}
+  - component: {fileID: 1851404773}
   m_Layer: 8
   m_Name: TC
   m_TagString: Untagged
@@ -280972,7 +281155,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.083452225, y: -0.35678542}
+  m_Offset: {x: -0.083452225, y: -0.3683082}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
@@ -280982,7 +281165,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 29.15873, y: 6.4729767}
+  m_Size: {x: 29.15873, y: 6.4960194}
   m_EdgeRadius: 0
 --- !u!82 &1851404769
 AudioSource:
@@ -281116,6 +281299,7 @@ MonoBehaviour:
   simulateEntry: 0
   connectedGate: {fileID: 0}
   bypassGpsCheck: 1
+  isPlayerInRange: 0
   activated: 0
   buildingName: TC
   usersScrollView: {fileID: 1017116444}
@@ -281194,8 +281378,26 @@ MonoBehaviour:
   ramPrefab: {fileID: 3470250536520970455, guid: 35dc22a450e568046b548ae2924ae151,
     type: 3}
   spawnParent: {fileID: 697916730}
+  spawnRadius: 2
+  maxRams: 6
+  spawnSound: {fileID: 8300000, guid: b228ee252c52410b8a858ec13aa9f6c5, type: 3}
+--- !u!114 &1851404773
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1851404766}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cbd82e369599a4f5cb25be2231bf97d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ramPrefab: {fileID: 0}
+  spawnParent: {fileID: 0}
   spawnRadius: 5
   maxRams: 10
+  spawnSound: {fileID: 0}
 --- !u!1001 &1854445095
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -281466,6 +281668,7 @@ GameObject:
   - component: {fileID: 1878086079}
   - component: {fileID: 1878086078}
   - component: {fileID: 1878086080}
+  - component: {fileID: 1878086081}
   m_Layer: 8
   m_Name: PR
   m_TagString: Untagged
@@ -281580,6 +281783,7 @@ MonoBehaviour:
   simulateEntry: 0
   connectedGate: {fileID: 7270442483274850398}
   bypassGpsCheck: 1
+  isPlayerInRange: 0
   activated: 0
   buildingName: PR
   usersScrollView: {fileID: 1017116444}
@@ -281730,6 +281934,24 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &1878086081
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1878086075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cbd82e369599a4f5cb25be2231bf97d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ramPrefab: {fileID: 3470250536520970455, guid: 35dc22a450e568046b548ae2924ae151,
+    type: 3}
+  spawnParent: {fileID: 833470305}
+  spawnRadius: 2
+  maxRams: 6
+  spawnSound: {fileID: 8300000, guid: b228ee252c52410b8a858ec13aa9f6c5, type: 3}
 --- !u!1001 &1897186309
 PrefabInstance:
   m_ObjectHideFlags: 0

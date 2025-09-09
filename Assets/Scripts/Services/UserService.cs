@@ -470,6 +470,71 @@ namespace RamRoutes.Services
             //     return 1; // Default to rank 1 if an error occurs
             // }
         }
+        
+        /// <summary>
+        /// Clears all user-related cached data from PlayerPrefs upon logout
+        /// </summary>
+        public static void ClearUserCache()
+        {
+            try
+            {
+                // Get current user ID before clearing cache to clear user-specific flags
+                string currentUserId = null;
+                try
+                {
+                    currentUserId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogWarning($"UserService: Could not get current user ID for cache clearing: {ex.Message}");
+                }
+                
+                // Clear user profile cache
+                if (PlayerPrefs.HasKey("current_user_profile"))
+                {
+                    PlayerPrefs.DeleteKey("current_user_profile");
+                }
+                
+                // Clear user info cache
+                if (PlayerPrefs.HasKey("UserName"))
+                {
+                    PlayerPrefs.DeleteKey("UserName");
+                }
+                
+                if (PlayerPrefs.HasKey("ResidenceHall"))
+                {
+                    PlayerPrefs.DeleteKey("ResidenceHall");
+                }
+                
+                if (PlayerPrefs.HasKey("PlayerName"))
+                {
+                    PlayerPrefs.DeleteKey("PlayerName");
+                }
+                
+                // Clear user rank cache
+                if (PlayerPrefs.HasKey("UserRank"))
+                {
+                    PlayerPrefs.DeleteKey("UserRank");
+                }
+                
+                // Clear first-time user flag for the current user
+                if (!string.IsNullOrEmpty(currentUserId))
+                {
+                    string firstTimeKey = $"FirstTime_{currentUserId}";
+                    if (PlayerPrefs.HasKey(firstTimeKey))
+                    {
+                        PlayerPrefs.DeleteKey(firstTimeKey);
+                    }
+                }
+                
+                PlayerPrefs.Save();
+                Debug.Log("UserService: Cleared all user cache data");
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"UserService: Failed to clear user cache: {ex.Message}");
+            }
+        }
 
     }
 }

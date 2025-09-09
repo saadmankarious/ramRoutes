@@ -247,7 +247,7 @@ public class RamAutoMovement : MonoBehaviour
         animator.SetFloat(movingXParam, moveInput.x);
         animator.SetFloat(movingYParam, moveInput.y);
         animator.SetBool(idleParam, moveMagnitude < 0.1f);
-        animator.SetFloat(movementMagnitudeParam, moveMagnitude); // For smooth transitions
+        // animator.SetFloat(movementMagnitudeParam, moveMagnitude); // For smooth transitions
     }
     
     // Visualize the movement radius in the scene view

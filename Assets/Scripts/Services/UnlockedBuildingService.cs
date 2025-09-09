@@ -27,14 +27,7 @@ namespace RamRoutes.Services
                 { "userName", record.userName },
                 { "buildingName", record.buildingName },
                 { "coinPoints", record.coinPoints },
-                { "knowledgePoints", record.knowledgePoints },
-                { "buildingPosition", new Dictionary<string, object>
-                    {
-                        { "x", record.buildingPosition.x },
-                        { "y", record.buildingPosition.y },
-                        { "z", record.buildingPosition.z }
-                    }
-                }
+                { "knowledgePoints", record.knowledgePoints }
             };
             try
             {
@@ -70,69 +63,71 @@ namespace RamRoutes.Services
             }
         }
 
-        public async Task<List<UnlockedBuildingRecord>> RetrieveUnlockedBuildings()
+        public async Task<List<UnlockedBuildingRecord>> RetrieveUnlockedBuildings(string userId)
         {
             var buildings = new List<UnlockedBuildingRecord>();
-            bool loadedFromFirestore = false;
             try
             {
-                QuerySnapshot snapshot = await db.Collection("unlocked-trials").GetSnapshotAsync();
+                // Query only for the specific user's unlocked buildings
+                Query query = db.Collection("unlocked-trials").WhereEqualTo("userId", userId);
+                QuerySnapshot snapshot = await query.GetSnapshotAsync();
+                
+                foreach (var doc in snapshot.Documents)
+                {
+                    var data = doc.ToDictionary();
+                    string docUserId = data.ContainsKey("userId") ? data["userId"].ToString() : "";
+                    DateTime unlockTime = data.ContainsKey("unlockTime") ? DateTime.Parse(data["unlockTime"].ToString()) : DateTime.MinValue;
+                    string buildingId = data.ContainsKey("buildingId") ? data["buildingId"].ToString() : "";
+                    string buildingName = data.ContainsKey("buildingName") ? data["buildingName"].ToString() : "";
+                    int coinPoints = data.ContainsKey("coinPoints") ? Convert.ToInt32(data["coinPoints"]) : 0;
+                    int knowledgePoints = data.ContainsKey("knowledgePoints") ? Convert.ToInt32(data["knowledgePoints"]) : 0;
+                    string userName = data.ContainsKey("userName") ? data["userName"].ToString() : "";
+                    
+                    // Create record without building position (obsolete)
+                    buildings.Add(new UnlockedBuildingRecord(docUserId, userName, unlockTime, buildingId, buildingName, Vector3.zero, coinPoints, knowledgePoints));
+                }
+                
+                Debug.Log($"Retrieved {buildings.Count} unlocked buildings for user {userId} from Firebase");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Failed to load unlocked buildings from Firestore for user {userId}: {ex.Message}");
+            }
+            
+            return buildings;
+        }
+
+        public async Task<List<UnlockedBuildingRecord>> RetrieveUnlockedBuildingsForBuilding(string buildingName)
+        {
+            var buildings = new List<UnlockedBuildingRecord>();
+            try
+            {
+                // Query for all users who unlocked a specific building
+                Query query = db.Collection("unlocked-trials").WhereEqualTo("buildingName", buildingName);
+                QuerySnapshot snapshot = await query.GetSnapshotAsync();
+                
                 foreach (var doc in snapshot.Documents)
                 {
                     var data = doc.ToDictionary();
                     string userId = data.ContainsKey("userId") ? data["userId"].ToString() : "";
                     DateTime unlockTime = data.ContainsKey("unlockTime") ? DateTime.Parse(data["unlockTime"].ToString()) : DateTime.MinValue;
                     string buildingId = data.ContainsKey("buildingId") ? data["buildingId"].ToString() : "";
-                    string buildingName = data.ContainsKey("buildingName") ? data["buildingName"].ToString() : "";
+                    string docBuildingName = data.ContainsKey("buildingName") ? data["buildingName"].ToString() : "";
                     int coinPoints = data.ContainsKey("coinPoints") ? Convert.ToInt32(data["coinPoints"]) : 0;
                     int knowledgePoints = data.ContainsKey("knowledgePoints") ? Convert.ToInt32(data["knowledgePoints"]) : 0;
-                    Vector3 buildingPosition = Vector3.zero;
-                    if (data.ContainsKey("buildingPosition"))
-                    {
-                        var posDict = data["buildingPosition"] as Dictionary<string, object>;
-                        if (posDict != null)
-                        {
-                            float x = posDict.ContainsKey("x") ? Convert.ToSingle(posDict["x"]) : 0f;
-                            float y = posDict.ContainsKey("y") ? Convert.ToSingle(posDict["y"]) : 0f;
-                            float z = posDict.ContainsKey("z") ? Convert.ToSingle(posDict["z"]) : 0f;
-                            buildingPosition = new Vector3(x, y, z);
-                        }
-                    }
                     string userName = data.ContainsKey("userName") ? data["userName"].ToString() : "";
-                    buildings.Add(new UnlockedBuildingRecord(userId, userName, unlockTime, buildingId, buildingName, buildingPosition, coinPoints, knowledgePoints));
+                    
+                    // Create record without building position (obsolete)
+                    buildings.Add(new UnlockedBuildingRecord(userId, userName, unlockTime, buildingId, docBuildingName, Vector3.zero, coinPoints, knowledgePoints));
                 }
-                // Save to local storage
-                string json = JsonUtility.ToJson(new UnlockedBuildingListWrapper { buildings = buildings });
-                PlayerPrefs.SetString("unlocked_buildings_cache", json);
-                PlayerPrefs.Save();
-                loadedFromFirestore = true;
-                // Debug.Log($"Got unlocked buildings from firestore {}");
+                
+                Debug.Log($"Retrieved {buildings.Count} users who unlocked building {buildingName} from Firebase");
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Failed to load unlocked buildings from Firestore: {ex.Message}");
+                Debug.LogError($"Failed to load users who unlocked building {buildingName} from Firestore: {ex.Message}");
             }
-            if (!loadedFromFirestore)
-            {
-                // Try to load from local storage
-                string json = PlayerPrefs.GetString("unlocked_buildings_cache", "");
-                if (!string.IsNullOrEmpty(json))
-                {
-                    try
-                    {
-                        var wrapper = JsonUtility.FromJson<UnlockedBuildingListWrapper>(json);
-                        if (wrapper != null && wrapper.buildings != null)
-                        {
-                            buildings = wrapper.buildings;
-                            Debug.Log($"Loaded unlocked buildings from local storage");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogError($"Failed to parse unlocked buildings from local storage: {ex.Message}");
-                    }
-                }
-            }
+            
             return buildings;
         }
 
@@ -141,5 +136,13 @@ namespace RamRoutes.Services
         {
             public List<UnlockedBuildingRecord> buildings;
         }
+            public static void ClearUnlockedBuildingsCache()
+        {
+            PlayerPrefs.DeleteKey("unlocked_buildings_cache");
+            PlayerPrefs.Save();
+            Debug.Log("Cleared local unlocked buildings cache");
+        }
     }
+
+
 }

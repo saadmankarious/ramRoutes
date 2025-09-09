@@ -122,5 +122,13 @@ namespace RamRoutes.Services
             SaveStageToPrefs(stage);
             await SaveStageToFirestore(stage);
         }
+
+        public static void ClearGameStageCache()
+        {
+             PlayerPrefs.DeleteKey(PrefsKey);
+            PlayerPrefs.DeleteKey(PrefsKeyDisplay);
+            PlayerPrefs.Save();
+            Debug.Log("GameStageService: Cleared game stage cache");
+        }
     }
 }

@@ -29,8 +29,8 @@ Transform:
   m_GameObject: {fileID: 3470250536520970455}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 12.8882, y: 0.3126, z: 0}
-  m_LocalScale: {x: 0.49977183, y: 0.49977183, z: 0.49977183}
+  m_LocalPosition: {x: 13.0386, y: 0.4737, z: 0}
+  m_LocalScale: {x: 0.7576041, y: 0.7576041, z: 0.7576041}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8066281368971023163}
@@ -126,9 +126,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 1
-  moveRadius: 3
+  moveRadius: 1
   waitTime: 2
   directionChangeInterval: 3
+  speedRange: {x: 0.5, y: 2}
+  waitTimeRange: {x: 3, y: 8}
   obstacleLayerMask:
     serializedVersion: 2
     m_Bits: 264
@@ -228,7 +230,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.4156863, g: 0.3529412, b: 0.8039216, a: 1}
+  m_Color: {r: 0.22745098, g: 0.26666668, b: 0.4, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

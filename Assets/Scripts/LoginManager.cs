@@ -491,6 +491,13 @@ public class LoginManager : MonoBehaviour
             var userService = new RamRoutes.Services.UserService();
             await userService.CreateUser(userId, username, email, residenceHall);
             
+            // Clear all existing cache data to ensure fresh start for new user
+            RamRoutes.Services.UserService.ClearUserCache();
+            RamRoutes.Services.BuildingEventService.ClearBuildingEventsCache();
+            UIManager.ClearStaticCache();
+            RamRoutes.Services.UnlockedBuildingService.ClearUnlockedBuildingsCache();
+            RamRoutes.Services.GameStageService.ClearGameStageCache();
+            
             // Store user info in PlayerPrefs for easy access
             PlayerPrefs.SetString("UserName", username);
             PlayerPrefs.SetString("ResidenceHall", residenceHall);
@@ -502,33 +509,67 @@ public class LoginManager : MonoBehaviour
             // Sign out the user immediately since they need to verify email first
             auth.SignOut();
             
-            // Success messaging to status text
-            ShowSignupStatus($"Confirmation link sent to {email}. Check your mailbox.");
-            
-            // Stay on signup panel, start countdown for resend
-            if (resendCountdownCoroutine != null)
+            // Check if this is a RamRoutes domain user (.rr)
+            if (email.EndsWith("@ramroutes.com"))
             {
-                Debug.Log("Stopping existing countdown coroutine");
-                StopCoroutine(resendCountdownCoroutine);
-            }
-            Debug.Log("Starting resend countdown after successful signup");
-            
-            // Start both coroutine and Update-based countdown as backup
-            // The Update method will be the primary countdown mechanism
-            countdownTimer = resendCountdownSeconds;
-            isCountingDown = true;
-            Debug.Log($"Started Update-based countdown with timer={countdownTimer}");
-            
-            // Also start coroutine as backup, but Update method will handle the countdown
-            resendCountdownCoroutine = StartCoroutine(ResendCountdownRoutine());
-            
-            if (resendCountdownCoroutine == null)
-            {
-                Debug.LogError("Failed to start countdown coroutine! Using Update-based timer.");
+                // RamRoutes users - redirect to login and pre-fill username
+                ShowSignupStatus("Account created successfully! Please login below.");
+                
+                // Switch to login mode
+                isSignupMode = false;
+                UpdateToggleText();
+                TogglePanels();
+                
+                // Pre-fill the login email field with the registered username
+                if (emailInput != null)
+                {
+                    emailInput.text = username + ".rr"; // Use original username with .rr
+                }
+                
+                // Clear signup form
+                if (signupUsernameInput != null) signupUsernameInput.text = "";
+                if (signupPasswordInput != null) signupPasswordInput.text = "";
+                if (residenceHallDropdown != null) residenceHallDropdown.value = 0;
+                
+                // Clear any countdown
+                if (resendCountdownCoroutine != null)
+                {
+                    StopCoroutine(resendCountdownCoroutine);
+                    resendCountdownCoroutine = null;
+                }
+                isCountingDown = false;
+                signupButton.interactable = true;
             }
             else
             {
-                Debug.Log("Countdown coroutine started successfully");
+                // Cornell College users - show verification message and stay on signup
+                ShowSignupStatus($"Confirmation link sent to {email}. Check your mailbox.");
+                
+                // Stay on signup panel, start countdown for resend
+                if (resendCountdownCoroutine != null)
+                {
+                    Debug.Log("Stopping existing countdown coroutine");
+                    StopCoroutine(resendCountdownCoroutine);
+                }
+                Debug.Log("Starting resend countdown after successful signup");
+                
+                // Start both coroutine and Update-based countdown as backup
+                // The Update method will be the primary countdown mechanism
+                countdownTimer = resendCountdownSeconds;
+                isCountingDown = true;
+                Debug.Log($"Started Update-based countdown with timer={countdownTimer}");
+                
+                // Also start coroutine as backup, but Update method will handle the countdown
+                resendCountdownCoroutine = StartCoroutine(ResendCountdownRoutine());
+                
+                if (resendCountdownCoroutine == null)
+                {
+                    Debug.LogError("Failed to start countdown coroutine! Using Update-based timer.");
+                }
+                else
+                {
+                    Debug.Log("Countdown coroutine started successfully");
+                }
             }
         }
         catch (FirebaseException e)
@@ -1047,7 +1088,20 @@ public class LoginManager : MonoBehaviour
         if (auth != null)
         {
             auth.SignOut();
-            PlayerPrefs.DeleteKey("PlayerName");
+
+            // Clear all user-related cache data
+            RamRoutes.Services.UserService.ClearUserCache();
+
+            // Clear building events cache
+            RamRoutes.Services.BuildingEventService.ClearBuildingEventsCache();
+
+            // Clear UIManager static cache
+            UIManager.ClearStaticCache();
+
+            RamRoutes.Services.GameStageService.ClearGameStageCache();
+            
+            // Clear game stage cache (optional - you may want to keep this)
+            // RamRoutes.Services.GameStageService.ClearStageFromPrefs();
         }
 
         // Reset to login mode

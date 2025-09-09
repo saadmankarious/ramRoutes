@@ -55,7 +55,7 @@ public class BuildingInteraction : MonoBehaviour
     // [SerializeField] private float gpsUnlockRadius = 50f;
     [SerializeField] public bool bypassGpsCheck = false;
 
-    private bool isPlayerInRange = false;
+    public bool isPlayerInRange = false;
     private int currentLineIndex = 0;
     private bool extraLineShown = false;
     private AudioSource audioSource;
@@ -77,14 +77,15 @@ public class BuildingInteraction : MonoBehaviour
     private bool eventsLoaded = false;
     private UIManager uiManager;
     private BuildingProximityDetector proximityDetector;
+    private RamsManager ramsManager;
     
     // Event for virtual building entry/exit
     public delegate void VirtualBuildingEntryEvent(BuildingInteraction buildingData);
     public static event VirtualBuildingEntryEvent OnVirtualBuildingEntered;
     public static event VirtualBuildingEntryEvent OnVirtualBuildingExited;
-    
+
     // NEW: Switch into building viewing mode (same behavior as when entering an unlocked building)
-    private void EnterBuildingViewingMode(bool showEventsHappening = true)
+    private async void EnterBuildingViewingMode(bool showEventsHappening = true)
     {
         // Update title UI
         if (buildingTitleUnlcoked != null)
@@ -95,7 +96,7 @@ public class BuildingInteraction : MonoBehaviour
 
         // Trigger virtual building entry event
         var buildingData = GetComponent<BuildingInteraction>();
-        if(showEventsHappening) OnVirtualBuildingEntered?.Invoke(buildingData);
+        if (showEventsHappening) OnVirtualBuildingEntered?.Invoke(buildingData);
 
         // Notify UI manager that we are in viewing mode
         if (UIManager.Instance != null)
@@ -127,6 +128,16 @@ public class BuildingInteraction : MonoBehaviour
         {
             uiManager.DisplayCurrentUsersForBuilding(buildingName);
         }
+        if (ramsManager != null)
+        {
+            ramsManager.OnBuildingActivated();
+        }
+                string userId = FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.UserId : "unknown";
+
+                var userService = new UserService();
+
+                    await userService.UpdateCurrentBuilding(userId, buildingName);
+
     }
 
     private IEnumerator ShowEventsWhenReady()
@@ -163,6 +174,7 @@ public class BuildingInteraction : MonoBehaviour
     {
         uiManager = UIManager.Instance;
         proximityDetector = FindObjectOfType<BuildingProximityDetector>();
+        ramsManager = GetComponent<RamsManager>();
         
         if (inactivePrefab != null)
         {
@@ -209,12 +221,19 @@ public class BuildingInteraction : MonoBehaviour
     private IEnumerator SetActiveIfEntered(UnlockedBuildingService service)
     {
         string userId = FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.UserId : "unknown";
-        var task = service.RetrieveUnlockedBuildings();
+        var task = service.RetrieveUnlockedBuildings(userId);
         while (!task.IsCompleted) yield return null;
         var enteredBuildings = task.Result;
         if (enteredBuildings != null && enteredBuildings.Exists(b => b.buildingName == buildingName && b.userId == userId))
         {
             activated = true;
+            
+            // Notify RamsManager that building is now activated
+            // if (ramsManager != null)
+            // {
+            //     ramsManager.OnBuildingActivated();
+            // }
+            
             if (inactiveInstance != null) inactiveInstance.SetActive(false);
             if (sr != null && originalMaterial != null)
             {
@@ -481,7 +500,7 @@ public class BuildingInteraction : MonoBehaviour
             // Check if already unlocked
             var service = new UnlockedBuildingService();
             string userId = FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.UserId : "unknown";
-            var enteredBuildings = await service.RetrieveUnlockedBuildings();
+            var enteredBuildings = await service.RetrieveUnlockedBuildings(userId);
             bool alreadyEntered = enteredBuildings.Exists(b => b.buildingName == buildingName && b.userId == userId);
             
             if (alreadyEntered)
@@ -525,6 +544,12 @@ public class BuildingInteraction : MonoBehaviour
         // Activate building after unlock
         activated = true;
 
+        // // Notify RamsManager that building is now activated
+        // if (ramsManager != null)
+        // {
+        //     ramsManager.OnBuildingActivated();
+        // }
+
 
 
         // Play reward sound when building is revealed
@@ -552,7 +577,7 @@ public class BuildingInteraction : MonoBehaviour
         // UIManager.Instance.UpdateCoins(updatedPoints);
 
         // Update user's current building
-        await userService.UpdateCurrentBuilding(userId, buildingName);
+        // await userService.UpdateCurrentBuilding(userId, buildingName);
 
         // Save unlock event to Firestore
         var record = new UnlockedBuildingRecord(
@@ -656,8 +681,7 @@ public class BuildingInteraction : MonoBehaviour
         }
 
         var service = new UnlockedBuildingService();
-        var unlockedList = await service.RetrieveUnlockedBuildings();
-        var usersForBuilding = unlockedList.FindAll(b => b.buildingName == buildingName);        try
+        var usersForBuilding = await service.RetrieveUnlockedBuildingsForBuilding(buildingName);        try
         {
             if (usersForBuilding.Count == 0)
             {

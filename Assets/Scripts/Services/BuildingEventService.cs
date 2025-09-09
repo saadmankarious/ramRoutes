@@ -248,6 +248,16 @@ namespace RamRoutes.Services
             Debug.Log("Building events cache cleared");
         }
         
+        /// <summary>
+        /// Static method to clear building events cache without needing an instance
+        /// </summary>
+        public static void ClearBuildingEventsCache()
+        {
+            PlayerPrefs.DeleteKey(CACHE_KEY);
+            PlayerPrefs.Save();
+            Debug.Log("BuildingEventService: Cleared building events cache");
+        }
+        
         public async Task<bool> RecordAttendanceAsync(string eventId, string playerId)
         {
             try
