@@ -21,6 +21,9 @@ public class RamsManager : MonoBehaviour
     [Header("Audio Settings")]
     [SerializeField] private AudioClip spawnSound;
     
+    [Header("User Info Panel")]
+    [SerializeField] private UserInfoPanel userInfoPanel;
+    
     private UserService userService;
     private List<GameObject> spawnedRams = new List<GameObject>();
     private HashSet<string> spawnedUserIds = new HashSet<string>(); // Track spawned user IDs
@@ -336,7 +339,27 @@ public class RamsManager : MonoBehaviour
     private void OnRamClicked(User user)
     {
         Debug.Log($"Ram clicked for user: {user.name}");
-        // Implement further interaction logic here, e.g., open user profile, send message, etc.
+        
+        // Try assigned reference first, then singleton, then find in scene
+        UserInfoPanel panel = userInfoPanel;
+        if (panel == null)
+        {
+            panel = UserInfoPanel.Instance;
+        }
+        if (panel == null)
+        {
+            panel = FindObjectOfType<UserInfoPanel>();
+        }
+        
+        // Show user info panel
+        if (panel != null)
+        {
+            panel.ShowUserInfo(user);
+        }
+        else
+        {
+            Debug.LogWarning("RamsManager: No UserInfoPanel found in scene!");
+        }
     }
     
     /// <summary>
