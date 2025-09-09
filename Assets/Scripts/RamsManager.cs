@@ -275,7 +275,7 @@ public class RamsManager : MonoBehaviour
             }
         }
     }
-    
+
     /// <summary>
     /// Spawns a single ram for a specific user
     /// </summary>
@@ -283,16 +283,16 @@ public class RamsManager : MonoBehaviour
     {
         // Calculate spawn position in a circle around the spawn parent
         Vector3 spawnPosition = CalculateSpawnPosition(index);
-        
+
         // Instantiate ram prefab
         GameObject ramInstance = Instantiate(ramPrefab, spawnPosition, Quaternion.identity);
-        
+
         // Set parent if specified
         if (spawnParent != null)
         {
             ramInstance.transform.SetParent(spawnParent);
         }
-        
+
         // Find and set username text
         var usernameText = ramInstance.GetComponentInChildren<UnityEngine.UI.Text>();
         if (usernameText != null)
@@ -312,7 +312,7 @@ public class RamsManager : MonoBehaviour
                 Debug.LogWarning($"No Text component found in ram prefab for user {user.name}");
             }
         }
-        
+
         // Try to set user stats if there are additional text components
         var allTexts = ramInstance.GetComponentsInChildren<UnityEngine.UI.Text>();
         if (allTexts.Length > 1)
@@ -320,14 +320,45 @@ public class RamsManager : MonoBehaviour
             // Second text could be for stats
             allTexts[1].text = $"Coins: {user.coins} | KB: {user.knowledgePoints}";
         }
-        
+
         // Add to spawned rams list
         spawnedRams.Add(ramInstance);
-        
+
+        // Setup click handling using ButtonHandler
+        SetupRamClickHandler(ramInstance, user);
+
         // Play spawn sound
         PlaySpawnSound();
-        
+
         Debug.Log($"Spawned ram for user: {user.name} at position {spawnPosition}");
+    }
+
+    private void OnRamClicked(User user)
+    {
+        Debug.Log($"Ram clicked for user: {user.name}");
+        // Implement further interaction logic here, e.g., open user profile, send message, etc.
+    }
+    
+    /// <summary>
+    /// Sets up click handling using RamClickHandler component
+    /// </summary>
+    private void SetupRamClickHandler(GameObject ramInstance, User user)
+    {
+        // Add RamClickHandler component
+        RamClickHandler ramClickHandler = ramInstance.AddComponent<RamClickHandler>();
+        
+        // Initialize RamClickHandler with user and manager reference
+        ramClickHandler.Initialize(user, this);
+        
+        Debug.Log($"RamClickHandler setup for ram: {user.name}");
+    }
+    
+    /// <summary>
+    /// Called by RamClickHandler when a ram is clicked
+    /// </summary>
+    public void HandleRamClick(User user)
+    {
+        OnRamClicked(user);
     }
     
     /// <summary>
