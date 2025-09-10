@@ -420,3 +420,136 @@ exports.notifyRankAchievement = onDocumentUpdated("users/{userId}", async (event
         throw error;
     }
 });
+
+/**
+ * Notify users when they receive a shoutout
+ * Triggers when a new document is created in the shout-outs collection
+ */
+exports.notifyShoutoutReceived = onDocumentCreated("shout-outs/{shoutoutId}", async (event) => {
+    try {
+        const shoutoutData = event.data.data();
+        const shoutoutId = event.params.shoutoutId;
+        const receiverUserId = shoutoutData.toId;
+        const senderUserId = shoutoutData.fromId;
+        
+        if (!receiverUserId) {
+            logger.error("No receiver user ID found in shoutout", { shoutoutId });
+            return null;
+        }
+        
+        const admin = require("firebase-admin");
+        const db = admin.firestore();
+        
+        // Get receiver user data to check if it's a guest user
+        const receiverDoc = await db.collection("users").doc(receiverUserId).get();
+        if (!receiverDoc.exists) {
+            logger.error("Receiver user not found", { receiverUserId, shoutoutId });
+            return null;
+        }
+        
+        const receiverData = receiverDoc.data();
+        const receiverEmail = receiverData.email || '';
+        
+        // Skip notification for guest users with @ramroutes.com emails
+        if (receiverEmail.endsWith('@ramroutes.com')) {
+            logger.info("Skipping shoutout notification for guest user", {
+                shoutoutId: shoutoutId,
+                receiverUserId: receiverUserId,
+                email: receiverEmail
+            });
+            return null;
+        }
+        
+        // Get sender user data for the notification message
+        let senderName = 'Someone';
+        if (senderUserId) {
+            const senderDoc = await db.collection("users").doc(senderUserId).get();
+            if (senderDoc.exists) {
+                const senderData = senderDoc.data();
+                senderName = senderData.name || 'Someone';
+            }
+        }
+        
+        const kbAmount = shoutoutData.kbAmount || 10;
+        const coinAmount = shoutoutData.coinAmount || 10;
+        
+        logger.info("Shoutout received, sending notification", {
+            shoutoutId: shoutoutId,
+            senderName: senderName,
+            receiverUserId: receiverUserId,
+            kbAmount: kbAmount,
+            coinAmount: coinAmount
+        });
+        
+        // Send targeted notification to the receiver only
+        const message = {
+            token: null, // We'll need to get the FCM token for the specific user
+            notification: {
+                title: '🎉 You received a Shoutout!',
+                body: `${senderName} sent you a shoutout! You gained ${coinAmount} coins and ${kbAmount} knowledge points!`
+            },
+            data: {
+                shoutoutId: shoutoutId,
+                senderName: senderName,
+                senderUserId: senderUserId || "",
+                receiverUserId: receiverUserId,
+                kbAmount: kbAmount.toString(),
+                coinAmount: coinAmount.toString(),
+                type: "shoutout_received"
+            },
+            android: {
+                notification: {
+                    icon: "ic_notification",
+                    color: "#E91E63", // Pink color for shoutouts
+                    sound: "default"
+                }
+            },
+            apns: {
+                payload: {
+                    aps: {
+                        badge: 1,
+                        sound: "default"
+                    }
+                }
+            }
+        };
+        
+        // Try to get the user's FCM token from their user document
+        const fcmToken = receiverData.notificationToken;
+        if (fcmToken) {
+            message.token = fcmToken;
+            
+            const response = await getMessaging().send(message);
+            logger.info("Successfully sent shoutout notification to user", {
+                messageId: response,
+                shoutoutId: shoutoutId,
+                receiverUserId: receiverUserId,
+                senderName: senderName
+            });
+            
+            return response;
+        } else {
+            // Fallback: send to updates topic (all users will see it but it's better than nothing)
+            delete message.token;
+            message.topic = 'updates';
+            message.notification.body = `${senderName} sent a shoutout to ${receiverData.name || 'a player'}!`;
+            
+            const response = await getMessaging().send(message);
+            logger.info("Sent shoutout notification to updates topic (no FCM token found)", {
+                messageId: response,
+                shoutoutId: shoutoutId,
+                receiverUserId: receiverUserId,
+                senderName: senderName
+            });
+            
+            return response;
+        }
+        
+    } catch (error) {
+        logger.error("Error sending shoutout notification", {
+            error: error.message,
+            shoutoutId: event.params.shoutoutId
+        });
+        throw error;
+    }
+});
