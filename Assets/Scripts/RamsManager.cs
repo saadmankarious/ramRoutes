@@ -46,8 +46,16 @@ public class RamsManager : MonoBehaviour
     {
         if (building.activated && !hasBeenActivated)
         {
+            // Check if we're in the Terminal game stage - only activate ram system during Terminal stage
+            var currentStage = GameStageService.LoadStageFromPrefs();
+            if (currentStage == null || currentStage.area != Stage.Terminal)
+            {
+                Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), skipping ram system activation");
+                return;
+            }
+            
             hasBeenActivated = true;
-            Debug.Log($"Building {building.buildingName} activated, spawning rams");
+            Debug.Log($"Building {building.buildingName} activated in Terminal stage, spawning rams");
             await SpawnRams();
             
             // Start the refresh coroutine to check for new players every 5 seconds
@@ -157,6 +165,14 @@ public class RamsManager : MonoBehaviour
     /// </summary>
     private async Task SpawnRams()
     {
+        // Check if we're in the Terminal game stage - only spawn rams during Terminal stage
+        var currentStage = GameStageService.LoadStageFromPrefs();
+        if (currentStage == null || currentStage.area != Stage.Terminal)
+        {
+            Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), skipping ram spawning");
+            return;
+        }
+        
         string buildingName = building.buildingName;
         if (string.IsNullOrEmpty(buildingName))
         {
@@ -233,6 +249,14 @@ public class RamsManager : MonoBehaviour
     /// </summary>
     private async Task CheckForNewPlayers()
     {
+        // Check if we're in the Terminal game stage - only spawn rams during Terminal stage
+        var currentStage = GameStageService.LoadStageFromPrefs();
+        if (currentStage == null || currentStage.area != Stage.Terminal)
+        {
+            Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), skipping new player check");
+            return;
+        }
+        
         string buildingName = building.buildingName;
         if (string.IsNullOrEmpty(buildingName))
         {

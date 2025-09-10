@@ -111,6 +111,10 @@ public class UIManager : MonoBehaviour
     // Static cache for current users per building
     private static Dictionary<string, List<User>> cachedCurrentUsersPerBuilding = new Dictionary<string, List<User>>();
     private static Dictionary<string, bool> currentUsersLoadedPerBuilding = new Dictionary<string, bool>();
+    
+    // Dictionary to track active popup animations to prevent conflicts
+    private Dictionary<GameObject, Coroutine> activePopupAnimations = new Dictionary<GameObject, Coroutine>();
+    
     private float lastTypingSoundTime;
     [SerializeField] private float typingSoundVolume = 0.3f;
 
@@ -231,6 +235,7 @@ public class UIManager : MonoBehaviour
         else
         {
             Destroy(gameObject);
+            return;
         }
 
         if (audioSource == null)
@@ -304,6 +309,100 @@ public class UIManager : MonoBehaviour
         
         // Reset fade overlay to be transparent and inactive at start
         ResetFadeOverlay();
+    }
+
+    /// <summary>
+    /// Called when a scene is loaded - reinitialize components if this UIManager persisted from another scene
+    /// </summary>
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        // Only reinitialize if this is an additive load or if we're loading a new scene
+        if (mode == LoadSceneMode.Single)
+        {
+            Debug.Log($"UIManager: Scene '{scene.name}' loaded, checking for component reinitialization");
+            
+            // Find and reconnect UI components that might have been lost during scene transition
+            RefreshUIReferences();
+        }
+    }
+
+    /// <summary>
+    /// Public method to manually refresh UI connections - can be called from Inspector or other scripts
+    /// </summary>
+    public void RefreshAllUIConnections()
+    {
+        RefreshUIReferences();
+        Debug.Log("UIManager: Manually refreshed all UI connections");
+    }
+
+    /// <summary>
+    /// Refreshes UI component references in case they were lost during scene transitions
+    /// </summary>
+    private void RefreshUIReferences()
+    {
+        // Try to find the pause menu button if it's not connected
+        if (gamePauseMenu == null)
+        {
+            GameObject pauseMenuGO = GameObject.Find("GamePauseMenu");
+            if (pauseMenuGO != null)
+            {
+                gamePauseMenu = pauseMenuGO;
+                Debug.Log("UIManager: Reconnected gamePauseMenu reference");
+            }
+        }
+        
+        // Look for pause button and reconnect the TogglePauseMenu method if needed
+        Button[] allButtons = FindObjectsOfType<Button>();
+        foreach (Button button in allButtons)
+        {
+            // Check if this looks like a pause button (by name or parent name)
+            string buttonName = button.gameObject.name.ToLower();
+            string parentName = button.transform.parent?.name?.ToLower() ?? "";
+            
+            if (buttonName.Contains("pause") || parentName.Contains("pause") || 
+                buttonName.Contains("menu") || buttonName.Contains("settings"))
+            {
+                // Check if the button has any listeners for TogglePauseMenu
+                bool hasToggleListener = false;
+                for (int i = 0; i < button.onClick.GetPersistentEventCount(); i++)
+                {
+                    if (button.onClick.GetPersistentMethodName(i) == "TogglePauseMenu")
+                    {
+                        hasToggleListener = true;
+                        break;
+                    }
+                }
+                
+                // If no TogglePauseMenu listener found, add it programmatically
+                if (!hasToggleListener)
+                {
+                    // Remove any existing runtime listeners for this method first to avoid duplicates
+                    button.onClick.RemoveListener(TogglePauseMenu);
+                    // Add the listener
+                    button.onClick.AddListener(TogglePauseMenu);
+                    Debug.Log($"UIManager: Added TogglePauseMenu listener to button '{button.gameObject.name}'");
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Cleanup when UIManager is destroyed
+    /// </summary>
+    private void OnDestroy()
+    {
+        // Stop all active popup animations to prevent coroutine errors
+        if (activePopupAnimations != null)
+        {
+            foreach (var animationPair in activePopupAnimations)
+            {
+                if (animationPair.Value != null)
+                {
+                    StopCoroutine(animationPair.Value);
+                }
+            }
+            activePopupAnimations.Clear();
+        }
     }
 
     private async Task InitializeGameStage()
@@ -1676,8 +1775,34 @@ private void HideObjectsWithTag(string tag)
     {
         if (panel == null) yield break;
 
-        // Save original scale
-        Vector3 originalScale = panel.transform.localScale;
+        // Stop any existing animation for this specific panel
+        if (activePopupAnimations.ContainsKey(panel))
+        {
+            if (activePopupAnimations[panel] != null)
+            {
+                StopCoroutine(activePopupAnimations[panel]);
+            }
+            activePopupAnimations.Remove(panel);
+        }
+        
+        // Track this animation
+        activePopupAnimations[panel] = StartCoroutine(AnimatePanelPopupInternal(panel));
+        
+        yield return activePopupAnimations[panel];
+        
+        // Clean up tracking when animation completes
+        if (activePopupAnimations.ContainsKey(panel))
+        {
+            activePopupAnimations.Remove(panel);
+        }
+    }
+    
+    private IEnumerator AnimatePanelPopupInternal(GameObject panel)
+    {
+        if (panel == null) yield break;
+
+        // Always use (1,1,1) as the target scale to prevent accumulating scale issues
+        Vector3 targetScale = Vector3.one;
         
         // Start with zero scale
         panel.transform.localScale = Vector3.zero;
@@ -1686,18 +1811,18 @@ private void HideObjectsWithTag(string tag)
         float duration = 0.4f;
         float elapsed = 0f;
         
-        // First phase - grow quickly to slightly larger than original
+        // First phase - grow quickly to slightly larger than target
         while (elapsed < duration * 0.8f)
         {
             elapsed += Time.deltaTime;
             float progress = elapsed / (duration * 0.8f);
             // Use easeOutBack-like effect for a bouncy feel
             float overshoot = Mathf.Lerp(0, 1.1f, progress);
-            panel.transform.localScale = Vector3.Lerp(Vector3.zero, originalScale * overshoot, progress);
+            panel.transform.localScale = Vector3.Lerp(Vector3.zero, targetScale * overshoot, progress);
             yield return null;
         }
         
-        // Second phase - settle back to original size
+        // Second phase - settle back to target size
         float secondPhaseDuration = duration * 0.2f;
         elapsed = 0f;
         Vector3 overshotScale = panel.transform.localScale;
@@ -1706,11 +1831,36 @@ private void HideObjectsWithTag(string tag)
         {
             elapsed += Time.deltaTime;
             float progress = elapsed / secondPhaseDuration;
-            panel.transform.localScale = Vector3.Lerp(overshotScale, originalScale, progress);
+            panel.transform.localScale = Vector3.Lerp(overshotScale, targetScale, progress);
             yield return null;
         }
         
-        // Ensure we end at exactly the original scale
+        // Ensure we end at exactly the target scale
+        panel.transform.localScale = targetScale;
+    }
+
+    /// <summary>
+    /// Resets a panel's scale to (1,1,1) - useful for fixing scale issues
+    /// </summary>
+    /// <param name="panel">The panel to reset</param>
+    public void ResetPanelScale(GameObject panel)
+    {
+        if (panel != null)
+        {
+            // Stop any active animation for this panel first
+            if (activePopupAnimations.ContainsKey(panel))
+            {
+                if (activePopupAnimations[panel] != null)
+                {
+                    StopCoroutine(activePopupAnimations[panel]);
+                }
+                activePopupAnimations.Remove(panel);
+            }
+            
+            // Reset to normal scale
+            panel.transform.localScale = Vector3.one;
+            Debug.Log($"Reset scale for panel: {panel.name}");
+        }
     }
 
     // Simple method to hide AROS without animation

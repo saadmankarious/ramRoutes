@@ -191,10 +191,14 @@ public class NpcAutoMovement : MonoBehaviour
     
     void Update()
     {
-        // Check if NPC has exceeded maximum lifetime
+        // Check if NPC has exceeded maximum lifetime - force despawn even during conversation
         if (Time.time - spawnTime > maxLifetime)
         {
-            Debug.Log($"NPC {gameObject.name}: Exceeded maximum lifetime ({maxLifetime}s), despawning");
+            Debug.Log($"NPC {gameObject.name}: Exceeded maximum lifetime ({maxLifetime}s), force despawning");
+            if (isInConversation)
+            {
+                EndConversation();
+            }
             DespawnNPC();
             return;
         }

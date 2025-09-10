@@ -124,10 +124,10 @@ public class BuildingInteraction : MonoBehaviour
         }
 
         // Show current users panel through UIManager
-        if (uiManager != null)
-        {
-            uiManager.DisplayCurrentUsersForBuilding(buildingName);
-        }
+        // if (uiManager != null)
+        // {
+        //     uiManager.DisplayCurrentUsersForBuilding(buildingName);
+        // }
         if (ramsManager != null)
         {
             ramsManager.OnBuildingActivated();
