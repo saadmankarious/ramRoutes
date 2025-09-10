@@ -444,9 +444,9 @@ public class RamsManager : MonoBehaviour
         
     }
     
-    void OnDestroy()
+    private void OnDestroy()
     {
-        // Stop the refresh coroutine
+        // Clean up the refresh coroutine when the object is destroyed
         if (refreshCoroutine != null)
         {
             StopCoroutine(refreshCoroutine);
