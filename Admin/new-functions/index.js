@@ -553,3 +553,122 @@ exports.notifyShoutoutReceived = onDocumentCreated("shout-outs/{shoutoutId}", as
         throw error;
     }
 });
+
+/**
+ * Notify user when they receive a friend request
+ * Triggers when a document is created in the FriendRequests collection
+ */
+exports.notifyFriendRequestReceived = onDocumentCreated("FriendRequests/{requestId}", async (event) => {
+    try {
+        const requestData = event.data.data();
+        const requestId = event.params.requestId;
+        const receiverUserId = requestData.toId;
+        const senderUserId = requestData.fromId;
+        
+        if (!receiverUserId) {
+            logger.error("No receiver user ID found in friend request", { requestId });
+            return null;
+        }
+        
+        const admin = require("firebase-admin");
+        const db = admin.firestore();
+        
+        // Get receiver user data to check if it's a guest user
+        const receiverDoc = await db.collection("users").doc(receiverUserId).get();
+        if (!receiverDoc.exists) {
+            logger.error("Receiver user not found", { receiverUserId, requestId });
+            return null;
+        }
+        
+        const receiverData = receiverDoc.data();
+        const receiverEmail = receiverData.email || '';
+        
+        // Skip notification for guest users with @ramroutes.com emails
+        if (receiverEmail.endsWith('@ramroutes.com')) {
+            logger.info("Skipping friend request notification for guest user", {
+                requestId: requestId,
+                receiverUserId: receiverUserId,
+                email: receiverEmail
+            });
+            return null;
+        }
+        
+        // Get sender name from request data or fallback to user document
+        let senderName = requestData.fromName || 'Someone';
+        if (!requestData.fromName && senderUserId) {
+            const senderDoc = await db.collection("users").doc(senderUserId).get();
+            if (senderDoc.exists) {
+                const senderData = senderDoc.data();
+                senderName = senderData.name || 'Someone';
+            }
+        }
+        
+        logger.info("Friend request received, sending notification", {
+            requestId: requestId,
+            senderName: senderName,
+            receiverUserId: receiverUserId
+        });
+        
+        // Send targeted notification to the receiver only
+        const message = {
+            token: null, // We'll need to get the FCM token for the specific user
+            notification: {
+                title: '👥 New Friend Request',
+                body: `${senderName} wants to be your friend!`
+            },
+            data: {
+                requestId: requestId,
+                senderName: senderName,
+                senderUserId: senderUserId || "",
+                receiverUserId: receiverUserId,
+                type: "friend_request_received"
+            },
+            android: {
+                notification: {
+                    icon: "ic_notification",
+                    color: "#2196F3", // Blue color for friend requests
+                    sound: "default"
+                }
+            },
+            apns: {
+                payload: {
+                    aps: {
+                        badge: 1,
+                        sound: "default"
+                    }
+                }
+            }
+        };
+        
+        // Try to get the user's FCM token from their user document
+        const fcmToken = receiverData.notificationToken;
+        if (fcmToken) {
+            message.token = fcmToken;
+            
+            const response = await getMessaging().send(message);
+            logger.info("Successfully sent friend request notification to user", {
+                messageId: response,
+                requestId: requestId,
+                receiverUserId: receiverUserId,
+                senderName: senderName
+            });
+            
+            return response;
+        } else {
+            logger.info("No FCM token found for user, cannot send targeted notification", {
+                requestId: requestId,
+                receiverUserId: receiverUserId,
+                senderName: senderName
+            });
+            
+            return null;
+        }
+        
+    } catch (error) {
+        logger.error("Error sending friend request notification", {
+            error: error.message,
+            requestId: event.params.requestId
+        });
+        throw error;
+    }
+});

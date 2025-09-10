@@ -254,8 +254,18 @@ namespace RamRoutes.Services
                     return false;
                 }
 
-                // TODO: Add the users as friends in a separate friends collection
-                // For now, we just delete the request
+                // Add both users as friends in their user profiles
+                var userService = new UserService();
+                
+                // Add sender's name to receiver's friends list
+                string senderName = request.fromName ?? "Unknown";
+                await userService.AddFriend(currentUserId, senderName);
+                
+                // Add receiver's name to sender's friends list
+                string receiverName = request.toName ?? "Unknown";
+                await userService.AddFriend(request.fromId, receiverName);
+
+                // Delete the friend request after successful acceptance
                 await DeleteFriendRequest(requestId);
 
                 Debug.Log($"Friend request accepted between {request.fromId} and {request.toId}");

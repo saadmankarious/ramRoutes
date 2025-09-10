@@ -78,6 +78,13 @@ public class LoginManager : MonoBehaviour
     private bool isScrollingPaused = false;
     private bool isResetting = false;
 
+    [Header("Friend Requests")]
+    public ScrollRect friendRequestsScrollView;
+    public Transform friendRequestsContentParent;
+    [Tooltip("Prefab for friend request entry. Expected child objects: MainText (username-hall), accept (Button), delete (Button)")]
+    public GameObject friendRequestPrefab;
+    private Coroutine friendRequestRefreshCoroutine = null;
+
     [Header("Background Music")]
     [SerializeField] private AudioClip backgroundMusic;
     [SerializeField] private float musicVolume = 0.3f;
@@ -870,6 +877,12 @@ public class LoginManager : MonoBehaviour
             {
                 welcomeText.gameObject.SetActive(false);
             }
+
+            // Load friend requests
+            await LoadFriendRequests();
+            
+            // Start auto-refresh for friend requests
+            StartFriendRequestRefresh();
         }
         catch (System.Exception e)
         {
@@ -881,6 +894,167 @@ public class LoginManager : MonoBehaviour
                 welcomeText.text = $"Welcome, {userProfile.name?.Split(" ")[0] ?? "User"}!";
                 welcomeText.gameObject.SetActive(true);
             }
+        }
+    }
+
+    private async Task LoadFriendRequests()
+    {
+        try
+        {
+            if (friendRequestsScrollView == null || friendRequestsContentParent == null || friendRequestPrefab == null)
+            {
+                Debug.LogWarning("Friend requests UI components not assigned");
+                return;
+            }
+
+            // Clear existing friend request entries
+            foreach (Transform child in friendRequestsContentParent)
+            {
+                Destroy(child.gameObject);
+            }
+
+            var friendRequestService = new RamRoutes.Services.FriendRequestService();
+            var requests = await friendRequestService.GetIncomingFriendRequests();
+
+            foreach (var request in requests)
+            {
+                CreateFriendRequestEntry(request);
+            }
+
+            Debug.Log($"Loaded {requests.Count} incoming friend requests");
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Failed to load friend requests: {e.Message}");
+        }
+    }
+
+    private void CreateFriendRequestEntry(RamRoutes.Model.FriendRequest request)
+    {
+        GameObject entryObject = Instantiate(friendRequestPrefab, friendRequestsContentParent);
+        
+        // Find the MainText component and set username-hall
+        Text mainText = entryObject.transform.Find("name")?.GetComponent<Text>();
+        if (mainText != null)
+        {
+            // Get user hall from request or fallback to just name
+            string displayText = !string.IsNullOrEmpty(request.fromName) ? request.fromName : "Unknown User";
+            if (!string.IsNullOrEmpty(request.fromName) && request.fromName.Contains(" - "))
+            {
+                displayText = request.fromName; // Already has hall info
+            }
+            else
+            {
+                displayText = $"{displayText} - Unknown Hall"; // Add fallback hall
+            }
+            mainText.text = displayText;
+        }
+
+        // Setup accept button
+        Button acceptButton = entryObject.transform.Find("accept")?.GetComponent<Button>();
+        if (acceptButton != null)
+        {
+            acceptButton.onClick.AddListener(async () => await AcceptFriendRequest(request.requestId, entryObject));
+        }
+
+        // Setup delete button
+        Button deleteButton = entryObject.transform.Find("delete")?.GetComponent<Button>();
+        if (deleteButton != null)
+        {
+            deleteButton.onClick.AddListener(async () => await DeleteFriendRequest(request.requestId, entryObject));
+        }
+    }
+
+    private async Task AcceptFriendRequest(string requestId, GameObject entryObject)
+    {
+        try
+        {
+            var friendRequestService = new RamRoutes.Services.FriendRequestService();
+            bool success = await friendRequestService.AcceptFriendRequest(requestId);
+            
+            if (success)
+            {
+                // Remove the entry from UI
+                Destroy(entryObject);
+                Debug.Log($"Friend request {requestId} accepted and removed from UI");
+            }
+            else
+            {
+                Debug.LogError($"Failed to accept friend request {requestId}");
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Error accepting friend request: {e.Message}");
+        }
+    }
+
+    private async Task DeleteFriendRequest(string requestId, GameObject entryObject)
+    {
+        try
+        {
+            var friendRequestService = new RamRoutes.Services.FriendRequestService();
+            bool success = await friendRequestService.DeleteFriendRequest(requestId);
+            
+            if (success)
+            {
+                // Remove the entry from UI
+                Destroy(entryObject);
+                Debug.Log($"Friend request {requestId} deleted and removed from UI");
+            }
+            else
+            {
+                Debug.LogError($"Failed to delete friend request {requestId}");
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Error deleting friend request: {e.Message}");
+        }
+    }
+
+    private void StartFriendRequestRefresh()
+    {
+        // Stop any existing refresh coroutine
+        StopFriendRequestRefresh();
+        
+        // Start the refresh coroutine
+        friendRequestRefreshCoroutine = StartCoroutine(RefreshFriendRequestsCoroutine());
+    }
+
+    private void StopFriendRequestRefresh()
+    {
+        if (friendRequestRefreshCoroutine != null)
+        {
+            StopCoroutine(friendRequestRefreshCoroutine);
+            friendRequestRefreshCoroutine = null;
+        }
+    }
+
+    private IEnumerator RefreshFriendRequestsCoroutine()
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(3f); // Wait 3 seconds
+            
+            // Only refresh if the welcome panel is active and components are available
+            if (welcomePanel != null && welcomePanel.activeInHierarchy && 
+                friendRequestsScrollView != null && friendRequestsContentParent != null && friendRequestPrefab != null)
+            {
+                // Load friend requests asynchronously
+                StartCoroutine(LoadFriendRequestsCoroutine());
+            }
+        }
+    }
+
+    private IEnumerator LoadFriendRequestsCoroutine()
+    {
+        var loadTask = LoadFriendRequests();
+        yield return new WaitUntil(() => loadTask.IsCompleted);
+        
+        if (loadTask.Exception != null)
+        {
+            Debug.LogError($"Friend request refresh failed: {loadTask.Exception.Message}");
         }
     }
     
@@ -1103,6 +1277,9 @@ public class LoginManager : MonoBehaviour
             // Clear game stage cache (optional - you may want to keep this)
             // RamRoutes.Services.GameStageService.ClearStageFromPrefs();
         }
+
+        // Stop friend request refresh
+        StopFriendRequestRefresh();
 
         // Reset to login mode
         isSignupMode = false;
@@ -1461,6 +1638,9 @@ public class LoginManager : MonoBehaviour
         {
             auth.StateChanged -= AuthStateChanged;
         }
+
+        // Stop friend request refresh
+        StopFriendRequestRefresh();
 
         // Clean up background music
         if (musicSource != null)

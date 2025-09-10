@@ -57,11 +57,30 @@ namespace RamRoutes.Services
                     int knowledgePoints = data.ContainsKey("knowledgePoints") ? Convert.ToInt32(data["knowledgePoints"]) : 0;
                     string currentBuilding = data.ContainsKey("currentBuilding") && data["currentBuilding"] != null ? data["currentBuilding"].ToString() : "";
                     string residenceHall = data.ContainsKey("residenceHall") && data["residenceHall"] != null ? data["residenceHall"].ToString() : "Not specified";
+                    
+                    // Handle friends list
+                    List<string> friends = new List<string>();
+                    if (data.ContainsKey("friends") && data["friends"] != null)
+                    {
+                        var friendsData = data["friends"];
+                        if (friendsData is List<object> friendsList)
+                        {
+                            foreach (var friend in friendsList)
+                            {
+                                if (friend != null)
+                                {
+                                    friends.Add(friend.ToString());
+                                }
+                            }
+                        }
+                    }
+                    
                     var user = new User(id, token, name, email);
                     user.coins = coins;
                     user.knowledgePoints = knowledgePoints;
                     user.currentBuilding = currentBuilding;
                     user.residenceHall = residenceHall;
+                    user.friends = friends;
                     Debug.Log($"User {id} retrieved from Firestore");
                     return user;
                 }
@@ -419,6 +438,74 @@ namespace RamRoutes.Services
             catch (Exception ex)
             {
                 Debug.LogError($"Failed to update knowledge points for user {userId}: {ex.Message}");
+            }
+        }
+
+        public async Task AddFriend(string userId, string friendName)
+        {
+            try
+            {
+                var userDoc = db.Collection("users").Document(userId);
+                var userSnapshot = await userDoc.GetSnapshotAsync();
+                
+                if (!userSnapshot.Exists)
+                {
+                    Debug.LogError($"User {userId} not found when trying to add friend");
+                    return;
+                }
+                
+                var userData = userSnapshot.ToDictionary();
+                List<string> currentFriends = new List<string>();
+                
+                // Get current friends list
+                if (userData.ContainsKey("friends") && userData["friends"] != null)
+                {
+                    var friendsData = userData["friends"];
+                    if (friendsData is List<object> friendsList)
+                    {
+                        foreach (var friend in friendsList)
+                        {
+                            if (friend != null)
+                            {
+                                currentFriends.Add(friend.ToString());
+                            }
+                        }
+                    }
+                }
+                
+                // Add new friend if not already in list
+                if (!currentFriends.Contains(friendName))
+                {
+                    currentFriends.Add(friendName);
+                    
+                    await userDoc.UpdateAsync(new Dictionary<string, object>
+                    {
+                        { "friends", currentFriends }
+                    });
+                    
+                    // // Update cache if exists
+                    // if (PlayerPrefs.HasKey("current_user_profile"))
+                    // {
+                    //     var json = PlayerPrefs.GetString("current_user_profile");
+                    //     var cachedUser = JsonUtility.FromJson<User>(json);
+                    //     if (cachedUser != null && cachedUser.userId == userId)
+                    //     {
+                    //         cachedUser.friends = currentFriends;
+                    //         PlayerPrefs.SetString("current_user_profile", JsonUtility.ToJson(cachedUser));
+                    //         PlayerPrefs.Save();
+                    //     }
+                    // }
+                    
+                    Debug.Log($"Added friend {friendName} to user {userId}");
+                }
+                else
+                {
+                    Debug.Log($"User {userId} already has {friendName} as a friend");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Failed to add friend for user {userId}: {ex.Message}");
             }
         }
 
