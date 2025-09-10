@@ -7,8 +7,21 @@ public class ButtonHandler : MonoBehaviour
 
     void Awake()
     {
-        // button = GetComponent<Button>();
-        button.onClick.AddListener(OnButtonClick);
+        // Try to get button component if not assigned
+        if (button == null)
+        {
+            button = GetComponent<Button>();
+        }
+        
+        // Only add listener if button exists
+        if (button != null)
+        {
+            button.onClick.AddListener(OnButtonClick);
+        }
+        else
+        {
+            Debug.LogWarning("ButtonHandler: No Button component found. This component should be attached to a GameObject with a Button component.");
+        }
     }
 
     public void Initialize(string data, System.Action onClick)
@@ -19,6 +32,9 @@ public class ButtonHandler : MonoBehaviour
 
     void OnButtonClick()
     {
-        onClickCallback?.Invoke();
+        if (onClickCallback != null)
+        {
+            onClickCallback.Invoke();
+        }
     }
 }

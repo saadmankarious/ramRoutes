@@ -70,15 +70,49 @@ public class RamsManager : MonoBehaviour
             hasBeenActivated = false;
             Debug.Log($"Building {building.buildingName} deactivated, despawning rams in 10 seconds");
             
-            // Start coroutine to handle delayed despawn and user cleanup
-            StartCoroutine(HandlePlayerLeavingWithDelay());
-
             // Stop the refresh coroutine if running
             if (refreshCoroutine != null)
             {
                 StopCoroutine(refreshCoroutine);
                 refreshCoroutine = null;
                 Debug.Log("Stopped refresh coroutine as building is no longer activated");
+            }
+            
+            // Check if GameObject is active before starting coroutine
+            if (gameObject.activeInHierarchy)
+            {
+                // Start coroutine to handle delayed despawn and user cleanup
+                StartCoroutine(HandlePlayerLeavingWithDelay());
+            }
+            else
+            {
+                // GameObject is inactive, handle cleanup immediately using a static method
+                Debug.Log("GameObject is inactive, handling cleanup immediately");
+                HandleImmediateCleanup();
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Handles immediate cleanup when GameObject is inactive and coroutines can't be started
+    /// </summary>
+    private async void HandleImmediateCleanup()
+    {
+        // Clear rams immediately
+        ClearSpawnedRams();
+        
+        // Clear current building for this user
+        string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+        if (!string.IsNullOrEmpty(userId))
+        {
+            try
+            {
+                await userService.ClearCurrentUserBuilding();
+                Debug.Log($"Successfully cleared current building for user {userId}");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Failed to clear current building: {e.Message}");
             }
         }
     }
@@ -90,7 +124,7 @@ public class RamsManager : MonoBehaviour
     {
         // Wait 10 seconds before starting despawn process
         Debug.Log("Waiting 10 seconds before despawning rams...");
-        yield return new WaitForSeconds(10f);
+        yield return new WaitForSeconds(5f);
         
         // Start despawn coroutine after the delay
         Debug.Log("Starting ram despawn process");
@@ -183,7 +217,7 @@ public class RamsManager : MonoBehaviour
     {
         while (building.activated && hasBeenActivated)
         {
-            yield return new WaitForSeconds(5f);
+            yield return new WaitForSeconds(3f);
             
             if (building.activated)
             {
@@ -246,6 +280,10 @@ public class RamsManager : MonoBehaviour
             if (usersToRemove.Count > 0)
             {
                 Debug.Log($"Removing {usersToRemove.Count} users who left the building");
+
+                // Play despawn sound for users leaving
+                PlayDespawnSound();
+                
                 RemoveRamsForUsers(usersToRemove);
             }
         }
@@ -422,6 +460,12 @@ public class RamsManager : MonoBehaviour
 
         // Play spawn sound
         PlaySpawnSound();
+
+        // Add pop animation using UIManager
+        if (UIManager.Instance != null)
+        {
+            StartCoroutine(UIManager.Instance.AnimatePanelPopup(ramInstance));
+        }
 
         Debug.Log($"Spawned ram for user: {user.name} at position {spawnPosition}");
     }

@@ -421,7 +421,6 @@ public class NpcAutoMovement : MonoBehaviour
             
             // Check if close enough to spawn point
             float distanceToSpawn = Vector3.Distance(transform.position, spawnPoint.position);
-            Debug.Log($"NPC {gameObject.name}: Moving to spawn, distance: {distanceToSpawn:F2}");
             
             if (distanceToSpawn < 0.2f)
             {
