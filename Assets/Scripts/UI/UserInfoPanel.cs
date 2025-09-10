@@ -11,12 +11,14 @@ public class UserInfoPanel : MonoBehaviour
     
     [Header("User Info Panel Components")]
     public Button closeButton;
-    public Button mainButton;
+    public Button shoutOutButton;
+    public Button friendRequestButton;
     
     [Header("User Info Display")]
     public Text usernameText;
     public Text coinsText;
     public Text knowledgePointsText;
+    public Text residenceHallText;
     public Image rankImage;
     
     [Header("Rank Sprites")]
@@ -27,6 +29,7 @@ public class UserInfoPanel : MonoBehaviour
     
     private UserService userService;
     private ShoutOutService shoutOutService;
+    private FriendRequestService friendRequestService;
     private Coroutine autoHideCoroutine;
     private User currentUser;
     
@@ -44,6 +47,7 @@ public class UserInfoPanel : MonoBehaviour
         
         userService = new UserService();
         shoutOutService = new ShoutOutService();
+        friendRequestService = new FriendRequestService();
     }
     
     void Start()
@@ -53,21 +57,15 @@ public class UserInfoPanel : MonoBehaviour
             closeButton.onClick.AddListener(HidePanel);
         }
         
-        if (mainButton != null)
+        if (shoutOutButton != null)
         {
-            mainButton.onClick.AddListener(SendShoutout);
+            shoutOutButton.onClick.AddListener(SendShoutout);
         }
-        else
+        
+        
+        if (friendRequestButton != null)
         {
-            GameObject buttonObj = GameObject.FindGameObjectWithTag("MainButton");
-            if (buttonObj != null)
-            {
-                mainButton = buttonObj.GetComponent<Button>();
-                if (mainButton != null)
-                {
-                    mainButton.onClick.AddListener(SendShoutout);
-                }
-            }
+            friendRequestButton.onClick.AddListener(SendFriendRequest);
         }
     }
     
@@ -98,6 +96,11 @@ public class UserInfoPanel : MonoBehaviour
         if (knowledgePointsText != null)
         {
             knowledgePointsText.text = user.knowledgePoints.ToString();
+        }
+        
+        if (residenceHallText != null)
+        {
+            residenceHallText.text = user.residenceHall ?? "No Hall Set";
         }
         
         if (rankImage != null)
@@ -155,13 +158,39 @@ public class UserInfoPanel : MonoBehaviour
         {
             if (UIManager.Instance != null)
             {
-                UIManager.Instance.ShowQuickUpdate("Shoutout sent! -10 Coins, -10 Knowledge Points");
-                
+                UIManager.Instance.ShowQuickUpdate("Shoutout sent to " + currentUser.name + "!");
+
                 // Update the UI with new player stats after sending shoutout
                 await UpdatePlayerStatsInUI();
             }
 
             HidePanel();
+        }
+    }
+    
+    private async void SendFriendRequest()
+    {
+        if (currentUser == null)
+        {
+            return;
+        }
+        
+        var friendRequest = await friendRequestService.SendFriendRequest(currentUser.userId);
+        if (friendRequest != null)
+        {
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.ShowQuickUpdate($"Friend request sent to {currentUser.name}!");
+            }
+
+            HidePanel();
+        }
+        else
+        {
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.ShowQuickUpdate("Failed to send friend request. You may have already sent one.");
+            }
         }
     }
     
@@ -227,9 +256,14 @@ public class UserInfoPanel : MonoBehaviour
             closeButton.onClick.RemoveListener(HidePanel);
         }
         
-        if (mainButton != null)
+        if (shoutOutButton != null)
         {
-            mainButton.onClick.RemoveListener(SendShoutout);
+            shoutOutButton.onClick.RemoveListener(SendShoutout);
+        }
+        
+        if (friendRequestButton != null)
+        {
+            friendRequestButton.onClick.RemoveListener(SendFriendRequest);
         }
     }
 }

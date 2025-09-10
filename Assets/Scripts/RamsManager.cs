@@ -46,13 +46,13 @@ public class RamsManager : MonoBehaviour
     {
         if (building.activated && !hasBeenActivated)
         {
-            // Check if we're in the Terminal game stage - only activate ram system during Terminal stage
-            var currentStage = GameStageService.LoadStageFromPrefs();
-            if (currentStage == null || currentStage.area != Stage.Terminal)
-            {
-                Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), skipping ram system activation");
-                return;
-            }
+            // // Check if we're in the Terminal game stage - only activate ram system during Terminal stage
+            // var currentStage = GameStageService.LoadStageFromPrefs();
+            // if (currentStage == null || currentStage.area != Stage.Terminal)
+            // {
+            //     Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), skipping ram system activation");
+            //     return;
+            // }
             
             hasBeenActivated = true;
             Debug.Log($"Building {building.buildingName} activated in Terminal stage, spawning rams");
@@ -166,12 +166,12 @@ public class RamsManager : MonoBehaviour
     private async Task SpawnRams()
     {
         // Check if we're in the Terminal game stage - only spawn rams during Terminal stage
-        var currentStage = GameStageService.LoadStageFromPrefs();
-        if (currentStage == null || currentStage.area != Stage.Terminal)
-        {
-            Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), skipping ram spawning");
-            return;
-        }
+        // var currentStage = GameStageService.LoadStageFromPrefs();
+        // if (currentStage == null || currentStage.area != Stage.Terminal)
+        // {
+        //     Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), skipping ram spawning");
+        //     return;
+        // }
         
         string buildingName = building.buildingName;
         if (string.IsNullOrEmpty(buildingName))
@@ -250,12 +250,12 @@ public class RamsManager : MonoBehaviour
     private async Task CheckForNewPlayers()
     {
         // Check if we're in the Terminal game stage - only spawn rams during Terminal stage
-        var currentStage = GameStageService.LoadStageFromPrefs();
-        if (currentStage == null || currentStage.area != Stage.Terminal)
-        {
-            Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), skipping new player check");
-            return;
-        }
+        // var currentStage = GameStageService.LoadStageFromPrefs();
+        // if (currentStage == null || currentStage.area != Stage.Terminal)
+        // {
+        //     Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), skipping new player check");
+        //     return;
+        // }
         
         string buildingName = building.buildingName;
         if (string.IsNullOrEmpty(buildingName))
@@ -448,6 +448,8 @@ public class RamsManager : MonoBehaviour
             ramInstance.transform.SetParent(spawnParent);
         }
 
+        // Note: Scaling will be applied AFTER pop animation to prevent animation from resetting it
+
         // Find and set username text
         var usernameText = ramInstance.GetComponentInChildren<UnityEngine.UI.Text>();
         if (usernameText != null)
@@ -485,10 +487,17 @@ public class RamsManager : MonoBehaviour
         // Play spawn sound
         PlaySpawnSound();
 
-        // Add pop animation using UIManager
+        // Add pop animation using UIManager, then apply scaling after animation
         if (UIManager.Instance != null)
         {
-            StartCoroutine(UIManager.Instance.AnimatePanelPopup(ramInstance));
+            StartCoroutine(ApplyScaleAfterPopAnimation(ramInstance, user.knowledgePoints));
+        }
+        else
+        {
+            // No UIManager, apply scale directly
+            float scaleMultiplier = CalculateRamScale(user.knowledgePoints);
+            ramInstance.transform.localScale = Vector3.one * scaleMultiplier;
+            Debug.Log($"Applied scale {scaleMultiplier:F2}x directly (no UIManager)");
         }
 
         Debug.Log($"Spawned ram for user: {user.name} at position {spawnPosition}");
@@ -591,6 +600,21 @@ public class RamsManager : MonoBehaviour
     }
     
     /// <summary>
+    /// Calculates ram scale based on knowledge points (1x to 2x)
+    /// </summary>
+    private float CalculateRamScale(int knowledgePoints)
+    {
+        const int minKnowledgePoints = 0;
+        const int maxKnowledgePoints = 1500;
+        const float minScale = 0.5f;
+        const float maxScale = 2.0f;
+        
+        int clampedKP = Mathf.Clamp(knowledgePoints, minKnowledgePoints, maxKnowledgePoints);
+        float normalizedKP = (float)(clampedKP - minKnowledgePoints) / (maxKnowledgePoints - minKnowledgePoints);
+        return Mathf.Lerp(minScale, maxScale, normalizedKP);
+    }
+    
+    /// <summary>
     /// Calculates spawn position in a circle pattern
     /// </summary>
     private Vector3 CalculateSpawnPosition(int index)
@@ -619,6 +643,49 @@ public class RamsManager : MonoBehaviour
         }
         spawnedRams.Clear();
         spawnedUserIds.Clear();
+    }
+    
+    /// <summary>
+    /// Scales a ram based on knowledge points (1x to 2x scale)
+    /// </summary>
+    /// <param name="ramInstance">The ram GameObject to scale</param>
+    /// <param name="knowledgePoints">The user's knowledge points</param>
+    private void ScaleRamByKnowledgePoints(GameObject ramInstance, int knowledgePoints)
+    {
+        // Define scaling parameters
+        const int minKnowledgePoints = 0;    // Minimum knowledge points (1x scale)
+        const int maxKnowledgePoints = 1000; // Knowledge points for 2x scale (adjust as needed)
+        const float minScale = 1.0f;         // Minimum scale (1x)
+        const float maxScale = 2.0f;         // Maximum scale (2x)
+        
+        // Calculate scale based on knowledge points
+        // Clamp knowledge points to our range
+        int clampedKP = Mathf.Clamp(knowledgePoints, minKnowledgePoints, maxKnowledgePoints);
+        
+        // Calculate scale factor using linear interpolation
+        float normalizedKP = (float)(clampedKP - minKnowledgePoints) / (maxKnowledgePoints - minKnowledgePoints);
+        float scaleMultiplier = Mathf.Lerp(minScale, maxScale, normalizedKP);
+        
+        // Apply scale to the ram
+        ramInstance.transform.localScale = Vector3.one * scaleMultiplier;
+        
+        Debug.Log($"Scaled ram for user with {knowledgePoints} KB to {scaleMultiplier:F2}x scale");
+    }
+
+    
+    /// <summary>
+    /// Coroutine that runs pop animation first, then applies knowledge-based scaling
+    /// </summary>
+    private IEnumerator ApplyScaleAfterPopAnimation(GameObject ramInstance, int knowledgePoints)
+    {
+        // Start the pop animation
+        yield return StartCoroutine(UIManager.Instance.AnimatePanelPopup(ramInstance));
+        
+        // Animation is complete, now apply our knowledge-based scaling
+        float scaleMultiplier = CalculateRamScale(knowledgePoints);
+        ramInstance.transform.localScale = Vector3.one * scaleMultiplier;
+        
+        Debug.Log($"Applied scale {scaleMultiplier:F2}x AFTER pop animation for {knowledgePoints} KB");
     }
     
     void Update()
