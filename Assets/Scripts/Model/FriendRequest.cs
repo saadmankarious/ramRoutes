@@ -1,18 +1,33 @@
 using System;
 using UnityEngine;
+using Firebase.Firestore;
 
 namespace RamRoutes.Model
 {
     [Serializable]
+    [FirestoreData]
     public class FriendRequest
     {
-        public string fromId;
-        public string toId;
-        public string timestamp; // Store as string for Firebase compatibility
+        [FirestoreProperty]
+        public string fromId { get; set; }
         
-        // This field is not stored in Firestore - it's set after retrieval
-        [System.NonSerialized]
-        public string requestId;
+        [FirestoreProperty]
+        public string toId { get; set; }
+        
+        [FirestoreProperty]
+        public string timestamp { get; set; }
+        
+        [FirestoreProperty]
+        public string fromName { get; set; }
+        
+        [FirestoreProperty]
+        public string toName { get; set; }
+        
+        [FirestoreProperty]
+        public bool accepted { get; set; }
+        
+        [FirestoreProperty]
+        public string requestId { get; set; }
 
         public FriendRequest()
         {
@@ -24,6 +39,7 @@ namespace RamRoutes.Model
             this.fromId = fromId;
             this.toId = toId;
             this.timestamp = DateTime.UtcNow.ToString("o"); // ISO 8601 format
+            this.accepted = false; // Default to not accepted
         }
         
         public DateTime GetTimestampAsDateTime()

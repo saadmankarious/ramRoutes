@@ -39,29 +39,51 @@ namespace RamRoutes.Services
                 return null;
             }
 
-            // Check if request already exists
-            var existingRequest = await GetFriendRequestBetweenUsers(currentUserId, toUserId);
+            // Check if current user has already sent a request to this user
+            var outgoingRequests = await GetOutgoingFriendRequests(currentUserId);
+            var existingRequest = outgoingRequests.FirstOrDefault(r => r.toId == toUserId);
+            
             if (existingRequest != null)
             {
-                Debug.LogWarning("FriendRequestService.SendFriendRequest: Friend request already exists");
-                return existingRequest;
+                Debug.LogWarning($"FriendRequestService.SendFriendRequest: User {currentUserId} already sent a friend request to {toUserId}");
+                return null; // Return null to indicate "already sent"
             }
 
             var friendRequest = new FriendRequest(currentUserId, toUserId);
             
             try
             {
+                // Get user names for the request
+                var userService = new UserService();
+                var fromUser = await userService.GetUserProfileCachedOrRemoteAsync(currentUserId);
+                var toUser = await userService.GetUserProfileCachedOrRemoteAsync(toUserId);
+                
+                string fromName = fromUser?.name ?? "Unknown";
+                string toName = toUser?.name ?? "Unknown";
+                
+                // Set the names on the friend request object
+                friendRequest.fromName = fromName;
+                friendRequest.toName = toName;
+                
                 var docData = new Dictionary<string, object>
                 {
                     { "fromId", friendRequest.fromId },
                     { "toId", friendRequest.toId },
-                    { "timestamp", friendRequest.timestamp }
+                    { "timestamp", friendRequest.timestamp },
+                    { "fromName", fromName },
+                    { "toName", toName },
+                    { "accepted", false }
                 };
                 
                 var docRef = await db.Collection(COLLECTION_NAME).AddAsync(docData);
+                
+                // Update the document with its own ID
+                await docRef.UpdateAsync("requestId", docRef.Id);
+                
+                // Set the request ID on our object
                 friendRequest.requestId = docRef.Id;
                 
-                Debug.Log($"Friend request sent from {currentUserId} to {toUserId}");
+                Debug.Log($"Friend request sent from {fromName} ({currentUserId}) to {toName} ({toUserId}) with ID {docRef.Id}");
                 return friendRequest;
             }
             catch (Exception ex)

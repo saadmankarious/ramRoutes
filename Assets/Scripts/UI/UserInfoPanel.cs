@@ -189,7 +189,7 @@ public class UserInfoPanel : MonoBehaviour
         {
             if (UIManager.Instance != null)
             {
-                UIManager.Instance.ShowQuickUpdate("Failed to send friend request. You may have already sent one.");
+                UIManager.Instance.ShowQuickUpdate("You already sent a request");
             }
         }
     }
