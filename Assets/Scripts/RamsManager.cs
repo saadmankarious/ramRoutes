@@ -20,6 +20,7 @@ public class RamsManager : MonoBehaviour
     
     [Header("Audio Settings")]
     [SerializeField] private AudioClip spawnSound;
+    [SerializeField] private AudioClip despawnSound;
     
     [Header("User Info Panel")]
     [SerializeField] private UserInfoPanel userInfoPanel;
@@ -61,6 +62,61 @@ public class RamsManager : MonoBehaviour
             Debug.Log($"Building {building.buildingName} activation called again, ignoring duplicate call");
         }
     }
+    
+    public void OnPlayerLeavesBuilding()
+    {
+        if (hasBeenActivated)
+        {
+            hasBeenActivated = false;
+            Debug.Log($"Building {building.buildingName} deactivated, despawning rams in 10 seconds");
+            
+            // Start coroutine to handle delayed despawn and user cleanup
+            StartCoroutine(HandlePlayerLeavingWithDelay());
+
+            // Stop the refresh coroutine if running
+            if (refreshCoroutine != null)
+            {
+                StopCoroutine(refreshCoroutine);
+                refreshCoroutine = null;
+                Debug.Log("Stopped refresh coroutine as building is no longer activated");
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Handles the delayed despawn process and user cleanup when player leaves
+    /// </summary>
+    private IEnumerator HandlePlayerLeavingWithDelay()
+    {
+        // Wait 10 seconds before starting despawn process
+        Debug.Log("Waiting 10 seconds before despawning rams...");
+        yield return new WaitForSeconds(10f);
+        
+        // Start despawn coroutine after the delay
+        Debug.Log("Starting ram despawn process");
+        yield return StartCoroutine(DespawnRamsWithDelay());
+        
+        // Clear current building for this user after despawning
+        string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+        if (string.IsNullOrEmpty(userId))
+        {
+            Debug.LogWarning("No authenticated user found, cannot clear current building");
+            yield break;
+        }
+
+        // Clear current building for this user (convert to coroutine-friendly approach)
+        var clearBuildingTask = userService.ClearCurrentUserBuilding();
+        yield return new WaitUntil(() => clearBuildingTask.IsCompleted);
+        
+        if (clearBuildingTask.Exception != null)
+        {
+            Debug.LogError($"Failed to clear current building: {clearBuildingTask.Exception.Message}");
+        }
+        else
+        {
+            Debug.Log("Successfully cleared current building for user");
+        }
+    }
 
     /// <summary>
     /// Spawns rams for users currently in this building
@@ -73,13 +129,13 @@ public class RamsManager : MonoBehaviour
             Debug.LogError("Building name not set in RamsManager!");
             return;
         }
-        
+
         if (ramPrefab == null)
         {
             Debug.LogError("Ram prefab not assigned in RamsManager!");
             return;
         }
-        
+
         try
         {
             // Get users currently in this building
@@ -106,7 +162,7 @@ public class RamsManager : MonoBehaviour
             if (spawnCount > 0)
             {
                 StartCoroutine(SpawnRamsWithDelay(usersInBuilding, spawnCount));
-                
+
                 // Track the user IDs that we're spawning
                 foreach (var user in usersInBuilding.Take(spawnCount))
                 {
@@ -280,6 +336,40 @@ public class RamsManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Coroutine to despawn rams one by one with delay and sound
+    /// </summary>
+    private IEnumerator DespawnRamsWithDelay()
+    {
+        // Create a copy of the list to avoid modification during iteration
+        var ramsToDestroy = new List<GameObject>(spawnedRams);
+        
+        for (int i = 0; i < ramsToDestroy.Count; i++)
+        {
+            var ram = ramsToDestroy[i];
+            if (ram != null)
+            {
+                // Play despawn sound
+                PlayDespawnSound();
+                
+                // Destroy the ram
+                Destroy(ram);
+                Debug.Log($"Despawned ram {i + 1}/{ramsToDestroy.Count}");
+                
+                // Wait a bit before despawning the next ram (except for the last one)
+                if (i < ramsToDestroy.Count - 1)
+                {
+                    yield return new WaitForSeconds(0.3f); // 300ms delay between despawns
+                }
+            }
+        }
+        
+        // Clear the lists after all rams are despawned
+        spawnedRams.Clear();
+        spawnedUserIds.Clear();
+        Debug.Log("All rams despawned successfully");
+    }
+
+    /// <summary>
     /// Spawns a single ram for a specific user
     /// </summary>
     private void SpawnRamForUser(User user, int index)
@@ -405,6 +495,30 @@ public class RamsManager : MonoBehaviour
         else if (spawnSound == null)
         {
             Debug.LogWarning("Spawn sound not assigned in RamsManager!");
+        }
+    }
+    
+    /// <summary>
+    /// Plays the despawn sound effect using the building's audio source
+    /// </summary>
+    private void PlayDespawnSound()
+    {
+        if (despawnSound != null && building != null)
+        {
+            // Use the building's audio source to play the despawn sound
+            var buildingAudioSource = building.GetComponent<AudioSource>();
+            if (buildingAudioSource != null)
+            {
+                buildingAudioSource.PlayOneShot(despawnSound);
+            }
+            else
+            {
+                Debug.LogWarning("No AudioSource found on building for despawn sound!");
+            }
+        }
+        else if (despawnSound == null)
+        {
+            Debug.LogWarning("Despawn sound not assigned in RamsManager!");
         }
     }
     

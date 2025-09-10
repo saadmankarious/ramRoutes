@@ -470,6 +470,40 @@ namespace RamRoutes.Services
             //     return 1; // Default to rank 1 if an error occurs
             // }
         }
+
+        public async Task ClearCurrentUserBuilding()
+        {
+            string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+            if (string.IsNullOrEmpty(userId))
+            {
+                Debug.LogWarning("No authenticated user found, cannot clear current building");
+                return;
+            }
+
+            try
+            {
+                var userDoc = db.Collection("users").Document(userId);
+                await userDoc.UpdateAsync(new Dictionary<string, object>
+                {
+                    { "currentBuilding", null }
+                });
+
+                // // Update the cached user profile
+                // var user = await GetUserProfileCachedOrRemoteAsync(userId);
+                // if (user != null)
+                // {
+                //     user.currentBuilding = null;
+                //     string json = JsonUtility.ToJson(user);
+                //     PlayerPrefs.SetString("current_user_profile", json);
+                //     PlayerPrefs.Save();
+                //     Debug.Log($"Updated current building for user {userId} to null");
+                // }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Failed to update current building for user {userId}: {ex.Message}");
+            }
+        }
         
         /// <summary>
         /// Clears all user-related cached data from PlayerPrefs upon logout
@@ -488,35 +522,35 @@ namespace RamRoutes.Services
                 {
                     Debug.LogWarning($"UserService: Could not get current user ID for cache clearing: {ex.Message}");
                 }
-                
+
                 // Clear user profile cache
                 if (PlayerPrefs.HasKey("current_user_profile"))
                 {
                     PlayerPrefs.DeleteKey("current_user_profile");
                 }
-                
+
                 // Clear user info cache
                 if (PlayerPrefs.HasKey("UserName"))
                 {
                     PlayerPrefs.DeleteKey("UserName");
                 }
-                
+
                 if (PlayerPrefs.HasKey("ResidenceHall"))
                 {
                     PlayerPrefs.DeleteKey("ResidenceHall");
                 }
-                
+
                 if (PlayerPrefs.HasKey("PlayerName"))
                 {
                     PlayerPrefs.DeleteKey("PlayerName");
                 }
-                
+
                 // Clear user rank cache
                 if (PlayerPrefs.HasKey("UserRank"))
                 {
                     PlayerPrefs.DeleteKey("UserRank");
                 }
-                
+
                 // Clear first-time user flag for the current user
                 if (!string.IsNullOrEmpty(currentUserId))
                 {
@@ -526,7 +560,7 @@ namespace RamRoutes.Services
                         PlayerPrefs.DeleteKey(firstTimeKey);
                     }
                 }
-                
+
                 PlayerPrefs.Save();
                 Debug.Log("UserService: Cleared all user cache data");
             }

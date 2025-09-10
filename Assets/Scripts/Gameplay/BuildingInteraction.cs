@@ -422,22 +422,22 @@ public class BuildingInteraction : MonoBehaviour
         if (other.CompareTag("Player") || other.CompareTag("Spaceship"))
         {
             Debug.Log($"BuildingInteraction: Player exited building '{buildingName}' trigger area");
-            
+
             isPlayerInRange = false;
             lastGpsProximityState = false; // Reset GPS proximity state
-            
+
             // Hide UIManager dialog if it's active
             if (uiManager != null && uiManager.IsDialogActive())
             {
                 uiManager.HideDialog();
             }
-            
+
             // Deactivate building events panel when player leaves
             if (buildingEventsPanel != null)
             {
                 buildingEventsPanel.SetActive(false);
             }
-            
+
             // Trigger virtual building exit event
             OnVirtualBuildingExited?.Invoke(this);
 
@@ -449,7 +449,7 @@ public class BuildingInteraction : MonoBehaviour
                 Destroy(indicator);
             }
             activeUserLocations.Clear();
-            
+
             // Despawn NPCs when player leaves the building
             if (activated && NPCSpawner.Instance != null)
             {
@@ -470,6 +470,11 @@ public class BuildingInteraction : MonoBehaviour
             {
                 UIManager.Instance.SetBuildingViewingMode(false);
             }
+            
+               if (ramsManager != null)
+        {
+            ramsManager.OnPlayerLeavesBuilding();
+        }
         }
     }
 
