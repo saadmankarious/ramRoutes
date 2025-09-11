@@ -347,12 +347,13 @@ public class RamsManager : MonoBehaviour
             var ram = spawnedRams[i];
             if (ram != null)
             {
-                // Try to find the user ID from the ram's text component
-                var usernameText = ram.GetComponentInChildren<UnityEngine.UI.Text>();
+                // Try to find the user ID from the ram's name text component
+                var allTexts = ram.GetComponentsInChildren<UnityEngine.UI.Text>();
+                var nameText = allTexts.FirstOrDefault(t => t.gameObject.name.ToLower().Contains("name"));
                 string ramUserName = "";
-                if (usernameText != null)
+                if (nameText != null)
                 {
-                    ramUserName = usernameText.text.Split('(')[0].Trim(); // Extract name before building info
+                    ramUserName = nameText.text.Split('(')[0].Trim(); // Extract name before building info
                 }
                 
                 // Check if this ram belongs to a user who left
@@ -450,32 +451,40 @@ public class RamsManager : MonoBehaviour
 
         // Note: Scaling will be applied AFTER pop animation to prevent animation from resetting it
 
-        // Find and set username text
-        var usernameText = ramInstance.GetComponentInChildren<UnityEngine.UI.Text>();
-        if (usernameText != null)
+        // Find and set username and coins text using specific component names
+        var allTexts = ramInstance.GetComponentsInChildren<UnityEngine.UI.Text>();
+        
+        // Find the "name" text component
+        var nameText = allTexts.FirstOrDefault(t => t.gameObject.name.ToLower().Contains("name"));
+        if (nameText != null)
         {
-            usernameText.text = user.name + " (" + user.currentBuilding + ")";
+            nameText.text = user.name + " (" + user.currentBuilding + ")";
         }
         else
         {
-            // Try TMPro text as fallback
-            var tmpText = ramInstance.GetComponentInChildren<TMPro.TextMeshProUGUI>();
-            if (tmpText != null)
-            {
-                tmpText.text = user.name ?? "Unknown";
-            }
-            else
-            {
-                Debug.LogWarning($"No Text component found in ram prefab for user {user.name}");
-            }
+            Debug.LogWarning($"No 'name' Text component found in ram prefab for user {user.name}");
+        }
+        
+        // Find the "coins" text component and display knowledge points
+        var coinsText = allTexts.FirstOrDefault(t => t.gameObject.name.ToLower().Contains("coins"));
+        if (coinsText != null)
+        {
+            coinsText.text = $"{user.knowledgePoints}";
+        }
+        else
+        {
+            Debug.LogWarning($"No 'coins' Text component found in ram prefab for user {user.name}");
         }
 
-        // Try to set user stats if there are additional text components
-        var allTexts = ramInstance.GetComponentsInChildren<UnityEngine.UI.Text>();
-        if (allTexts.Length > 1)
+        // Fallback: Try TMPro text components if UI Text not found
+        if (nameText == null)
         {
-            // Second text could be for stats
-            allTexts[1].text = $"Coins: {user.coins} | KB: {user.knowledgePoints}";
+            var tmpTexts = ramInstance.GetComponentsInChildren<TMPro.TextMeshProUGUI>();
+            var tmpNameText = tmpTexts.FirstOrDefault(t => t.gameObject.name.ToLower().Contains("name"));
+            if (tmpNameText != null)
+            {
+                tmpNameText.text = user.name ?? "Unknown";
+            }
         }
 
         // Add to spawned rams list
