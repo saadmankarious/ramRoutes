@@ -26,13 +26,16 @@ namespace RamRoutes.Model
         public string category { get; set; }
         
         [FirestoreProperty]
+        public string imageUrl { get; set; }
+        
+        [FirestoreProperty]
         public bool available { get; set; } = true;
 
         public StoreItem()
         {
         }
 
-        public StoreItem(string itemId, string name, string description, int priceCoins, int priceKb, string category = "general")
+        public StoreItem(string itemId, string name, string description, int priceCoins, int priceKb, string category = "general", string imageUrl = "")
         {
             this.itemId = itemId;
             this.name = name;
@@ -40,6 +43,7 @@ namespace RamRoutes.Model
             this.priceCoins = priceCoins;
             this.priceKb = priceKb;
             this.category = category;
+            this.imageUrl = imageUrl;
             this.available = true;
         }
     }

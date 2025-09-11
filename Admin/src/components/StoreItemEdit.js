@@ -9,6 +9,7 @@ function StoreItemEdit({ item, onCancel, onSave }) {
     priceCoins: item.priceCoins || 0,
     priceKb: item.priceKb || 0,
     category: item.category || 'general',
+    imageUrl: item.imageUrl || '',
     available: item.available !== undefined ? item.available : true
   });
   const [loading, setLoading] = useState(false);
@@ -95,6 +96,28 @@ function StoreItemEdit({ item, onCancel, onSave }) {
             rows="3"
             placeholder="Enter item description"
           />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="imageUrl">Image URL</label>
+          <input
+            type="url"
+            id="imageUrl"
+            name="imageUrl"
+            value={formData.imageUrl}
+            onChange={handleChange}
+            placeholder="https://example.com/image.jpg"
+          />
+          {formData.imageUrl && (
+            <div className="image-preview">
+              <img 
+                src={formData.imageUrl} 
+                alt="Preview" 
+                style={{ maxWidth: '100px', maxHeight: '100px', marginTop: '10px' }}
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+            </div>
+          )}
         </div>
 
         <div className="form-row">

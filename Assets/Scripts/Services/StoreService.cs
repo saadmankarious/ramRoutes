@@ -204,6 +204,7 @@ namespace RamRoutes.Services
                 category = "hat",
                 priceKb = 50,
                 priceCoins = 120,
+                imageUrl = "https://via.placeholder.com/150x150/4CAF50/FFFFFF?text=Hat",
                 available = true,
 
             };

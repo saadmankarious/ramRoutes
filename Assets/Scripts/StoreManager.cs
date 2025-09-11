@@ -181,6 +181,7 @@ public class StoreManager : MonoBehaviour
         Transform kbTransform = FindChildByName(itemObject.transform, "kb");
         Transform coinsTransform = FindChildByName(itemObject.transform, "coins");
         Transform buyButtonTransform = FindChildByName(itemObject.transform, "buy-button");
+        Transform imageTransform = FindChildByName(itemObject.transform, "image");
         
         // Set item name
         if (nameTransform != null)
@@ -204,6 +205,12 @@ public class StoreManager : MonoBehaviour
         if (coinsTransform != null)
         {
             SetTextComponent(coinsTransform, item.priceCoins.ToString());
+        }
+        
+        // Load and set item image
+        if (imageTransform != null && !string.IsNullOrEmpty(item.imageUrl))
+        {
+            LoadItemImage(imageTransform, item.imageUrl);
         }
         
         // Set up buy button
@@ -265,6 +272,39 @@ public class StoreManager : MonoBehaviour
             Debug.LogError($"StoreManager.CheckAffordabilityAndSetButton: Error checking affordability: {ex.Message}");
             // If error occurs, disable the button as a safety measure
             buyButton.interactable = false;
+        }
+    }
+    
+    private void LoadItemImage(Transform imageTransform, string imageUrl)
+    {
+        // Get Image component from the transform
+        var imageComponent = imageTransform.GetComponent<UnityEngine.UI.Image>();
+        if (imageComponent != null)
+        {
+            StartCoroutine(LoadImageFromUrl(imageComponent, imageUrl));
+        }
+        else
+        {
+            Debug.LogWarning($"StoreManager: No Image component found on 'image' GameObject");
+        }
+    }
+    
+    private System.Collections.IEnumerator LoadImageFromUrl(UnityEngine.UI.Image imageComponent, string url)
+    {
+        using (UnityEngine.Networking.UnityWebRequest www = UnityEngine.Networking.UnityWebRequestTexture.GetTexture(url))
+        {
+            yield return www.SendWebRequest();
+            
+            if (www.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
+            {
+                Texture2D texture = UnityEngine.Networking.DownloadHandlerTexture.GetContent(www);
+                Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+                imageComponent.sprite = sprite;
+            }
+            else
+            {
+                Debug.LogError($"StoreManager: Failed to load image from {url}: {www.error}");
+            }
         }
     }
     

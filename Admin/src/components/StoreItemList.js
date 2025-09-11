@@ -200,6 +200,23 @@ function StoreItemList({ user, onEditItem }) {
               </div>
 
               <div className="item-content">
+                {item.imageUrl && (
+                  <div className="item-image">
+                    <img 
+                      src={item.imageUrl} 
+                      alt={item.name}
+                      style={{ 
+                        maxWidth: '80px', 
+                        maxHeight: '80px', 
+                        objectFit: 'cover',
+                        borderRadius: '4px',
+                        marginBottom: '10px'
+                      }}
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                  </div>
+                )}
+                
                 {item.description && (
                   <p className="item-description">{item.description}</p>
                 )}
