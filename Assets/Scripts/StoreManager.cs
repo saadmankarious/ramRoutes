@@ -15,11 +15,13 @@ public class StoreManager : MonoBehaviour
     
     [Header("Store Settings")]
     public bool useTestData = true;
+    public Color overlayColor = new Color(0, 0, 0, 0.5f); // Semi-transparent black
     
     private StoreService storeService;
     private List<GameObject> spawnedItems = new List<GameObject>();
     private Transform itemsContainer;
     private bool isStoreOpen = false;
+    private SpriteRenderer overlaySprite;
     
     void Start()
     {
@@ -67,7 +69,11 @@ public class StoreManager : MonoBehaviour
         {
             Debug.LogWarning("StoreManager: No closeStoreButton assigned. Optionally assign a Button to close the store");
         }
+        
+        // Create overlay for when store is open
     }
+    
+
     
     private void ToggleStore()
     {
@@ -77,10 +83,16 @@ public class StoreManager : MonoBehaviour
         {
             itemsContainer.gameObject.SetActive(isStoreOpen);
             
-            // Only activate the parent when opening the store, don't deactivate when closing
-            if (itemsContainer.parent != null)
+            // Toggle overlay sprite visibility
+            if (overlaySprite != null)
             {
-                itemsContainer.parent.gameObject.SetActive(isStoreOpen);
+                overlaySprite.enabled = isStoreOpen;
+            }
+            
+            // Only activate the parent when opening the store, don't deactivate when closing
+            if (itemsContainer.parent.parent != null)
+            {
+                itemsContainer.parent.parent.gameObject.SetActive(isStoreOpen);
             }
             
             if (isStoreOpen && spawnedItems.Count == 0)
@@ -185,13 +197,13 @@ public class StoreManager : MonoBehaviour
         // Set KB price
         if (kbTransform != null)
         {
-            SetTextComponent(kbTransform, item.priceKb.ToString() + " KB");
+            SetTextComponent(kbTransform, item.priceKb.ToString());
         }
         
         // Set coins price
         if (coinsTransform != null)
         {
-            SetTextComponent(coinsTransform, item.priceCoins.ToString() + " Coins");
+            SetTextComponent(coinsTransform, item.priceCoins.ToString());
         }
         
         // Set up buy button
@@ -203,6 +215,9 @@ public class StoreManager : MonoBehaviour
                 // Remove existing listeners to avoid duplicates
                 buyButton.onClick.RemoveAllListeners();
                 buyButton.onClick.AddListener(() => OnBuyButtonClicked(item));
+                
+                // Check if user can afford the item and enable/disable button accordingly
+                CheckAffordabilityAndSetButton(buyButton, item.itemId);
             }
         }
     }
@@ -222,6 +237,34 @@ public class StoreManager : MonoBehaviour
         if (legacyText != null)
         {
             legacyText.text = text;
+        }
+    }
+    
+    private async void CheckAffordabilityAndSetButton(Button buyButton, string itemId)
+    {
+        try
+        {
+            bool canAfford = await storeService.CanAffordItem(itemId);
+            buyButton.interactable = canAfford;
+            
+            // Optional: Change button appearance based on affordability
+            var buttonColors = buyButton.colors;
+            if (canAfford)
+            {
+                buttonColors.normalColor = Color.white;
+                buttonColors.disabledColor = new Color(0.8f, 0.8f, 0.8f, 0.5f);
+            }
+            else
+            {
+                buttonColors.disabledColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+            }
+            buyButton.colors = buttonColors;
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"StoreManager.CheckAffordabilityAndSetButton: Error checking affordability: {ex.Message}");
+            // If error occurs, disable the button as a safety measure
+            buyButton.interactable = false;
         }
     }
     
@@ -260,15 +303,51 @@ public class StoreManager : MonoBehaviour
         if (success)
         {
             Debug.Log($"Successfully purchased {item.name}!");
-            // You can add UI feedback here (e.g., show success message, update UI)
             
-            // Optionally refresh the store items to update availability
-            LoadStoreItems();
+            // Close the store
+            CloseStore();
+            
+            // Show success message using UIManager
+            var uiManager = FindObjectOfType<UIManager>();
+            if (uiManager != null)
+            {
+                uiManager.ShowQuickUpdate($"Purchased {item.name}!");
+
+                // Get updated user values and update UI display
+                var userService = new UserService();
+                string currentUserId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+                if (!string.IsNullOrEmpty(currentUserId))
+                {
+                    UpdateUserDisplayValues(userService, currentUserId, uiManager);
+                }
+            }
         }
         else
         {
             Debug.Log($"Failed to purchase {item.name}. Check console for details.");
-            // You can add UI feedback here (e.g., show error message)
+            
+            // Show error message using UIManager
+            var uiManager = FindObjectOfType<UIManager>();
+            if (uiManager != null)
+            {
+                uiManager.ShowQuickUpdate($"Cannot afford {item.name}");
+            }
+        }
+    }
+    
+    private async void UpdateUserDisplayValues(UserService userService, string userId, UIManager uiManager)
+    {
+        try
+        {
+            int coins = await userService.GetUserCoins(userId);
+            int knowledgePoints = await userService.GetUserKnowledgePoints(userId);
+            
+            uiManager.UpdateCoins(coins);
+            uiManager.UpdateKnowledgePoints(knowledgePoints);
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"StoreManager.UpdateUserDisplayValues: Error updating display values: {ex.Message}");
         }
     }
     
@@ -300,5 +379,12 @@ public class StoreManager : MonoBehaviour
     void OnDestroy()
     {
         ClearSpawnedItems();
+        
+        // Clean up overlay sprite
+        if (overlaySprite != null && overlaySprite.sprite != null)
+        {
+            DestroyImmediate(overlaySprite.sprite.texture);
+            DestroyImmediate(overlaySprite.sprite);
+        }
     }
 }

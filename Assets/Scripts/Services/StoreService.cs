@@ -74,7 +74,7 @@ namespace RamRoutes.Services
 
                 if (userCoins < item.priceCoins || userKb < item.priceKb)
                 {
-                    Debug.LogError("StoreService.BuyItem: Insufficient funds");
+                    Debug.LogError($"StoreService.BuyItem: Insufficient funds. Need {item.priceCoins} coins (have {userCoins}) and {item.priceKb} KB (have {userKb})");
                     return false;
                 }
 
@@ -233,8 +233,8 @@ namespace RamRoutes.Services
                 }
 
                 // Add test items for development/testing
-                var testItems = InitializeTestItems();
-                items.AddRange(testItems);
+                // var testItems = InitializeTestItems();
+                // items.AddRange(testItems);
 
                 return items;
             }
@@ -245,5 +245,44 @@ namespace RamRoutes.Services
                 return InitializeTestItems();
             }
         }
+
+        // Check if the current user can afford a specific item
+        public async Task<bool> CanAffordItem(string itemId)
+        {
+            string currentUserId = FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+            if (string.IsNullOrEmpty(currentUserId))
+            {
+                return false;
+            }
+
+            try
+            {
+                var itemDoc = await db.Collection(STORE_COLLECTION).Document(itemId).GetSnapshotAsync();
+                if (!itemDoc.Exists)
+                {
+                    return false;
+                }
+
+                var item = itemDoc.ConvertTo<StoreItem>();
+                if (!item.available)
+                {
+                    return false;
+                }
+
+                var userService = new UserService();
+                int userCoins = await userService.GetUserCoins(currentUserId);
+                int userKb = await userService.GetUserKnowledgePoints(currentUserId);
+
+                return userCoins >= item.priceCoins && userKb >= item.priceKb;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"StoreService.CanAffordItem: Error checking affordability: {ex.Message}");
+                return false;
+            }
+        }
+
+        // Check if the current user can afford a specific item (overload for StoreItem object)
+
     }
 }
