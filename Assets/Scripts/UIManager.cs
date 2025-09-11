@@ -687,11 +687,11 @@ public class UIManager : MonoBehaviour
             UpdateKnowledgePoints(knowledgePoints);
             
             // Get previously saved rank for comparison
-            int previousRank = PlayerPrefs.GetInt("UserRank", 0);
-            
+            int previousRank = PlayerPrefs.GetInt("UserRank", 1);
+
             // Calculate current rank and update avatar (this also persists the new rank)
-            GetUserAvatarBasedOnPoints(totalPoints, true);
-            
+            GetUserAvatarBasedOnPoints(coins, knowledgePoints, true);
+
             // Get the newly saved rank
             int currentRank = userService.CalculateUserRank(coins, knowledgePoints);
 
@@ -758,12 +758,12 @@ public class UIManager : MonoBehaviour
             UpdateKnowledgePoints(knowledgePoints);
             
             // Get previously saved rank for comparison
-            int previousRank = PlayerPrefs.GetInt("UserRank", 0);
+            int previousRank = PlayerPrefs.GetInt("UserRank", 1);
 
             // Calculate current rank and update avatar (this also persists the new rank)
             if(userAvatarImage != null)
             {
-                userAvatarImage.sprite = GetUserAvatarBasedOnPoints(totalPoints, true); // reset to default while loading
+                userAvatarImage.sprite = GetUserAvatarBasedOnPoints(coins, knowledgePoints, true); // reset to default while loading
             }
 
             // Get the newly saved rank
@@ -2171,8 +2171,7 @@ private void HideObjectsWithTag(string tag)
                 Image avatarImage = userGO.GetComponentInChildren<Image>();
                 if (avatarImage != null)
                 {
-                    int totalPoints = user.coins + user.knowledgePoints;
-                    Sprite rankSprite = GetUserAvatarBasedOnPoints(totalPoints);
+                    Sprite rankSprite = GetUserAvatarBasedOnPoints(user.coins, user.knowledgePoints);
                     avatarImage.sprite = rankSprite;
                                     }
                 else
@@ -2201,32 +2200,21 @@ private void HideObjectsWithTag(string tag)
     /// <param name="points">The user's total points (coins + knowledge points)</param>
     /// <param name="oneself">If true, saves the current rank for rank increase detection</param>
     /// <returns>The appropriate sprite for the user's point level</returns>
-    public Sprite GetUserAvatarBasedOnPoints(int points, bool oneself = false)
+    public Sprite GetUserAvatarBasedOnPoints(int coins, int knowledgePoints, bool oneself = false)
     {
         // Determine rank based on points
-        int rank = 0; // Default rank
-        
-        if (points >= 2000)
-        {
-            rank = 3;
-        }
-        else if (points >= 1000)
-        {
-            rank = 2;
-        }
-        else if (points > 0)
-        {
-            rank = 1;
-        }
+        var userService = new UserService();
+        int rank = userService.CalculateUserRank(coins, knowledgePoints);
+
         
         // If this is for the current user, save the rank for future comparison
         if (oneself)
         {
-            int previousRank = PlayerPrefs.GetInt("UserRank", 0);
+            int previousRank = PlayerPrefs.GetInt("UserRank", 1);
             PlayerPrefs.SetInt("UserRank", rank);
             PlayerPrefs.Save();
-            
-            Debug.Log($"Updated user rank: {previousRank} -> {rank} (points: {points})");
+
+            Debug.Log($"Updated user rank: {previousRank} -> {rank} (points: {coins}, knowledge: {knowledgePoints})");
         }
         
         // Select the appropriate sprite based on rank
@@ -2252,7 +2240,7 @@ private void HideObjectsWithTag(string tag)
         // If the selected sprite is null, use the default sprite
         if (selectedSprite == null)
         {
-            Debug.LogWarning($"Avatar sprite for rank {rank} (points: {points}) is not assigned. Using default sprite.");
+            Debug.LogWarning($"Avatar sprite for rank {rank} (points: {coins}, knowledge: {knowledgePoints}) is not assigned. Using default sprite.");
             selectedSprite = defaultAvatarSprite;
         }
         

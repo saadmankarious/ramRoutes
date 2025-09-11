@@ -324,13 +324,22 @@ namespace RamRoutes.Services
             try
             {
                 var now = Timestamp.FromDateTime(DateTime.UtcNow);
+                
+                // Initialize with starting values
+                int startingCoins = 0;
+                int startingKnowledgePoints = 0;
+                int userRank = CalculateUserRank(startingCoins, startingKnowledgePoints); // Should be 1 for new users
+                
                 var userData = new Dictionary<string, object>
                 {
                     { "id", userId },
                     { "name", username },
                     { "email", email },
                     { "residenceHall", residenceHall },
-                    { "points", 0 },
+                    { "points", 0 }, // Legacy field, keep for compatibility
+                    { "coins", startingCoins },
+                    { "knowledgePoints", startingKnowledgePoints },
+                    { "rank", userRank },
                     { "createdAt", now },
                     { "lastLoginAt", now },
                     { "currentBuilding", null },
@@ -514,11 +523,11 @@ namespace RamRoutes.Services
 
       double weightedScore = (0.7 * knowledgePoints) + (0.3 * coins);
     
-    if (weightedScore >= 3000)
+    if (weightedScore >= 1600)
     {
         return 3;
     }
-    else if (weightedScore >= 1500)
+    else if (weightedScore >= 750)
     {
         return 2;
     }

@@ -839,11 +839,10 @@ public class LoginManager : MonoBehaviour
                 userKBText.text = $"{kb}";
             }
 
-            // Set user avatar based on total points
+            // Set user avatar based on coins and knowledge points using central rank calculation
             if (userAvatarImage != null)
             {
-                int totalPoints = coins + kb;
-                Sprite avatarSprite = GetRankSprite(totalPoints);
+                Sprite avatarSprite = GetRankSprite(coins, kb);
                 if (avatarSprite != null)
                 {
                     userAvatarImage.sprite = avatarSprite;
@@ -1348,15 +1347,17 @@ public class LoginManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Gets the appropriate rank sprite based on user's points (same logic as UIManager)
+    /// Gets the appropriate rank sprite based on user's coins and knowledge points using central rank calculation
     /// </summary>
-    private Sprite GetRankSprite(int points)
+    private Sprite GetRankSprite(int coins, int knowledgePoints)
     {
         // Implement the same rank logic directly in LoginManager
         // Load rank sprites as public SerializeField references in LoginManager
-        if (points >= 2000) return rank3AvatarSprite;
-        else if (points >= 1000) return rank2AvatarSprite;
-        else  return rank1AvatarSprite;
+        var userService = new RamRoutes.Services.UserService();
+        int rank = userService.CalculateUserRank(coins, knowledgePoints);
+        if (rank == 3) return rank3AvatarSprite;
+        else if (rank == 2) return rank2AvatarSprite;
+        else return rank1AvatarSprite;
     }
 
     /// <summary>
@@ -1443,12 +1444,11 @@ public class LoginManager : MonoBehaviour
                 for (int i = 0; i < topThree.Count; i++)
                 {
                     var user = topThree[i];
-                    int totalPoints = user.coins + user.kb;
-                                     var userService = new RamRoutes.Services.UserService();
+                    var userService = new RamRoutes.Services.UserService();
 
                     int rank = userService.CalculateUserRank(user.coins, user.kb);
                     string rankName = GetRankName(rank);
-                    Sprite rankSprite = GetRankSprite(totalPoints);
+                    Sprite rankSprite = GetRankSprite(rank, user.kb);
 
                     GameObject entryObject = Instantiate(leaderboardEntryPrefab, leaderboardContentParent);
                     

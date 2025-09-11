@@ -733,7 +733,8 @@ public class BuildingInteraction : MonoBehaviour
                 {
                     var userService = new UserService();
                     var userPoints = await userService.GetUserCoins(record.userId);
-                    userImage.sprite = uiManager.GetUserAvatarBasedOnPoints(userPoints);
+                    var userKnowledgePoints = await userService.GetUserKnowledgePoints(record.userId);
+                    userImage.sprite = uiManager.GetUserAvatarBasedOnPoints(userPoints, userKnowledgePoints);
                 }
             }
         }
