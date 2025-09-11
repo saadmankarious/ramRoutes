@@ -10,6 +10,9 @@ import AdminEdit from './components/AdminEdit';
 import BuildingEventForm from './components/BuildingEventForm';
 import EventList from './components/EventList';
 import EventEdit from './components/EventEdit';
+import StoreItemForm from './components/StoreItemForm';
+import StoreItemList from './components/StoreItemList';
+import StoreItemEdit from './components/StoreItemEdit';
 import './App.css';
 
 function App() {
@@ -18,6 +21,7 @@ function App() {
   const [currentView, setCurrentView] = useState('events');
   const [editingEvent, setEditingEvent] = useState(null);
   const [editingAdmin, setEditingAdmin] = useState(null);
+  const [editingStoreItem, setEditingStoreItem] = useState(null);
 
   useEffect(() => {
     console.log('Setting up auth state listener...');
@@ -87,6 +91,7 @@ function App() {
     setCurrentView('events');
     setEditingEvent(null);
     setEditingAdmin(null);
+    setEditingStoreItem(null);
   };
 
   const handleEditAdmin = (admin) => {
@@ -129,6 +134,31 @@ function App() {
     console.log('Event created, navigating to events list:', eventId);
     if (eventId === 'view') {
       setCurrentView('view-events');
+    }
+  };
+
+  const handleEditStoreItem = (item) => {
+    console.log('Editing store item:', item);
+    setEditingStoreItem(item);
+    setCurrentView('edit-store-item');
+  };
+
+  const handleSaveStoreItem = (updatedItem) => {
+    console.log('Store item saved:', updatedItem);
+    setEditingStoreItem(null);
+    setCurrentView('view-store-items');
+  };
+
+  const handleCancelStoreItemEdit = () => {
+    console.log('Store item edit cancelled');
+    setEditingStoreItem(null);
+    setCurrentView('view-store-items');
+  };
+
+  const handleStoreItemCreated = (itemId) => {
+    console.log('Store item created, navigating to items list:', itemId);
+    if (itemId === 'view') {
+      setCurrentView('view-store-items');
     }
   };
 
@@ -190,6 +220,30 @@ function App() {
           );
         }
         return <div className="access-denied">No event selected for editing.</div>;
+      
+      case 'store-items':
+        if (user.role === 'superadmin') {
+          return <StoreItemForm user={user} onItemCreated={handleStoreItemCreated} />;
+        }
+        return <div className="access-denied">Access denied. Super admin role required.</div>;
+      
+      case 'view-store-items':
+        if (user.role === 'superadmin') {
+          return <StoreItemList user={user} onEditItem={handleEditStoreItem} />;
+        }
+        return <div className="access-denied">Access denied. Super admin role required.</div>;
+      
+      case 'edit-store-item':
+        if (user.role === 'superadmin' && editingStoreItem) {
+          return (
+            <StoreItemEdit 
+              item={editingStoreItem}
+              onCancel={handleCancelStoreItemEdit}
+              onSave={handleSaveStoreItem}
+            />
+          );
+        }
+        return <div className="access-denied">Access denied or no store item selected for editing.</div>;
       
       default:
         return <BuildingEventForm user={user} onEventCreated={handleEventCreated} />;

@@ -50,6 +50,18 @@ function Header({ user, currentView, setCurrentView, onLogout }) {
               >
                 View Events
               </button>
+              <button
+                className={`nav-button ${currentView === 'store-items' ? 'active' : ''}`}
+                onClick={() => setCurrentView('store-items')}
+              >
+                Create Store Item
+              </button>
+              <button
+                className={`nav-button ${currentView === 'view-store-items' ? 'active' : ''}`}
+                onClick={() => setCurrentView('view-store-items')}
+              >
+                View Store Items
+              </button>
             </>
           )}
           
