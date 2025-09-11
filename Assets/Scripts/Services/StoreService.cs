@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using Firebase.Firestore;
@@ -85,19 +86,24 @@ namespace RamRoutes.Services
                     { "knowledgePoints", userKb - item.priceKb }
                 });
 
+                // Always create a new inventory entry for each purchase
                 var inventoryData = new Dictionary<string, object>
                 {
                     { "userId", currentUserId },
                     { "itemId", itemId },
                     { "itemName", item.name },
+                    { "description", item.description },
+                    { "category", item.category },
+                    { "imageUrl", item.imageUrl },
                     { "purchaseDate", Timestamp.GetCurrentTimestamp() },
                     { "pricePaidCoins", item.priceCoins },
-                    { "pricePaidKb", item.priceKb }
+                    { "pricePaidKb", item.priceKb },
+                    { "equipped", false }
                 };
 
                 await db.Collection(USER_INVENTORY_COLLECTION).AddAsync(inventoryData);
-
                 Debug.Log($"Successfully purchased item {item.name}");
+
                 return true;
             }
             catch (Exception ex)
