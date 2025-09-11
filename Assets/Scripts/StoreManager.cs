@@ -11,6 +11,7 @@ public class StoreManager : MonoBehaviour
     [Header("Store UI References")]
     public GameObject itemPrefab;
     public Button openStoreButton;
+    public Button closeStoreButton;
     
     [Header("Store Settings")]
     public bool useTestData = true;
@@ -30,8 +31,8 @@ public class StoreManager : MonoBehaviour
     private void InitializeStoreManager()
     {
         // Look for a child named "items"
-        itemsContainer = transform.Find("items");
-        
+        // find the object recursievly
+        itemsContainer = FindChildByName(transform, "whereitemslive");
         if (itemsContainer == null)
         {
             Debug.LogError("StoreManager: No 'items' child found. Please create a child GameObject named 'items'.");
@@ -54,6 +55,18 @@ public class StoreManager : MonoBehaviour
         {
             Debug.LogWarning("StoreManager: No openStoreButton assigned. Please assign a Button to toggle store visibility");
         }
+        
+        // Set up the close store button if assigned
+        if (closeStoreButton != null)
+        {
+            closeStoreButton.onClick.RemoveAllListeners();
+            closeStoreButton.onClick.AddListener(CloseStore);
+            Debug.Log("StoreManager: Set up store close button");
+        }
+        else
+        {
+            Debug.LogWarning("StoreManager: No closeStoreButton assigned. Optionally assign a Button to close the store");
+        }
     }
     
     private void ToggleStore()
@@ -63,6 +76,12 @@ public class StoreManager : MonoBehaviour
         if (itemsContainer != null)
         {
             itemsContainer.gameObject.SetActive(isStoreOpen);
+            
+            // Only activate the parent when opening the store, don't deactivate when closing
+            if (itemsContainer.parent != null)
+            {
+                itemsContainer.parent.gameObject.SetActive(isStoreOpen);
+            }
             
             if (isStoreOpen && spawnedItems.Count == 0)
             {
@@ -141,7 +160,7 @@ public class StoreManager : MonoBehaviour
         
         Debug.Log($"Displayed {items.Count} store items");
     }
-    
+
     private void SetupItemUI(GameObject itemObject, StoreItem item)
     {
         // Find UI components by name
