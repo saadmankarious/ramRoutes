@@ -274,7 +274,7 @@ public class RamsManager : MonoBehaviour
     {
         while (building.activated && hasBeenActivated)
         {
-            yield return new WaitForSeconds(3f);
+            yield return new WaitForSeconds(1f);
             
             if (building.activated)
             {

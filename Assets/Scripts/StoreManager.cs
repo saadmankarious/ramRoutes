@@ -83,13 +83,7 @@ public class StoreManager : MonoBehaviour
         {
             itemsContainer.gameObject.SetActive(isStoreOpen);
             
-            // Toggle overlay sprite visibility
-            if (overlaySprite != null)
-            {
-                overlaySprite.enabled = isStoreOpen;
-            }
-            
-            // Only activate the parent when opening the store, don't deactivate when closing
+            // Show/hide the parent container accordingly
             if (itemsContainer.parent.parent != null)
             {
                 itemsContainer.parent.parent.gameObject.SetActive(isStoreOpen);

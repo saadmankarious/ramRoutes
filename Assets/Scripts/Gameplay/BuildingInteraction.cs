@@ -105,9 +105,10 @@ public class BuildingInteraction : MonoBehaviour
         }
 
         // Spawn NPCs for this building
-        if (NPCSpawner.Instance != null)
+        var npcSpawner = FindObjectOfType<NPCSpawner>();
+        if (npcSpawner != null)
         {
-            NPCSpawner.Instance.SpawnNPCForBuildingOnEnter(buildingName);
+            npcSpawner.SpawnNPCForBuildingOnEnter(buildingName);
         }
 
         // Show events panel
@@ -451,18 +452,19 @@ public class BuildingInteraction : MonoBehaviour
             activeUserLocations.Clear();
 
             // Despawn NPCs when player leaves the building
-            if (activated && NPCSpawner.Instance != null)
+            var npcSpawner = FindObjectOfType<NPCSpawner>();
+            if (activated && npcSpawner != null)
             {
                 Debug.Log($"BuildingInteraction: Player left activated building '{buildingName}', calling despawn NPCs");
-                NPCSpawner.Instance.DespawnNPCsForBuilding(buildingName);
+                npcSpawner.DespawnNPCsForBuilding(buildingName);
             }
             else if (!activated)
             {
                 Debug.Log($"BuildingInteraction: Building '{buildingName}' not activated, skipping NPC despawn");
             }
-            else if (NPCSpawner.Instance == null)
+            else if (npcSpawner == null)
             {
-                Debug.LogWarning($"BuildingInteraction: NPCSpawner.Instance is null, cannot despawn NPCs");
+                Debug.LogWarning($"BuildingInteraction: NPCSpawner not found, cannot despawn NPCs");
             }
 
             // Leaving range exits viewing mode
