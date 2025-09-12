@@ -265,12 +265,13 @@ namespace RamRoutes.Services
                     int knowledgePoints = data.ContainsKey("knowledgePoints") ? Convert.ToInt32(data["knowledgePoints"]) : 0;
                     string currentBuilding = data.ContainsKey("currentBuilding") && data["currentBuilding"] != null ? data["currentBuilding"].ToString() : "";
                     string residenceHall = data.ContainsKey("residenceHall") && data["residenceHall"] != null ? data["residenceHall"].ToString() : "";
-
+                    string equippedSkin = data.ContainsKey("equippedSkin") && data["equippedSkin"] != null ? data["equippedSkin"].ToString() : "Default";
                     var user = new User(id, token, name, email);
                     user.coins = coins;
                     user.knowledgePoints = knowledgePoints;
                     user.currentBuilding = currentBuilding;
                     user.residenceHall = residenceHall;
+                    user.SetEquippedSkinFromString(equippedSkin);
                     users.Add(user);
                 }
 

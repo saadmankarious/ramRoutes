@@ -493,6 +493,9 @@ public class RamsManager : MonoBehaviour
         // Setup click handling using ButtonHandler
         SetupRamClickHandler(ramInstance, user);
 
+        // Apply user's equipped skin to the RAM
+        ApplyUserSkinToRam(ramInstance, user);
+
         // Play spawn sound
         PlaySpawnSound();
 
@@ -550,6 +553,50 @@ public class RamsManager : MonoBehaviour
         ramClickHandler.Initialize(user, this);
         
         Debug.Log($"RamClickHandler setup for ram: {user.name}");
+    }
+    
+    /// <summary>
+    /// Applies the user's equipped skin to the spawned RAM using SkinManager
+    /// </summary>
+    /// <param name="ramInstance">The spawned RAM GameObject</param>
+    /// <param name="user">The user data containing equipped skin information</param>
+    private void ApplyUserSkinToRam(GameObject ramInstance, User user)
+    {
+        try
+        {
+            // Find the Animator component on the RAM
+            var ramAnimator = ramInstance.GetComponent<Animator>();
+            if (ramAnimator == null)
+            {
+                Debug.LogWarning($"No Animator component found on RAM for user {user.name} - cannot apply skin");
+                return;
+            }
+            
+            // Find SkinManager in the scene
+            var skinManager = FindObjectOfType<SkinManager>();
+            if (skinManager == null)
+            {
+                Debug.LogWarning("SkinManager not found in scene - cannot apply user skin to RAM");
+                return;
+            }
+            
+            // Get the appropriate animator controller for the user's equipped skin
+            RuntimeAnimatorController skinAnimator = skinManager.GetAnimatorForSkin(user.equippedSkin);
+            if (skinAnimator != null)
+            {
+                // Apply the skin's animator controller to the RAM
+                ramAnimator.runtimeAnimatorController = skinAnimator;
+                Debug.Log($"Applied {user.equippedSkin} skin to RAM for user {user.name}");
+            }
+            else
+            {
+                Debug.LogWarning($"No animator controller found for skin {user.equippedSkin} - RAM will use default appearance");
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Failed to apply skin to RAM for user {user.name}: {ex.Message}");
+        }
     }
     
     /// <summary>

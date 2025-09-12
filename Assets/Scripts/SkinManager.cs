@@ -152,7 +152,7 @@ public class SkinManager : MonoBehaviour
     /// </summary>
     /// <param name="skin">The skin enum value</param>
     /// <returns>The corresponding animator controller, or default if not found</returns>
-    private RuntimeAnimatorController GetAnimatorForSkin(EquippedSkin skin)
+    public RuntimeAnimatorController GetAnimatorForSkin(EquippedSkin skin)
     {
         return skin switch
         {

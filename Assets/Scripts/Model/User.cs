@@ -27,7 +27,22 @@ namespace RamRoutes.Model
         public string residenceHall { set; get; }
         public EquippedSkin equippedSkin { set; get; } = EquippedSkin.Default;
         public List<string> friends { set; get; } = new List<string>();
-        
+        public string GetEquippedSkinAsString()
+        {
+            return equippedSkin.ToString();
+        }
+        public void SetEquippedSkinFromString(string skinName)
+        {
+            if (Enum.TryParse<EquippedSkin>(skinName, out var parsedSkin))
+            {
+                equippedSkin = parsedSkin;
+            }
+            else
+            {
+                equippedSkin = EquippedSkin.Default; // Fallback to default if parsing fails
+            }
+        }
+
         public User(string userId, string notificationToken, string name, string email)
         {
             this.userId = userId;
