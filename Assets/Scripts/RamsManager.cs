@@ -25,9 +25,13 @@ public class RamsManager : MonoBehaviour
     [Header("User Info Panel")]
     [SerializeField] private UserInfoPanel userInfoPanel;
     
+    [Header("Player Count Display")]
+    [SerializeField] private GameObject playerCountCanvasPrefab;
+    
     private UserService userService;
     private List<GameObject> spawnedRams = new List<GameObject>();
     private HashSet<string> spawnedUserIds = new HashSet<string>(); // Track spawned user IDs
+    private GameObject playerCountCanvasInstance; // Instance of the player count canvas
     private bool hasBeenActivated = false; // Prevent double activation
     private Coroutine refreshCoroutine; // Reference to the refresh coroutine
     
@@ -36,7 +40,27 @@ public class RamsManager : MonoBehaviour
         building = GetComponent<BuildingInteraction>();
         userService = new UserService();
         
+        // Initialize player count display immediately
+        InitializePlayerCountDisplay();
+        
         // Rams will only spawn when OnBuildingActivated() is called from BuildingInteraction
+    }
+    
+    /// <summary>
+    /// Initialize the player count display on start
+    /// </summary>
+    private async void InitializePlayerCountDisplay()
+    {
+        try
+        {
+            // Small delay to ensure building is properly initialized
+            await Task.Delay(500);
+            await DisplayPlayerCount();
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Error initializing player count display: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -58,6 +82,9 @@ public class RamsManager : MonoBehaviour
             Debug.Log($"Building {building.buildingName} activated in Terminal stage, spawning rams");
             await SpawnRams();
             
+            // Display player count if there are players in the building
+            await DisplayPlayerCount();
+            
             // Start the refresh coroutine to check for new players every 5 seconds
             if (refreshCoroutine == null)
             {
@@ -77,6 +104,19 @@ public class RamsManager : MonoBehaviour
         {
             hasBeenActivated = false;
             Debug.Log($"Building {building.buildingName} deactivated, despawning rams in 10 seconds");
+            
+            // Update player count display instead of hiding it
+            // This will show the remaining players in the building
+            Task.Run(async () => {
+                try
+                {
+                    await DisplayPlayerCount();
+                }
+                catch (System.Exception ex)
+                {
+                    Debug.LogError($"Error updating player count when player leaves: {ex.Message}");
+                }
+            });
             
             // Stop the refresh coroutine if running
             if (refreshCoroutine != null)
@@ -310,6 +350,9 @@ public class RamsManager : MonoBehaviour
                 
                 RemoveRamsForUsers(usersToRemove);
             }
+            
+            // Update player count display after changes
+            await DisplayPlayerCount();
         }
         catch (System.Exception e)
         {
@@ -744,6 +787,91 @@ public class RamsManager : MonoBehaviour
         Debug.Log($"Applied scale {scaleMultiplier:F2}x AFTER pop animation for {knowledgePoints} KB");
     }
     
+    /// <summary>
+    /// Display player count in the building if non-zero and building is active
+    /// </summary>
+    private async Task DisplayPlayerCount()
+    {
+        try
+        {
+            // Only display if building is activated
+            // if (!building.activated)
+            // {
+            //     // Hide canvas if building is not active
+            //     if (playerCountCanvasInstance != null)
+            //     {
+            //         playerCountCanvasInstance.SetActive(false);
+            //         Debug.Log($"Hiding player count canvas - building {building.buildingName} is not active");
+            //     }
+            //     return;
+            // }
+            
+            // Get the current player count in this building
+            var playersInBuilding = await userService.GetUsersInBuilding(building.buildingName);
+            int playerCount = playersInBuilding?.Count ?? 0;
+            
+            if (playerCount > 0)
+            {
+                // Create the canvas if it doesn't exist
+                if (playerCountCanvasInstance == null && playerCountCanvasPrefab != null)
+                {
+                    playerCountCanvasInstance = Instantiate(playerCountCanvasPrefab, transform);
+                    Debug.Log($"Created player count canvas for building {building.buildingName}");
+                }
+                
+                // Update the count display and show it
+                UpdatePlayerCountDisplay(playerCount);
+                Debug.Log($"Displaying player count: {playerCount} in building {building.buildingName}");
+            }
+            else
+            {
+                // Hide the canvas when count is zero
+                if (playerCountCanvasInstance != null)
+                {
+                    playerCountCanvasInstance.SetActive(false);
+                    Debug.Log($"Hiding player count canvas - zero players in building {building.buildingName}");
+                }
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Error displaying player count: {ex.Message}");
+        }
+    }
+    
+    /// <summary>
+    /// Update the player count display text
+    /// </summary>
+    private void UpdatePlayerCountDisplay(int count)
+    {
+        if (playerCountCanvasInstance == null) return;
+        
+        // Find the Text component in the canvas (nested)
+        var countText = playerCountCanvasInstance.GetComponentInChildren<UnityEngine.UI.Text>();
+        
+        if (countText == null)
+        {
+            // Try TextMeshPro if regular Text component not found
+            var tmpText = playerCountCanvasInstance.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+            if (tmpText != null)
+            {
+                tmpText.text = count.ToString();
+                playerCountCanvasInstance.SetActive(true);
+                Debug.Log($"Updated TMPro player count display to: {count}");
+                return;
+            }
+            
+            Debug.LogWarning("No Text or TextMeshPro component found in player count canvas");
+            return;
+        }
+        
+        // Update the text and make sure canvas is active
+        countText.text = count.ToString();
+        playerCountCanvasInstance.SetActive(true);
+        
+        Debug.Log($"Updated player count display to: {count}");
+    }
+    
     void Update()
     {
         
@@ -756,6 +884,13 @@ public class RamsManager : MonoBehaviour
         {
             StopCoroutine(refreshCoroutine);
             refreshCoroutine = null;
+        }
+        
+        // Clean up player count canvas
+        if (playerCountCanvasInstance != null)
+        {
+            Destroy(playerCountCanvasInstance);
+            playerCountCanvasInstance = null;
         }
         
         ClearSpawnedRams();
