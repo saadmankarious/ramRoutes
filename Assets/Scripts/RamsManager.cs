@@ -27,6 +27,7 @@ public class RamsManager : MonoBehaviour
     
     [Header("Player Count Display")]
     [SerializeField] private GameObject playerCountCanvasPrefab;
+    [SerializeField] private Transform playerCountSpawnPoint;
     
     private UserService userService;
     private List<GameObject> spawnedRams = new List<GameObject>();
@@ -794,18 +795,6 @@ public class RamsManager : MonoBehaviour
     {
         try
         {
-            // Only display if building is activated
-            // if (!building.activated)
-            // {
-            //     // Hide canvas if building is not active
-            //     if (playerCountCanvasInstance != null)
-            //     {
-            //         playerCountCanvasInstance.SetActive(false);
-            //         Debug.Log($"Hiding player count canvas - building {building.buildingName} is not active");
-            //     }
-            //     return;
-            // }
-            
             // Get the current player count in this building
             var playersInBuilding = await userService.GetUsersInBuilding(building.buildingName);
             int playerCount = playersInBuilding?.Count ?? 0;
@@ -815,8 +804,10 @@ public class RamsManager : MonoBehaviour
                 // Create the canvas if it doesn't exist
                 if (playerCountCanvasInstance == null && playerCountCanvasPrefab != null)
                 {
-                    playerCountCanvasInstance = Instantiate(playerCountCanvasPrefab, transform);
-                    Debug.Log($"Created player count canvas for building {building.buildingName}");
+                    // Use spawn point if assigned, otherwise use this transform
+                    Transform spawnParentTransform = playerCountSpawnPoint != null ? playerCountSpawnPoint : transform;
+                    playerCountCanvasInstance = Instantiate(playerCountCanvasPrefab, spawnParentTransform);
+                    Debug.Log($"Created player count canvas for building {building.buildingName} at spawn point");
                 }
                 
                 // Update the count display and show it
@@ -869,7 +860,25 @@ public class RamsManager : MonoBehaviour
         countText.text = count.ToString();
         playerCountCanvasInstance.SetActive(true);
         
+        // Start beating animation to attract attention
+        StartCoroutine(BeatingAnimation());
+        
         Debug.Log($"Updated player count display to: {count}");
+    }
+    
+    /// <summary>
+    /// Simple beating animation for player count canvas
+    /// </summary>
+    private IEnumerator BeatingAnimation()
+    {
+        if (playerCountCanvasInstance == null) yield break;
+        while (playerCountCanvasInstance.activeInHierarchy)
+        {
+            playerCountCanvasInstance.transform.localScale = Vector3.one * 1.2f;
+            yield return new WaitForSeconds(1f);
+            playerCountCanvasInstance.transform.localScale = Vector3.one;
+            yield return new WaitForSeconds(1f);
+        }
     }
     
     void Update()
