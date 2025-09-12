@@ -88,145 +88,162 @@ function StoreItemForm({ user, onItemCreated }) {
 
   return (
     <div className="form-container">
-      <div className="form-header">
-        <h2>Create Store Item</h2>
-        <p>Add a new item to the game store</p>
-      </div>
-
-      {success && (
-        <div className="success-message">
-          ✅ Store item created successfully!
-        </div>
-      )}
-
-      {error && (
-        <div className="error-message">
-          ❌ {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="admin-form">
-        <div className="form-group">
-          <label htmlFor="name">Item Name *</label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            placeholder="Enter item name"
-          />
+      <div className="form-card">
+        <div className="form-header">
+          <h2 className="form-title">Create Store Item</h2>
+          <p className="form-description">Add a new item to the game store</p>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="description">Description</label>
-          <textarea
-            id="description"
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            rows="3"
-            placeholder="Enter item description"
-          />
-        </div>
+        {success && (
+          <div className="alert alert-success">
+            ✅ Store item created successfully!
+          </div>
+        )}
 
-        <div className="form-group">
-          <label htmlFor="imageUrl">Image URL</label>
-          <input
-            type="url"
-            id="imageUrl"
-            name="imageUrl"
-            value={formData.imageUrl}
-            onChange={handleChange}
-            placeholder="https://example.com/image.jpg"
-          />
-          {formData.imageUrl && (
-            <div className="image-preview">
-              <img 
-                src={formData.imageUrl} 
-                alt="Preview" 
-                style={{ maxWidth: '100px', maxHeight: '100px', marginTop: '10px' }}
-                onError={(e) => { e.target.style.display = 'none'; }}
+        {error && (
+          <div className="alert alert-error">
+            ❌ {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="name" className="form-label">Item Name *</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              placeholder="Enter item name"
+              className="form-input"
+              disabled={loading}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="description" className="form-label">Description</label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows="3"
+              placeholder="Enter item description"
+              className="form-input"
+              disabled={loading}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="imageUrl" className="form-label">Image URL</label>
+            <input
+              type="url"
+              id="imageUrl"
+              name="imageUrl"
+              value={formData.imageUrl}
+              onChange={handleChange}
+              placeholder="https://example.com/image.jpg"
+              className="form-input"
+              disabled={loading}
+            />
+            {formData.imageUrl && (
+              <div className="image-preview">
+                <img 
+                  src={formData.imageUrl} 
+                  alt="Preview" 
+                  style={{ maxWidth: '100px', maxHeight: '100px', marginTop: '10px', borderRadius: '4px' }}
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+              </div>
+            )}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="form-group">
+              <label htmlFor="priceCoins" className="form-label">Price (Coins)</label>
+              <input
+                type="number"
+                id="priceCoins"
+                name="priceCoins"
+                value={formData.priceCoins}
+                onChange={handleChange}
+                min="0"
+                placeholder="0"
+                className="form-input"
+                disabled={loading}
               />
             </div>
-          )}
-        </div>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor="priceCoins">Price (Coins)</label>
-            <input
-              type="number"
-              id="priceCoins"
-              name="priceCoins"
-              value={formData.priceCoins}
-              onChange={handleChange}
-              min="0"
-              placeholder="0"
-            />
+            <div className="form-group">
+              <label htmlFor="priceKb" className="form-label">Price (Knowledge Points)</label>
+              <input
+                type="number"
+                id="priceKb"
+                name="priceKb"
+                value={formData.priceKb}
+                onChange={handleChange}
+                min="0"
+                placeholder="0"
+                className="form-input"
+                disabled={loading}
+              />
+            </div>
           </div>
 
           <div className="form-group">
-            <label htmlFor="priceKb">Price (Knowledge Points)</label>
-            <input
-              type="number"
-              id="priceKb"
-              name="priceKb"
-              value={formData.priceKb}
+            <label htmlFor="category" className="form-label">Category</label>
+            <select
+              id="category"
+              name="category"
+              value={formData.category}
               onChange={handleChange}
-              min="0"
-              placeholder="0"
-            />
+              className="form-select"
+              disabled={loading}
+            >
+              {categoryOptions.map(category => (
+                <option key={category} value={category}>
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                </option>
+              ))}
+            </select>
           </div>
-        </div>
 
-        <div className="form-group">
-          <label htmlFor="category">Category</label>
-          <select
-            id="category"
-            name="category"
-            value={formData.category}
-            onChange={handleChange}
-          >
-            {categoryOptions.map(category => (
-              <option key={category} value={category}>
-                {category.charAt(0).toUpperCase() + category.slice(1)}
-              </option>
-            ))}
-          </select>
-        </div>
+          <div className="form-group">
+            <label className="form-label">
+              <input
+                type="checkbox"
+                name="available"
+                checked={formData.available}
+                onChange={handleChange}
+                disabled={loading}
+                style={{ marginRight: '0.5rem' }}
+              />
+              Available for purchase
+            </label>
+          </div>
 
-        <div className="form-group checkbox-group">
-          <label>
-            <input
-              type="checkbox"
-              name="available"
-              checked={formData.available}
-              onChange={handleChange}
-            />
-            Available for purchase
-          </label>
-        </div>
-
-        <div className="form-actions">
-          <button 
-            type="submit" 
-            className="submit-button"
-            disabled={loading}
-          >
-            {loading ? 'Creating...' : 'Create Store Item'}
-          </button>
-          
-          <button 
-            type="button" 
-            className="view-button"
-            onClick={() => onItemCreated && onItemCreated('view')}
-          >
-            View Store Items
-          </button>
-        </div>
-      </form>
+          <div className="form-actions">
+            <button 
+              type="submit" 
+              className="form-button"
+              disabled={loading}
+            >
+              {loading ? 'Creating...' : 'Create Store Item'}
+            </button>
+            
+            <button 
+              type="button" 
+              className="form-button cancel-button"
+              onClick={() => onItemCreated && onItemCreated('view')}
+              disabled={loading}
+            >
+              View Store Items
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

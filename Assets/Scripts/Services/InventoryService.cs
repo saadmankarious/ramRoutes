@@ -319,15 +319,24 @@ namespace RamRoutes.Services
         {
             try
             {
-                // Notify SkinManager to update player sprite
-                if (SkinManager.Instance != null)
+                // Only attempt notifications if we're in the game scene
+                var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+                if (currentScene != "LevelRPG")
                 {
-                    SkinManager.Instance.OnUserSkinChanged(newSkin);
+                    Debug.Log($"Skipping skin change notification - not in game scene (current: {currentScene})");
+                    return;
+                }
+
+                // Find SkinManager in current scene (no singleton dependency)
+                var skinManager = UnityEngine.Object.FindObjectOfType<SkinManager>();
+                if (skinManager != null)
+                {
+                    skinManager.OnUserSkinChanged(newSkin);
                     Debug.Log($"Notified SkinManager of skin change to: {newSkin}");
                 }
                 else
                 {
-                    Debug.LogWarning("SkinManager instance not found - cannot update player skin");
+                    Debug.LogWarning("SkinManager not found in current scene - cannot update player skin");
                 }
                 
                 // Find UIManager in the scene for UI notifications

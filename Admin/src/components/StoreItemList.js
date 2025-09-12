@@ -134,48 +134,54 @@ function StoreItemList({ user, onEditItem }) {
   }
 
   return (
-    <div className="list-container">
-      <div className="list-header">
-        <h2>Store Items Management</h2>
-        <p>Manage items available in the game store</p>
+    <div className="admin-list-container">
+      <div className="admin-list-header">
+        <div>
+          <h2>Store Items Management</h2>
+          <p className="admin-list-description">Manage items available in the game store</p>
+        </div>
       </div>
 
       {error && (
-        <div className="error-message">
+        <div className="alert alert-error">
           ❌ {error}
         </div>
       )}
 
-      <div className="filter-controls">
-        <div className="filter-group">
-          <label>Category:</label>
-          <select 
-            value={selectedCategory} 
-            onChange={(e) => setSelectedCategory(e.target.value)}
-          >
-            {categoryOptions.map(category => (
-              <option key={category} value={category}>
-                {category === 'all' ? 'All Categories' : category.charAt(0).toUpperCase() + category.slice(1)}
-              </option>
-            ))}
-          </select>
-        </div>
+      <div className="admin-list-controls">
+        <div className="filter-controls">
+          <div className="filter-group">
+            <label className="form-label">Category:</label>
+            <select 
+              value={selectedCategory} 
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="form-select"
+            >
+              {categoryOptions.map(category => (
+                <option key={category} value={category}>
+                  {category === 'all' ? 'All Categories' : category.charAt(0).toUpperCase() + category.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className="filter-group">
-          <label>Status:</label>
-          <select 
-            value={selectedStatus} 
-            onChange={(e) => setSelectedStatus(e.target.value)}
-          >
-            <option value="all">All Items</option>
-            <option value="available">Available Only</option>
-            <option value="unavailable">Unavailable Only</option>
-          </select>
-        </div>
+          <div className="filter-group">
+            <label className="form-label">Status:</label>
+            <select 
+              value={selectedStatus} 
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="form-select"
+            >
+              <option value="all">All Items</option>
+              <option value="available">Available Only</option>
+              <option value="unavailable">Unavailable Only</option>
+            </select>
+          </div>
 
-        <div className="stats">
-          <span>Total: {items.length}</span>
-          <span>Filtered: {filteredItems.length}</span>
+          <div className="stats">
+            <span>Total: {items.length}</span>
+            <span>Filtered: {filteredItems.length}</span>
+          </div>
         </div>
       </div>
 
@@ -184,64 +190,61 @@ function StoreItemList({ user, onEditItem }) {
           <p>No store items found matching the current filters.</p>
         </div>
       ) : (
-        <div className="items-grid">
+        <div className="admin-list">
           {filteredItems.map((item) => (
-            <div key={item.id} className="item-card">
-              <div className="item-header">
-                <h3>{item.name}</h3>
-                <div className="item-badges">
-                  <span className={`status-badge ${item.available ? 'available' : 'unavailable'}`}>
-                    {item.available ? 'Available' : 'Unavailable'}
-                  </span>
-                  <span className="category-badge">
-                    {item.category}
-                  </span>
-                </div>
-              </div>
-
-              <div className="item-content">
-                {item.imageUrl && (
-                  <div className="item-image">
-                    <img 
-                      src={item.imageUrl} 
-                      alt={item.name}
-                      style={{ 
-                        maxWidth: '80px', 
-                        maxHeight: '80px', 
-                        objectFit: 'cover',
-                        borderRadius: '4px',
-                        marginBottom: '10px'
-                      }}
-                      onError={(e) => { e.target.style.display = 'none'; }}
-                    />
+            <div key={item.id} className="admin-card">
+              <div className="admin-info">
+                <div className="admin-header">
+                  <h3 className="admin-name">{item.name}</h3>
+                  <div className="item-badges">
+                    <span className={`status-badge ${item.available ? 'available' : 'unavailable'}`}>
+                      {item.available ? 'Available' : 'Unavailable'}
+                    </span>
+                    <span className="category-badge">
+                      {item.category}
+                    </span>
                   </div>
-                )}
-                
-                {item.description && (
-                  <p className="item-description">{item.description}</p>
-                )}
-                
-                <div className="item-price">
-                  <strong>Price: {formatPrice(item.priceCoins, item.priceKb)}</strong>
                 </div>
 
-                <div className="item-meta">
-                  <small>Created: {formatDate(item.createdAt)}</small>
+                <div className="admin-details">
+                  {item.imageUrl && (
+                    <div className="item-image" style={{ marginBottom: '10px' }}>
+                      <img 
+                        src={item.imageUrl} 
+                        alt={item.name}
+                        style={{ 
+                          maxWidth: '80px', 
+                          maxHeight: '80px', 
+                          objectFit: 'cover',
+                          borderRadius: '4px'
+                        }}
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                    </div>
+                  )}
+                  
+                  {item.description && (
+                    <p>{item.description}</p>
+                  )}
+                  
+                  <p><strong>Price: {formatPrice(item.priceCoins, item.priceKb)}</strong></p>
+
+                  <p><small>Created: {formatDate(item.createdAt)}</small></p>
                   {item.updatedAt && item.updatedAt !== item.createdAt && (
-                    <small>Updated: {formatDate(item.updatedAt)}</small>
+                    <p><small>Updated: {formatDate(item.updatedAt)}</small></p>
                   )}
                 </div>
               </div>
 
-              <div className="item-actions">
+              <div className="admin-actions">
                 <button 
-                  className="edit-button"
+                  className="form-button"
                   onClick={() => onEditItem(item)}
                 >
                   Edit
                 </button>
                 <button 
-                  className="delete-button"
+                  className="form-button delete-button"
                   onClick={() => setDeleteConfirm(item.id)}
                 >
                   Delete
@@ -253,20 +256,20 @@ function StoreItemList({ user, onEditItem }) {
       )}
 
       {deleteConfirm && (
-        <div className="delete-modal">
-          <div className="delete-modal-content">
+        <div className="modal-overlay">
+          <div className="modal-content">
             <h3>Confirm Delete</h3>
             <p>Are you sure you want to delete this store item?</p>
             <p><strong>{items.find(item => item.id === deleteConfirm)?.name}</strong></p>
-            <div className="delete-modal-actions">
+            <div className="form-actions">
               <button 
-                className="confirm-delete"
+                className="form-button delete-button"
                 onClick={() => handleDelete(deleteConfirm)}
               >
                 Yes, Delete
               </button>
               <button 
-                className="cancel-delete"
+                className="form-button cancel-button"
                 onClick={() => setDeleteConfirm(null)}
               >
                 Cancel

@@ -19,17 +19,17 @@ public class SkinManager : MonoBehaviour
     
     void Awake()
     {
-        // Singleton pattern
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
-            return;
-        }
+        // // Singleton pattern
+        // if (Instance == null)
+        // {
+        //     Instance = this;
+        //     DontDestroyOnLoad(gameObject);
+        // }
+        // else
+        // {
+        //     Destroy(gameObject);
+        //     return;
+        // }
     }
     
     void Start()
@@ -106,27 +106,44 @@ public class SkinManager : MonoBehaviour
     /// <param name="newSkin">The new equipped skin</param>
     public void OnUserSkinChanged(EquippedSkin newSkin)
     {
-        // Ensure we have a valid player reference
-        if (player == null || playerAnimator == null)
+        try
         {
-            FindPlayer(); // Try to find player again
+            // Ensure we're in the correct scene for player updates
+            var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            if (currentScene != "LevelRPG")
+            {
+                Debug.Log($"SkinManager: Skipping skin change in scene: {currentScene}");
+                return;
+            }
+
+            Debug.Log($"SkinManager: Updating player skin to: {newSkin}");
+            
+            // Ensure we have a valid player reference
+            if (player == null || playerAnimator == null)
+            {
+                FindPlayer(); // Try to find player again
+            }
+            
+            if (playerAnimator == null)
+            {
+                Debug.LogWarning("SkinManager: Cannot update skin - no player Animator available");
+                return;
+            }
+            
+            RuntimeAnimatorController skinAnimator = GetAnimatorForSkin(newSkin);
+            if (skinAnimator != null)
+            {
+                playerAnimator.runtimeAnimatorController = skinAnimator;
+                Debug.Log($"SkinManager: Successfully updated player skin animator to {newSkin}");
+            }
+            else
+            {
+                Debug.LogWarning($"SkinManager: No animator assigned for skin {newSkin}");
+            }
         }
-        
-        if (playerAnimator == null)
+        catch (System.Exception ex)
         {
-            Debug.LogWarning("SkinManager: Cannot update skin - no player Animator available");
-            return;
-        }
-        
-        RuntimeAnimatorController skinAnimator = GetAnimatorForSkin(newSkin);
-        if (skinAnimator != null)
-        {
-            playerAnimator.runtimeAnimatorController = skinAnimator;
-            Debug.Log($"SkinManager: Updated player skin animator to {newSkin}");
-        }
-        else
-        {
-            Debug.LogWarning($"SkinManager: No animator assigned for skin {newSkin}");
+            Debug.LogError($"SkinManager: Failed to update skin to {newSkin}: {ex.Message}");
         }
     }
     
