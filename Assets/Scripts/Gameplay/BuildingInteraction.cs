@@ -55,6 +55,9 @@ public class BuildingInteraction : MonoBehaviour
     // [SerializeField] private float gpsUnlockRadius = 50f;
     [SerializeField] public bool bypassGpsCheck = false;
 
+    [Header("Player Movement")]
+    [SerializeField] private GameObject playerTargetPoint;
+
     public bool isPlayerInRange = false;
     private int currentLineIndex = 0;
     private bool extraLineShown = false;
@@ -504,6 +507,9 @@ public class BuildingInteraction : MonoBehaviour
         {
             Debug.Log($"Player entered GPS proximity of building: {building.name}");
             
+            // Move player to building position smoothly
+            StartCoroutine(MovePlayerToBuildingSmooth());
+            
             // Check if already unlocked
             var service = new UnlockedBuildingService();
             string userId = FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.UserId : "unknown";
@@ -875,6 +881,52 @@ public class BuildingInteraction : MonoBehaviour
         else if (buildingEventsPanel != null)
         {
             buildingEventsPanel.SetActive(false);
+        }
+    }
+    
+    /// <summary>
+    /// Smoothly moves the player to the target point near this building
+    /// </summary>
+    private IEnumerator MovePlayerToBuildingSmooth()
+    {
+        GameObject player = GameObject.FindWithTag("Player");
+        // if (player == null)
+        // {
+        //     player = GameObject.FindWithTag("Spaceship");
+        // }
+        
+        if (player != null)
+        {
+            // Check if target point is assigned, otherwise fallback to building position
+            Vector3 targetPosition = playerTargetPoint != null ? playerTargetPoint.transform.position : transform.position;
+            Vector3 startPosition = player.transform.position;
+            float duration = 2.0f; // 2 seconds for smooth movement
+            float elapsedTime = 0f;
+            
+            string targetName = playerTargetPoint != null ? playerTargetPoint.name : buildingName;
+            Debug.Log($"Starting smooth movement to target '{targetName}' from {startPosition} to {targetPosition}");
+            
+            while (elapsedTime < duration)
+            {
+                elapsedTime += Time.deltaTime;
+                float progress = elapsedTime / duration;
+                
+                // Use smooth step for eased movement
+                float smoothProgress = Mathf.SmoothStep(0f, 1f, progress);
+                
+                // Interpolate position
+                player.transform.position = Vector3.Lerp(startPosition, targetPosition, smoothProgress);
+                
+                yield return null; // Wait one frame
+            }
+            
+            // Ensure we end exactly at target position
+            player.transform.position = targetPosition;
+            Debug.Log($"Completed smooth movement to target '{targetName}' at position {targetPosition}");
+        }
+        else
+        {
+            Debug.LogWarning("Could not find player object with 'Player' tag to move");
         }
     }
     

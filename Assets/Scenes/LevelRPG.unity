@@ -2077,6 +2077,37 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!1 &179463703
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 179463704}
+  m_Layer: 8
+  m_Name: teleport spawn (3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &179463704
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 179463703}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.9976046, z: -0, w: -0.06917477}
+  m_LocalPosition: {x: -1.13, y: -3.26, z: 25.39}
+  m_LocalScale: {x: 0.9593278, y: 0.95932806, z: 0.9593278}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1851404767}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &185559586
 GameObject:
   m_ObjectHideFlags: 0
@@ -2114,6 +2145,7 @@ Transform:
   - {fileID: 1490650722}
   - {fileID: 1681770776}
   - {fileID: 477640359}
+  - {fileID: 686948866}
   m_Father: {fileID: 1187746829}
   m_LocalEulerAnglesHint: {x: 0, y: 29.564, z: 0}
 --- !u!212 &185559588
@@ -2206,6 +2238,7 @@ MonoBehaviour:
   simulateEntry: 0
   connectedGate: {fileID: 0}
   bypassGpsCheck: 0
+  playerTargetPoint: {fileID: 686948865}
   isPlayerInRange: 0
   activated: 0
   buildingName: Library
@@ -2938,6 +2971,7 @@ Transform:
   - {fileID: 829954904}
   - {fileID: 862378266}
   - {fileID: 1226407748}
+  - {fileID: 927560907}
   m_Father: {fileID: 1187746829}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &211162575
@@ -3077,6 +3111,7 @@ MonoBehaviour:
   simulateEntry: 0
   connectedGate: {fileID: 1496117206}
   bypassGpsCheck: 1
+  playerTargetPoint: {fileID: 927560906}
   isPlayerInRange: 0
   activated: 0
   buildingName: McWethy
@@ -4475,6 +4510,37 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7dc17e83f4e9ac545b4fae3cc84cb6cc, type: 3}
+--- !u!1 &284486514
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 284486515}
+  m_Layer: 8
+  m_Name: teleport spawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &284486515
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 284486514}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -5.3, y: -3, z: -59.36315}
+  m_LocalScale: {x: 1.4479324, y: 1.4479324, z: 1.4479324}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1046268213}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &307560158
 GameObject:
   m_ObjectHideFlags: 0
@@ -4584,7 +4650,7 @@ Transform:
   m_GameObject: {fileID: 316913357}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.4, y: -4.52, z: -59.36315}
+  m_LocalPosition: {x: -0.6, y: -5.6, z: -59.36315}
   m_LocalScale: {x: 1.4479324, y: 1.4479324, z: 1.4479324}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -20539,6 +20605,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 670941116}
   m_CullTransparentMesh: 1
+--- !u!1 &686948865
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 686948866}
+  m_Layer: 8
+  m_Name: teleport spawn (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &686948866
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 686948865}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0.25513858, z: -0, w: 0.9669045}
+  m_LocalPosition: {x: 25.23, y: -6.6, z: -50.06}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 185559587}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &697916729
 GameObject:
   m_ObjectHideFlags: 0
@@ -23033,6 +23130,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 925486882}
   m_CullTransparentMesh: 1
+--- !u!1 &927560906
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 927560907}
+  m_Layer: 8
+  m_Name: teleport spawn (4)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &927560907
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 927560906}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 1.3, y: 4.9, z: 0.0014209747}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 211162574}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &941276235
 GameObject:
   m_ObjectHideFlags: 0
@@ -24261,6 +24389,7 @@ Transform:
   m_Children:
   - {fileID: 1204112142}
   - {fileID: 316913358}
+  - {fileID: 284486515}
   m_Father: {fileID: 1187746829}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!61 &1046268214
@@ -24344,6 +24473,7 @@ MonoBehaviour:
   simulateEntry: 0
   connectedGate: {fileID: 0}
   bypassGpsCheck: 1
+  playerTargetPoint: {fileID: 284486514}
   isPlayerInRange: 0
   activated: 0
   buildingName: Ebersole
@@ -25353,6 +25483,112 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1114174253}
   m_CullTransparentMesh: 1
+--- !u!1 &1123365108
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1123365111}
+  - component: {fileID: 1123365110}
+  - component: {fileID: 1123365109}
+  m_Layer: 0
+  m_Name: GPS Backup
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!114 &1123365109
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1123365108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c124e8f219fa7201b9eeede9392c8b9b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  eventsPanel: {fileID: 541286879}
+  buildingTitleText: {fileID: 1285263764}
+  eventsScrollView: {fileID: 1546293402}
+  eventsContentParent: {fileID: 851517684}
+  eventPrefab: {fileID: 2000664500281949103, guid: ff49a5a8c89336da8b9407e20074a4d5,
+    type: 3}
+  noEventsText: {fileID: 563434308}
+  closeButton: {fileID: 1089934570}
+--- !u!114 &1123365110
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1123365108}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 79c7e8ba614b7ed49a0d8d43706654fc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  showDebugInfo: 0
+  clearCacheOnStart: 0
+  simulateGpsEnabled: 1
+  buildings:
+  - name: TC
+    entranceGPS: {x: 41.926, y: -91.42536}
+    detectionRadius: 80
+    closeProximityRadius: 50
+    debugColor: {r: 0.6226415, g: 0.13040228, b: 0.44183475, a: 1}
+  - name: McWethy
+    entranceGPS: {x: 41.927002, y: -91.42436}
+    detectionRadius: 35
+    closeProximityRadius: 15
+    debugColor: {r: 0.101122856, g: 0, b: 1, a: 1}
+  - name: Stoner
+    entranceGPS: {x: 41.925278, y: -91.42181}
+    detectionRadius: 35
+    closeProximityRadius: 20
+    debugColor: {r: 0, g: 1, b: 1, a: 1}
+  - name: PR
+    entranceGPS: {x: 41.927242, y: -91.428085}
+    detectionRadius: 50
+    closeProximityRadius: 15
+    debugColor: {r: 1, g: 0.063696235, b: 0, a: 1}
+  - name: Library
+    entranceGPS: {x: 41.924538, y: -91.42376}
+    detectionRadius: 35
+    closeProximityRadius: 15
+    debugColor: {r: 0.6226415, g: 0.13040228, b: 0.44183475, a: 1}
+  - name: Ebersole
+    entranceGPS: {x: 41.925148, y: -91.42546}
+    detectionRadius: 35
+    closeProximityRadius: 15
+    debugColor: {r: 0.6226415, g: 0.13040228, b: 0.44183475, a: 1}
+  - name: SAW
+    entranceGPS: {x: 41.927956, y: -91.4256}
+    detectionRadius: 35
+    closeProximityRadius: 15
+    debugColor: {r: 0.6226415, g: 0.13040228, b: 0.44183475, a: 1}
+  updateInterval: 10
+  locationDisabledCanvas: {fileID: 1742409201}
+--- !u!4 &1123365111
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1123365108}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -7.46454, y: -16.73276, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1132677566
 GameObject:
   m_ObjectHideFlags: 0
@@ -29946,17 +30182,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79c7e8ba614b7ed49a0d8d43706654fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  showDebugInfo: 0
+  showDebugInfo: 1
   clearCacheOnStart: 0
-  simulateGpsEnabled: 1
+  simulateGpsEnabled: 0
   buildings:
   - name: TC
-    entranceGPS: {x: 41.926, y: -91.42536}
+    entranceGPS: {x: 38.89941, y: -77.04844}
     detectionRadius: 80
     closeProximityRadius: 50
     debugColor: {r: 0.6226415, g: 0.13040228, b: 0.44183475, a: 1}
   - name: McWethy
-    entranceGPS: {x: 41.927002, y: -91.42436}
+    entranceGPS: {x: 38.90017, y: -77.04947}
     detectionRadius: 35
     closeProximityRadius: 15
     debugColor: {r: 0.101122856, g: 0, b: 1, a: 1}
@@ -29981,7 +30217,7 @@ MonoBehaviour:
     closeProximityRadius: 15
     debugColor: {r: 0.6226415, g: 0.13040228, b: 0.44183475, a: 1}
   - name: SAW
-    entranceGPS: {x: 41.927956, y: -91.4256}
+    entranceGPS: {x: 38.8986, y: -77.05059}
     detectionRadius: 35
     closeProximityRadius: 15
     debugColor: {r: 0.6226415, g: 0.13040228, b: 0.44183475, a: 1}
@@ -32066,13 +32302,14 @@ Transform:
   m_GameObject: {fileID: 1602936568}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -95.1, y: -62.5, z: -2.7501276}
+  m_LocalPosition: {x: -95.1, y: -63.04, z: -2.7501276}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2118235787}
   - {fileID: 1353312976}
   - {fileID: 329316537}
+  - {fileID: 1950010140}
   m_Father: {fileID: 1187746829}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &1602936570
@@ -32166,6 +32403,7 @@ MonoBehaviour:
   simulateEntry: 0
   connectedGate: {fileID: 8580128933837205543}
   bypassGpsCheck: 1
+  playerTargetPoint: {fileID: 1950010139}
   isPlayerInRange: 0
   activated: 0
   buildingName: Stoner
@@ -39147,6 +39385,7 @@ Transform:
   - {fileID: 1942281749}
   - {fileID: 1940202910}
   - {fileID: 423005919}
+  - {fileID: 2095592911}
   m_Father: {fileID: 1187746829}
   m_LocalEulerAnglesHint: {x: 0, y: 30.043, z: 0}
 --- !u!212 &1711022878
@@ -39285,6 +39524,7 @@ MonoBehaviour:
   simulateEntry: 0
   connectedGate: {fileID: 0}
   bypassGpsCheck: 0
+  playerTargetPoint: {fileID: 2095592910}
   isPlayerInRange: 0
   activated: 0
   buildingName: SAW
@@ -283377,6 +283617,7 @@ Transform:
   - {fileID: 783852339}
   - {fileID: 697916730}
   - {fileID: 2015675560}
+  - {fileID: 179463704}
   m_Father: {fileID: 1187746829}
   m_LocalEulerAnglesHint: {x: 0, y: -187.933, z: 0}
 --- !u!61 &1851404768
@@ -283557,6 +283798,7 @@ MonoBehaviour:
   simulateEntry: 0
   connectedGate: {fileID: 0}
   bypassGpsCheck: 1
+  playerTargetPoint: {fileID: 179463703}
   isPlayerInRange: 0
   activated: 0
   buildingName: TC
@@ -284080,6 +284322,7 @@ Transform:
   m_Children:
   - {fileID: 833470305}
   - {fileID: 279220171}
+  - {fileID: 1970216930}
   m_Father: {fileID: 1187746829}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &1878086077
@@ -284173,6 +284416,7 @@ MonoBehaviour:
   simulateEntry: 0
   connectedGate: {fileID: 7270442483274850398}
   bypassGpsCheck: 1
+  playerTargetPoint: {fileID: 1970216929}
   isPlayerInRange: 0
   activated: 0
   buildingName: PR
@@ -284780,6 +285024,37 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 2043285553}
+--- !u!1 &1950010139
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1950010140}
+  m_Layer: 8
+  m_Name: teleport spawn (2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1950010140
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1950010139}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -0.72, y: 4.03, z: 2.751558}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1602936569}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1965324245
 GameObject:
   m_ObjectHideFlags: 0
@@ -285073,6 +285348,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1969762526}
   m_CullTransparentMesh: 1
+--- !u!1 &1970216929
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1970216930}
+  m_Layer: 8
+  m_Name: teleport spawn (5)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1970216930
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1970216929}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -1.12, y: -3.29, z: 1.2914401}
+  m_LocalScale: {x: 0.4693503, y: 0.4693503, z: 0.4693503}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1878086076}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1972444929
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -286848,6 +287154,37 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 073797afb82c5a1438f328866b10b3f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &2095592910
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2095592911}
+  m_Layer: 8
+  m_Name: teleport spawn (6)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2095592911
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2095592910}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0.25918272, z: -0, w: 0.9658283}
+  m_LocalPosition: {x: 14.4, y: 4.3, z: -35.6}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1711022877}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &2095834912
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -288086,5 +288423,6 @@ SceneRoots:
   - {fileID: 1187746829}
   - {fileID: 2050128707}
   - {fileID: 1470091601}
+  - {fileID: 1123365111}
   - {fileID: 1431704524}
   - {fileID: 1331873262}
