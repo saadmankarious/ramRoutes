@@ -197,6 +197,9 @@ public class InventoryManager : MonoBehaviour
             LoadItemImage(imageTransform, item.imageUrl);
         }
         
+        // Add overlay to unequipped items
+        AddOverlayToUnequippedItem(itemObject, hasEquipped);
+        
         // Set up equip/unequip button
         if (equipButtonTransform != null)
         {
@@ -489,11 +492,55 @@ public class InventoryManager : MonoBehaviour
         {
             if (item != null)
             {
+                // Remove any overlays before destroying the item
+                RemoveOverlayFromItem(item);
                 DestroyImmediate(item);
             }
         }
         spawnedItems.Clear();
     }
+    
+    private void AddOverlayToUnequippedItem(GameObject itemObject, bool hasEquipped)
+    {
+        // Only add overlay to unequipped items
+        if (hasEquipped)
+        {
+            return; // Item is equipped, no overlay needed
+        }
+        
+        // Create overlay GameObject as child of the item
+        GameObject overlayObject = new GameObject("UnequippedOverlay");
+        overlayObject.transform.SetParent(itemObject.transform, false);
+        
+        // Add Image component for the overlay
+        var overlayImage = overlayObject.AddComponent<UnityEngine.UI.Image>();
+        overlayImage.color = new Color(0, 0, 0, 0.6f); // Semi-transparent black overlay
+        overlayImage.raycastTarget = false; // Don't block interactions
+        
+        // Add RectTransform and set it to cover the entire item
+        var rectTransform = overlayObject.GetComponent<RectTransform>();
+        rectTransform.anchorMin = Vector2.zero;
+        rectTransform.anchorMax = Vector2.one;
+        rectTransform.offsetMin = Vector2.zero;
+        rectTransform.offsetMax = Vector2.zero;
+        
+        // Set as last sibling to appear on top
+        overlayObject.transform.SetAsLastSibling();
+        
+        Debug.Log($"Added unequipped overlay to item: {itemObject.name}");
+    }
+    
+    private void RemoveOverlayFromItem(GameObject itemObject)
+    {
+        // Find and destroy the overlay GameObject
+        Transform overlayTransform = itemObject.transform.Find("UnequippedOverlay");
+        if (overlayTransform != null)
+        {
+            DestroyImmediate(overlayTransform.gameObject);
+            Debug.Log($"Removed unequipped overlay from item: {itemObject.name}");
+        }
+    }
+    
     
  
     

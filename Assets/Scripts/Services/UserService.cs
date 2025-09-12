@@ -666,5 +666,66 @@ namespace RamRoutes.Services
             }
         }
 
+        /// <summary>
+        /// Gets the currently equipped skin for a user
+        /// </summary>
+        /// <param name="userId">The user ID</param>
+        /// <returns>The equipped skin enum value</returns>
+        public async Task<EquippedSkin> GetEquippedSkin(string userId)
+        {
+            try
+            {
+                DocumentSnapshot doc = await db.Collection("users").Document(userId).GetSnapshotAsync();
+                if (doc.Exists && doc.TryGetValue("equippedSkin", out object skinValue))
+                {
+                    if (skinValue is string skinString)
+                    {
+                        if (Enum.TryParse<EquippedSkin>(skinString, out EquippedSkin skin))
+                        {
+                            return skin;
+                        }
+                    }
+                    else if (skinValue is long skinNumber)
+                    {
+                        return (EquippedSkin)skinNumber;
+                    }
+                }
+                
+                // Default to Default skin if not found or invalid
+                return EquippedSkin.Default;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"UserService: Failed to get equipped skin for user {userId}: {ex.Message}");
+                return EquippedSkin.Default;
+            }
+        }
+
+        /// <summary>
+        /// Updates the equipped skin for a user
+        /// </summary>
+        /// <param name="userId">The user ID</param>
+        /// <param name="newSkin">The new skin to equip</param>
+        /// <returns>True if successful, false otherwise</returns>
+        public async Task<bool> UpdateEquippedSkin(string userId, EquippedSkin newSkin)
+        {
+            try
+            {
+                var updateData = new Dictionary<string, object>
+                {
+                    { "equippedSkin", newSkin.ToString() }
+                };
+
+                await db.Collection("users").Document(userId).UpdateAsync(updateData);
+                Debug.Log($"UserService: Updated equipped skin for user {userId} to {newSkin}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"UserService: Failed to update equipped skin for user {userId}: {ex.Message}");
+                return false;
+            }
+        }
+
     }
 }

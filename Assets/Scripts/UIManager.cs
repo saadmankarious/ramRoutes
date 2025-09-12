@@ -600,7 +600,7 @@ public class UIManager : MonoBehaviour
         
         Debug.Log("UIManager: Cleaned up conflicting audio settings");
     }
-    
+
     /// <summary>
     /// Updates the user's avatar sprite based on their rank.
     /// </summary>
@@ -613,10 +613,10 @@ public class UIManager : MonoBehaviour
             Debug.LogWarning("User avatar image component not assigned in UIManager");
             return;
         }
-        
+
         // Select the appropriate sprite based on rank
         Sprite selectedSprite;
-        
+
         switch (rank)
         {
             case 1:
@@ -633,17 +633,17 @@ public class UIManager : MonoBehaviour
                 selectedSprite = defaultAvatarSprite;
                 break;
         }
-        
+
         // If the selected sprite is null, use the default sprite
         if (selectedSprite == null)
         {
             Debug.LogWarning($"Avatar sprite for rank {rank} is not assigned. Using default sprite.");
             selectedSprite = defaultAvatarSprite;
         }
-        
+
         // Update the avatar image
         userAvatarImage.sprite = selectedSprite;
-        
+
         Debug.Log($"Updated user avatar to rank {rank} sprite");
     }
 

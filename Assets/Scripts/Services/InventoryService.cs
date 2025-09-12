@@ -96,6 +96,28 @@ namespace RamRoutes.Services
                     { "equipped", true }
                 });
 
+                // If the item is clothing, update the user's equipped skin
+                if (item.category.Equals("Clothing", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Map item name to skin enum
+                    EquippedSkin newSkin = MapItemNameToSkin(item.itemName);
+                    
+                    var userService = new UserService();
+                    bool skinUpdated = await userService.UpdateEquippedSkin(currentUserId, newSkin);
+                    
+                    if (skinUpdated)
+                    {
+                        Debug.Log($"Successfully updated equipped skin to: {newSkin} for clothing item: {item.itemName}");
+                        
+                        // Notify UIManager to refresh user avatar/appearance
+                        NotifyUIManagerSkinChanged(newSkin);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Failed to update equipped skin for clothing item: {item.itemName}");
+                    }
+                }
+
                 Debug.Log($"Successfully equipped item: {item.itemName}");
                 return true;
             }
@@ -135,6 +157,27 @@ namespace RamRoutes.Services
                 {
                     { "equipped", false }
                 });
+
+                  if (item.category.Equals("Clothing", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Map item name to skin enum
+                    EquippedSkin newSkin = EquippedSkin.Default; // Revert to default on unequip
+
+                    var userService = new UserService();
+                    bool skinUpdated = await userService.UpdateEquippedSkin(currentUserId, newSkin);
+                    
+                    if (skinUpdated)
+                    {
+                        Debug.Log($"Successfully updated equipped skin to: {newSkin} for clothing item: {item.itemName}");
+                        
+                        // Notify UIManager to refresh user avatar/appearance
+                        NotifyUIManagerSkinChanged(newSkin);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Failed to update equipped skin for clothing item: {item.itemName}");
+                    }
+                }
 
                 Debug.Log($"Successfully unequipped item: {item.itemName}");
                 return true;
@@ -233,6 +276,78 @@ namespace RamRoutes.Services
 
             Debug.Log($"Initialized {testItems.Count} test inventory items");
             return testItems;
+        }
+
+        /// <summary>
+        /// Maps clothing item names to corresponding skin enums
+        /// </summary>
+        /// <param name="itemName">The name of the clothing item</param>
+        /// <returns>The corresponding EquippedSkin enum value</returns>
+        private EquippedSkin MapItemNameToSkin(string itemName)
+        {
+            if (string.IsNullOrEmpty(itemName))
+            {
+                return EquippedSkin.Default;
+            }
+
+            string lowerItemName = itemName.ToLower();
+
+            // Map based on item name keywords
+            if (lowerItemName.Contains("rainbow"))
+            {
+                return EquippedSkin.Rainbow;
+            }
+            else if (lowerItemName.Contains("summer") || lowerItemName.Contains("beach") || lowerItemName.Contains("tropical"))
+            {
+                return EquippedSkin.Summer;
+            }
+            else if (lowerItemName.Contains("winter") || lowerItemName.Contains("snow") || lowerItemName.Contains("cold"))
+            {
+                return EquippedSkin.Winter;
+            }
+            else
+            {
+                return EquippedSkin.Default;
+            }
+        }
+
+        /// <summary>
+        /// Notifies the SkinManager and UIManager that a skin has been changed
+        /// </summary>
+        /// <param name="newSkin">The new equipped skin</param>
+        private void NotifyUIManagerSkinChanged(EquippedSkin newSkin)
+        {
+            try
+            {
+                // Notify SkinManager to update player sprite
+                if (SkinManager.Instance != null)
+                {
+                    SkinManager.Instance.OnUserSkinChanged(newSkin);
+                    Debug.Log($"Notified SkinManager of skin change to: {newSkin}");
+                }
+                else
+                {
+                    Debug.LogWarning("SkinManager instance not found - cannot update player skin");
+                }
+                
+                // Find UIManager in the scene for UI notifications
+                var uiManager = UnityEngine.Object.FindObjectOfType<UIManager>();
+                if (uiManager != null)
+                {
+                    // Show a quick notification about the skin change
+                    uiManager.ShowQuickUpdate($"Equipped {newSkin} skin!");
+                    
+                    Debug.Log($"Notified UIManager of skin change to: {newSkin}");
+                }
+                else
+                {
+                    Debug.LogWarning("UIManager not found in scene - cannot notify of skin change");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"Failed to notify managers of skin change: {ex.Message}");
+            }
         }
     }
 }

@@ -213,7 +213,7 @@ public class StoreManager : MonoBehaviour
             LoadItemImage(imageTransform, item.imageUrl);
         }
         
-        // Set up buy button
+        // Set up buy button and check affordability
         if (buyButtonTransform != null)
         {
             var buyButton = buyButtonTransform.GetComponent<Button>();
@@ -224,7 +224,7 @@ public class StoreManager : MonoBehaviour
                 buyButton.onClick.AddListener(() => OnBuyButtonClicked(item));
                 
                 // Check if user can afford the item and enable/disable button accordingly
-                CheckAffordabilityAndSetButton(buyButton, item.itemId);
+                CheckAffordabilityAndSetButton(buyButton, item.itemId, itemObject);
             }
         }
     }
@@ -247,12 +247,15 @@ public class StoreManager : MonoBehaviour
         }
     }
     
-    private async void CheckAffordabilityAndSetButton(Button buyButton, string itemId)
+    private async void CheckAffordabilityAndSetButton(Button buyButton, string itemId, GameObject itemObject)
     {
         try
         {
             bool canAfford = await storeService.CanAffordItem(itemId);
             buyButton.interactable = canAfford;
+            
+            // Add or remove overlay based on affordability
+            AddOverlayToUnaffordableItem(itemObject, canAfford);
             
             // Optional: Change button appearance based on affordability
             var buttonColors = buyButton.colors;
@@ -270,8 +273,9 @@ public class StoreManager : MonoBehaviour
         catch (System.Exception ex)
         {
             Debug.LogError($"StoreManager.CheckAffordabilityAndSetButton: Error checking affordability: {ex.Message}");
-            // If error occurs, disable the button as a safety measure
+            // If error occurs, disable the button and add overlay as a safety measure
             buyButton.interactable = false;
+            AddOverlayToUnaffordableItem(itemObject, false);
         }
     }
     
@@ -397,10 +401,62 @@ public class StoreManager : MonoBehaviour
         {
             if (item != null)
             {
+                // Remove any overlays before destroying the item
+                RemoveOverlayFromItem(item);
                 DestroyImmediate(item);
             }
         }
         spawnedItems.Clear();
+    }
+    
+    private void AddOverlayToUnaffordableItem(GameObject itemObject, bool canAfford)
+    {
+        // Only add overlay to unaffordable items
+        if (canAfford)
+        {
+            // Item is affordable, remove overlay if it exists
+            RemoveOverlayFromItem(itemObject);
+            return;
+        }
+        
+        // Check if overlay already exists to avoid duplicates
+        Transform existingOverlay = itemObject.transform.Find("UnaffordableOverlay");
+        if (existingOverlay != null)
+        {
+            return; // Overlay already exists
+        }
+        
+        // Create overlay GameObject as child of the item
+        GameObject overlayObject = new GameObject("UnaffordableOverlay");
+        overlayObject.transform.SetParent(itemObject.transform, false);
+        
+        // Add Image component for the overlay
+        var overlayImage = overlayObject.AddComponent<UnityEngine.UI.Image>();
+        overlayImage.color = new Color(0, 0, 0, 0.6f); // Semi-transparent black overlay
+        overlayImage.raycastTarget = false; // Don't block interactions
+        
+        // Add RectTransform and set it to cover the entire item
+        var rectTransform = overlayObject.GetComponent<RectTransform>();
+        rectTransform.anchorMin = Vector2.zero;
+        rectTransform.anchorMax = Vector2.one;
+        rectTransform.offsetMin = Vector2.zero;
+        rectTransform.offsetMax = Vector2.zero;
+        
+        // Set as last sibling to appear on top
+        overlayObject.transform.SetAsLastSibling();
+        
+        Debug.Log($"Added unaffordable overlay to store item: {itemObject.name}");
+    }
+    
+    private void RemoveOverlayFromItem(GameObject itemObject)
+    {
+        // Find and destroy the overlay GameObject
+        Transform overlayTransform = itemObject.transform.Find("UnaffordableOverlay");
+        if (overlayTransform != null)
+        {
+            DestroyImmediate(overlayTransform.gameObject);
+            Debug.Log($"Removed unaffordable overlay from store item: {itemObject.name}");
+        }
     }
     
     // Public method to refresh store items
