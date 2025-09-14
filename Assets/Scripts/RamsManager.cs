@@ -30,11 +30,15 @@ public class RamsManager : MonoBehaviour
     [SerializeField] private Transform playerCountSpawnPoint;
     
     private UserService userService;
+    private NotificationManager notificationManager; // Will be found automatically
     private List<GameObject> spawnedRams = new List<GameObject>();
     private HashSet<string> spawnedUserIds = new HashSet<string>(); // Track spawned user IDs
     private GameObject playerCountCanvasInstance; // Instance of the player count canvas
     private bool hasBeenActivated = false; // Prevent double activation
     private Coroutine refreshCoroutine; // Reference to the refresh coroutine
+    
+    // Static flag to prevent duplicate building activity notifications
+    private static bool hasNotifiedBuildingActivity = false;
     
     // Color assignment tracking for unique colors
     private Dictionary<string, Color> userColorAssignments = new Dictionary<string, Color>();
@@ -46,11 +50,25 @@ public class RamsManager : MonoBehaviour
         building = GetComponent<BuildingInteraction>();
         userService = new UserService();
         
+        // Find NotificationManager in the scene
+        notificationManager = FindObjectOfType<NotificationManager>();
+        if (notificationManager != null)
+        {
+            Debug.Log("RamsManager: Found NotificationManager in scene");
+        }
+        else
+        {
+            Debug.LogWarning("RamsManager: No NotificationManager found in scene - notifications will be logged to console");
+        }
+        
         // Initialize colors that are visible on green background
         InitializeVisibleColors();
         
         // Initialize player count display immediately
         InitializePlayerCountDisplay();
+        
+        // Get players in all buildings and notify current player
+        GetPlayersInAllBuildingsAndNotify();
         
         // Rams will only spawn when OnBuildingActivated() is called from BuildingInteraction
     }
@@ -94,6 +112,96 @@ public class RamsManager : MonoBehaviour
         catch (System.Exception ex)
         {
             Debug.LogError($"Error initializing player count display: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Get players in all buildings upon start and notify current player of who is where
+    /// Only runs once per session to avoid duplicate notifications
+    /// </summary>
+    private async void GetPlayersInAllBuildingsAndNotify()
+    {
+        try
+        {
+            // Check if we've already notified about building activity this session
+            if (hasNotifiedBuildingActivity)
+            {
+                Debug.Log("RamsManager: Building activity already notified this session, skipping");
+                return;
+            }
+            
+            // Mark as notified to prevent other RamsManagers from running this
+            hasNotifiedBuildingActivity = true;
+            
+            // Small delay to ensure services are properly initialized
+            await Task.Delay(1000);
+            
+            // Get current player info
+            string currentUserId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+            if (string.IsNullOrEmpty(currentUserId))
+            {
+                Debug.LogWarning("RamsManager: No authenticated user, cannot notify about building occupancy");
+                return;
+            }
+            
+            // Get all users in all buildings
+            var buildingUsers = await userService.GetUsersInAllBuildings();
+            
+            if (buildingUsers.Count == 0)
+            {
+                Debug.Log("RamsManager: No players found in any buildings");
+                if (notificationManager != null)
+                {
+                    notificationManager.ShowNotification("Campus Status", "No players currently in any buildings");
+                }
+                return;
+            }
+            
+            // Notify current player about each building's occupancy in a queue
+            foreach (var kvp in buildingUsers)
+            {
+                string buildingName = kvp.Key;
+                var users = kvp.Value;
+                
+                if (users.Count > 0)
+                {
+                    // Create notification message
+                    string message;
+                    if (users.Count == 1)
+                    {
+                        message = $"{users[0].name} is in {buildingName}";
+                    }
+                    else if (users.Count <= 3)
+                    {
+                        var names = users.Take(3).Select(u => u.name).ToArray();
+                        message = $"{string.Join(", ", names)} are in {buildingName}";
+                    }
+                    else
+                    {
+                        var firstThree = users.Take(3).Select(u => u.name).ToArray();
+                        message = $"{string.Join(", ", firstThree)} and {users.Count - 3} others are in {buildingName}";
+                    }
+                    
+                    // Show notification if NotificationManager is available
+                    if (notificationManager != null)
+                    {
+                        notificationManager.ShowNotification("Building Activity", message);
+                        
+                        // Small delay between notifications to create a proper queue
+                        await Task.Delay(500);
+                    }
+                    else
+                    {
+                        Debug.Log($"RamsManager: {message}");
+                    }
+                }
+            }
+            
+            Debug.Log($"RamsManager: Notified current player about {buildingUsers.Count} buildings with active players");
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"RamsManager: Error getting players in all buildings: {ex.Message}");
         }
     }
 
@@ -1020,6 +1128,15 @@ public class RamsManager : MonoBehaviour
     void Update()
     {
         
+    }
+    
+    /// <summary>
+    /// Public method to reset building activity notification flag - useful for testing
+    /// </summary>
+    public static void ResetBuildingActivityNotification()
+    {
+        hasNotifiedBuildingActivity = false;
+        Debug.Log("RamsManager: Building activity notification flag reset - will allow showing notifications again");
     }
     
     private void OnDestroy()

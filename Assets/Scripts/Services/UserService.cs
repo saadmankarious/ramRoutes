@@ -284,6 +284,116 @@ namespace RamRoutes.Services
             }
         }
 
+        /// <summary>
+        /// Gets users currently in ALL buildings, grouped by building name
+        /// Detects when currentBuilding is not null and includes those users
+        /// </summary>
+        /// <returns>Dictionary where key is building name and value is list of users in that building</returns>
+        public async Task<Dictionary<string, List<User>>> GetUsersInAllBuildings()
+        {
+            try
+            {
+                var buildingUsers = new Dictionary<string, List<User>>();
+                
+                // Query all users where currentBuilding is not null/empty
+                var querySnapshot = await db.Collection("users")
+                    .WhereGreaterThan("currentBuilding", "")  // This excludes null and empty strings
+                    .GetSnapshotAsync();
+
+                foreach (var doc in querySnapshot.Documents)
+                {
+                    var data = doc.ToDictionary();
+                    
+                    // Extract user data
+                    string id = data.ContainsKey("id") && data["id"] != null ? data["id"].ToString() : "";
+                    string token = data.ContainsKey("notificationToken") && data["notificationToken"] != null ? data["notificationToken"].ToString() : "";
+                    string name = data.ContainsKey("name") && data["name"] != null ? data["name"].ToString() : "";
+                    string email = data.ContainsKey("email") && data["email"] != null ? data["email"].ToString() : "";
+                    int coins = data.ContainsKey("coins") ? Convert.ToInt32(data["coins"]) : 0;
+                    int knowledgePoints = data.ContainsKey("knowledgePoints") ? Convert.ToInt32(data["knowledgePoints"]) : 0;
+                    string currentBuilding = data.ContainsKey("currentBuilding") && data["currentBuilding"] != null ? data["currentBuilding"].ToString() : "";
+                    string residenceHall = data.ContainsKey("residenceHall") && data["residenceHall"] != null ? data["residenceHall"].ToString() : "";
+                    string equippedSkin = data.ContainsKey("equippedSkin") && data["equippedSkin"] != null ? data["equippedSkin"].ToString() : "Default";
+                    
+                    // Only process users with valid currentBuilding
+                    if (!string.IsNullOrEmpty(currentBuilding))
+                    {
+                        var user = new User(id, token, name, email);
+                        user.coins = coins;
+                        user.knowledgePoints = knowledgePoints;
+                        user.currentBuilding = currentBuilding;
+                        user.residenceHall = residenceHall;
+                        user.SetEquippedSkinFromString(equippedSkin);
+                        
+                        // Add user to the appropriate building list
+                        if (!buildingUsers.ContainsKey(currentBuilding))
+                        {
+                            buildingUsers[currentBuilding] = new List<User>();
+                        }
+                        buildingUsers[currentBuilding].Add(user);
+                    }
+                }
+
+                Debug.Log($"Found users in {buildingUsers.Count} buildings:");
+                foreach (var kvp in buildingUsers)
+                {
+                    Debug.Log($"  {kvp.Key}: {kvp.Value.Count} users");
+                }
+
+                return buildingUsers;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Failed to retrieve users in all buildings: {ex.Message}");
+                return new Dictionary<string, List<User>>();
+            }
+        }
+
+        /// <summary>
+        /// Gets a simplified list of all users currently in any building with just basic info
+        /// Useful for notifications without heavy data loading
+        /// </summary>
+        /// <returns>List of users currently in buildings</returns>
+        public async Task<List<User>> GetAllUsersInBuildings()
+        {
+            try
+            {
+                var users = new List<User>();
+                
+                // Query all users where currentBuilding is not null/empty
+                var querySnapshot = await db.Collection("users")
+                    .WhereGreaterThan("currentBuilding", "")
+                    .GetSnapshotAsync();
+
+                foreach (var doc in querySnapshot.Documents)
+                {
+                    var data = doc.ToDictionary();
+                    
+                    string id = data.ContainsKey("id") && data["id"] != null ? data["id"].ToString() : "";
+                    string token = data.ContainsKey("notificationToken") && data["notificationToken"] != null ? data["notificationToken"].ToString() : "";
+                    string name = data.ContainsKey("name") && data["name"] != null ? data["name"].ToString() : "";
+                    string email = data.ContainsKey("email") && data["email"] != null ? data["email"].ToString() : "";
+                    string currentBuilding = data.ContainsKey("currentBuilding") && data["currentBuilding"] != null ? data["currentBuilding"].ToString() : "";
+                    
+                    // Only process users with valid currentBuilding
+                    if (!string.IsNullOrEmpty(currentBuilding))
+                    {
+                        var user = new User(id, token, name, email);
+                        user.currentBuilding = currentBuilding;
+                        users.Add(user);
+                    }
+                }
+
+                Debug.Log($"Found {users.Count} total users currently in buildings");
+                return users;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Failed to retrieve all users in buildings: {ex.Message}");
+                return new List<User>();
+            }
+        }
+
         public async Task UpdateLastLogin(string userId)
         {
             try
