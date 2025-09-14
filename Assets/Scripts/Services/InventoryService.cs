@@ -118,6 +118,28 @@ namespace RamRoutes.Services
                     }
                 }
 
+                // If item is an accessory, update the user's equipped accessory
+                if (item.category.Equals("Accessories", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Map item name to accessory enum
+                    EquippedAccessory newAccessory = MapItemNameToAccessory(item.itemName);
+                    
+                    var userService = new UserService();
+                    bool accessoryUpdated = await userService.UpdateEquippedAccessory(currentUserId, newAccessory);
+                    
+                    if (accessoryUpdated)
+                    {
+                        Debug.Log($"Successfully updated equipped accessory to: {newAccessory} for accessory item: {item.itemName}");
+                        
+                        // Notify UIManager to refresh user avatar/appearance
+                        NotifyUIManagerAccessoryChanged(newAccessory);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Failed to update equipped accessory for accessory item: {item.itemName}");
+                    }
+                }
+
                 Debug.Log($"Successfully equipped item: {item.itemName}");
                 return true;
             }
@@ -176,6 +198,27 @@ namespace RamRoutes.Services
                     else
                     {
                         Debug.LogWarning($"Failed to update equipped skin for clothing item: {item.itemName}");
+                    }
+                }
+
+                // If item is an accessory, revert to no accessory
+                if (item.category.Equals("Accessories", StringComparison.OrdinalIgnoreCase))
+                {
+                    EquippedAccessory newAccessory = EquippedAccessory.None; // Revert to none on unequip
+
+                    var userService = new UserService();
+                    bool accessoryUpdated = await userService.UpdateEquippedAccessory(currentUserId, newAccessory);
+                    
+                    if (accessoryUpdated)
+                    {
+                        Debug.Log($"Successfully updated equipped accessory to: {newAccessory} for accessory item: {item.itemName}");
+                        
+                        // Notify UIManager to refresh user avatar/appearance
+                        NotifyUIManagerAccessoryChanged(newAccessory);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Failed to update equipped accessory for accessory item: {item.itemName}");
                     }
                 }
 
@@ -312,6 +355,35 @@ namespace RamRoutes.Services
         }
 
         /// <summary>
+        /// Maps an accessory item name to the corresponding EquippedAccessory enum value
+        /// </summary>
+        /// <param name="itemName">The name of the accessory item</param>
+        /// <returns>The corresponding EquippedAccessory enum value</returns>
+        private EquippedAccessory MapItemNameToAccessory(string itemName)
+        {
+            if (string.IsNullOrEmpty(itemName))
+            {
+                return EquippedAccessory.None;
+            }
+
+            string lowerItemName = itemName.ToLower();
+
+            // Map based on item name keywords
+            if (lowerItemName.Contains("torch") || lowerItemName.Contains("light") || lowerItemName.Contains("flame"))
+            {
+                return EquippedAccessory.Torch;
+            }
+            else if (lowerItemName.Contains("horns") || lowerItemName.Contains("horn") || lowerItemName.Contains("devil"))
+            {
+                return EquippedAccessory.Horns;
+            }
+            else
+            {
+                return EquippedAccessory.None;
+            }
+        }
+
+        /// <summary>
         /// Notifies the SkinManager and UIManager that a skin has been changed
         /// </summary>
         /// <param name="newSkin">The new equipped skin</param>
@@ -356,6 +428,55 @@ namespace RamRoutes.Services
             catch (System.Exception ex)
             {
                 Debug.LogError($"Failed to notify managers of skin change: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Notifies the UIManager that an accessory has been changed
+        /// </summary>
+        /// <param name="newAccessory">The new equipped accessory</param>
+        private void NotifyUIManagerAccessoryChanged(EquippedAccessory newAccessory)
+        {
+            try
+            {
+                // Only attempt notifications if we're in the game scene
+                var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+                if (currentScene != "LevelRPG")
+                {
+                    Debug.Log($"Skipping accessory change notification - not in game scene (current: {currentScene})");
+                    return;
+                }
+
+                // Find SkinManager in current scene (no singleton dependency)
+                var skinManager = UnityEngine.Object.FindObjectOfType<SkinManager>();
+                if (skinManager != null)
+                {
+                    skinManager.OnUserAccessoryChanged(newAccessory);
+                    Debug.Log($"Notified SkinManager of accessory change to: {newAccessory}");
+                }
+                else
+                {
+                    Debug.LogWarning("SkinManager not found in current scene - cannot update player accessory");
+                }
+
+                // Find UIManager in the scene for UI notifications
+                var uiManager = UnityEngine.Object.FindObjectOfType<UIManager>();
+                if (uiManager != null)
+                {
+                    // Show a quick notification about the accessory change
+                    string accessoryDisplayName = newAccessory == EquippedAccessory.None ? "No accessory" : newAccessory.ToString();
+                    uiManager.ShowQuickUpdate($"Equipped {accessoryDisplayName}!");
+                    
+                    Debug.Log($"Notified UIManager of accessory change to: {newAccessory}");
+                }
+                else
+                {
+                    Debug.LogWarning("UIManager not found in scene - cannot notify of accessory change");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"Failed to notify managers of accessory change: {ex.Message}");
             }
         }
     }

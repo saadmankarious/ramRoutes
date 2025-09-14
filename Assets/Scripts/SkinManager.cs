@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 using RamRoutes.Model;
 using RamRoutes.Services;
 using Firebase.Auth;
@@ -13,9 +14,14 @@ public class SkinManager : MonoBehaviour
     public RuntimeAnimatorController summerSkinAnimator;
     public RuntimeAnimatorController winterSkinAnimator;
     
+    [Header("Accessory Prefabs")]
+    [SerializeField] private Light2D torchLightPrefab;
+    [SerializeField] private Light2D hornsLightPrefab;
+    
     [Header("Player Reference")]
     private GameObject player;
     private Animator playerAnimator;
+    private Light2D currentAccessoryLight;
     
     void Awake()
     {
@@ -37,8 +43,9 @@ public class SkinManager : MonoBehaviour
         // Find and cache player reference
         FindPlayer();
         
-        // Initialize player skin from Firebase
+        // Initialize player skin and accessory from Firebase
         _ = InitializePlayerSkin();
+        _ = InitializePlayerAccessory();
     }
     
     /// <summary>
@@ -73,6 +80,41 @@ public class SkinManager : MonoBehaviour
             
             // Fallback to default skin if there's an error
             SetPlayerSkin(EquippedSkin.Default);
+        }
+    }
+    
+    /// <summary>
+    /// Fetches the player's current accessory from Firebase and initializes the Light2D
+    /// </summary>
+    private async System.Threading.Tasks.Task InitializePlayerAccessory()
+    {
+        try
+        {
+            // Get current user ID
+            string userId = FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+            if (string.IsNullOrEmpty(userId))
+            {
+                Debug.LogWarning("SkinManager: No logged-in user found, using no accessory");
+                SetPlayerAccessory(EquippedAccessory.None);
+                return;
+            }
+            
+            // Fetch equipped accessory from UserService
+            var userService = new UserService();
+            EquippedAccessory currentAccessory = await userService.GetEquippedAccessory(userId);
+            
+            Debug.Log($"SkinManager: Retrieved equipped accessory from Firebase: {currentAccessory}");
+            
+            // Apply the accessory to the player
+            OnUserAccessoryChanged(currentAccessory);
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"SkinManager: Failed to initialize player accessory: {ex.Message}");
+            Debug.LogWarning("SkinManager: Falling back to no accessory");
+            
+            // Fallback to no accessory if there's an error
+            SetPlayerAccessory(EquippedAccessory.None);
         }
     }
     
@@ -148,6 +190,63 @@ public class SkinManager : MonoBehaviour
     }
     
     /// <summary>
+    /// Called when user's equipped accessory changes - updates player Light2D
+    /// </summary>
+    /// <param name="newAccessory">The new equipped accessory</param>
+    public void OnUserAccessoryChanged(EquippedAccessory newAccessory)
+    {
+        try
+        {
+            // Ensure we're in the correct scene for player updates
+            var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            if (currentScene != "LevelRPG")
+            {
+                Debug.Log($"SkinManager: Skipping accessory change in scene: {currentScene}");
+                return;
+            }
+
+            Debug.Log($"SkinManager: Updating player accessory to: {newAccessory}");
+            
+            // Ensure we have a valid player reference
+            if (player == null)
+            {
+                FindPlayer(); // Try to find player again
+            }
+            
+            if (player == null)
+            {
+                Debug.LogWarning("SkinManager: Cannot update accessory - no player GameObject available");
+                return;
+            }
+            
+            // Remove existing accessory light if any
+            if (currentAccessoryLight != null)
+            {
+                DestroyImmediate(currentAccessoryLight.gameObject);
+                currentAccessoryLight = null;
+                Debug.Log("SkinManager: Removed previous accessory light");
+            }
+            
+            // Add new accessory light if not None
+            Light2D accessoryLightPrefab = GetLightPrefabForAccessory(newAccessory);
+            if (accessoryLightPrefab != null)
+            {
+                GameObject lightObj = Instantiate(accessoryLightPrefab.gameObject, player.transform);
+                currentAccessoryLight = lightObj.GetComponent<Light2D>();
+                Debug.Log($"SkinManager: Successfully equipped accessory light for {newAccessory}");
+            }
+            else
+            {
+                Debug.Log($"SkinManager: No accessory light for {newAccessory}");
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"SkinManager: Failed to update accessory to {newAccessory}: {ex.Message}");
+        }
+    }
+    
+    /// <summary>
     /// Gets the appropriate animator controller for the given skin
     /// </summary>
     /// <param name="skin">The skin enum value</param>
@@ -161,6 +260,22 @@ public class SkinManager : MonoBehaviour
             EquippedSkin.Winter => winterSkinAnimator ?? defaultSkinAnimator,
             EquippedSkin.Default => defaultSkinAnimator,
             _ => defaultSkinAnimator
+        };
+    }
+    
+    /// <summary>
+    /// Gets the appropriate Light2D prefab for the given accessory
+    /// </summary>
+    /// <param name="accessory">The accessory enum value</param>
+    /// <returns>The corresponding Light2D prefab, or null if none or not found</returns>
+    public Light2D GetLightPrefabForAccessory(EquippedAccessory accessory)
+    {
+        return accessory switch
+        {
+            EquippedAccessory.Torch => torchLightPrefab,
+            EquippedAccessory.Horns => hornsLightPrefab,
+            EquippedAccessory.None => null,
+            _ => null
         };
     }
     
@@ -201,5 +316,31 @@ public class SkinManager : MonoBehaviour
         }
         
         return playerAnimator?.runtimeAnimatorController;
+    }
+    
+    /// <summary>
+    /// Manually refresh player accessory from Firebase (useful after login or scene changes)
+    /// </summary>
+    public async System.Threading.Tasks.Task RefreshPlayerAccessoryFromFirebase()
+    {
+        await InitializePlayerAccessory();
+    }
+    
+    /// <summary>
+    /// Set player accessory directly without going through accessory change event
+    /// </summary>
+    /// <param name="accessory">The accessory to apply</param>
+    public void SetPlayerAccessory(EquippedAccessory accessory)
+    {
+        OnUserAccessoryChanged(accessory);
+    }
+    
+    /// <summary>
+    /// Get the currently equipped accessory Light2D component
+    /// </summary>
+    /// <returns>The current Light2D component, or null if no accessory equipped</returns>
+    public Light2D GetCurrentAccessoryLight()
+    {
+        return currentAccessoryLight;
     }
 }

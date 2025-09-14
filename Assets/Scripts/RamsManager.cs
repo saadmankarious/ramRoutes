@@ -71,13 +71,13 @@ public class RamsManager : MonoBehaviour
     {
         if (building.activated && !hasBeenActivated)
         {
-            // // Check if we're in the Terminal game stage - only activate ram system during Terminal stage
-            // var currentStage = GameStageService.LoadStageFromPrefs();
-            // if (currentStage == null || currentStage.area != Stage.Terminal)
-            // {
-            //     Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), skipping ram system activation");
-            //     return;
-            // }
+            // Check if we're in the Terminal game stage - only activate ram system during Terminal stage
+            var currentStage = GameStageService.LoadStageFromPrefs();
+            if (currentStage == null || currentStage.area != Stage.Terminal)
+            {
+                Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), skipping ram system activation");
+                return;
+            }
             
             hasBeenActivated = true;
             Debug.Log($"Building {building.buildingName} activated in Terminal stage, spawning rams");
@@ -207,12 +207,12 @@ public class RamsManager : MonoBehaviour
     private async Task SpawnRams()
     {
         // Check if we're in the Terminal game stage - only spawn rams during Terminal stage
-        // var currentStage = GameStageService.LoadStageFromPrefs();
-        // if (currentStage == null || currentStage.area != Stage.Terminal)
-        // {
-        //     Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), skipping ram spawning");
-        //     return;
-        // }
+        var currentStage = GameStageService.LoadStageFromPrefs();
+        if (currentStage == null || currentStage.area != Stage.Terminal)
+        {
+            Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), skipping ram spawning");
+            return;
+        }
         
         string buildingName = building.buildingName;
         if (string.IsNullOrEmpty(buildingName))
@@ -291,12 +291,12 @@ public class RamsManager : MonoBehaviour
     private async Task CheckForNewPlayers()
     {
         // Check if we're in the Terminal game stage - only spawn rams during Terminal stage
-        // var currentStage = GameStageService.LoadStageFromPrefs();
-        // if (currentStage == null || currentStage.area != Stage.Terminal)
-        // {
-        //     Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), skipping new player check");
-        //     return;
-        // }
+        var currentStage = GameStageService.LoadStageFromPrefs();
+        if (currentStage == null || currentStage.area != Stage.Terminal)
+        {
+            Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), skipping new player check");
+            return;
+        }
         
         string buildingName = building.buildingName;
         if (string.IsNullOrEmpty(buildingName))
@@ -550,10 +550,11 @@ public class RamsManager : MonoBehaviour
         }
         else
         {
-            // No UIManager, apply scale directly
-            float scaleMultiplier = CalculateRamScale(user.knowledgePoints);
-            ramInstance.transform.localScale = Vector3.one * scaleMultiplier;
-            Debug.Log($"Applied scale {scaleMultiplier:F2}x directly (no UIManager)");
+            // No UIManager, apply scale and random color directly
+            float scale = CalculateRamScale(user.knowledgePoints);
+            ramInstance.transform.localScale = Vector3.one * scale;
+            ApplyRandomColorToRamText(ramInstance);
+            Debug.Log($"Applied scale {scale:F2}x and random color directly (no UIManager)");
         }
 
         Debug.Log($"Spawned ram for user: {user.name} at position {spawnPosition}");
@@ -700,7 +701,50 @@ public class RamsManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Calculates ram scale based on knowledge points (1x to 2x)
+    /// Gets a random color from predefined colors
+    /// </summary>
+    private Color GetRandomRamColor()
+    {
+        Color[] ramColors = { Color.red, Color.yellow, Color.green };
+        int randomIndex = Random.Range(0, ramColors.Length);
+        return ramColors[randomIndex];
+    }
+    
+    /// <summary>
+    /// Applies random color to the RAM's name text component
+    /// </summary>
+    private void ApplyRandomColorToRamText(GameObject ramInstance)
+    {
+        Color randomColor = GetRandomRamColor();
+        
+        // Find and color the name text component
+        var allTexts = ramInstance.GetComponentsInChildren<UnityEngine.UI.Text>();
+        var nameText = allTexts.FirstOrDefault(t => t.gameObject.name.ToLower().Contains("name"));
+        
+        if (nameText != null)
+        {
+            nameText.color = randomColor;
+            Debug.Log($"Applied random {randomColor} color to RAM name text");
+        }
+        else
+        {
+            // Try TextMeshPro if regular Text component not found
+            var tmpTexts = ramInstance.GetComponentsInChildren<TMPro.TextMeshProUGUI>();
+            var tmpNameText = tmpTexts.FirstOrDefault(t => t.gameObject.name.ToLower().Contains("name"));
+            if (tmpNameText != null)
+            {
+                tmpNameText.color = randomColor;
+                Debug.Log($"Applied random {randomColor} color to RAM TMPro name text");
+            }
+            else
+            {
+                Debug.LogWarning("No name text component found to apply color to RAM");
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Calculates ram scale based on knowledge points (1x to 2x) - Legacy method for compatibility
     /// </summary>
     private float CalculateRamScale(int knowledgePoints)
     {
@@ -774,18 +818,21 @@ public class RamsManager : MonoBehaviour
 
     
     /// <summary>
-    /// Coroutine that runs pop animation first, then applies knowledge-based scaling
+    /// Coroutine that runs pop animation first, then applies knowledge-based scaling and random coloring
     /// </summary>
     private IEnumerator ApplyScaleAfterPopAnimation(GameObject ramInstance, int knowledgePoints)
     {
         // Start the pop animation
         yield return StartCoroutine(UIManager.Instance.AnimatePanelPopup(ramInstance));
         
-        // Animation is complete, now apply our knowledge-based scaling
-        float scaleMultiplier = CalculateRamScale(knowledgePoints);
-        ramInstance.transform.localScale = Vector3.one * scaleMultiplier;
+        // Animation is complete, now apply our knowledge-based scaling and random coloring
+        float scale = CalculateRamScale(knowledgePoints);
+        ramInstance.transform.localScale = Vector3.one * scale;
         
-        Debug.Log($"Applied scale {scaleMultiplier:F2}x AFTER pop animation for {knowledgePoints} KB");
+        // Apply random color to the ram's name text
+        ApplyRandomColorToRamText(ramInstance);
+        
+        Debug.Log($"Applied scale {scale:F2}x and random color AFTER pop animation for {knowledgePoints} KB");
     }
     
     /// <summary>
@@ -795,6 +842,19 @@ public class RamsManager : MonoBehaviour
     {
         try
         {
+            // Check if we're in the Terminal game stage - only display player count during Terminal stage
+            var currentStage = GameStageService.LoadStageFromPrefs();
+            if (currentStage == null || currentStage.area != Stage.Terminal)
+            {
+                Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), hiding player count");
+                // Hide the canvas when not in Terminal stage
+                if (playerCountCanvasInstance != null)
+                {
+                    playerCountCanvasInstance.SetActive(false);
+                }
+                return;
+            }
+            
             // Get the current player count in this building
             var playersInBuilding = await userService.GetUsersInBuilding(building.buildingName);
             int playerCount = playersInBuilding?.Count ?? 0;

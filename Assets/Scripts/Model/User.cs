@@ -14,6 +14,14 @@ namespace RamRoutes.Model
     }
 
     [Serializable]
+    public enum EquippedAccessory
+    {
+        None,
+        Torch,
+        Horns
+    }
+
+    [Serializable]
     public class User
     {
         public string userId { set; get; }
@@ -26,6 +34,7 @@ namespace RamRoutes.Model
         public string currentBuilding { set; get; }
         public string residenceHall { set; get; }
         public EquippedSkin equippedSkin { set; get; } = EquippedSkin.Default;
+        public EquippedAccessory equippedAccessory { set; get; } = EquippedAccessory.None;
         public List<string> friends { set; get; } = new List<string>();
         public string GetEquippedSkinAsString()
         {
@@ -40,6 +49,22 @@ namespace RamRoutes.Model
             else
             {
                 equippedSkin = EquippedSkin.Default; // Fallback to default if parsing fails
+            }
+        }
+
+        public string GetEquippedAccessoryAsString()
+        {
+            return equippedAccessory.ToString();
+        }
+        public void SetEquippedAccessoryFromString(string accessoryName)
+        {
+            if (Enum.TryParse<EquippedAccessory>(accessoryName, out var parsedAccessory))
+            {
+                equippedAccessory = parsedAccessory;
+            }
+            else
+            {
+                equippedAccessory = EquippedAccessory.None; // Fallback to none if parsing fails
             }
         }
 

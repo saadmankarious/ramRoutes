@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
 using RamRoutes.Services;
+using RamRoutes.Model;
 using Firebase.Auth;
 
 [System.Serializable]
@@ -56,10 +57,21 @@ public class NPCSpawner : MonoBehaviour
     void Start()
     {
         Debug.Log($"NPCSpawner: Starting up with {buildingNPCs?.Length ?? 0} NPCs configured");
+        
+        // Check if we're in Terminal stage and despawn all NPCs if so
+        CheckAndHideNPCsInTerminalStage();
     }
     
     public void SpawnNPCForBuildingOnEnter(string buildingName)
     {
+        // Check if we're in the Terminal game stage - hide NPCs during Terminal stage
+        var currentStage = GameStageService.LoadStageFromPrefs();
+        if (currentStage != null && currentStage.area == Stage.Terminal)
+        {
+            Debug.Log($"NPCSpawner: In Terminal stage, hiding NPCs for building '{buildingName}'");
+            return;
+        }
+        
         Debug.Log($"NPCSpawner: Player entered building '{buildingName}', spawning NPCs");
         
         // Find NPCs associated with this building
@@ -350,5 +362,42 @@ public class NPCSpawner : MonoBehaviour
             }
         }
         return null;
+    }
+    
+    /// <summary>
+    /// Check if we're in Terminal stage and despawn all NPCs if so
+    /// </summary>
+    private void CheckAndHideNPCsInTerminalStage()
+    {
+        var currentStage = GameStageService.LoadStageFromPrefs();
+        if (currentStage != null && currentStage.area == Stage.Terminal)
+        {
+            Debug.Log("NPCSpawner: In Terminal stage, despawning all existing NPCs");
+            DespawnAllNPCs();
+        }
+    }
+    
+    /// <summary>
+    /// Despawn all currently spawned NPCs immediately
+    /// </summary>
+    private void DespawnAllNPCs()
+    {
+        var npcsToRemove = new List<string>(spawnedNPCs.Keys);
+        
+        foreach (string npcName in npcsToRemove)
+        {
+            if (spawnedNPCs.ContainsKey(npcName))
+            {
+                GameObject npcToDestroy = spawnedNPCs[npcName];
+                if (npcToDestroy != null)
+                {
+                    Debug.Log($"NPCSpawner: Despawning NPC '{npcName}' due to Terminal stage");
+                    Destroy(npcToDestroy);
+                }
+                spawnedNPCs.Remove(npcName);
+            }
+        }
+        
+        Debug.Log($"NPCSpawner: Despawned all NPCs for Terminal stage. Remaining count: {spawnedNPCs.Count}");
     }
 }

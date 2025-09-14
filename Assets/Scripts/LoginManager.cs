@@ -94,6 +94,7 @@ public class LoginManager : MonoBehaviour
     private string playerName = "";
     private bool isSignupMode = false;
     private bool isResetPasswordMode = false;
+    private bool isProcessingSignup = false; // Flag to prevent auto-login during signup
     
     // Resend verification fields
     private int resendCountdownSeconds = 10;
@@ -371,10 +372,14 @@ public class LoginManager : MonoBehaviour
 
     private async void OnSignupClicked()
     {
+        // Set flag to prevent auto-login during signup
+        isProcessingSignup = true;
+        
         // Defensive: make sure inputs exist
         if (signupUsernameInput == null || signupPasswordInput == null || residenceHallDropdown == null)
         {
             ShowSignupStatus("Signup form not configured. Please contact support.");
+            isProcessingSignup = false;
             return;
         }
 
@@ -389,24 +394,28 @@ public class LoginManager : MonoBehaviour
         if (string.IsNullOrEmpty(username))
         {
             ShowSignupStatus("Please enter a username");
+            isProcessingSignup = false;
             return;
         }
 
         if (string.IsNullOrEmpty(password))
         {
             ShowSignupStatus("Please enter a password");
+            isProcessingSignup = false;
             return;
         }
 
         if (password.Length < 6)
         {
             ShowSignupStatus("Password must be at least 6 characters long");
+            isProcessingSignup = false;
             return;
         }
 
         if (residenceHallDropdown.value == 0)
         {
             ShowSignupStatus("Please select a residence hall");
+            isProcessingSignup = false;
             return;
         }
 
@@ -418,6 +427,7 @@ public class LoginManager : MonoBehaviour
             if (!username.Contains("@"))
             {
                 ShowSignupStatus("When external domains are enabled, please enter a full email address");
+                isProcessingSignup = false;
                 return;
             }
             
@@ -425,6 +435,7 @@ public class LoginManager : MonoBehaviour
             if (!IsValidEmail(username))
             {
                 ShowSignupStatus("Please enter a valid email address");
+                isProcessingSignup = false;
                 return;
             }
             
@@ -436,6 +447,7 @@ public class LoginManager : MonoBehaviour
             if ((username.Contains(" ") || username.Contains("@")))
             {
                 ShowSignupStatus("Username cannot contain spaces or @ symbol");
+                isProcessingSignup = false;
                 return;
             }
             // Convert username to Cornell College or RamRoutes email format
@@ -454,6 +466,7 @@ public class LoginManager : MonoBehaviour
         {
             ShowSignupStatus("Firebase not initialized. Please restart the app.");
             signupButton.interactable = true;
+            isProcessingSignup = false;
             return;
         }
 
@@ -578,16 +591,21 @@ public class LoginManager : MonoBehaviour
                     Debug.Log("Countdown coroutine started successfully");
                 }
             }
+            
+            // Clear the signup processing flag after successful completion
+            isProcessingSignup = false;
         }
         catch (FirebaseException e)
         {
             ShowSignupStatus(GetFirebaseErrorMessage(e));
             signupButton.interactable = true;
+            isProcessingSignup = false; // Clear flag on error
         }
         catch (System.Exception e)
         {
             ShowSignupStatus("Failed to create account: " + e.Message);
             signupButton.interactable = true;
+            isProcessingSignup = false; // Clear flag on error
         }
     }
 
@@ -680,6 +698,13 @@ public class LoginManager : MonoBehaviour
 
     private async void AuthStateChanged(object sender, System.EventArgs eventArgs)
     {
+        // Don't auto-login if we're currently processing a signup
+        if (isProcessingSignup)
+        {
+            Debug.Log("AuthStateChanged: Ignoring auth state change during signup process");
+            return;
+        }
+        
         if (auth.CurrentUser != null)
         {
             await auth.CurrentUser.ReloadAsync(); // Refresh to get latest verification status
@@ -795,11 +820,11 @@ public class LoginManager : MonoBehaviour
         else
         {
             // Returning user - show welcome screen
-            loginPanel.SetActive(false);
-            signupPanel.SetActive(false);
-            welcomePanel.SetActive(true);
-            playButton.interactable = true;
-            statusText.text = "";
+            if (loginPanel != null) loginPanel.SetActive(false);
+            if (signupPanel != null) signupPanel.SetActive(false);
+            if (welcomePanel != null) welcomePanel.SetActive(true);
+            if (playButton != null) playButton.interactable = true;
+            if (statusText != null) statusText.text = "";
         }
 
         // Ensure Firebase Messaging is initialized
@@ -812,6 +837,9 @@ public class LoginManager : MonoBehaviour
     {
         try
         {
+            // Check if this object is still valid
+            if (this == null) return;
+            
             // Set username
             if (usernameText != null)
             {
@@ -825,8 +853,18 @@ public class LoginManager : MonoBehaviour
             }
                  var userService = new RamRoutes.Services.UserService();
 
+            // Check if this object is still valid before making async calls
+            if (this == null) return;
+            
             int coins = await userService.GetUserCoins(userId);
+            
+            // Check again after async call
+            if (this == null) return;
+            
             int kb = await userService.GetUserKnowledgePoints(userId);
+
+            // Final check before updating UI
+            if (this == null) return;
 
             // Set coins and KB
             if (userCoinsText != null)
@@ -886,6 +924,9 @@ public class LoginManager : MonoBehaviour
         catch (System.Exception e)
         {
             Debug.LogError($"Failed to update welcome panel user info: {e.Message}");
+            
+            // Check if this object is still valid
+            if (this == null) return;
             
             // Fallback to simple welcome message
             if (welcomeText != null)

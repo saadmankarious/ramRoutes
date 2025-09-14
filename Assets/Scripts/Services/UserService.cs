@@ -326,10 +326,10 @@ namespace RamRoutes.Services
             {
                 var now = Timestamp.FromDateTime(DateTime.UtcNow);
                 
-                // Initialize with starting values
-                int startingCoins = 0;
-                int startingKnowledgePoints = 0;
-                int userRank = CalculateUserRank(startingCoins, startingKnowledgePoints); // Should be 1 for new users
+                // Initialize new users with starting values
+                int startingCoins = 60;           // Give new users 60 coins
+                int startingKnowledgePoints = 20; // Give new users 20 KB (knowledge points)
+                int userRank = CalculateUserRank(startingCoins, startingKnowledgePoints);
                 
                 var userData = new Dictionary<string, object>
                 {
@@ -703,6 +703,41 @@ namespace RamRoutes.Services
         }
 
         /// <summary>
+        /// Gets the currently equipped accessory for a user
+        /// </summary>
+        /// <param name="userId">The user ID</param>
+        /// <returns>The equipped accessory, or None if not found</returns>
+        public async Task<EquippedAccessory> GetEquippedAccessory(string userId)
+        {
+            try
+            {
+                DocumentSnapshot doc = await db.Collection("users").Document(userId).GetSnapshotAsync();
+                if (doc.Exists && doc.TryGetValue("equippedAccessory", out object accessoryValue))
+                {
+                    if (accessoryValue is string accessoryString)
+                    {
+                        if (Enum.TryParse<EquippedAccessory>(accessoryString, out EquippedAccessory accessory))
+                        {
+                            return accessory;
+                        }
+                    }
+                    else if (accessoryValue is long accessoryNumber)
+                    {
+                        return (EquippedAccessory)accessoryNumber;
+                    }
+                }
+                
+                // Default to None if not found or invalid
+                return EquippedAccessory.None;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"UserService: Failed to get equipped accessory for user {userId}: {ex.Message}");
+                return EquippedAccessory.None;
+            }
+        }
+
+        /// <summary>
         /// Updates the equipped skin for a user
         /// </summary>
         /// <param name="userId">The user ID</param>
@@ -724,6 +759,32 @@ namespace RamRoutes.Services
             catch (Exception ex)
             {
                 Debug.LogError($"UserService: Failed to update equipped skin for user {userId}: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Updates the user's equipped accessory in Firebase
+        /// </summary>
+        /// <param name="userId">The user ID</param>
+        /// <param name="newAccessory">The new accessory to equip</param>
+        /// <returns>True if successful, false otherwise</returns>
+        public async Task<bool> UpdateEquippedAccessory(string userId, EquippedAccessory newAccessory)
+        {
+            try
+            {
+                var updateData = new Dictionary<string, object>
+                {
+                    { "equippedAccessory", newAccessory.ToString() }
+                };
+
+                await db.Collection("users").Document(userId).UpdateAsync(updateData);
+                Debug.Log($"UserService: Updated equipped accessory for user {userId} to {newAccessory}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"UserService: Failed to update equipped accessory for user {userId}: {ex.Message}");
                 return false;
             }
         }

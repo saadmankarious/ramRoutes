@@ -2220,8 +2220,8 @@ MonoBehaviour:
   popupPrefab: {fileID: 0}
   popupLocation: {fileID: 0}
   rewardSound: {fileID: 8300000, guid: dab7626c0a3474a0aba894ac33d149e7, type: 3}
-  coinPoints: 900
-  knowledgePoints: 500
+  coinPoints: 600
+  knowledgePoints: 250
   buildingTitleUnlcoked: {fileID: 670941118}
   inactivePrefab: {fileID: 6131559785892294148, guid: b3d494e286427de438f4ed9b2097482d,
     type: 3}
@@ -3094,7 +3094,7 @@ MonoBehaviour:
   popupLocation: {fileID: 862378265}
   rewardSound: {fileID: 8300000, guid: dab7626c0a3474a0aba894ac33d149e7, type: 3}
   coinPoints: 100
-  knowledgePoints: 120
+  knowledgePoints: 50
   buildingTitleUnlcoked: {fileID: 670941118}
   inactivePrefab: {fileID: 6131559785892294148, guid: b3d494e286427de438f4ed9b2097482d,
     type: 3}
@@ -5000,14 +5000,14 @@ RectTransform:
   m_GameObject: {fileID: 333380996}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 2.1120217, y: 2.1120217, z: 2.1120217}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 580520774}
+  m_Father: {fileID: 1969269128}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -19.3, y: 0.00000047684}
+  m_AnchoredPosition: {x: -45, y: -1}
   m_SizeDelta: {x: 41.9819, y: 41.9834}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &333380998
@@ -5268,7 +5268,7 @@ RectTransform:
   m_GameObject: {fileID: 348921698}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.47348, y: 0.47348, z: 0.47348}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 231466426}
@@ -5276,7 +5276,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: -47.2, y: 47.2}
+  m_AnchoredPosition: {x: 23.6, y: 25.40001}
   m_SizeDelta: {x: 91.557, y: 84.234}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &348921700
@@ -18170,7 +18170,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 30.4, y: 0.0000021458}
+  m_AnchoredPosition: {x: 43.184, y: 0.0000021458}
   m_SizeDelta: {x: 86.36772, y: 20.53529}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &444792624
@@ -19492,15 +19492,14 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 333380997}
   - {fileID: 368479174}
   - {fileID: 444718997}
   m_Father: {fileID: 1499820068}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -99.30005, y: -95.5}
-  m_SizeDelta: {x: 190, y: 36.2418}
+  m_AnchoredPosition: {x: -99.30005, y: -93.47688}
+  m_SizeDelta: {x: 190, y: 32.1956}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &580520775
 MonoBehaviour:
@@ -19654,8 +19653,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -99.3, y: -135.3}
-  m_SizeDelta: {x: 190, y: 35.8773}
+  m_AnchoredPosition: {x: -99.3, y: -129.1}
+  m_SizeDelta: {x: 190, y: 32.1956}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &611676693
 MonoBehaviour:
@@ -24456,7 +24455,7 @@ MonoBehaviour:
   popupLocation: {fileID: 0}
   rewardSound: {fileID: 0}
   coinPoints: 250
-  knowledgePoints: 100
+  knowledgePoints: 50
   buildingTitleUnlcoked: {fileID: 670941118}
   inactivePrefab: {fileID: 6131559785892294148, guid: b3d494e286427de438f4ed9b2097482d,
     type: 3}
@@ -25495,7 +25494,7 @@ GameObject:
   - component: {fileID: 1123365110}
   - component: {fileID: 1123365109}
   m_Layer: 0
-  m_Name: GPS Backup
+  m_Name: GPS PROD
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -25535,7 +25534,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   showDebugInfo: 0
   clearCacheOnStart: 0
-  simulateGpsEnabled: 1
+  simulateGpsEnabled: 0
   buildings:
   - name: TC
     entranceGPS: {x: 41.926, y: -91.42536}
@@ -25544,33 +25543,33 @@ MonoBehaviour:
     debugColor: {r: 0.6226415, g: 0.13040228, b: 0.44183475, a: 1}
   - name: McWethy
     entranceGPS: {x: 41.927002, y: -91.42436}
-    detectionRadius: 35
-    closeProximityRadius: 15
+    detectionRadius: 80
+    closeProximityRadius: 50
     debugColor: {r: 0.101122856, g: 0, b: 1, a: 1}
   - name: Stoner
     entranceGPS: {x: 41.925278, y: -91.42181}
-    detectionRadius: 35
-    closeProximityRadius: 20
+    detectionRadius: 80
+    closeProximityRadius: 50
     debugColor: {r: 0, g: 1, b: 1, a: 1}
   - name: PR
     entranceGPS: {x: 41.927242, y: -91.428085}
-    detectionRadius: 50
-    closeProximityRadius: 15
+    detectionRadius: 80
+    closeProximityRadius: 50
     debugColor: {r: 1, g: 0.063696235, b: 0, a: 1}
   - name: Library
     entranceGPS: {x: 41.924538, y: -91.42376}
-    detectionRadius: 35
-    closeProximityRadius: 15
+    detectionRadius: 80
+    closeProximityRadius: 50
     debugColor: {r: 0.6226415, g: 0.13040228, b: 0.44183475, a: 1}
   - name: Ebersole
     entranceGPS: {x: 41.925148, y: -91.42546}
-    detectionRadius: 35
-    closeProximityRadius: 15
+    detectionRadius: 80
+    closeProximityRadius: 50
     debugColor: {r: 0.6226415, g: 0.13040228, b: 0.44183475, a: 1}
   - name: SAW
     entranceGPS: {x: 41.927956, y: -91.4256}
-    detectionRadius: 35
-    closeProximityRadius: 15
+    detectionRadius: 80
+    closeProximityRadius: 50
     debugColor: {r: 0.6226415, g: 0.13040228, b: 0.44183475, a: 1}
   updateInterval: 10
   locationDisabledCanvas: {fileID: 1742409201}
@@ -25953,7 +25952,7 @@ GameObject:
   - component: {fileID: 1164986330}
   - component: {fileID: 1164986329}
   m_Layer: 5
-  m_Name: Text (Legacy)
+  m_Name: empty
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -25991,7 +25990,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.21568628, g: 0.25490198, b: 0.38431373, a: 1}
+  m_Color: {r: 0.6435915, g: 0.6435915, b: 0.6435915, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -26011,7 +26010,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: No events available for check in!
+  m_Text: You haven't bought anything yet!
 --- !u!222 &1164986330
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -26312,13 +26311,13 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 211162574}
   - {fileID: 1851404767}
-  - {fileID: 1602936569}
-  - {fileID: 185559587}
-  - {fileID: 1046268213}
   - {fileID: 1878086076}
+  - {fileID: 211162574}
   - {fileID: 1711022877}
+  - {fileID: 1602936569}
+  - {fileID: 1046268213}
+  - {fileID: 185559587}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1194168453
@@ -26928,7 +26927,7 @@ RectTransform:
   m_GameObject: {fileID: 1229732991}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.47348, y: 0.47348, z: 0.47348}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 255536890}
@@ -26936,7 +26935,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 0}
-  m_AnchoredPosition: {x: 49.23699, y: 47.200066}
+  m_AnchoredPosition: {x: -25.8, y: 25.4}
   m_SizeDelta: {x: 91.557, y: 84.233}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1229732993
@@ -30182,9 +30181,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79c7e8ba614b7ed49a0d8d43706654fc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  showDebugInfo: 1
+  showDebugInfo: 0
   clearCacheOnStart: 0
-  simulateGpsEnabled: 0
+  simulateGpsEnabled: 1
   buildings:
   - name: TC
     entranceGPS: {x: 38.89941, y: -77.04844}
@@ -30592,13 +30591,14 @@ RectTransform:
   - {fileID: 580520774}
   - {fileID: 611676692}
   - {fileID: 348921699}
+  - {fileID: 1969269128}
   - {fileID: 1229732992}
   m_Father: {fileID: 263408520}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -67.02524, y: -79.94745}
-  m_SizeDelta: {x: 199.2751, y: 246.8534}
+  m_AnchoredPosition: {x: -67.02524, y: -63.47988}
+  m_SizeDelta: {x: 199.2751, y: 194.5949}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1499820069
 CanvasRenderer:
@@ -32302,7 +32302,7 @@ Transform:
   m_GameObject: {fileID: 1602936568}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -95.1, y: -63.04, z: -2.7501276}
+  m_LocalPosition: {x: -95.09999, y: -63.04, z: -2.750126}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -32386,7 +32386,7 @@ MonoBehaviour:
   popupLocation: {fileID: 1353312975}
   rewardSound: {fileID: 8300000, guid: dab7626c0a3474a0aba894ac33d149e7, type: 3}
   coinPoints: 100
-  knowledgePoints: 100
+  knowledgePoints: 50
   buildingTitleUnlcoked: {fileID: 670941118}
   inactivePrefab: {fileID: 6131559785892294148, guid: b3d494e286427de438f4ed9b2097482d,
     type: 3}
@@ -39507,7 +39507,7 @@ MonoBehaviour:
   popupLocation: {fileID: 0}
   rewardSound: {fileID: 8300000, guid: dab7626c0a3474a0aba894ac33d149e7, type: 3}
   coinPoints: 650
-  knowledgePoints: 150
+  knowledgePoints: 200
   buildingTitleUnlcoked: {fileID: 670941118}
   inactivePrefab: {fileID: 6131559785892294148, guid: b3d494e286427de438f4ed9b2097482d,
     type: 3}
@@ -270415,6 +270415,9 @@ MonoBehaviour:
   rainbowSkinAnimator: {fileID: 9100000, guid: e97ee39cee140a72aa1cc65d8f864b80, type: 2}
   summerSkinAnimator: {fileID: 0}
   winterSkinAnimator: {fileID: 0}
+  torchLightPrefab: {fileID: 5761933324209087768, guid: 1aa60fbfe21060201a4ab4189e8f9d1c,
+    type: 3}
+  hornsLightPrefab: {fileID: 0}
 --- !u!1001 &1755570085
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -285272,6 +285275,82 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 60792b188c3284b2dbd04ae998ed47e4, type: 3}
+--- !u!1 &1969269127
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1969269128}
+  - component: {fileID: 1969269130}
+  - component: {fileID: 1969269129}
+  m_Layer: 5
+  m_Name: GameObject (2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1969269128
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1969269127}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.47348, y: 0.47348, z: 0.47348}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 333380997}
+  m_Father: {fileID: 1499820068}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: 73, y: 25.40001}
+  m_SizeDelta: {x: 91.557, y: 84.234}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1969269129
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1969269127}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.2, g: 0.24705882, b: 0.36862746, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 10905, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1969269130
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1969269127}
+  m_CullTransparentMesh: 1
 --- !u!1 &1969762526
 GameObject:
   m_ObjectHideFlags: 0

@@ -20,6 +20,7 @@ public class InventoryManager : MonoBehaviour
     private InventoryService inventoryService;
     private List<GameObject> spawnedItems = new List<GameObject>();
     private Transform itemsContainer;
+    private GameObject emptyText; // Reference to the "empty" text child
     private bool isInventoryOpen = false;
     
     void Start()
@@ -42,6 +43,19 @@ public class InventoryManager : MonoBehaviour
             Debug.Log("InventoryManager: Found and using 'whereitemslive' child GameObject");
             // Hide items container initially
             itemsContainer.gameObject.SetActive(false);
+        }
+        
+        // Find the empty text child
+        Transform emptyTransform = FindChildByName(transform, "empty");
+        if (emptyTransform != null)
+        {
+            emptyText = emptyTransform.gameObject;
+            emptyText.SetActive(false); // Hide initially
+            Debug.Log("InventoryManager: Found and using 'empty' text child");
+        }
+        else
+        {
+            Debug.LogWarning("InventoryManager: No 'empty' child found. Please create a child GameObject named 'empty' to display when inventory is empty.");
         }
         
         // Set up the open inventory button if assigned
@@ -138,6 +152,22 @@ public class InventoryManager : MonoBehaviour
         if (itemsContainer == null)
         {
             Debug.LogError("InventoryManager: Cannot display items - no 'whereitemslive' container found");
+            return;
+        }
+        
+        // Check if inventory is empty
+        bool isEmpty = items == null || items.Count == 0;
+        
+        // Show/hide empty text based on inventory state
+        if (emptyText != null)
+        {
+            emptyText.SetActive(isEmpty);
+            Debug.Log($"InventoryManager: Empty text {(isEmpty ? "shown" : "hidden")}");
+        }
+        
+        if (isEmpty)
+        {
+            Debug.Log("InventoryManager: No items to display - showing empty message");
             return;
         }
         
