@@ -37,8 +37,14 @@ public class RamsManager : MonoBehaviour
     private bool hasBeenActivated = false; // Prevent double activation
     private Coroutine refreshCoroutine; // Reference to the refresh coroutine
     
-    // Static flag to prevent duplicate building activity notifications
+    // Static flag to prevent duplicate building activity notifications on startup
     private static bool hasNotifiedBuildingActivity = false;
+    
+    // Instance-specific tracking for previously seen players in THIS building
+    private HashSet<string> previousPlayersInThisBuilding = new HashSet<string>();
+    
+    // Coroutine reference for live building monitoring
+    private Coroutine buildingMonitorCoroutine;
     
     // Color assignment tracking for unique colors
     private Dictionary<string, Color> userColorAssignments = new Dictionary<string, Color>();
@@ -67,8 +73,11 @@ public class RamsManager : MonoBehaviour
         // Initialize player count display immediately
         InitializePlayerCountDisplay();
         
-        // Get players in all buildings and notify current player
-        GetPlayersInAllBuildingsAndNotify();
+        // Get players in all buildings and notify current player (initial notification)
+        // GetPlayersInAllBuildingsAndNotify();
+        
+        // Start live monitoring for new players entering buildings
+        StartLiveBuildingMonitoring();
         
         // Rams will only spawn when OnBuildingActivated() is called from BuildingInteraction
     }
@@ -169,17 +178,17 @@ public class RamsManager : MonoBehaviour
                     string message;
                     if (users.Count == 1)
                     {
-                        message = $"{users[0].name} is in {buildingName}";
+                        message = $"{users[0].name} is in {buildingName}. Go say hi!";
                     }
                     else if (users.Count <= 3)
                     {
                         var names = users.Take(3).Select(u => u.name).ToArray();
-                        message = $"{string.Join(", ", names)} are in {buildingName}";
+                        message = $"{string.Join(", ", names)} are in {buildingName}. Go say hi!";
                     }
                     else
                     {
                         var firstThree = users.Take(3).Select(u => u.name).ToArray();
-                        message = $"{string.Join(", ", firstThree)} and {users.Count - 3} others are in {buildingName}";
+                        message = $"{string.Join(", ", firstThree)} and {users.Count - 3} others are in {buildingName}. Go say hi!";
                     }
                     
                     // Show notification if NotificationManager is available
@@ -202,6 +211,112 @@ public class RamsManager : MonoBehaviour
         catch (System.Exception ex)
         {
             Debug.LogError($"RamsManager: Error getting players in all buildings: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Starts live monitoring of building occupancy to detect new players entering buildings
+    /// </summary>
+    private void StartLiveBuildingMonitoring()
+    {
+        if (buildingMonitorCoroutine == null)
+        {
+            buildingMonitorCoroutine = StartCoroutine(MonitorBuildingOccupancyCoroutine());
+            Debug.Log("RamsManager: Started live building occupancy monitoring (10 second intervals)");
+        }
+    }
+    
+    /// <summary>
+    /// Coroutine that monitors building occupancy every 10 seconds to detect new players
+    /// </summary>
+    private IEnumerator MonitorBuildingOccupancyCoroutine()
+    {
+        // Wait a bit before starting monitoring to let initial notification complete
+        yield return new WaitForSeconds(5f);
+        
+        while (true)
+        {
+            yield return new WaitForSeconds(10f); // Check every 10 seconds
+            
+            // Start the async task and wait for it to complete
+            var task = CheckForNewPlayersInBuildings();
+            yield return new WaitUntil(() => task.IsCompleted);
+        }
+    }
+    
+    /// <summary>
+    /// Checks for new players that have joined THIS building since the last check
+    /// Only notifies about NEW players, not existing ones
+    /// </summary>
+    private async Task CheckForNewPlayersInBuildings()
+    {
+        try
+        {
+            // Get current player info
+            string currentUserId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+            if (string.IsNullOrEmpty(currentUserId))
+            {
+                return; // No authenticated user
+            }
+            
+            // Get building name for this specific manager
+            string buildingName = building.buildingName;
+            if (string.IsNullOrEmpty(buildingName))
+            {
+                return; // No building name set
+            }
+            
+            // Get users currently in THIS building only
+            var currentUsersInBuilding = await userService.GetUsersInBuildingWithPoints(buildingName);
+            
+            if (currentUsersInBuilding.Count > 0)
+            {
+                // Get current user IDs in this building
+                var currentUserIds = currentUsersInBuilding.Select(u => u.userId).ToHashSet();
+                
+                // Find NEW users (present now but not in previous check)
+                var newUserIds = currentUserIds.Except(previousPlayersInThisBuilding).ToList();
+                
+                if (newUserIds.Count > 0)
+                {
+                    // Get the new user objects
+                    var newUsers = currentUsersInBuilding.Where(u => newUserIds.Contains(u.userId)).ToList();
+                    
+                    // Create notification for new players
+                    foreach (var newUser in newUsers)
+                    {
+                        string message = $"{newUser.name} just entered {buildingName}. Go say hi!";
+                        
+                        // Show notification if NotificationManager is available
+                        if (notificationManager != null)
+                        {
+                            notificationManager.ShowNotification("New Player Activity", message);
+                            
+                            // Small delay between notifications
+                            await Task.Delay(300);
+                        }
+                        else
+                        {
+                            Debug.Log($"RamsManager: {message}");
+                        }
+                        
+                        Debug.Log($"RamsManager ({buildingName}): New player detected - {newUser.name} entered building");
+                    }
+                }
+                
+                // Update the tracking with current occupancy for this building
+                previousPlayersInThisBuilding = currentUserIds;
+            }
+            else
+            {
+                // Building is empty, clear its tracking
+                previousPlayersInThisBuilding.Clear();
+            }
+            
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"RamsManager ({building.buildingName}): Error checking for new players in building: {ex.Message}");
         }
     }
 
@@ -1146,6 +1261,13 @@ public class RamsManager : MonoBehaviour
         {
             StopCoroutine(refreshCoroutine);
             refreshCoroutine = null;
+        }
+        
+        // Clean up the building monitor coroutine
+        if (buildingMonitorCoroutine != null)
+        {
+            StopCoroutine(buildingMonitorCoroutine);
+            buildingMonitorCoroutine = null;
         }
         
         // Clean up player count canvas
