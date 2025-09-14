@@ -7,6 +7,7 @@ namespace RamRoutes.Services
     using RamRoutes.Model;
     using System.Collections.Generic;
     using UnityEngine.SocialPlatforms;
+    using System.Linq;
 
     public class UnlockedBuildingService
     {
@@ -34,28 +35,28 @@ namespace RamRoutes.Services
                 await db.Collection("unlocked-trials").AddAsync(docData);
                 Debug.Log($"Unlocked building saved for user {record.userId} at {record.unlockTime}");
                 // Save locally
-                string json = PlayerPrefs.GetString("unlocked_buildings_cache", "");
-                List<UnlockedBuildingRecord> buildings = new List<UnlockedBuildingRecord>();
-                if (!string.IsNullOrEmpty(json))
-                {
-                    try
-                    {
-                        var wrapper = JsonUtility.FromJson<UnlockedBuildingListWrapper>(json);
-                        if (wrapper != null && wrapper.buildings != null)
-                        {
-                            buildings = wrapper.buildings;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogError($"Failed to parse local unlocked buildings cache: {ex.Message}");
-                    }
-                }
-                buildings.Add(record);
-                string newJson = JsonUtility.ToJson(new UnlockedBuildingListWrapper { buildings = buildings });
-                PlayerPrefs.SetString("unlocked_buildings_cache", newJson);
-                PlayerPrefs.Save();
-                Debug.Log($"Unlocked building also saved locally");
+                // string json = PlayerPrefs.GetString("unlocked_buildings_cache", "");
+                // List<UnlockedBuildingRecord> buildings = new List<UnlockedBuildingRecord>();
+                // if (!string.IsNullOrEmpty(json))
+                // {
+                //     try
+                //     {
+                //         var wrapper = JsonUtility.FromJson<UnlockedBuildingListWrapper>(json);
+                //         if (wrapper != null && wrapper.buildings != null)
+                //         {
+                //             buildings = wrapper.buildings;
+                //         }
+                //     }
+                //     catch (Exception ex)
+                //     {
+                //         Debug.LogError($"Failed to parse local unlocked buildings cache: {ex.Message}");
+                //     }
+                // }
+                // buildings.Add(record);
+                // string newJson = JsonUtility.ToJson(new UnlockedBuildingListWrapper { buildings = buildings });
+                // PlayerPrefs.SetString("unlocked_buildings_cache", newJson);
+                // PlayerPrefs.Save();
+                // Debug.Log($"Unlocked building also saved locally");
             }
             catch (Exception ex)
             {
@@ -102,8 +103,9 @@ namespace RamRoutes.Services
             var buildings = new List<UnlockedBuildingRecord>();
             try
             {
-                // Query for all users who unlocked a specific building
-                Query query = db.Collection("unlocked-trials").WhereEqualTo("buildingName", buildingName);
+                // Query for users who unlocked a specific building (without ordering to avoid index requirement)
+                Query query = db.Collection("unlocked-trials")
+                    .WhereEqualTo("buildingName", buildingName);
                 QuerySnapshot snapshot = await query.GetSnapshotAsync();
                 
                 foreach (var doc in snapshot.Documents)
@@ -121,7 +123,10 @@ namespace RamRoutes.Services
                     buildings.Add(new UnlockedBuildingRecord(userId, userName, unlockTime, buildingId, docBuildingName, Vector3.zero, coinPoints, knowledgePoints));
                 }
                 
-                Debug.Log($"Retrieved {buildings.Count} users who unlocked building {buildingName} from Firebase");
+                // Sort by unlockTime descending and take only the most recent 10 (client-side)
+                buildings = buildings.OrderByDescending(b => b.unlockTime).Take(10).ToList();
+                
+                Debug.Log($"Retrieved {buildings.Count} most recent users who unlocked building {buildingName} from Firebase");
             }
             catch (Exception ex)
             {

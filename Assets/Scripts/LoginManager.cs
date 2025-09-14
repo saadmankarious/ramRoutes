@@ -386,6 +386,12 @@ public class LoginManager : MonoBehaviour
         string username = signupUsernameInput.text;
         string password = signupPasswordInput.text;
         string residenceHall = residenceHallDropdown.options[residenceHallDropdown.value].text;
+        
+        // For .rr users, automatically use "Other" as residence hall regardless of dropdown selection
+        if (username.EndsWith(".rr"))
+        {
+            residenceHall = "Other";
+        }
 
         // Clear previous status
         ClearSignupStatus();
@@ -412,7 +418,7 @@ public class LoginManager : MonoBehaviour
             return;
         }
 
-        if (residenceHallDropdown.value == 0)
+        if (residenceHallDropdown.value == 0 && !username.EndsWith(".rr"))
         {
             ShowSignupStatus("Please select a residence hall");
             isProcessingSignup = false;

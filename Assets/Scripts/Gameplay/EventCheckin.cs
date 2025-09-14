@@ -276,7 +276,7 @@ public class EventCheckin : MonoBehaviour
                 string message = evt.eventType == RamRoutes.Model.EventType.Daily ? 
                     "You've already checked in to this event today!" : 
                     "You've already checked in to this event!";
-                uiManager.ShowDialog(message, 3f, false);
+                uiManager.ShowQuickUpdate(message);
             }
             return;
         }
@@ -318,7 +318,7 @@ public class EventCheckin : MonoBehaviour
             
             if (uiManager != null)
             {
-                uiManager.ShowDialog($"You've checked in to {evt.eventName}! +50 coins, +50 knowledge points", 3f, false);
+                uiManager.ShowQuickUpdate($"You've checked in to {evt.eventName}!");
             }
         }
         catch (Exception ex)

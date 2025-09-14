@@ -275,7 +275,6 @@ namespace RamRoutes.Services
                     users.Add(user);
                 }
 
-                Debug.Log($"Found {users.Count} users in building {buildingName} with complete point data");
                 return users;
             }
             catch (Exception ex)
@@ -398,19 +397,19 @@ namespace RamRoutes.Services
                 });
                 
                 // Update cache if exists
-                if (PlayerPrefs.HasKey("current_user_profile"))
-                {
-                    var json = PlayerPrefs.GetString("current_user_profile");
-                    var cachedUser = JsonUtility.FromJson<User>(json);
-                    if (cachedUser != null)
-                    {
-                        cachedUser.coins = coins;
-                        PlayerPrefs.SetString("current_user_profile", JsonUtility.ToJson(cachedUser));
-                        PlayerPrefs.Save();
-                    }
-                }
+                // if (PlayerPrefs.HasKey("current_user_profile"))
+                // {
+                //     var json = PlayerPrefs.GetString("current_user_profile");
+                //     var cachedUser = JsonUtility.FromJson<User>(json);
+                //     if (cachedUser != null)
+                //     {
+                //         cachedUser.coins = coins;
+                //         PlayerPrefs.SetString("current_user_profile", JsonUtility.ToJson(cachedUser));
+                //         PlayerPrefs.Save();
+                //     }
+                // }
                 
-                Debug.Log($"Updated coins for user {userId} to {coins}");
+                // Debug.Log($"Updated coins for user {userId} to {coins}");
             }
             catch (Exception ex)
             {
@@ -430,20 +429,20 @@ namespace RamRoutes.Services
                     { "knowledgePoints", points + currentPoints }
                 });
                 
-                // Update cache if exists
-                if (PlayerPrefs.HasKey("current_user_profile"))
-                {
-                    var json = PlayerPrefs.GetString("current_user_profile");
-                    var cachedUser = JsonUtility.FromJson<User>(json);
-                    if (cachedUser != null)
-                    {
-                        cachedUser.knowledgePoints = points;
-                        PlayerPrefs.SetString("current_user_profile", JsonUtility.ToJson(cachedUser));
-                        PlayerPrefs.Save();
-                    }
-                }
+                // // Update cache if exists
+                // if (PlayerPrefs.HasKey("current_user_profile"))
+                // {
+                //     var json = PlayerPrefs.GetString("current_user_profile");
+                //     var cachedUser = JsonUtility.FromJson<User>(json);
+                //     if (cachedUser != null)
+                //     {
+                //         cachedUser.knowledgePoints = points;
+                //         PlayerPrefs.SetString("current_user_profile", JsonUtility.ToJson(cachedUser));
+                //         PlayerPrefs.Save();
+                //     }
+                // }
                 
-                Debug.Log($"Updated knowledge points for user {userId} to {points}");
+                // Debug.Log($"Updated knowledge points for user {userId} to {points}");
             }
             catch (Exception ex)
             {

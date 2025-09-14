@@ -486,12 +486,14 @@ public class BuildingInteraction : MonoBehaviour
     private void HandleApproachBuilding(BuildingProximityDetector.Building building)
     {
         Debug.Log("Building Interaction:: Approaching building " + building.name);
-    }    public void ShowBuildingUnlockedPanel()
+    }
+
+    public void ShowBuildingUnlockedPanel()
     {
         if (buildingUnlockedPanel != null)
         {
             buildingUnlockedPanel.SetActive(true);
-            
+
             // Apply animation to the panel using UIManager
             if (uiManager != null)
             {
@@ -542,6 +544,7 @@ public class BuildingInteraction : MonoBehaviour
 
     public async void UnlockBuilding()
     {
+        closeUnlockedPanelButton.interactable = false; // Prevent multiple clicks
         if (uiManager != null)
         {
             await uiManager.HandleBuildingUnlock(this);
@@ -580,8 +583,9 @@ public class BuildingInteraction : MonoBehaviour
         var service = new UnlockedBuildingService();
         string userId = FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.UserId : "unknown";
         var userService = new UserService();
-        var userProfile = await userService.GetUserProfileCachedOrRemoteAsync(userId);
-        string userName = userProfile != null && !string.IsNullOrEmpty(userProfile.name) ? userProfile.name : userId;
+
+        // Get username from PlayerPrefs for efficiency instead of full profile fetch
+        string userName = PlayerPrefs.GetString("username", userId);
 
         // Award points for unlocking the building
         // await userService.AddPoints(userId, 100);
@@ -619,8 +623,8 @@ public class BuildingInteraction : MonoBehaviour
         {
             EnterBuildingViewingMode(false);
         }
-        
-        if(doesTheBuildingHavePopup && popupPrefab != null)
+
+        if (doesTheBuildingHavePopup && popupPrefab != null)
         {
             // Instantiate the popup prefab at the building's position
             GameObject popupInstance = Instantiate(popupPrefab, popupLocation.transform.position, Quaternion.identity);
@@ -628,6 +632,8 @@ public class BuildingInteraction : MonoBehaviour
             // Optionally, set the popup to destroy itself after a few seconds
             // Destroy(popupInstance, 5f); // Destroy after 5 seconds
         }
+                closeUnlockedPanelButton.interactable = true; // Prevent multiple clicks
+
     }
     
     private bool IsPlayerCloseToBuilding()
