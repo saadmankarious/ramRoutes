@@ -38,8 +38,8 @@ public class NpcAutoMovement : MonoBehaviour
     public string npcName = "Unknown NPC"; // Will be set by spawner
     
     [Header("Rewards")]
-    [SerializeField] private int coinReward = 50;
-    [SerializeField] private int knowledgePointReward = 50;
+    [SerializeField] private int coinReward = 10;
+    [SerializeField] private int knowledgePointReward = 10;
     
     [Header("Animation")]
     private Animator animator;

@@ -23,6 +23,10 @@ public class FriendsManager : MonoBehaviour
     [SerializeField] private Transform friendsListContentParent;
     [SerializeField] private GameObject friendPrefab;
     
+    [Header("Empty State UI")]
+    [SerializeField] private Text emptyStateText;
+    [Tooltip("Text component to show empty state messages for friends/requests")]
+    
     [Header("Settings")]
     [SerializeField] private float refreshInterval = 3f;
     
@@ -159,6 +163,9 @@ public class FriendsManager : MonoBehaviour
             return;
         }
         
+        // Hide empty state while loading
+        HideEmptyState();
+        
         // Load appropriate data based on current view
         if (isShowingRequests)
         {
@@ -206,9 +213,20 @@ public class FriendsManager : MonoBehaviour
 
             var requests = await friendRequestService.GetIncomingFriendRequests();
 
-            foreach (var request in requests)
+            if (requests.Count == 0)
             {
-                CreateFriendRequestEntry(request);
+                // Show empty state for friend requests
+                ShowEmptyState("No pending friend requests");
+            }
+            else
+            {
+                // Hide empty state and show friend requests
+                HideEmptyState();
+                
+                foreach (var request in requests)
+                {
+                    CreateFriendRequestEntry(request);
+                }
             }
 
             Debug.Log($"FriendsManager: Loaded {requests.Count} incoming friend requests");
@@ -216,6 +234,8 @@ public class FriendsManager : MonoBehaviour
         catch (System.Exception e)
         {
             Debug.LogError($"FriendsManager: Failed to load friend requests: {e.Message}");
+            // Show error state
+            ShowEmptyState("Unable to load friend requests");
         }
     }
     
@@ -240,6 +260,7 @@ public class FriendsManager : MonoBehaviour
             if (string.IsNullOrEmpty(currentUserId))
             {               
                 Debug.LogWarning("FriendsManager: No authenticated user, cannot load friends");
+                ShowEmptyState("Please log in to view friends");
                 return;
             }
             
@@ -247,9 +268,13 @@ public class FriendsManager : MonoBehaviour
             if (currentUser?.friends == null || currentUser.friends.Count == 0)
             {
                 Debug.Log("FriendsManager: No friends found for current user");
+                ShowEmptyState("No friends added yet");
                 return;
             }
 
+            // Hide empty state and show friends
+            HideEmptyState();
+            
             foreach (var friendName in currentUser.friends)
             {
                 CreateFriendEntry(friendName);
@@ -260,6 +285,7 @@ public class FriendsManager : MonoBehaviour
         catch (System.Exception e)
         {
             Debug.LogError($"FriendsManager: Failed to load friends list: {e.Message}");
+            ShowEmptyState("Unable to load friends list");
         }
     }
     
@@ -344,6 +370,9 @@ public class FriendsManager : MonoBehaviour
                 Destroy(entryObject);
                 Debug.Log($"FriendsManager: Friend request {requestId} accepted and removed from UI");
                 
+                // Check for empty state in friend requests
+                CheckAndShowEmptyRequestsState();
+                
                 // Refresh friends list if currently showing it
                 if (!isShowingRequests)
                 {
@@ -375,6 +404,9 @@ public class FriendsManager : MonoBehaviour
                 // Remove the entry from UI
                 Destroy(entryObject);
                 Debug.Log($"FriendsManager: Friend request {requestId} deleted and removed from UI");
+                
+                // Check for empty state in friend requests
+                CheckAndShowEmptyRequestsState();
             }
             else
             {
@@ -504,6 +536,80 @@ public class FriendsManager : MonoBehaviour
     {
         StopRefreshCoroutine();
         Debug.Log("FriendsManager: Refresh stopped");
+    }
+    
+    /// <summary>
+    /// Shows empty state with specified message
+    /// </summary>
+    private void ShowEmptyState(string message)
+    {
+        if (emptyStateText != null)
+        {
+            emptyStateText.text = message;
+            emptyStateText.gameObject.SetActive(true);
+            Debug.Log($"FriendsManager: Showing empty state: {message}");
+        }
+    }
+    
+    /// <summary>
+    /// Hides the empty state text
+    /// </summary>
+    private void HideEmptyState()
+    {
+        if (emptyStateText != null)
+        {
+            emptyStateText.gameObject.SetActive(false);
+        }
+    }
+    
+    /// <summary>
+    /// Checks if there are no friend request entries left and shows empty state
+    /// </summary>
+    private void CheckAndShowEmptyRequestsState()
+    {
+        if (friendRequestsContentParent != null)
+        {
+            // Count the actual friend request entries (exclude destroyed objects)
+            int activeChildCount = 0;
+            foreach (Transform child in friendRequestsContentParent)
+            {
+                if (child != null && child.gameObject != null)
+                {
+                    activeChildCount++;
+                }
+            }
+            
+            // Show empty state if no active friend requests and currently showing requests
+            if (activeChildCount == 0 && isShowingRequests)
+            {
+                ShowEmptyState("No pending friend requests");
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Checks if there are no friends left and shows empty state
+    /// </summary>
+    private void CheckAndShowEmptyFriendsState()
+    {
+        if (friendsListContentParent != null)
+        {
+            // Count the actual friend entries (exclude destroyed objects)
+            int activeChildCount = 0;
+            foreach (Transform child in friendsListContentParent)
+            {
+                if (child != null && child.gameObject != null)
+                {
+                    activeChildCount++;
+                }
+            }
+            
+            // Show empty state if no active friends and currently showing friends
+            if (activeChildCount == 0 && !isShowingRequests)
+            {
+                ShowEmptyState("No friends added yet");
+            }
+        }
     }
     
     void OnDestroy()

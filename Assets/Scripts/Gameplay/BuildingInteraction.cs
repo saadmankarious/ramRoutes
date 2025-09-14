@@ -584,8 +584,9 @@ public class BuildingInteraction : MonoBehaviour
         string userId = FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.UserId : "unknown";
         var userService = new UserService();
 
-        // Get username from PlayerPrefs for efficiency instead of full profile fetch
-        string userName = PlayerPrefs.GetString("username", userId);
+        // Get username from Firestore instead of PlayerPrefs for accuracy
+        var user = await userService.RetrieveUserById(userId);
+        string userName = user?.name ?? userId;
 
         // Award points for unlocking the building
         // await userService.AddPoints(userId, 100);

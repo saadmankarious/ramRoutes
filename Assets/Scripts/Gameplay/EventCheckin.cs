@@ -447,7 +447,7 @@ public class EventCheckin : MonoBehaviour
         var events = await eventService.GetBuildingEventsAsync(true);
         var now = DateTime.Now;
         var earliestTime = now.AddMinutes(-15);
-        var latestTime = now.AddMinutes(15);
+        var latestTime = now.AddMinutes(60);
 
         // Get the current authenticated user ID for filtering events
         string userId = "unknown";
@@ -524,7 +524,8 @@ public class EventCheckin : MonoBehaviour
             return false;
         }
 
-        // Event MUST be happening within 15 minutes regardless of type (except always happening)
+        // Event MUST be happening within time window regardless of type (except always happening)
+        // Time window: 15 minutes before event, 60 minutes after event
         if (evt.IsAlwaysHappening)
         {
             return true;
@@ -536,25 +537,29 @@ public class EventCheckin : MonoBehaviour
         }
         else if (evt.eventType == RamRoutes.Model.EventType.Daily)
         {
-            // For daily events, check if the time of day matches (within 15 minutes)
+            // For daily events, check if the time of day matches (15 minutes before, 60 minutes after)
             // DateTime normalizedEventDate = NormalizeDate(evt.date);
             TimeSpan eventTimeOfDay = evt.date.TimeOfDay;
             TimeSpan currentTimeOfDay = now.TimeOfDay;
             
-            // Check if current time is within 15 minutes of the event time
-            TimeSpan timeDifference = (currentTimeOfDay - eventTimeOfDay).Duration();
-            return timeDifference <= TimeSpan.FromMinutes(15);
+            // Calculate time difference (positive if current time is after event time)
+            TimeSpan timeDifference = currentTimeOfDay - eventTimeOfDay;
+            
+            // Allow 15 minutes before event and 60 minutes after event
+            return timeDifference >= TimeSpan.FromMinutes(-15) && timeDifference <= TimeSpan.FromMinutes(60);
         }
         else if (evt.IsRecurring && evt.IsActiveAt(now))
         {
-            // For recurring events (weekly, monthly), check if the time of day matches
+            // For recurring events (weekly, monthly), check if the time of day matches (15 minutes before, 60 minutes after)
             DateTime normalizedEventDate = NormalizeDate(evt.date);
             TimeSpan eventTimeOfDay = normalizedEventDate.TimeOfDay;
             TimeSpan currentTimeOfDay = now.TimeOfDay;
             
-            // Check if current time is within 15 minutes of the event time
-            TimeSpan timeDifference = (currentTimeOfDay - eventTimeOfDay).Duration();
-            return timeDifference <= TimeSpan.FromMinutes(15);
+            // Calculate time difference (positive if current time is after event time)
+            TimeSpan timeDifference = currentTimeOfDay - eventTimeOfDay;
+            
+            // Allow 15 minutes before event and 60 minutes after event
+            return timeDifference >= TimeSpan.FromMinutes(-15) && timeDifference <= TimeSpan.FromMinutes(60);
         }
 
         return false;

@@ -36,15 +36,48 @@ public class RamsManager : MonoBehaviour
     private bool hasBeenActivated = false; // Prevent double activation
     private Coroutine refreshCoroutine; // Reference to the refresh coroutine
     
+    // Color assignment tracking for unique colors
+    private Dictionary<string, Color> userColorAssignments = new Dictionary<string, Color>();
+    private List<Color> availableColors = new List<Color>();
+    private int colorIndex = 0;
+    
     void Start()
     {
         building = GetComponent<BuildingInteraction>();
         userService = new UserService();
         
+        // Initialize colors that are visible on green background
+        InitializeVisibleColors();
+        
         // Initialize player count display immediately
         InitializePlayerCountDisplay();
         
         // Rams will only spawn when OnBuildingActivated() is called from BuildingInteraction
+    }
+    
+    /// <summary>
+    /// Initialize colors that are visible on green background
+    /// </summary>
+    private void InitializeVisibleColors()
+    {
+        availableColors.Clear();
+        
+        // Colors that contrast well with green background
+        availableColors.Add(new Color(1f, 0.2f, 0.2f));        // Red
+        availableColors.Add(new Color(0.2f, 0.2f, 1f));        // Blue  
+        availableColors.Add(new Color(1f, 0.6f, 0f));          // Orange
+        availableColors.Add(new Color(0.8f, 0f, 0.8f));        // Magenta
+        availableColors.Add(new Color(0.4f, 0.2f, 0.6f));      // Purple
+        availableColors.Add(new Color(1f, 1f, 0.2f));          // Yellow
+        availableColors.Add(new Color(0f, 0.8f, 0.8f));        // Cyan
+        availableColors.Add(new Color(0.8f, 0.4f, 0.2f));      // Brown
+        availableColors.Add(new Color(1f, 0.4f, 0.8f));        // Pink
+        availableColors.Add(new Color(0.2f, 0.2f, 0.2f));      // Dark Gray
+        availableColors.Add(new Color(0.6f, 0.3f, 0f));        // Dark Orange
+        availableColors.Add(new Color(0.2f, 0.6f, 0.8f));      // Light Blue
+        
+        colorIndex = 0;
+        Debug.Log($"Initialized {availableColors.Count} colors visible on green background");
     }
     
     /// <summary>
@@ -232,17 +265,10 @@ public class RamsManager : MonoBehaviour
             // Get users currently in this building
             var usersInBuilding = await userService.GetUsersInBuildingWithPoints(buildingName);
 
-            // Get current player's user ID to exclude them from ram spawning
+            // Include current player in ram spawning along with other players
             string currentUserId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
-
-            // Filter out the current player from the users list
-            if (!string.IsNullOrEmpty(currentUserId))
-            {
-                usersInBuilding.RemoveAll(user => user.userId == currentUserId);
-                Debug.Log($"Excluded current player ({currentUserId}) from ram spawning");
-            }
-
-            Debug.Log($"Found {usersInBuilding.Count} other users in {buildingName} (excluding current player)");
+            
+            Debug.Log($"Found {usersInBuilding.Count} users in {buildingName} (including current player)");
 
             // Clear existing rams and reset tracking
             ClearSpawnedRams();
@@ -309,12 +335,8 @@ public class RamsManager : MonoBehaviour
             // Get current users in building
             var usersInBuilding = await userService.GetUsersInBuildingWithPoints(buildingName);
 
-            // Get current player's user ID to exclude them
+            // Include current player in new player checking
             string currentUserId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
-            if (!string.IsNullOrEmpty(currentUserId))
-            {
-                usersInBuilding.RemoveAll(user => user.userId == currentUserId);
-            }
 
             // Find new users that haven't been spawned yet
             var newUsers = usersInBuilding.Where(user => !spawnedUserIds.Contains(user.userId)).ToList();
@@ -546,15 +568,15 @@ public class RamsManager : MonoBehaviour
         // Add pop animation using UIManager, then apply scaling after animation
         if (UIManager.Instance != null)
         {
-            StartCoroutine(ApplyScaleAfterPopAnimation(ramInstance, user.knowledgePoints));
+            StartCoroutine(ApplyScaleAfterPopAnimation(ramInstance, user));
         }
         else
         {
-            // No UIManager, apply scale and random color directly
-            float scale = CalculateRamScale(user.knowledgePoints);
+            // No UIManager, apply scale and unique color directly
+            float scale = CalculateRamScaleByRank(user);
             ramInstance.transform.localScale = Vector3.one * scale;
-            ApplyRandomColorToRamText(ramInstance);
-            Debug.Log($"Applied scale {scale:F2}x and random color directly (no UIManager)");
+            ApplyUniqueColorToRamText(ramInstance, user);
+            Debug.Log($"Applied scale {scale:F2}x and unique color directly (no UIManager)");
         }
 
         Debug.Log($"Spawned ram for user: {user.name} at position {spawnPosition}");
@@ -591,6 +613,14 @@ public class RamsManager : MonoBehaviour
     /// </summary>
     private void SetupRamClickHandler(GameObject ramInstance, User user)
     {
+        // Don't add click handler for current player's ram
+        string currentUserId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+        if (!string.IsNullOrEmpty(currentUserId) && user.userId == currentUserId)
+        {
+            Debug.Log($"Skipping click handler setup for current player's ram: {user.name}");
+            return;
+        }
+        
         // Add RamClickHandler component
         RamClickHandler ramClickHandler = ramInstance.AddComponent<RamClickHandler>();
         
@@ -701,21 +731,37 @@ public class RamsManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Gets a random color from predefined colors
+    /// Gets a unique color for a specific user
     /// </summary>
-    private Color GetRandomRamColor()
+    private Color GetUniqueColorForUser(string userId)
     {
-        Color[] ramColors = { Color.red, Color.yellow, Color.green };
-        int randomIndex = Random.Range(0, ramColors.Length);
-        return ramColors[randomIndex];
+        // Check if user already has an assigned color
+        if (userColorAssignments.ContainsKey(userId))
+        {
+            return userColorAssignments[userId];
+        }
+        
+        // Assign next available color
+        if (availableColors.Count == 0)
+        {
+            InitializeVisibleColors(); // Re-initialize if we run out
+        }
+        
+        Color assignedColor = availableColors[colorIndex % availableColors.Count];
+        userColorAssignments[userId] = assignedColor;
+        
+        colorIndex++;
+        Debug.Log($"Assigned unique color {assignedColor} to user {userId}");
+        
+        return assignedColor;
     }
     
     /// <summary>
-    /// Applies random color to the RAM's name text component
+    /// Applies unique color to the RAM's name text component based on user
     /// </summary>
-    private void ApplyRandomColorToRamText(GameObject ramInstance)
+    private void ApplyUniqueColorToRamText(GameObject ramInstance, User user)
     {
-        Color randomColor = GetRandomRamColor();
+        Color userColor = GetUniqueColorForUser(user.userId);
         
         // Find and color the name text component
         var allTexts = ramInstance.GetComponentsInChildren<UnityEngine.UI.Text>();
@@ -723,8 +769,8 @@ public class RamsManager : MonoBehaviour
         
         if (nameText != null)
         {
-            nameText.color = randomColor;
-            Debug.Log($"Applied random {randomColor} color to RAM name text");
+            nameText.color = userColor;
+            Debug.Log($"Applied unique color {userColor} to RAM name text for user {user.name}");
         }
         else
         {
@@ -733,13 +779,39 @@ public class RamsManager : MonoBehaviour
             var tmpNameText = tmpTexts.FirstOrDefault(t => t.gameObject.name.ToLower().Contains("name"));
             if (tmpNameText != null)
             {
-                tmpNameText.color = randomColor;
-                Debug.Log($"Applied random {randomColor} color to RAM TMPro name text");
+                tmpNameText.color = userColor;
+                Debug.Log($"Applied unique color {userColor} to RAM TMPro name text for user {user.name}");
             }
             else
             {
-                Debug.LogWarning("No name text component found to apply color to RAM");
+                Debug.LogWarning($"No name text component found to apply color to RAM for user {user.name}");
             }
+        }
+    }
+    
+    /// <summary>
+    /// Calculates ram scale based on user rank from UserService (Small/Medium/Large categories)
+    /// </summary>
+    private float CalculateRamScaleByRank(User user)
+    {
+        // Get user rank directly from UserService
+        int userRank = userService.CalculateUserRank(user.coins, user.knowledgePoints);
+        
+        // Define scales for each rank
+        const float smallScale = 1f;     // Small size for rank 1
+        const float mediumScale = 1.5f;    // Medium size for rank 2
+        const float largeScale = 2f;     // Large size for rank 3
+        
+        switch (userRank)
+        {
+            case 1:
+                return smallScale;
+            case 2:
+                return mediumScale;
+            case 3:
+                return largeScale;
+            default:
+                return smallScale;
         }
     }
     
@@ -787,6 +859,11 @@ public class RamsManager : MonoBehaviour
         }
         spawnedRams.Clear();
         spawnedUserIds.Clear();
+        
+        // Clear color assignments to allow fresh unique colors
+        userColorAssignments.Clear();
+        colorIndex = 0;
+        Debug.Log("Cleared all spawned rams and reset color assignments");
     }
     
     /// <summary>
@@ -820,19 +897,20 @@ public class RamsManager : MonoBehaviour
     /// <summary>
     /// Coroutine that runs pop animation first, then applies knowledge-based scaling and random coloring
     /// </summary>
-    private IEnumerator ApplyScaleAfterPopAnimation(GameObject ramInstance, int knowledgePoints)
+    private IEnumerator ApplyScaleAfterPopAnimation(GameObject ramInstance, User user)
     {
         // Start the pop animation
         yield return StartCoroutine(UIManager.Instance.AnimatePanelPopup(ramInstance));
         
-        // Animation is complete, now apply our knowledge-based scaling and random coloring
-        float scale = CalculateRamScale(knowledgePoints);
+        // Animation is complete, now apply our rank-based scaling and unique coloring
+        float scale = CalculateRamScaleByRank(user);
         ramInstance.transform.localScale = Vector3.one * scale;
         
-        // Apply random color to the ram's name text
-        ApplyRandomColorToRamText(ramInstance);
+        // Apply unique color to the ram's name text based on user
+        ApplyUniqueColorToRamText(ramInstance, user);
         
-        Debug.Log($"Applied scale {scale:F2}x and random color AFTER pop animation for {knowledgePoints} KB");
+        int userRank = userService.CalculateUserRank(user.coins, user.knowledgePoints);
+        Debug.Log($"Applied rank-based scale {scale:F2}x and unique color AFTER pop animation for user {user.name} (Rank {userRank})");
     }
     
     /// <summary>
@@ -872,7 +950,6 @@ public class RamsManager : MonoBehaviour
                 
                 // Update the count display and show it
                 UpdatePlayerCountDisplay(playerCount);
-                Debug.Log($"Displaying player count: {playerCount} in building {building.buildingName}");
             }
             else
             {
@@ -880,7 +957,6 @@ public class RamsManager : MonoBehaviour
                 if (playerCountCanvasInstance != null)
                 {
                     playerCountCanvasInstance.SetActive(false);
-                    Debug.Log($"Hiding player count canvas - zero players in building {building.buildingName}");
                 }
             }
         }
