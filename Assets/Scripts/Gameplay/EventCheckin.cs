@@ -505,6 +505,23 @@ public class EventCheckin : MonoBehaviour
         HideEventsPanel();
     }
 
+    private bool IsEventWithinTimeWindow(BuildingEvent evt, DateTime now)
+    {
+        // Always happening events are always within the time window
+        if (evt.IsAlwaysHappening)
+            return true;
+
+        // Get the event's time of day
+        TimeSpan eventTimeOfDay = evt.date.TimeOfDay;
+        TimeSpan currentTimeOfDay = now.TimeOfDay;
+        
+        // Calculate time difference (positive if current time is after event time)
+        TimeSpan timeDifference = currentTimeOfDay - eventTimeOfDay;
+        
+        // Allow 15 minutes before event and 60 minutes after event
+        return timeDifference >= TimeSpan.FromMinutes(-15) && timeDifference <= TimeSpan.FromMinutes(60);
+    }
+
     private async Task<bool> IsEventEligibleForCheckInRightNow(BuildingEvent evt, string buildingName, string userId, DateTime now, DateTime earliestTime, DateTime latestTime)
     {
         // Event MUST be in the correct building
@@ -524,49 +541,30 @@ public class EventCheckin : MonoBehaviour
             return false;
         }
 
-        // Event MUST be happening within time window regardless of type (except always happening)
-        // Time window: 15 minutes before event, 60 minutes after event
-        if (evt.IsAlwaysHappening)
+        // Check if event is within time window based on event type
+        if (evt.eventType == RamRoutes.Model.EventType.Scheduled)
         {
-            return true;
-        }
-        else if (evt.eventType == RamRoutes.Model.EventType.Scheduled)
-        {
-            // For scheduled events, check if current time is within 15 minutes before and 60 minutes after the event time
-            TimeSpan eventTimeOfDay = evt.date.TimeOfDay;
-            TimeSpan currentTimeOfDay = now.TimeOfDay;
-            
-            // Calculate time difference (positive if current time is after event time)
-            TimeSpan timeDifference = currentTimeOfDay - eventTimeOfDay;
-            
-            // Allow 15 minutes before event and 60 minutes after event
-            return timeDifference >= TimeSpan.FromMinutes(-15) && timeDifference <= TimeSpan.FromMinutes(60);
+            // For scheduled events, check if it's the correct date and within time window
+            if (evt.date.Date == now.Date)
+            {
+                return IsEventWithinTimeWindow(evt, now);
+            }
+            return false;
         }
         else if (evt.eventType == RamRoutes.Model.EventType.Daily)
         {
-            // For daily events, check if the time of day matches (15 minutes before, 60 minutes after)
-            // DateTime normalizedEventDate = NormalizeDate(evt.date);
-            TimeSpan eventTimeOfDay = evt.date.TimeOfDay;
-            TimeSpan currentTimeOfDay = now.TimeOfDay;
-            
-            // Calculate time difference (positive if current time is after event time)
-            TimeSpan timeDifference = currentTimeOfDay - eventTimeOfDay;
-            
-            // Allow 15 minutes before event and 60 minutes after event
-            return timeDifference >= TimeSpan.FromMinutes(-15) && timeDifference <= TimeSpan.FromMinutes(60);
+            // For daily events, always check time window (happens every day)
+            return IsEventWithinTimeWindow(evt, now);
         }
         else if (evt.IsRecurring && evt.IsActiveAt(now))
         {
-            // For recurring events (weekly, monthly), check if the time of day matches (15 minutes before, 60 minutes after)
-            // DateTime normalizedEventDate = NormalizeDate(evt.date);
-            TimeSpan eventTimeOfDay = evt.date.TimeOfDay;
-            TimeSpan currentTimeOfDay = now.TimeOfDay;
-            
-            // Calculate time difference (positive if current time is after event time)
-            TimeSpan timeDifference = currentTimeOfDay - eventTimeOfDay;
-            
-            // Allow 15 minutes before event and 60 minutes after event
-            return timeDifference >= TimeSpan.FromMinutes(-15) && timeDifference <= TimeSpan.FromMinutes(60);
+            // For recurring events (weekly, monthly), check if active today and within time window
+            return IsEventWithinTimeWindow(evt, now);
+        }
+        else if (evt.IsAlwaysHappening)
+        {
+            // Always happening events are always eligible
+            return true;
         }
 
         return false;
