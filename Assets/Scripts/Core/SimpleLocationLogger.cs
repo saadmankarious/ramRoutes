@@ -235,14 +235,6 @@ public class BuildingProximityDetector : MonoBehaviour
     void OnBuildingEntered(Building building)
     {
         Debug.Log($"ENTERED BUILDING: {building.name} (Distance: {distanceToBuilding:F2}m)");
-        
-        // Show panel with "Entering" status if not already shown for this building
-        if (lastNotifiedBuilding == null || lastNotifiedBuilding.name != building.name || !isPanelCurrentlyShown)
-        {
-            ShowBuildingStatusPanel(building.name, "Entering");
-            lastNotifiedBuilding = building;
-        }
-        
         OnEnterBuilding?.Invoke(building);
         // Trigger your building entry logic here
     }
@@ -250,70 +242,15 @@ public class BuildingProximityDetector : MonoBehaviour
     void OnBuildingApproached(Building building)
     {
         Debug.Log($"APPROACHING BUILDING: {building.name} (Distance: {distanceToBuilding:F2}m)");
-        
-        // Show panel with "Approaching" status if not already shown for this building
-        if (lastNotifiedBuilding == null || lastNotifiedBuilding.name != building.name || !isPanelCurrentlyShown)
-        {
-            ShowBuildingStatusPanel(building.name, "Approaching");
-            lastNotifiedBuilding = building;
-        }
-        
         OnApproachBuilding?.Invoke(building);
-        
         // Trigger your approach logic here
     }
 
-    /// <summary>
-    /// Shows the building status panel with the building name and status
-    /// </summary>
-    private void ShowBuildingStatusPanel(string buildingName, string status)
-    {
-        if (buildingApproachPanel != null && buildingNameText != null)
-        {
-            // Set concise text: "Status Building"
-            buildingNameText.text = $"{status} {buildingName}";
-            
-            // Show the panel only if not already shown
-            if (!isPanelCurrentlyShown)
-            {
-                buildingApproachPanel.SetActive(true);
-                isPanelCurrentlyShown = true;
-                
-                // Start coroutine to hide the panel after specified duration
-                StartCoroutine(HidePanelAfterDelay());
-                
-                Debug.Log($"Showing building status panel: {status} {buildingName}");
-            }
-            else
-            {
-                // Just update the text if panel is already shown
-                Debug.Log($"Updated building status panel text: {status} {buildingName}");
-            }
-        }
-        else
-        {
-            Debug.LogWarning("Building approach panel or text component not assigned!");
-        }
-    }
-    
-    /// <summary>
-    /// Coroutine to hide the panel after a delay
-    /// </summary>
-    private System.Collections.IEnumerator HidePanelAfterDelay()
-    {
-        yield return new WaitForSeconds(panelDisplayDuration);
-        
-        if (buildingApproachPanel != null)
-        {
-            buildingApproachPanel.SetActive(false);
-            isPanelCurrentlyShown = false;
-        }
-    }    void UpdateStatusText()
+    void UpdateStatusText()
     {
         if (closestBuilding == null)
         {
             currentStatus = "No buildings nearby";
-            lastNotifiedBuilding = null; // Reset when no buildings are nearby
             return;
         }
 
@@ -328,7 +265,6 @@ public class BuildingProximityDetector : MonoBehaviour
         else
         {
             currentStatus = $"CLOSEST: {closestBuilding.name} ({distanceToBuilding:F1}m away)";
-            lastNotifiedBuilding = null; // Reset when far from all buildings
         }
     }
 
@@ -387,23 +323,23 @@ public class BuildingProximityDetector : MonoBehaviour
 
     private void UpdateBuildingStatusPanel()
     {
-        if (buildingApproachText == null) return;
+        if (buildingNameText == null) return;
 
-        if (currentBuilding != null)
+        if (closestBuilding != null && distanceToBuilding <= closestBuilding.closeProximityRadius)
         {
-            buildingApproachText.text = $"Inside Building: {currentBuilding}";
+            buildingNameText.text = $"Inside Building: {closestBuilding.name}";
         }
-        else if (approachingBuilding)
+        else if (closestBuilding != null && distanceToBuilding <= closestBuilding.detectionRadius)
         {
-            buildingApproachText.text = $"Approaching Building: {closestBuildingName}";
+            buildingNameText.text = $"Approaching Building: {closestBuilding.name}";
         }
-        else if (!string.IsNullOrEmpty(closestBuildingName))
+        else if (closestBuilding != null)
         {
-            buildingApproachText.text = $"Closest building: {closestBuildingName}";
+            buildingNameText.text = $"Closest building: {closestBuilding.name}";
         }
         else
         {
-            buildingApproachText.text = "No buildings nearby";
+            buildingNameText.text = "No buildings nearby";
         }
     }
 }
