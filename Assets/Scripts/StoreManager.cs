@@ -37,7 +37,7 @@ public class StoreManager : MonoBehaviour
         itemsContainer = FindChildByName(transform, "whereitemslive");
         if (itemsContainer == null)
         {
-            Debug.LogError("StoreManager: No 'items' child found. Please create a child GameObject named 'items'.");
+            Debug.LogWarning("StoreManager: No 'items' child found. Please create a child GameObject named 'items'.");
         }
         else
         {

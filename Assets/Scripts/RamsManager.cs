@@ -236,11 +236,16 @@ public class RamsManager : MonoBehaviour
         
         while (true)
         {
-            yield return new WaitForSeconds(10f); // Check every 10 seconds
-            
+            yield return new WaitForSeconds(3f); // Check every 10 seconds
+
             // Start the async task and wait for it to complete
-            var task = CheckForNewPlayersInBuildings();
-            yield return new WaitUntil(() => task.IsCompleted);
+                   var currentStage = GameStageService.LoadStageFromPrefs();
+            if (currentStage != null && currentStage.area == Stage.Terminal)
+            {
+                       var task = CheckForNewPlayersInBuildings();
+                 yield return new WaitUntil(() => task.IsCompleted);
+
+            }
         }
     }
     
@@ -282,9 +287,16 @@ public class RamsManager : MonoBehaviour
                     // Get the new user objects
                     var newUsers = currentUsersInBuilding.Where(u => newUserIds.Contains(u.userId)).ToList();
                     
-                    // Create notification for new players
+                    // Create notification for new players (excluding current player)
                     foreach (var newUser in newUsers)
                     {
+                        // Skip notification if this is the current player
+                        if (newUser.userId == currentUserId)
+                        {
+                            Debug.Log($"RamsManager ({buildingName}): Skipping notification for current player: {newUser.name}");
+                            continue;
+                        }
+                        
                         string message = $"{newUser.name} just entered {buildingName}. Go say hi!";
                         
                         // Show notification if NotificationManager is available
@@ -743,11 +755,18 @@ public class RamsManager : MonoBehaviour
         // Find and set username and coins text using specific component names
         var allTexts = ramInstance.GetComponentsInChildren<UnityEngine.UI.Text>();
         
+        // Get current user ID to check if this ram is for the current player
+        string currentUserId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+        bool isCurrentPlayer = !string.IsNullOrEmpty(currentUserId) && user.userId == currentUserId;
+        
         // Find the "name" text component
         var nameText = allTexts.FirstOrDefault(t => t.gameObject.name.ToLower().Contains("name"));
         if (nameText != null)
         {
-            nameText.text = user.name + " (" + user.currentBuilding + ")";
+            // Display "Me" if this is the current player, otherwise show username
+            string displayName = isCurrentPlayer ? "just me" : user.name;
+            var building = " (" + user.currentBuilding + ")";
+            nameText.text = displayName + (isCurrentPlayer ? "" : building);
         }
         else
         {
@@ -772,7 +791,9 @@ public class RamsManager : MonoBehaviour
             var tmpNameText = tmpTexts.FirstOrDefault(t => t.gameObject.name.ToLower().Contains("name"));
             if (tmpNameText != null)
             {
-                tmpNameText.text = user.name ?? "Unknown";
+                // Display "Me" if this is the current player, otherwise show username
+                string displayName = isCurrentPlayer ? "Me" : (user.name ?? "Unknown");
+                tmpNameText.text = displayName;
             }
         }
 
@@ -980,34 +1001,59 @@ public class RamsManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Applies unique color to the RAM's name text component based on user
+    /// Applies unique color to the RAM's name and knowledge points text components based on user
     /// </summary>
     private void ApplyUniqueColorToRamText(GameObject ramInstance, User user)
     {
         Color userColor = GetUniqueColorForUser(user.userId);
         
-        // Find and color the name text component
+        // Find and color both name and coins text components
         var allTexts = ramInstance.GetComponentsInChildren<UnityEngine.UI.Text>();
         var nameText = allTexts.FirstOrDefault(t => t.gameObject.name.ToLower().Contains("name"));
+        var coinsText = allTexts.FirstOrDefault(t => t.gameObject.name.ToLower().Contains("coins"));
         
+        // Apply color to name text
         if (nameText != null)
         {
             nameText.color = userColor;
             Debug.Log($"Applied unique color {userColor} to RAM name text for user {user.name}");
         }
-        else
+        
+        // Apply same color to knowledge points text
+        if (coinsText != null)
         {
-            // Try TextMeshPro if regular Text component not found
+            coinsText.color = userColor;
+            Debug.Log($"Applied unique color {userColor} to RAM knowledge points text for user {user.name}");
+        }
+        
+        // Fallback: Try TextMeshPro if regular Text components not found
+        if (nameText == null || coinsText == null)
+        {
             var tmpTexts = ramInstance.GetComponentsInChildren<TMPro.TextMeshProUGUI>();
-            var tmpNameText = tmpTexts.FirstOrDefault(t => t.gameObject.name.ToLower().Contains("name"));
-            if (tmpNameText != null)
+            
+            if (nameText == null)
             {
-                tmpNameText.color = userColor;
-                Debug.Log($"Applied unique color {userColor} to RAM TMPro name text for user {user.name}");
+                var tmpNameText = tmpTexts.FirstOrDefault(t => t.gameObject.name.ToLower().Contains("name"));
+                if (tmpNameText != null)
+                {
+                    tmpNameText.color = userColor;
+                    Debug.Log($"Applied unique color {userColor} to RAM TMPro name text for user {user.name}");
+                }
             }
-            else
+            
+            if (coinsText == null)
             {
-                Debug.LogWarning($"No name text component found to apply color to RAM for user {user.name}");
+                var tmpCoinsText = tmpTexts.FirstOrDefault(t => t.gameObject.name.ToLower().Contains("coins"));
+                if (tmpCoinsText != null)
+                {
+                    tmpCoinsText.color = userColor;
+                    Debug.Log($"Applied unique color {userColor} to RAM TMPro knowledge points text for user {user.name}");
+                }
+            }
+            
+            if (nameText == null && coinsText == null)
+            {
+                Debug.LogWarning($"No name or knowledge points text components found to apply color to RAM for user {user.name}");
             }
         }
     }

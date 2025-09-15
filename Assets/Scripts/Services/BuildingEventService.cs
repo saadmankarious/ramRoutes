@@ -91,7 +91,6 @@ namespace RamRoutes.Services
                     
                     // Get the document ID from Firestore (this is the actual event ID)
                     string documentId = doc.Id;
-                    Debug.Log($"Processing event document with ID: {documentId}");
                     
                     // Parse event type and handle date accordingly
                     RamRoutes.Model.EventType eventType = ParseEventType(data);

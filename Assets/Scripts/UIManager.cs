@@ -793,6 +793,9 @@ public class UIManager : MonoBehaviour
             yield return null;
         }
 
+        // Check if in Terminal stage and hide tagged UI elements
+        HideTerminalStageElements();
+
         OnTrialComplete.AddListener(() => StartCoroutine(CompleteTrial()));
         OnTimeExpired.AddListener(TimeUp);
 
@@ -823,6 +826,45 @@ public class UIManager : MonoBehaviour
         
         // Reset the fade overlay if it exists
         ResetFadeOverlay();
+    }
+
+    /// <summary>
+    /// Hides all GameObjects tagged with "GoneOnTerminalStage" when in Terminal stage
+    /// </summary>
+    private void HideTerminalStageElements()
+    {
+        try
+        {
+            // Check if we're in Terminal stage
+            var currentStage = GameStageService.LoadStageFromPrefs();
+            if (currentStage != null && currentStage.area == Stage.Terminal)
+            {
+                // Find all GameObjects with the "GoneOnTerminalStage" tag
+                GameObject[] taggedObjects = GameObject.FindGameObjectsWithTag("GoneOnTerminalStage");
+                
+                Debug.Log($"UIManager: Found {taggedObjects.Length} objects with 'GoneOnTerminalStage' tag");
+                
+                // Hide all found objects
+                foreach (GameObject obj in taggedObjects)
+                {
+                    if (obj != null)
+                    {
+                        obj.SetActive(false);
+                        Debug.Log($"UIManager: Hidden '{obj.name}' due to Terminal stage");
+                    }
+                }
+                
+                Debug.Log($"UIManager: Hidden {taggedObjects.Length} UI elements for Terminal stage");
+            }
+            else
+            {
+                Debug.Log("UIManager: Not in Terminal stage, keeping all tagged elements visible");
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"UIManager: Error hiding Terminal stage elements: {ex.Message}");
+        }
     }
 
     /// <summary>
