@@ -41,7 +41,7 @@ setGlobalOptions({ maxInstances: 10 });
  * Notify all users when a new building event is added
  * Triggers when a document is created in the BuildingEvents collection
  */
-exports.notifyNewBuildingEvent = onDocumentCreated("building-events/{eventId}", async (event) => {
+exports.notifyNewBuildingEventV2 = onDocumentCreated("building-events/{eventId}", async (event) => {
   try {
     const eventData = event.data.data();
     const eventId = event.params.eventId;
@@ -477,6 +477,7 @@ exports.notifyShoutoutReceived = onDocumentCreated("shout-outs/{shoutoutId}", as
             shoutoutId: shoutoutId,
             senderName: senderName,
             receiverUserId: receiverUserId,
+            receiverToken: receiverData.notificationToken,
             kbAmount: kbAmount,
             coinAmount: coinAmount
         });
@@ -606,7 +607,9 @@ exports.notifyFriendRequestReceived = onDocumentCreated("FriendRequests/{request
         logger.info("Friend request received, sending notification", {
             requestId: requestId,
             senderName: senderName,
-            receiverUserId: receiverUserId
+            receiverUserId: receiverUserId,
+                        receiverToken: receiverData.notificationToken,
+
         });
         
         // Send targeted notification to the receiver only

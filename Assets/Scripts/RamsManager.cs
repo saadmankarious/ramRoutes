@@ -10,6 +10,9 @@ public class RamsManager : MonoBehaviour
 {
      private BuildingInteraction building;
     
+    [Header("Stage Control")]
+    [SerializeField] private bool requireTerminalStage = false; // Flag to control terminal stage restrictions
+    
     [Header("Ram Prefab")]
     [SerializeField] private GameObject ramPrefab;
     
@@ -239,12 +242,20 @@ public class RamsManager : MonoBehaviour
             yield return new WaitForSeconds(3f); // Check every 10 seconds
 
             // Start the async task and wait for it to complete
-                   var currentStage = GameStageService.LoadStageFromPrefs();
-            if (currentStage != null && currentStage.area == Stage.Terminal)
+            if (requireTerminalStage)
             {
-                       var task = CheckForNewPlayersInBuildings();
-                 yield return new WaitUntil(() => task.IsCompleted);
-
+                var currentStage = GameStageService.LoadStageFromPrefs();
+                if (currentStage != null && currentStage.area == Stage.Terminal)
+                {
+                    var task = CheckForNewPlayersInBuildings();
+                    yield return new WaitUntil(() => task.IsCompleted);
+                }
+            }
+            else
+            {
+                // If terminal stage not required, always check for new players
+                var task = CheckForNewPlayersInBuildings();
+                yield return new WaitUntil(() => task.IsCompleted);
             }
         }
     }
@@ -340,11 +351,14 @@ public class RamsManager : MonoBehaviour
         if (building.activated && !hasBeenActivated)
         {
             // Check if we're in the Terminal game stage - only activate ram system during Terminal stage
-            var currentStage = GameStageService.LoadStageFromPrefs();
-            if (currentStage == null || currentStage.area != Stage.Terminal)
+            if (requireTerminalStage)
             {
-                Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), skipping ram system activation");
-                return;
+                var currentStage = GameStageService.LoadStageFromPrefs();
+                if (currentStage == null || currentStage.area != Stage.Terminal)
+                {
+                    Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), skipping ram system activation");
+                    return;
+                }
             }
             
             hasBeenActivated = true;
@@ -475,11 +489,14 @@ public class RamsManager : MonoBehaviour
     private async Task SpawnRams()
     {
         // Check if we're in the Terminal game stage - only spawn rams during Terminal stage
-        var currentStage = GameStageService.LoadStageFromPrefs();
-        if (currentStage == null || currentStage.area != Stage.Terminal)
+        if (requireTerminalStage)
         {
-            Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), skipping ram spawning");
-            return;
+            var currentStage = GameStageService.LoadStageFromPrefs();
+            if (currentStage == null || currentStage.area != Stage.Terminal)
+            {
+                Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), skipping ram spawning");
+                return;
+            }
         }
         
         string buildingName = building.buildingName;
@@ -552,11 +569,14 @@ public class RamsManager : MonoBehaviour
     private async Task CheckForNewPlayers()
     {
         // Check if we're in the Terminal game stage - only spawn rams during Terminal stage
-        var currentStage = GameStageService.LoadStageFromPrefs();
-        if (currentStage == null || currentStage.area != Stage.Terminal)
+        if (requireTerminalStage)
         {
-            Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), skipping new player check");
-            return;
+            var currentStage = GameStageService.LoadStageFromPrefs();
+            if (currentStage == null || currentStage.area != Stage.Terminal)
+            {
+                Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), skipping new player check");
+                return;
+            }
         }
         
         string buildingName = building.buildingName;
@@ -1190,16 +1210,19 @@ public class RamsManager : MonoBehaviour
         try
         {
             // Check if we're in the Terminal game stage - only display player count during Terminal stage
-            var currentStage = GameStageService.LoadStageFromPrefs();
-            if (currentStage == null || currentStage.area != Stage.Terminal)
+            if (requireTerminalStage)
             {
-                Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), hiding player count");
-                // Hide the canvas when not in Terminal stage
-                if (playerCountCanvasInstance != null)
+                var currentStage = GameStageService.LoadStageFromPrefs();
+                if (currentStage == null || currentStage.area != Stage.Terminal)
                 {
-                    playerCountCanvasInstance.SetActive(false);
+                    Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), hiding player count");
+                    // Hide the canvas when not in Terminal stage
+                    if (playerCountCanvasInstance != null)
+                    {
+                        playerCountCanvasInstance.SetActive(false);
+                    }
+                    return;
                 }
-                return;
             }
             
             // Get the current player count in this building
