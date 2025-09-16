@@ -28,6 +28,9 @@ public class RamsManager : MonoBehaviour
     [Header("User Info Panel")]
     [SerializeField] private UserInfoPanel userInfoPanel;
     
+    [Header("Chat System")]
+    [SerializeField] private ChatManager chatManager;
+    
     [Header("Player Count Display")]
     [SerializeField] private GameObject playerCountCanvasPrefab;
     [SerializeField] private Transform playerCountSpawnPoint;
@@ -850,7 +853,7 @@ public class RamsManager : MonoBehaviour
     {
         Debug.Log($"Ram clicked for user: {user.name}");
         
-        // Try assigned reference first, then singleton, then find in scene
+        // Try assigned reference first, then singleton, then find in scene for UserInfoPanel
         UserInfoPanel panel = userInfoPanel;
         if (panel == null)
         {
@@ -869,6 +872,23 @@ public class RamsManager : MonoBehaviour
         else
         {
             Debug.LogWarning("RamsManager: No UserInfoPanel found in scene!");
+        }
+        
+        // Start chat with the clicked user
+        ChatManager chat = chatManager;
+        if (chat == null)
+        {
+            chat = FindObjectOfType<ChatManager>();
+        }
+        
+        if (chat != null)
+        {
+            chat.StartChatWithUser(user);
+            Debug.Log($"Started chat with user: {user.name}");
+        }
+        else
+        {
+            Debug.LogWarning("RamsManager: No ChatManager found in scene!");
         }
     }
     
