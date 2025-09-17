@@ -19,7 +19,8 @@ public class ChatManager : MonoBehaviour
     [SerializeField] private Button closeChatButton;
     
     [Header("Emoji Selection")]
-    [SerializeField] private Transform emojiButtonsParent;
+    [SerializeField] private ScrollRect emojiScrollView;
+    [SerializeField] private Transform emojiContentParent;
     [SerializeField] private Button emojiButtonPrefab;
     
     [Header("Available Emojis")]
@@ -59,10 +60,10 @@ public class ChatManager : MonoBehaviour
     /// </summary>
     private void CreateEmojiButtons()
     {
-        if (emojiButtonsParent == null || emojiButtonPrefab == null) return;
+        if (emojiContentParent == null || emojiButtonPrefab == null) return;
         
         // Clear existing buttons
-        foreach (Transform child in emojiButtonsParent)
+        foreach (Transform child in emojiContentParent)
         {
             Destroy(child.gameObject);
         }
@@ -70,7 +71,7 @@ public class ChatManager : MonoBehaviour
         // Create button for each emoji
         foreach (string emoji in availableEmojis)
         {
-            Button emojiBtn = Instantiate(emojiButtonPrefab, emojiButtonsParent);
+            Button emojiBtn = Instantiate(emojiButtonPrefab, emojiContentParent);
             
             // Set emoji text
             TextMeshProUGUI emojiText = emojiBtn.GetComponentInChildren<TextMeshProUGUI>();
