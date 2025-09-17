@@ -14,7 +14,8 @@ public class ChatManager : MonoBehaviour
     [SerializeField] private GameObject chatPanel;
     [SerializeField] private ScrollRect chatScrollView;
     [SerializeField] private Transform chatContentParent;
-    [SerializeField] private GameObject chatBubblePrefab;
+    [SerializeField] private GameObject senderBubblePrefab; // Prefab for messages you send
+    [SerializeField] private GameObject receiverBubblePrefab; // Prefab for messages you receive
     [SerializeField] private Button closeChatButton;
     
     [Header("Emoji Selection")]
@@ -184,7 +185,7 @@ public class ChatManager : MonoBehaviour
     /// </summary>
     private void DisplayMessages()
     {
-        if (chatContentParent == null || chatBubblePrefab == null) return;
+        if (chatContentParent == null || senderBubblePrefab == null || receiverBubblePrefab == null) return;
         
         // Clear existing messages
         foreach (Transform child in chatContentParent)
@@ -197,25 +198,51 @@ public class ChatManager : MonoBehaviour
         // Create message bubbles
         foreach (var chat in currentConversation)
         {
-            GameObject bubble = Instantiate(chatBubblePrefab, chatContentParent);
+            bool isMyMessage = chat.fromId == currentUserId;
             
-            // Find text component and set emoji
+            // Choose the appropriate prefab based on sender
+            GameObject prefabToUse = isMyMessage ? senderBubblePrefab : receiverBubblePrefab;
+            GameObject bubble = Instantiate(prefabToUse, chatContentParent);
+            
+            // Remove ButtonHandler if no Button component exists
+            ButtonHandler buttonHandler = bubble.GetComponent<ButtonHandler>();
+            Button button = bubble.GetComponent<Button>();
+            if (buttonHandler != null && button == null)
+            {
+                Destroy(buttonHandler);
+            }
+            
+            // Find text component and set emoji only
             TextMeshProUGUI messageText = bubble.GetComponentInChildren<TextMeshProUGUI>();
             if (messageText != null)
             {
-                bool isMyMessage = chat.fromId == currentUserId;
-                string prefix = isMyMessage ? "You: " : $"{currentChatTargetName}: ";
-                messageText.text = prefix + chat.chatEmojies;
-                
-                // Optional: Color code messages
-                messageText.color = isMyMessage ? Color.blue : Color.gray;
+                // Display only the emoji, no additional text
+                messageText.text = chat.chatEmojies;
             }
         }
         
-        // Scroll to bottom
+        // Scroll to bottom to show most recent messages
         if (chatScrollView != null)
         {
+            // Force canvas update first
             Canvas.ForceUpdateCanvases();
+            
+            // Use a small delay to ensure layout is complete
+            StartCoroutine(ScrollToBottomDelayed());
+        }
+    }
+    
+    /// <summary>
+    /// Coroutine to scroll to bottom with a small delay to ensure layout is complete
+    /// </summary>
+    private IEnumerator ScrollToBottomDelayed()
+    {
+        // Wait one frame for layout to update
+        yield return null;
+        
+        if (chatScrollView != null)
+        {
+            // Scroll to bottom (0 = bottom for vertical scroll)
             chatScrollView.normalizedPosition = new Vector2(0, 0);
         }
     }
