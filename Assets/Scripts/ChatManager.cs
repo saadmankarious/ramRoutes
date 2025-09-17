@@ -28,6 +28,8 @@ public class ChatManager : MonoBehaviour
     
     private ChatService chatService;
     private UserService userService;
+    private ShoutOutService shoutOutService;
+    private FriendRequestService friendRequestService;
     private string currentChatTargetId;
     private string currentChatTargetName;
     private User currentChatTargetUser;
@@ -38,12 +40,17 @@ public class ChatManager : MonoBehaviour
     {
         chatService = new ChatService();
         userService = new UserService();
+        shoutOutService = new ShoutOutService();
+        friendRequestService = new FriendRequestService();
         
         // Setup UI
         if (closeChatButton != null)
         {
             closeChatButton.onClick.AddListener(CloseChatPanel);
         }
+        
+        // Setup shoutout and friend request buttons
+        SetupActionButtons();
         
         // Create emoji buttons
         CreateEmojiButtons();
@@ -83,6 +90,114 @@ public class ChatManager : MonoBehaviour
             // Add click listener
             string currentEmoji = emoji; // Capture for closure
             emojiBtn.onClick.AddListener(() => SendEmoji(currentEmoji));
+        }
+    }
+    
+    /// <summary>
+    /// Setup shoutout and friend request buttons
+    /// </summary>
+    private void SetupActionButtons()
+    {
+        if (chatPanel == null) return;
+        
+        // Find and setup shoutout button
+        Transform shoutoutTransform = FindChildByName(chatPanel.transform, "shoutout");
+         followingButton shoutoutButton = shoutoutTransform?.GetComponent<Button>();
+        if (shoutoutButton != null)
+        {
+            shoutoutButton.onClick.AddListener(SendShoutout);
+        }
+        
+        // Find and setup add friend button
+        Transform addFriendTransform = FindChildByName(chatPanel.transform, "add-friend");
+        Button addFriendButton = addFriendTransform?.GetComponent<Button>();
+        if (addFriendButton != null)
+        {
+            addFriendButton.onClick.AddListener(SendFriendRequest);
+        }
+    }
+    
+    /// <summary>
+    /// Send a shoutout to the current chat target
+    /// </summary>
+    private async void SendShoutout()
+    {
+        if (currentChatTargetUser == null)
+        {
+            Debug.LogWarning("No chat target selected for shoutout");
+            return;
+        }
+        
+        bool success = await shoutOutService.SendShoutOut(currentChatTargetUser.userId);
+        if (success)
+        {
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.ShowQuickUpdate("Shoutout sent to " + currentChatTargetUser.name + "!");
+                
+                // Update the UI with new player stats after sending shoutout
+                await UpdatePlayerStatsInUI();
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Send a friend request to the current chat target
+    /// </summary>
+    private async void SendFriendRequest()
+    {
+        if (currentChatTargetUser == null)
+        {
+            Debug.LogWarning("No chat target selected for friend request");
+            return;
+        }
+        
+        var friendRequest = await friendRequestService.SendFriendRequest(currentChatTargetUser.userId);
+        if (friendRequest != null)
+        {
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.ShowQuickUpdate($"Friend request sent to {currentChatTargetUser.name}!");
+            }
+        }
+        else
+        {
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.ShowQuickUpdate("You already sent a request");
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Updates the player stats in the UI Manager after a shoutout is sent
+    /// </summary>
+    private async Task UpdatePlayerStatsInUI()
+    {
+        try
+        {
+            // Get current user ID
+            string currentUserId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+            if (string.IsNullOrEmpty(currentUserId))
+            {
+                return;
+            }
+            
+            // Get updated user profile from cache or remote
+            var updatedUser = await userService.GetUserProfileCachedOrRemoteAsync(currentUserId);
+            
+            if (updatedUser != null && UIManager.Instance != null)
+            {
+                // Update UI with the latest stats
+                UIManager.Instance.UpdateCoins(updatedUser.coins);
+                UIManager.Instance.UpdateKnowledgePoints(updatedUser.knowledgePoints);
+                
+                Debug.Log($"Updated UI stats after shoutout - Coins: {updatedUser.coins}, KB: {updatedUser.knowledgePoints}");
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Failed to update player stats in UI after shoutout: {e.Message}");
         }
     }
     
@@ -300,6 +415,24 @@ public class ChatManager : MonoBehaviour
         if (closeChatButton != null)
         {
             closeChatButton.onClick.RemoveListener(CloseChatPanel);
+        }
+        
+        // Remove action button listeners
+        if (chatPanel != null)
+        {
+            Transform shoutoutTransform = FindChildByName(chatPanel.transform, "shoutout");
+            Button shoutoutButton = shoutoutTransform?.GetComponent<Button>();
+            if (shoutoutButton != null)
+            {
+                shoutoutButton.onClick.RemoveListener(SendShoutout);
+            }
+            
+            Transform addFriendTransform = FindChildByName(chatPanel.transform, "add-friend");
+            Button addFriendButton = addFriendTransform?.GetComponent<Button>();
+            if (addFriendButton != null)
+            {
+                addFriendButton.onClick.RemoveListener(SendFriendRequest);
+            }
         }
     }
     
