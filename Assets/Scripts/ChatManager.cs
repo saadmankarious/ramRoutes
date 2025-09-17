@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using RamRoutes.Services;
@@ -24,13 +25,17 @@ public class ChatManager : MonoBehaviour
     [SerializeField] private string[] availableEmojis = { "😀", "😎", "👍", "❤️", "😂", "🔥", "💯", "🎉", "👋", "🤔" };
     
     private ChatService chatService;
+    private UserService userService;
     private string currentChatTargetId;
     private string currentChatTargetName;
+    private User currentChatTargetUser;
     private List<Chat> currentConversation = new List<Chat>();
+    private Coroutine refreshCoroutine;
     
     void Start()
     {
         chatService = new ChatService();
+        userService = new UserService();
         
         // Setup UI
         if (closeChatButton != null)
@@ -82,10 +87,16 @@ public class ChatManager : MonoBehaviour
     /// <summary>
     /// Open chat with a specific user
     /// </summary>
-    public async void OpenChatWithUser(string userId, string userName)
+    public async void OpenChatWithUser(User user)
     {
-        currentChatTargetId = userId;
-        currentChatTargetName = userName;
+        if (user == null) return;
+        
+        currentChatTargetUser = user;
+        currentChatTargetId = user.userId;
+        currentChatTargetName = user.name;
+        
+        // Update profile display
+        UpdateProfileDisplay(user);
         
         if (chatPanel != null)
         {
@@ -94,6 +105,33 @@ public class ChatManager : MonoBehaviour
         
         // Load conversation
         await LoadConversation();
+        
+        // Start auto-refresh
+        StartChatRefresh();
+    }
+    
+    /// <summary>
+    /// Update the profile display with user information
+    /// </summary>
+    private void UpdateProfileDisplay(User user)
+    {
+        if (user == null || chatPanel == null) return;
+        
+        // Find the "name" text component recursively
+        Transform nameTransform = FindChildByName(chatPanel.transform, "name");
+        Text nameText = nameTransform?.GetComponent<Text>();
+        if (nameText != null)
+        {
+            nameText.text = user.name ?? "Unknown";
+        }
+        
+        // Find the "profile" image component recursively and update avatar based on rank using UIManager
+        Transform profileTransform = FindChildByName(chatPanel.transform, "profile");
+        Image profileImage = profileTransform?.GetComponent<Image>();
+        if (profileImage != null && UIManager.Instance != null)
+        {
+            profileImage.sprite = UIManager.Instance.GetUserAvatarBasedOnPoints(user.coins, user.knowledgePoints);
+        }
     }
     
     /// <summary>
@@ -187,6 +225,9 @@ public class ChatManager : MonoBehaviour
     /// </summary>
     public void CloseChatPanel()
     {
+        // Stop auto-refresh
+        StopChatRefresh();
+        
         if (chatPanel != null)
         {
             chatPanel.SetActive(false);
@@ -194,6 +235,7 @@ public class ChatManager : MonoBehaviour
         
         currentChatTargetId = "";
         currentChatTargetName = "";
+        currentChatTargetUser = null;
         currentConversation.Clear();
     }
     
@@ -218,15 +260,87 @@ public class ChatManager : MonoBehaviour
     {
         if (user != null)
         {
-            OpenChatWithUser(user.userId, user.name);
+            OpenChatWithUser(user);
         }
     }
     
     void OnDestroy()
     {
+        // Stop auto-refresh
+        StopChatRefresh();
+        
         if (closeChatButton != null)
         {
             closeChatButton.onClick.RemoveListener(CloseChatPanel);
         }
+    }
+    
+    /// <summary>
+    /// Start the chat refresh coroutine
+    /// </summary>
+    private void StartChatRefresh()
+    {
+        StopChatRefresh(); // Stop any existing coroutine
+        refreshCoroutine = StartCoroutine(RefreshChatPeriodically());
+    }
+    
+    /// <summary>
+    /// Stop the chat refresh coroutine
+    /// </summary>
+    private void StopChatRefresh()
+    {
+        if (refreshCoroutine != null)
+        {
+            StopCoroutine(refreshCoroutine);
+            refreshCoroutine = null;
+        }
+    }
+    
+    /// <summary>
+    /// Coroutine to refresh chat every 3 seconds
+    /// </summary>
+    private IEnumerator RefreshChatPeriodically()
+    {
+        while (!string.IsNullOrEmpty(currentChatTargetId))
+        {
+            yield return new WaitForSeconds(3f);
+            
+            // Only refresh if chat is still open
+            if (!string.IsNullOrEmpty(currentChatTargetId) && chatPanel != null && chatPanel.activeInHierarchy)
+            {
+                // Start the async operation and wait for it to complete
+                var loadTask = LoadConversation();
+                yield return new WaitUntil(() => loadTask.IsCompleted);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Recursively find a child transform by name
+    /// </summary>
+    private Transform FindChildByName(Transform parent, string name)
+    {
+        // Check direct children first
+        for (int i = 0; i < parent.childCount; i++)
+        {
+            Transform child = parent.GetChild(i);
+            if (child.name.ToLower().Contains(name.ToLower()))
+            {
+                return child;
+            }
+        }
+        
+        // If not found in direct children, search recursively
+        for (int i = 0; i < parent.childCount; i++)
+        {
+            Transform child = parent.GetChild(i);
+            Transform found = FindChildByName(child, name);
+            if (found != null)
+            {
+                return found;
+            }
+        }
+        
+        return null;
     }
 }

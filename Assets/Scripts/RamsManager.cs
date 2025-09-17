@@ -845,7 +845,7 @@ public class RamsManager : MonoBehaviour
             ApplyUniqueColorToRamText(ramInstance, user);
             Debug.Log($"Applied scale {scale:F2}x and unique color directly (no UIManager)");
         }
-
+        
         Debug.Log($"Spawned ram for user: {user.name} at position {spawnPosition}");
     }
 
@@ -854,25 +854,25 @@ public class RamsManager : MonoBehaviour
         Debug.Log($"Ram clicked for user: {user.name}");
         
         // Try assigned reference first, then singleton, then find in scene for UserInfoPanel
-        UserInfoPanel panel = userInfoPanel;
-        if (panel == null)
-        {
-            panel = UserInfoPanel.Instance;
-        }
-        if (panel == null)
-        {
-            panel = FindObjectOfType<UserInfoPanel>();
-        }
+        // UserInfoPanel panel = userInfoPanel;
+        // if (panel == null)
+        // {
+        //     panel = UserInfoPanel.Instance;
+        // }
+        // if (panel == null)
+        // {
+        //     panel = FindObjectOfType<UserInfoPanel>();
+        // }
         
-        // Show user info panel
-        if (panel != null)
-        {
-            panel.ShowUserInfo(user);
-        }
-        else
-        {
-            Debug.LogWarning("RamsManager: No UserInfoPanel found in scene!");
-        }
+        // // Show user info panel
+        // if (panel != null)
+        // {
+        //     panel.ShowUserInfo(user);
+        // }
+        // else
+        // {
+        //     Debug.LogWarning("RamsManager: No UserInfoPanel found in scene!");
+        // }
         
         // Start chat with the clicked user
         ChatManager chat = chatManager;
@@ -1323,9 +1323,9 @@ public class RamsManager : MonoBehaviour
         while (playerCountCanvasInstance.activeInHierarchy)
         {
             playerCountCanvasInstance.transform.localScale = Vector3.one * 1.2f;
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(1.5f);
             playerCountCanvasInstance.transform.localScale = Vector3.one;
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(1.5f);
         }
     }
     
@@ -1367,5 +1367,37 @@ public class RamsManager : MonoBehaviour
         }
         
         ClearSpawnedRams();
+    }
+    
+    /// <summary>
+    /// Setup physics collision for a spawned ram
+    /// </summary>
+    private void SetupRamPhysics(GameObject ramInstance)
+    {
+        // Add collider for collision detection
+        SphereCollider ramCollider = ramInstance.GetComponent<SphereCollider>();
+        if (ramCollider == null)
+        {
+            ramCollider = ramInstance.AddComponent<SphereCollider>();
+        }
+        
+        // Configure collider
+        ramCollider.radius = 1f;
+        ramCollider.isTrigger = false; // Physical collision
+        
+        // Add Rigidbody for physics
+        Rigidbody ramRigidbody = ramInstance.GetComponent<Rigidbody>();
+        if (ramRigidbody == null)
+        {
+            ramRigidbody = ramInstance.AddComponent<Rigidbody>();
+        }
+        
+        // Configure rigidbody to prevent rams from affecting each other too much
+        ramRigidbody.mass = 1f;
+        ramRigidbody.linearDamping = 5f; // High drag for smooth stopping
+        ramRigidbody.freezeRotation = true; // Keep rams upright
+        
+        // Set physics layer for ram-to-ram interaction
+        ramInstance.layer = LayerMask.NameToLayer("Rams"); // Create "Rams" layer
     }
 }
