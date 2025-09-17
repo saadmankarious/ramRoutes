@@ -12,6 +12,7 @@ public class NpcAutoMovement : MonoBehaviour
     public float moveRadius = 3f; // How far from anchor point NPC can move
     public float waitTime = 2f; // Time to wait at each destination
     public float directionChangeInterval = 3f; // How often to pick new direction
+    public bool MoveToPlayer = false; // Whether NPC should move towards player on spawn
     
     [Header("Building Association")]
     public string associatedBuilding = ""; // Which building this NPC belongs to
@@ -70,7 +71,7 @@ public class NpcAutoMovement : MonoBehaviour
     
     // NPC State Management
     private enum NPCState { PursuingPlayer, Normal, ReturningToSpawn }
-    private NPCState currentState = NPCState.PursuingPlayer; // Start by pursuing player
+    private NPCState currentState = NPCState.Normal; // Default to normal, will be set based on MoveToPlayer flag
     private bool playerNearby = false;
     
     // Return to spawn pathfinding state
@@ -113,8 +114,17 @@ public class NpcAutoMovement : MonoBehaviour
         // Set initial target (for normal movement later)
         ChooseNewTarget();
         
-        // Start in pursuit mode - don't wait, immediately begin pursuing
-        isWaiting = false;
+        // Set initial state based on MoveToPlayer flag
+        if (MoveToPlayer)
+        {
+            currentState = NPCState.PursuingPlayer;
+            isWaiting = false; // Don't wait, immediately begin pursuing
+        }
+        else
+        {
+            currentState = NPCState.Normal;
+            isWaiting = false; // Start moving normally
+        }
         
         // Initialize UI
         InitializeUI();

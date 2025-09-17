@@ -47,13 +47,16 @@ namespace RamRoutes.Services
         
         /// <summary>
         /// Get chat messages for a specific user (received messages)
+        /// Requires composite index: toId (Ascending), timestamp (Descending)
         /// </summary>
         public async Task<List<Chat>> GetChatsForUserAsync(string userId, int limit = 20)
         {
             try
             {
                 var query = db.Collection(COLLECTION_NAME)
-                    .WhereEqualTo("toId", userId);
+                    .WhereEqualTo("toId", userId)
+                    .OrderByDescending("timestamp")
+                    .Limit(limit);
                 
                 var snapshot = await query.GetSnapshotAsync();
                 var chats = new List<Chat>();
@@ -74,9 +77,6 @@ namespace RamRoutes.Services
                     }
                 }
                 
-                // Sort and limit in memory to avoid index requirements
-                chats = chats.OrderByDescending(c => c.timestamp).Take(limit).ToList();
-                
                 return chats;
             }
             catch (Exception ex)
@@ -88,20 +88,27 @@ namespace RamRoutes.Services
         
         /// <summary>
         /// Get chat conversation between two users
+        /// Requires composite indexes:
+        /// 1. fromId (Ascending), toId (Ascending), timestamp (Ascending)
+        /// 2. fromId (Ascending), toId (Ascending), timestamp (Ascending) 
         /// </summary>
         public async Task<List<Chat>> GetConversationAsync(string userId1, string userId2, int limit = 50)
         {
             try
             {
-                // Get messages from user1 to user2
+                // Get messages from user1 to user2 with server-side ordering
                 var query1 = db.Collection(COLLECTION_NAME)
                     .WhereEqualTo("fromId", userId1)
-                    .WhereEqualTo("toId", userId2);
+                    .WhereEqualTo("toId", userId2)
+                    .OrderBy("timestamp")
+                    .Limit(limit);
                     
-                // Get messages from user2 to user1
+                // Get messages from user2 to user1 with server-side ordering
                 var query2 = db.Collection(COLLECTION_NAME)
                     .WhereEqualTo("fromId", userId2)
-                    .WhereEqualTo("toId", userId1);
+                    .WhereEqualTo("toId", userId1)
+                    .OrderBy("timestamp")
+                    .Limit(limit);
                 
                 // Execute both queries
                 var snapshot1 = await query1.GetSnapshotAsync();
@@ -143,14 +150,9 @@ namespace RamRoutes.Services
                     }
                 }
                 
-                // Sort all messages by timestamp
-                chats = chats.OrderBy(c => c.timestamp).ToList();
-                
-                // Apply limit to the combined results
-                if (chats.Count > limit)
-                {
-                    chats = chats.Take(limit).ToList();
-                }
+                // Sort all messages by timestamp and apply final limit
+                // Server-side ordering helps but we still need to merge and sort the two result sets
+                chats = chats.OrderBy(c => c.timestamp).Take(limit).ToList();
                 
                 return chats;
             }
