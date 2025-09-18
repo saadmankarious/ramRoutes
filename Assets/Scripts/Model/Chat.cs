@@ -7,13 +7,8 @@ namespace RamRoutes.Model
         Greeting = 0,
         HaveANiceLift = 1,
         Heart = 2,
-        Laugh = 3,
-        Fire = 4,
-        Celebration = 5,
-        Wave = 6,
-        Thinking = 7,
-        Cool = 8,
-        Perfect = 9
+        ArosHi = 3,
+     
     }
 
     [Serializable]
