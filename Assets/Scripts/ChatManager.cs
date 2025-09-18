@@ -8,6 +8,15 @@ using RamRoutes.Model;
 using Firebase.Auth;
 using System.Linq;
 using TMPro;
+using System;
+
+[System.Serializable]
+public class WhisperSprite
+{
+    public WhisperType whisperType;
+    public Sprite sprite;
+}
+
 public class ChatManager : MonoBehaviour
 {
     [Header("Chat UI")]
@@ -18,13 +27,13 @@ public class ChatManager : MonoBehaviour
     [SerializeField] private GameObject receiverBubblePrefab; // Prefab for messages you receive
     [SerializeField] private Button closeChatButton;
     
-    [Header("Emoji Selection")]
-    [SerializeField] private ScrollRect emojiScrollView;
-    [SerializeField] private Transform emojiContentParent;
-    [SerializeField] private Button emojiButtonPrefab;
+    [Header("Whisper Selection")]
+    [SerializeField] private ScrollRect whisperScrollView;
+    [SerializeField] private Transform whisperContentParent;
+    [SerializeField] private Button whisperButtonPrefab;
     
-    [Header("Available Emojis")]
-    [SerializeField] private string[] availableEmojis = { "😀", "😎", "👍", "❤️", "😂", "🔥", "💯", "🎉", "👋", "🤔" };
+    [Header("Whisper Sprites")]
+    [SerializeField] private WhisperSprite[] availableWhispers; // List of available whispers with their sprites
     
     private ChatService chatService;
     private UserService userService;
@@ -52,8 +61,8 @@ public class ChatManager : MonoBehaviour
         // Setup shoutout and friend request buttons
         SetupActionButtons();
         
-        // Create emoji buttons
-        CreateEmojiButtons();
+        // Create whisper buttons
+        CreateWhisperButtons();
         
         // Hide chat panel initially
         if (chatPanel != null)
@@ -63,33 +72,48 @@ public class ChatManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Create emoji selection buttons
+    /// Create whisper selection buttons
     /// </summary>
-    private void CreateEmojiButtons()
+    private void CreateWhisperButtons()
     {
-        if (emojiContentParent == null || emojiButtonPrefab == null) return;
+        if (whisperContentParent == null || whisperButtonPrefab == null) return;
         
         // Clear existing buttons
-        foreach (Transform child in emojiContentParent)
+        foreach (Transform child in whisperContentParent)
         {
             Destroy(child.gameObject);
         }
         
-        // Create button for each emoji
-        foreach (string emoji in availableEmojis)
+        // Create button for each available whisper (only those defined in the list)
+        if (availableWhispers != null)
         {
-            Button emojiBtn = Instantiate(emojiButtonPrefab, emojiContentParent);
-            
-            // Set emoji text
-            TextMeshProUGUI emojiText = emojiBtn.GetComponentInChildren<TextMeshProUGUI>();
-            if (emojiText != null)
+            for (int i = 0; i < availableWhispers.Length; i++)
             {
-                emojiText.text = emoji;
+                WhisperSprite whisperSprite = availableWhispers[i];
+                if (whisperSprite.sprite == null) continue; // Skip if no sprite assigned
+                
+                Button whisperBtn = Instantiate(whisperButtonPrefab, whisperContentParent);
+                
+                // Find the "whisper" child and set sprite
+                Transform whisperTransform = FindChildByName(whisperBtn.transform, "whisper");
+                Image whisperImage = whisperTransform?.GetComponent<Image>();
+                if (whisperImage != null)
+                {
+                    whisperImage.sprite = whisperSprite.sprite;
+                }
+                else
+                {
+                    Debug.LogWarning($"No 'whisper' child found in whisper button prefab or no Image component on whisper child");
+                }
+                
+                // Add click listener
+                WhisperType currentWhisper = whisperSprite.whisperType; // Capture for closure
+                whisperBtn.onClick.AddListener(() => SendWhisper(currentWhisper));
             }
-            
-            // Add click listener
-            string currentEmoji = emoji; // Capture for closure
-            emojiBtn.onClick.AddListener(() => SendEmoji(currentEmoji));
+        }
+        else
+        {
+            Debug.LogWarning("ChatManager: No available whispers defined. Please assign whispers in the availableWhispers array.");
         }
     }
     
@@ -102,7 +126,7 @@ public class ChatManager : MonoBehaviour
         
         // Find and setup shoutout button
         Transform shoutoutTransform = FindChildByName(chatPanel.transform, "shoutout");
-         followingButton shoutoutButton = shoutoutTransform?.GetComponent<Button>();
+        Button shoutoutButton = shoutoutTransform?.GetComponent<Button>();
         if (shoutoutButton != null)
         {
             shoutoutButton.onClick.AddListener(SendShoutout);
@@ -252,9 +276,9 @@ public class ChatManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Send an emoji to the current chat target
+    /// Send a whisper to the current chat target
     /// </summary>
-    private async void SendEmoji(string emoji)
+    private async void SendWhisper(WhisperType whisperType)
     {
         if (string.IsNullOrEmpty(currentChatTargetId))
         {
@@ -269,11 +293,13 @@ public class ChatManager : MonoBehaviour
             return;
         }
         
-        // Send the emoji
-        bool success = await chatService.SendChatAsync(currentUserId, currentChatTargetId, emoji);
+        // Send the whisper (store as string representation of enum)
+        bool success = await chatService.SendChatAsync(currentUserId, currentChatTargetId, whisperType.ToString());
         
         if (success)
         {
+            UIManager.Instance.ShowQuickUpdate("Whisper sent to " + currentChatTargetUser.name + "!");
+
             // Refresh conversation to show the new message
             await LoadConversation();
         }
@@ -328,12 +354,41 @@ public class ChatManager : MonoBehaviour
                 Destroy(buttonHandler);
             }
             
-            // Find text component and set emoji only
+            // Find the "whisper" child and set sprite
+            Transform whisperTransform = FindChildByName(bubble.transform, "whisper");
+            Image whisperImage = whisperTransform?.GetComponent<Image>();
+            if (whisperImage != null)
+            {
+                WhisperType whisperType = chat.GetWhisperType();
+                
+                // Find the sprite for this whisper type from available whispers
+                Sprite whisperSprite = GetSpriteForWhisperType(whisperType);
+                if (whisperSprite != null)
+                {
+                    whisperImage.sprite = whisperSprite;
+                }
+                else
+                {
+                    Debug.LogWarning($"No sprite found for whisper type: {whisperType}");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"No 'whisper' child found in chat bubble prefab or no Image component on whisper child");
+            }
+            
+            // Hide any text components since we're using sprites now
             TextMeshProUGUI messageText = bubble.GetComponentInChildren<TextMeshProUGUI>();
             if (messageText != null)
             {
-                // Display only the emoji, no additional text
-                messageText.text = chat.chatEmojies;
+                messageText.gameObject.SetActive(false);
+            }
+            
+            // Also hide regular Text components
+            Text regularText = bubble.GetComponentInChildren<Text>();
+            if (regularText != null)
+            {
+                regularText.gameObject.SetActive(false);
             }
         }
         
@@ -499,6 +554,26 @@ public class ChatManager : MonoBehaviour
             if (found != null)
             {
                 return found;
+            }
+        }
+        
+        return null;
+    }
+    
+    /// <summary>
+    /// Get the sprite for a specific whisper type from the available whispers list
+    /// </summary>
+    /// <param name="whisperType">The whisper type to find a sprite for</param>
+    /// <returns>The sprite for the whisper type, or null if not found</returns>
+    private Sprite GetSpriteForWhisperType(WhisperType whisperType)
+    {
+        if (availableWhispers == null) return null;
+        
+        foreach (var whisperSprite in availableWhispers)
+        {
+            if (whisperSprite.whisperType == whisperType && whisperSprite.sprite != null)
+            {
+                return whisperSprite.sprite;
             }
         }
         

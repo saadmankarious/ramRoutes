@@ -2053,6 +2053,10 @@ private void HideObjectsWithTag(string tag)
     {
         isInBuildingViewingMode = active;
         currentViewedBuilding = active ? buildingName : null;
+        
+        // Hide/Show objects tagged "StatsToHide" based on building viewing mode
+       // ToggleStatsToHideObjects(!active); // Hide when in building view mode (active = true)
+        
         if (!active)
         {
             // Hide current users panel when leaving building view
@@ -2064,6 +2068,25 @@ private void HideObjectsWithTag(string tag)
                 TryProceedPendingScene();
             }
         }
+    }
+
+    /// <summary>
+    /// Toggle visibility of objects tagged "StatsToHide"
+    /// </summary>
+    /// <param name="show">True to show objects, false to hide them</param>
+    private void ToggleStatsToHideObjects(bool show)
+    {
+        GameObject[] statsObjects = GameObject.FindGameObjectsWithTag("HideOnBuildingView");
+        
+        foreach (GameObject obj in statsObjects)
+        {
+            if (obj != null)
+            {
+                obj.SetActive(show);
+            }
+        }
+        
+        Debug.Log($"UIManager: {(show ? "Showing" : "Hiding")} {statsObjects.Length} objects tagged 'HideOnBuildingView'");
     }
 
     // Centralized gate for onboarding transition conditions
