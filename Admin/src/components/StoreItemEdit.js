@@ -10,7 +10,8 @@ function StoreItemEdit({ item, onCancel, onSave }) {
     priceKb: item.priceKb || 0,
     category: item.category || 'general',
     imageUrl: item.imageUrl || '',
-    available: item.available !== undefined ? item.available : true
+    available: item.available !== undefined ? item.available : true,
+    whisperType: item.whisperType || 0
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -21,7 +22,8 @@ function StoreItemEdit({ item, onCancel, onSave }) {
     'accessories',
     'consumables',
     'upgrades',
-    'special'
+    'special',
+    'whisper'
   ];
 
   const handleChange = (e) => {
@@ -163,6 +165,25 @@ function StoreItemEdit({ item, onCancel, onSave }) {
             ))}
           </select>
         </div>
+
+        {formData.category === 'whisper' && (
+          <div className="form-group">
+            <label htmlFor="whisperType">Whisper Type</label>
+            <select
+              id="whisperType"
+              name="whisperType"
+              value={formData.whisperType}
+              onChange={handleChange}
+            >
+              <option value={0}>Greeting</option>
+              <option value={1}>Have A Nice Lift</option>
+              <option value={2}>Heart</option>
+              <option value={3}>Aros Hi</option>
+              <option value={4}>Aros Nice Day</option>
+              <option value={5}>Beat Coe</option>
+            </select>
+          </div>
+        )}
 
         <div className="form-group checkbox-group">
           <label>

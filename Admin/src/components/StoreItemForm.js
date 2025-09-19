@@ -10,7 +10,8 @@ function StoreItemForm({ user, onItemCreated }) {
     priceKb: 0,
     category: 'general',
     imageUrl: '',
-    available: true
+    available: true,
+    whisperType: 0 // Default to Greeting (0)
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -22,7 +23,8 @@ function StoreItemForm({ user, onItemCreated }) {
     'accessories',
     'consumables',
     'upgrades',
-    'special'
+    'special',
+    'whisper'
   ];
 
   const handleChange = (e) => {
@@ -59,7 +61,8 @@ function StoreItemForm({ user, onItemCreated }) {
         priceCoins: 0,
         priceKb: 0,
         category: 'general',
-        available: true
+        available: true,
+        whisperType: 0
       });
 
       setTimeout(() => {
@@ -209,6 +212,27 @@ function StoreItemForm({ user, onItemCreated }) {
               ))}
             </select>
           </div>
+
+          {formData.category === 'whisper' && (
+            <div className="form-group">
+              <label htmlFor="whisperType" className="form-label">Whisper Type</label>
+              <select
+                id="whisperType"
+                name="whisperType"
+                value={formData.whisperType}
+                onChange={handleChange}
+                className="form-select"
+                disabled={loading}
+              >
+                <option value={0}>Greeting</option>
+                <option value={1}>Have A Nice Lift</option>
+                <option value={2}>Heart</option>
+                <option value={3}>Aros Hi</option>
+                <option value={4}>Aros Nice Day</option>
+                <option value={5}>Beat Coe</option>
+              </select>
+            </div>
+          )}
 
           <div className="form-group">
             <label className="form-label">

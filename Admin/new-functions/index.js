@@ -451,14 +451,14 @@ exports.notifyShoutoutReceived = onDocumentCreated("shout-outs/{shoutoutId}", as
         const receiverEmail = receiverData.email || '';
         
         // Skip notification for guest users with @ramroutes.com emails
-        if (receiverEmail.endsWith('@ramroutes.com')) {
-            logger.info("Skipping shoutout notification for guest user", {
-                shoutoutId: shoutoutId,
-                receiverUserId: receiverUserId,
-                email: receiverEmail
-            });
-            return null;
-        }
+        // if (receiverEmail.endsWith('@ramroutes.com')) {
+        //     logger.info("Skipping shoutout notification for guest user", {
+        //         shoutoutId: shoutoutId,
+        //         receiverUserId: receiverUserId,
+        //         email: receiverEmail
+        //     });
+        //     return null;
+        // }
         
         // Get sender user data for the notification message
         let senderName = 'Someone';
@@ -559,7 +559,7 @@ exports.notifyShoutoutReceived = onDocumentCreated("shout-outs/{shoutoutId}", as
  * Notify user when they receive a friend request
  * Triggers when a document is created in the FriendRequests collection
  */
-exports.notifyFriendRequestReceived = onDocumentCreated("FriendRequests/{requestId}", async (event) => {
+exports.notifyFriendRequestReceived = onDocumentCreated("friend-requests/{requestId}", async (event) => {
     try {
         const requestData = event.data.data();
         const requestId = event.params.requestId;
@@ -585,14 +585,14 @@ exports.notifyFriendRequestReceived = onDocumentCreated("FriendRequests/{request
         const receiverEmail = receiverData.email || '';
         
         // Skip notification for guest users with @ramroutes.com emails
-        if (receiverEmail.endsWith('@ramroutes.com')) {
-            logger.info("Skipping friend request notification for guest user", {
-                requestId: requestId,
-                receiverUserId: receiverUserId,
-                email: receiverEmail
-            });
-            return null;
-        }
+        // if (receiverEmail.endsWith('@ramroutes.com')) {
+        //     logger.info("Skipping friend request notification for guest user", {
+        //         requestId: requestId,
+        //         receiverUserId: receiverUserId,
+        //         email: receiverEmail
+        //     });
+        //     return null;
+        // }
         
         // Get sender name from request data or fallback to user document
         let senderName = requestData.fromName || 'Someone';
@@ -673,5 +673,166 @@ exports.notifyFriendRequestReceived = onDocumentCreated("FriendRequests/{request
             requestId: event.params.requestId
         });
         throw error;
+    }
+});
+
+/**
+ * Notify user when they receive a whisper
+ * Triggers when a document is created in the chat collection
+ */
+exports.notifyWhisperReceived = onDocumentCreated("chat/{chatId}", async (event) => {
+    try {
+        const chatData = event.data.data();
+        const chatId = event.params.chatId;
+        const receiverUserId = chatData.toId;
+        const senderUserId = chatData.fromId;
+        const whisperType = chatData.chatEmojies;
+        
+        if (!receiverUserId) {
+            logger.error("No receiver user ID found in whisper", { chatId });
+            return null;
+        }
+        
+        const admin = require("firebase-admin");
+        const db = admin.firestore();
+        
+        // Get receiver user data
+        const receiverDoc = await db.collection("users").doc(receiverUserId).get();
+        if (!receiverDoc.exists) {
+            logger.error("Receiver user not found", { receiverUserId, chatId });
+            return null;
+        }
+        
+        const receiverData = receiverDoc.data();
+        const receiverEmail = receiverData.email || '';
+        
+        // Skip notification for guest users with @ramroutes.com emails
+        // if (receiverEmail.endsWith('@ramroutes.com')) {
+        //     logger.info("Skipping whisper notification for guest user", {
+        //         chatId: chatId,
+        //         receiverUserId: receiverUserId,
+        //         email: receiverEmail
+        //     });
+        //     return null;
+        // }
+        
+        // Get sender name for more personalized notification
+        let senderName = 'Someone';
+        if (senderUserId) {
+            try {
+                const senderDoc = await db.collection("users").doc(senderUserId).get();
+                if (senderDoc.exists) {
+                    const senderData = senderDoc.data();
+                    senderName = senderData.name || 'Someone';
+                }
+            } catch (error) {
+                logger.warn("Could not fetch sender data", { senderUserId, chatId });
+            }
+        }
+        
+        // Create dramatic whisper messages
+        const dramaticMessages = [
+            "🌟 A mysterious whisper has found its way to you...",
+            "✨ The winds carry a secret message just for you...",
+            "🔮 Someone has sent you a whisper from the shadows...",
+            "💫 A whisper echoes through the digital realm to reach you...",
+            "🎭 The whispers of the campus have something to tell you...",
+            "🌙 Under the moonlight, a whisper arrives at your doorstep...",
+            "⚡ Lightning carries a whispered message to your ears...",
+            "🍃 The whispers in the wind speak your name...",
+            "🔥 A fiery whisper burns bright with a message for you...",
+            "🌊 Waves of whispers crash upon your consciousness..."
+        ];
+        
+        // Select a random dramatic message
+        const randomMessage = dramaticMessages[Math.floor(Math.random() * dramaticMessages.length)];
+        
+        logger.info("Whisper received, sending notification", {
+            chatId: chatId,
+            senderName: senderName,
+            receiverUserId: receiverUserId,
+            whisperType: whisperType,
+            receiverToken: receiverData.notificationToken ? 'present' : 'missing'
+        });
+        
+        // Send targeted notification to the receiver only
+        const message = {
+            token: null, // We'll set this below
+            notification: {
+                title: `🌟 ${senderName} Whispered to you`,
+                body: randomMessage
+            },
+            data: {
+                chatId: chatId,
+                senderName: senderName,
+                senderUserId: senderUserId || "",
+                receiverUserId: receiverUserId,
+                whisperType: whisperType || "",
+                timestamp: chatData.timestamp ? chatData.timestamp.toString() : "",
+                type: "whisper_received"
+            },
+            android: {
+                notification: {
+                    icon: "ic_notification",
+                    color: "#9C27B0", // Purple color for whispers (mysterious)
+                    sound: "default"
+                }
+            },
+            apns: {
+                payload: {
+                    aps: {
+                        badge: 1,
+                        sound: "default"
+                    }
+                }
+            }
+        };
+        
+        // Try to get the user's FCM token from their user document
+        const fcmToken = receiverData.notificationToken;
+        if (fcmToken && fcmToken.trim() !== '') {
+            message.token = fcmToken;
+            
+            try {
+                const response = await getMessaging().send(message);
+                logger.info("Successfully sent whisper notification to user", {
+                    messageId: response,
+                    chatId: chatId,
+                    receiverUserId: receiverUserId,
+                    senderName: senderName,
+                    whisperType: whisperType
+                });
+                
+                return response;
+            } catch (sendError) {
+                logger.error("Failed to send whisper notification", {
+                    error: sendError.message,
+                    chatId: chatId,
+                    receiverUserId: receiverUserId
+                });
+                
+                return null;
+            }
+        } else {
+            logger.info("No valid FCM token found for user, cannot send whisper notification", {
+                chatId: chatId,
+                receiverUserId: receiverUserId,
+                senderName: senderName,
+                whisperType: whisperType,
+                tokenPresent: !!fcmToken
+            });
+            
+            return null;
+        }
+        
+    } catch (error) {
+        logger.error("Error sending whisper notification", {
+            error: error.message,
+            stack: error.stack,
+            chatId: event.params.chatId
+        });
+        
+        // Don't re-throw the error to prevent function retry
+        return null;
     }
 });

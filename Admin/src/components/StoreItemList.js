@@ -13,7 +13,7 @@ function StoreItemList({ user, onEditItem }) {
   const [selectedStatus, setSelectedStatus] = useState('all');
 
   const categoryOptions = [
-    'all', 'general', 'clothing', 'accessories', 'consumables', 'upgrades', 'special'
+    'all', 'general', 'clothing', 'accessories', 'consumables', 'upgrades', 'special', 'whisper'
   ];
 
   useEffect(() => {
@@ -111,6 +111,18 @@ function StoreItemList({ user, onEditItem }) {
       console.error('Error formatting date:', error);
       return 'Invalid Date';
     }
+  };
+
+  const getWhisperTypeName = (whisperType) => {
+    const whisperNames = {
+      0: 'Greeting',
+      1: 'Have A Nice Lift',
+      2: 'Heart',
+      3: 'Aros Hi',
+      4: 'Aros Nice Day',
+      5: 'Beat Coe'
+    };
+    return whisperNames[whisperType] || `Unknown (${whisperType})`;
   };
 
   if (user.role !== 'superadmin') {
@@ -228,6 +240,10 @@ function StoreItemList({ user, onEditItem }) {
                   )}
                   
                   <p><strong>Price: {formatPrice(item.priceCoins, item.priceKb)}</strong></p>
+
+                  {item.category === 'whisper' && item.whisperType !== undefined && (
+                    <p><strong>Whisper Type: {getWhisperTypeName(item.whisperType)}</strong></p>
+                  )}
 
                   <p><small>Created: {formatDate(item.createdAt)}</small></p>
                   {item.updatedAt && item.updatedAt !== item.createdAt && (

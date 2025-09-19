@@ -260,10 +260,17 @@ public class ChatManager : MonoBehaviour
         
         // Find the "name" text component recursively
         Transform nameTransform = FindChildByName(chatPanel.transform, "name");
+        Transform whisperTo = FindChildByName(chatPanel.transform, "whisper-to");
+        Text whisperToText = whisperTo?.GetComponent<Text>();
         Text nameText = nameTransform?.GetComponent<Text>();
         if (nameText != null)
         {
             nameText.text = user.name ?? "Unknown";
+        }
+        
+        if (whisperToText != null)
+        {
+            whisperToText.text = "Whisper to " + (user.name ?? "Unknown");
         }
         
         // Find the "profile" image component recursively and update avatar based on rank using UIManager

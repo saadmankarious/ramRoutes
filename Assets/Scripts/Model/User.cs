@@ -36,6 +36,7 @@ namespace RamRoutes.Model
         public EquippedSkin equippedSkin { set; get; } = EquippedSkin.Default;
         public EquippedAccessory equippedAccessory { set; get; } = EquippedAccessory.None;
         public List<string> friends { set; get; } = new List<string>();
+        public List<int> whispers { set; get; } = new List<int>(); // Store whisper types as integers
         public string GetEquippedSkinAsString()
         {
             return equippedSkin.ToString();
@@ -75,6 +76,7 @@ namespace RamRoutes.Model
             this.name = name;
             this.email = email;
             this.friends = new List<string>();
+            this.whispers = new List<int>();
         }
     }
 }

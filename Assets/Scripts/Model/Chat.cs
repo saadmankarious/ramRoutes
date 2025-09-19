@@ -8,6 +8,8 @@ namespace RamRoutes.Model
         HaveANiceLift = 1,
         Heart = 2,
         ArosHi = 3,
+        ArosNiceDay = 4,
+        BeatCoe = 5,
      
     }
 

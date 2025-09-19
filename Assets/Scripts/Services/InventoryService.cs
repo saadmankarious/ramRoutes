@@ -101,14 +101,14 @@ namespace RamRoutes.Services
                 {
                     // Map item name to skin enum
                     EquippedSkin newSkin = MapItemNameToSkin(item.itemName);
-                    
+
                     var userService = new UserService();
                     bool skinUpdated = await userService.UpdateEquippedSkin(currentUserId, newSkin);
-                    
+
                     if (skinUpdated)
                     {
                         Debug.Log($"Successfully updated equipped skin to: {newSkin} for clothing item: {item.itemName}");
-                        
+
                         // Notify UIManager to refresh user avatar/appearance
                         NotifyUIManagerSkinChanged(newSkin);
                     }
@@ -123,20 +123,40 @@ namespace RamRoutes.Services
                 {
                     // Map item name to accessory enum
                     EquippedAccessory newAccessory = MapItemNameToAccessory(item.itemName);
-                    
+
                     var userService = new UserService();
                     bool accessoryUpdated = await userService.UpdateEquippedAccessory(currentUserId, newAccessory);
-                    
+
                     if (accessoryUpdated)
                     {
                         Debug.Log($"Successfully updated equipped accessory to: {newAccessory} for accessory item: {item.itemName}");
-                        
+
                         // Notify UIManager to refresh user avatar/appearance
                         NotifyUIManagerAccessoryChanged(newAccessory);
                     }
                     else
                     {
                         Debug.LogWarning($"Failed to update equipped accessory for accessory item: {item.itemName}");
+                    }
+                }
+
+                if (item.category.Equals("Whisper", StringComparison.OrdinalIgnoreCase))
+                {
+                    // For whisper items, you might want to trigger some special behavior
+                    WhisperType whisperType = (WhisperType)item.whisperType;
+                    var userService = new UserService();
+                    bool whisperUpdated = await userService.UpdateWhispers(currentUserId, whisperType);
+
+                    if (whisperUpdated)
+                    {
+                        Debug.Log($"Successfully updated equipped whisper to: {whisperType} for whisper item: {item.itemName}");
+
+                        // Notify UIManager to refresh user avatar/appearance
+                        NotifyUIManagerWhisperChanged(whisperType);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Failed to update equipped whisper for whisper item: {item.itemName}");
                     }
                 }
 
@@ -180,18 +200,18 @@ namespace RamRoutes.Services
                     { "equipped", false }
                 });
 
-                  if (item.category.Equals("Clothing", StringComparison.OrdinalIgnoreCase))
+                if (item.category.Equals("Clothing", StringComparison.OrdinalIgnoreCase))
                 {
                     // Map item name to skin enum
                     EquippedSkin newSkin = EquippedSkin.Default; // Revert to default on unequip
 
                     var userService = new UserService();
                     bool skinUpdated = await userService.UpdateEquippedSkin(currentUserId, newSkin);
-                    
+
                     if (skinUpdated)
                     {
                         Debug.Log($"Successfully updated equipped skin to: {newSkin} for clothing item: {item.itemName}");
-                        
+
                         // Notify UIManager to refresh user avatar/appearance
                         NotifyUIManagerSkinChanged(newSkin);
                     }
@@ -208,11 +228,11 @@ namespace RamRoutes.Services
 
                     var userService = new UserService();
                     bool accessoryUpdated = await userService.UpdateEquippedAccessory(currentUserId, newAccessory);
-                    
+
                     if (accessoryUpdated)
                     {
                         Debug.Log($"Successfully updated equipped accessory to: {newAccessory} for accessory item: {item.itemName}");
-                        
+
                         // Notify UIManager to refresh user avatar/appearance
                         NotifyUIManagerAccessoryChanged(newAccessory);
                     }
@@ -410,14 +430,14 @@ namespace RamRoutes.Services
                 {
                     Debug.LogWarning("SkinManager not found in current scene - cannot update player skin");
                 }
-                
+
                 // Find UIManager in the scene for UI notifications
                 var uiManager = UnityEngine.Object.FindObjectOfType<UIManager>();
                 if (uiManager != null)
                 {
                     // Show a quick notification about the skin change
                     uiManager.ShowQuickUpdate($"Equipped {newSkin} skin!");
-                    
+
                     Debug.Log($"Notified UIManager of skin change to: {newSkin}");
                 }
                 else
@@ -466,7 +486,7 @@ namespace RamRoutes.Services
                     // Show a quick notification about the accessory change
                     string accessoryDisplayName = newAccessory == EquippedAccessory.None ? "No accessory" : newAccessory.ToString();
                     uiManager.ShowQuickUpdate($"Equipped {accessoryDisplayName}!");
-                    
+
                     Debug.Log($"Notified UIManager of accessory change to: {newAccessory}");
                 }
                 else
@@ -477,6 +497,39 @@ namespace RamRoutes.Services
             catch (System.Exception ex)
             {
                 Debug.LogError($"Failed to notify managers of accessory change: {ex.Message}");
+            }
+        }
+        
+        private void NotifyUIManagerWhisperChanged(WhisperType newWhisper)
+        {
+            try
+            {
+                // Only attempt notifications if we're in the game scene
+                var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+                if (currentScene != "LevelRPG")
+                {
+                    Debug.Log($"Skipping whisper change notification - not in game scene (current: {currentScene})");
+                    return;
+                }
+
+                // Find UIManager in the scene for UI notifications
+                var uiManager = UnityEngine.Object.FindObjectOfType<UIManager>();
+                if (uiManager != null)
+                {
+                    // Show a quick notification about the whisper change
+                    string whisperDisplayName = newWhisper.ToString();
+                    uiManager.ShowQuickUpdate($"Equipped {whisperDisplayName} whisper!");
+
+                    Debug.Log($"Notified UIManager of whisper change to: {newWhisper}");
+                }
+                else
+                {
+                    Debug.LogWarning("UIManager not found in scene - cannot notify of whisper change");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"Failed to notify managers of whisper change: {ex.Message}");
             }
         }
     }

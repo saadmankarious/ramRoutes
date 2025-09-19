@@ -441,7 +441,7 @@ public class RamsManager : MonoBehaviour
         {
             try
             {
-                await userService.ClearCurrentUserBuilding();
+                //await userService.ClearCurrentUserBuilding();
                 Debug.Log($"Successfully cleared current building for user {userId}");
             }
             catch (System.Exception e)
@@ -473,17 +473,17 @@ public class RamsManager : MonoBehaviour
         }
 
         // Clear current building for this user (convert to coroutine-friendly approach)
-        var clearBuildingTask = userService.ClearCurrentUserBuilding();
-        yield return new WaitUntil(() => clearBuildingTask.IsCompleted);
+        // var clearBuildingTask = userService.ClearCurrentUserBuilding();
+        // yield return new WaitUntil(() => clearBuildingTask.IsCompleted);
         
-        if (clearBuildingTask.Exception != null)
-        {
-            Debug.LogError($"Failed to clear current building: {clearBuildingTask.Exception.Message}");
-        }
-        else
-        {
-            Debug.Log("Successfully cleared current building for user");
-        }
+        // if (clearBuildingTask.Exception != null)
+        // {
+        //     Debug.LogError($"Failed to clear current building: {clearBuildingTask.Exception.Message}");
+        // }
+        // else
+        // {
+        //     Debug.Log("Successfully cleared current building for user");
+        // }
     }
 
     /// <summary>
