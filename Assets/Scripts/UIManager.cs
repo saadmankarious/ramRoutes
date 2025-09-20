@@ -2055,7 +2055,7 @@ private void HideObjectsWithTag(string tag)
         currentViewedBuilding = active ? buildingName : null;
         
         // Hide/Show objects tagged "StatsToHide" based on building viewing mode
-       // ToggleStatsToHideObjects(!active); // Hide when in building view mode (active = true)
+       ToggleStatsToHideObjects(!active); // Hide when in building view mode (active = true)
         
         if (!active)
         {
@@ -2071,12 +2071,22 @@ private void HideObjectsWithTag(string tag)
     }
 
     /// <summary>
-    /// Toggle visibility of objects tagged "StatsToHide"
+    /// Toggle visibility of objects tagged "HideOnBuildingView"
     /// </summary>
     /// <param name="show">True to show objects, false to hide them</param>
     private void ToggleStatsToHideObjects(bool show)
     {
-        GameObject[] statsObjects = GameObject.FindGameObjectsWithTag("HideOnBuildingView");
+        // Use Resources.FindObjectsOfTypeAll to find both active and inactive GameObjects
+        GameObject[] allObjects = Resources.FindObjectsOfTypeAll<GameObject>();
+        List<GameObject> statsObjects = new List<GameObject>();
+        
+        foreach (GameObject obj in allObjects)
+        {
+            if (obj != null && obj.CompareTag("HideOnBuildingView") && obj.scene.IsValid())
+            {
+                statsObjects.Add(obj);
+            }
+        }
         
         foreach (GameObject obj in statsObjects)
         {
@@ -2086,7 +2096,7 @@ private void HideObjectsWithTag(string tag)
             }
         }
         
-        Debug.Log($"UIManager: {(show ? "Showing" : "Hiding")} {statsObjects.Length} objects tagged 'HideOnBuildingView'");
+        Debug.Log($"UIManager: {(show ? "Showing" : "Hiding")} {statsObjects.Count} objects tagged 'HideOnBuildingView'");
     }
 
     // Centralized gate for onboarding transition conditions

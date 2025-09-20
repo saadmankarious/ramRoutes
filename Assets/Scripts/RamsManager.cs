@@ -1236,20 +1236,45 @@ public class RamsManager : MonoBehaviour
                 if (currentStage == null || currentStage.area != Stage.Terminal)
                 {
                     Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), hiding player count");
-                    // Hide the canvas when not in Terminal stage
-                    if (playerCountCanvasInstance != null)
-                    {
-                        playerCountCanvasInstance.SetActive(false);
-                    }
+                    // Hide the canvas when not in Terminal stage - use coroutine to ensure main thread
+                    StartCoroutine(HidePlayerCountCanvas());
                     return;
                 }
             }
             
-            // Get the current player count in this building
+            // Get the current player count in this building (this runs on background thread)
             var playersInBuilding = await userService.GetUsersInBuilding(building.buildingName);
             int playerCount = playersInBuilding?.Count ?? 0;
             
-            if (playerCount > 0)
+            // Use coroutine to ensure UI updates happen on main thread
+            StartCoroutine(UpdatePlayerCountCoroutine(playerCount));
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Error displaying player count: {ex.Message}");
+        }
+    }
+    
+    /// <summary>
+    /// Coroutine to hide player count canvas on main thread
+    /// </summary>
+    private IEnumerator HidePlayerCountCanvas()
+    {
+        if (playerCountCanvasInstance != null)
+        {
+            playerCountCanvasInstance.SetActive(false);
+        }
+        yield return null;
+    }
+    
+    /// <summary>
+    /// Coroutine to update player count display on main thread
+    /// </summary>
+    private IEnumerator UpdatePlayerCountCoroutine(int count)
+    {
+        try
+        {
+            if (count > 0)
             {
                 // Create the canvas if it doesn't exist
                 if (playerCountCanvasInstance == null && playerCountCanvasPrefab != null)
@@ -1261,7 +1286,7 @@ public class RamsManager : MonoBehaviour
                 }
                 
                 // Update the count display and show it
-                UpdatePlayerCountDisplay(playerCount);
+                UpdatePlayerCountDisplay(count);
             }
             else
             {
@@ -1274,8 +1299,10 @@ public class RamsManager : MonoBehaviour
         }
         catch (System.Exception ex)
         {
-            Debug.LogError($"Error displaying player count: {ex.Message}");
+            Debug.LogError($"Error updating player count display in coroutine: {ex.Message}");
         }
+        
+        yield return null;
     }
     
     /// <summary>
