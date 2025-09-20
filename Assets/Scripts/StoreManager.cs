@@ -6,12 +6,37 @@ using TMPro;
 using RamRoutes.Model;
 using RamRoutes.Services;
 
+/// <summary>
+/// StoreManager handles the display and interaction with store items.
+/// 
+/// Hierarchy Understanding:
+/// - "items" container: The main container that gets hidden/shown when store opens/closes
+/// - Content container: Where items are actually instantiated (ScrollView content or items container)
+/// - ScrollView: Optional scrollable area within the items container hierarchy
+/// 
+/// Expected Hierarchy:
+/// items (visibility toggle) → ... → ScrollView → content (item instantiation)
+/// OR
+/// items (both visibility and instantiation)
+/// 
+/// Setup:
+/// 1. Assign the "items" container that should be hidden/shown to itemsContainer field
+/// 2. Optionally assign ScrollRect to storeScrollView for scrollable display
+/// 3. Items will be instantiated in ScrollView content if available, otherwise in items container
+/// 
+/// Usage:
+/// - Opening store: Shows the "items" container (revealing entire store UI)
+/// - Closing store: Hides the "items" container (hiding entire store UI)
+/// - ScrollView provides scrolling functionality within the visible store area
+/// </summary>
 public class StoreManager : MonoBehaviour
 {
     [Header("Store UI References")]
     public GameObject itemPrefab;
     public Button openStoreButton;
     public Button closeStoreButton;
+    public ScrollRect storeScrollView; // ScrollView reference
+    public Transform itemsContainer; // The "items" container that gets hidden/shown
     
     [Header("Store Settings")]
     public bool useTestData = false;
@@ -19,7 +44,7 @@ public class StoreManager : MonoBehaviour
     
     private StoreService storeService;
     private List<GameObject> spawnedItems = new List<GameObject>();
-    private Transform itemsContainer;
+    private Transform contentContainer; // Where items are actually instantiated (ScrollView content or fallback)
     private bool isStoreOpen = false;
     private SpriteRenderer overlaySprite;
     
@@ -27,22 +52,53 @@ public class StoreManager : MonoBehaviour
     {
         storeService = new StoreService();
         InitializeStoreManager();
+        
+        // Configure ScrollView if available
+        if (storeScrollView != null)
+        {
+            ConfigureScrollView();
+        }
+        
         // Don't load items immediately - wait for store to be opened
     }
     
     private void InitializeStoreManager()
     {
-        // Look for a child named "items"
-        // find the object recursievly
-        itemsContainer = FindChildByName(transform, "whereitemslive");
+        // Find or assign the "items" container (the one that gets hidden/shown)
         if (itemsContainer == null)
         {
-            Debug.LogWarning("StoreManager: No 'items' child found. Please create a child GameObject named 'items'.");
+            itemsContainer = FindChildByName(transform, "items");
+            if (itemsContainer == null)
+            {
+                Debug.LogError("StoreManager: No 'items' container found. Please assign the 'items' container that should be hidden/shown.");
+                return;
+            }
+            else
+            {
+                Debug.Log("StoreManager: Found and using 'items' container for visibility toggle");
+            }
         }
         else
         {
-            Debug.Log("StoreManager: Found and using 'items' child GameObject");
-            // Hide items container initially
+            Debug.Log("StoreManager: Using directly assigned 'items' container for visibility toggle");
+        }
+        
+        // Determine content container (where items are actually instantiated)
+        if (storeScrollView != null && storeScrollView.content != null)
+        {
+            contentContainer = storeScrollView.content.transform;
+            Debug.Log("StoreManager: Using ScrollView content for item instantiation");
+        }
+        else
+        {
+            // Fallback to items container or find a suitable child
+            contentContainer = itemsContainer;
+            Debug.Log("StoreManager: Using items container directly for item instantiation");
+        }
+        
+        // Initially hide the items container (this hides the entire store UI)
+        if (itemsContainer != null)
+        {
             itemsContainer.gameObject.SetActive(false);
         }
         
@@ -79,24 +135,16 @@ public class StoreManager : MonoBehaviour
     {
         isStoreOpen = !isStoreOpen;
         
-        if (itemsContainer != null)
+        // Use the new method to properly handle UI activation
+        SetStoreUIActive(isStoreOpen);
+        
+        // Load items if opening store for the first time
+        if (isStoreOpen && spawnedItems.Count == 0)
         {
-            itemsContainer.gameObject.SetActive(isStoreOpen);
-            
-            // Show/hide the parent container accordingly
-            if (itemsContainer.parent.parent != null)
-            {
-                itemsContainer.parent.parent.gameObject.SetActive(isStoreOpen);
-            }
-            
-            if (isStoreOpen && spawnedItems.Count == 0)
-            {
-                // Load items only when opening the store for the first time
-                LoadStoreItems();
-            }
-            
-            Debug.Log($"StoreManager: Store {(isStoreOpen ? "opened" : "closed")}");
+            LoadStoreItems();
         }
+        
+        Debug.Log($"StoreManager: Store {(isStoreOpen ? "opened" : "closed")}");
     }
     
     // Public method to open/close store programmatically
@@ -114,6 +162,131 @@ public class StoreManager : MonoBehaviour
         {
             ToggleStore();
         }
+    }
+    
+    /// <summary>
+    /// Configure the ScrollView for optimal store item display
+    /// Call this method if you want to customize ScrollView settings
+    /// </summary>
+    public void ConfigureScrollView()
+    {
+        if (storeScrollView != null)
+        {
+            // Enable vertical scrolling
+            storeScrollView.vertical = true;
+            storeScrollView.horizontal = false;
+            
+            // Configure scroll sensitivity
+            storeScrollView.scrollSensitivity = 20f;
+            
+            // Enable inertia for smooth scrolling
+            storeScrollView.inertia = true;
+            storeScrollView.decelerationRate = 0.135f;
+            
+            // Ensure content has proper layout components
+            if (storeScrollView.content != null)
+            {
+                // Add VerticalLayoutGroup if not present
+                if (storeScrollView.content.GetComponent<VerticalLayoutGroup>() == null)
+                {
+                    VerticalLayoutGroup layoutGroup = storeScrollView.content.gameObject.AddComponent<VerticalLayoutGroup>();
+                    layoutGroup.spacing = 10f;
+                    layoutGroup.padding = new RectOffset(10, 10, 10, 10);
+                    layoutGroup.childControlHeight = false;
+                    layoutGroup.childControlWidth = true;
+                    layoutGroup.childForceExpandHeight = false;
+                    layoutGroup.childForceExpandWidth = true;
+                }
+                
+                // Add ContentSizeFitter if not present
+                if (storeScrollView.content.GetComponent<ContentSizeFitter>() == null)
+                {
+                    ContentSizeFitter sizeFitter = storeScrollView.content.gameObject.AddComponent<ContentSizeFitter>();
+                    sizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+                    sizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+                }
+            }
+            
+            Debug.Log("StoreManager: ScrollView configured for optimal store display");
+        }
+    }
+    
+    /// <summary>
+    /// Properly activates/deactivates the store UI
+    /// Toggles the "items" container which contains the entire store UI
+    /// </summary>
+    private void SetStoreUIActive(bool active)
+    {
+        // Toggle the main items container (this shows/hides the entire store)
+        if (itemsContainer != null)
+        {
+            itemsContainer.gameObject.SetActive(active);
+            Debug.Log($"StoreManager: Items container '{itemsContainer.name}' set to {(active ? "active" : "inactive")}");
+        }
+        else
+        {
+            Debug.LogError("StoreManager: Items container is null, cannot toggle store visibility");
+        }
+    }
+    
+    /// <summary>
+    /// Debug method to log the store UI hierarchy
+    /// Useful for troubleshooting activation issues
+    /// </summary>
+    [ContextMenu("Debug Store Hierarchy")]
+    public void DebugStoreHierarchy()
+    {
+        Debug.Log("=== Store UI Hierarchy Debug ===");
+        
+        if (itemsContainer != null)
+        {
+            Debug.Log($"Items Container (visibility toggle): {itemsContainer.name} (Active: {itemsContainer.gameObject.activeSelf})");
+            Transform parent = itemsContainer.parent;
+            int level = 1;
+            while (parent != null && level < 5)
+            {
+                Debug.Log($"  Items Parent {level}: {parent.name} (Active: {parent.gameObject.activeSelf})");
+                parent = parent.parent;
+                level++;
+            }
+        }
+        else
+        {
+            Debug.Log("Items Container: Not assigned");
+        }
+        
+        if (contentContainer != null && contentContainer != itemsContainer)
+        {
+            Debug.Log($"Content Container (item instantiation): {contentContainer.name} (Active: {contentContainer.gameObject.activeSelf})");
+            Transform parent = contentContainer.parent;
+            int level = 1;
+            while (parent != null && level < 5)
+            {
+                Debug.Log($"  Content Parent {level}: {parent.name} (Active: {parent.gameObject.activeSelf})");
+                parent = parent.parent;
+                level++;
+            }
+        }
+        else if (contentContainer == itemsContainer)
+        {
+            Debug.Log("Content Container: Same as Items Container");
+        }
+        else
+        {
+            Debug.Log("Content Container: Not assigned");
+        }
+        
+        if (storeScrollView != null)
+        {
+            Debug.Log($"ScrollView: {storeScrollView.name} (Active: {storeScrollView.gameObject.activeSelf})");
+        }
+        else
+        {
+            Debug.Log("ScrollView: Not assigned");
+        }
+        
+        Debug.Log($"Store Open: {isStoreOpen}, Spawned Items: {spawnedItems.Count}");
+        Debug.Log("================================");
     }
     
     private async void LoadStoreItems()
@@ -151,20 +324,52 @@ public class StoreManager : MonoBehaviour
         // Clear existing items
         ClearSpawnedItems();
         
-        if (itemsContainer == null)
+        if (contentContainer == null)
         {
-            Debug.LogError("StoreManager: Cannot display items - no 'items' container found");
+            Debug.LogError("StoreManager: Cannot display items - no content container found");
             return;
         }
         
         foreach (var item in items)
         {
-            GameObject itemObject = Instantiate(itemPrefab, itemsContainer);
+            GameObject itemObject = Instantiate(itemPrefab, contentContainer);
+            
+            // Ensure the instantiated item is active
+            itemObject.SetActive(true);
+            
             SetupItemUI(itemObject, item);
             spawnedItems.Add(itemObject);
         }
         
-        Debug.Log($"Displayed {items.Count} store items");
+        // If using ScrollView, ensure content size is updated
+        if (storeScrollView != null && storeScrollView.content != null)
+        {
+            // Force rebuild layout to ensure proper content size
+            LayoutRebuilder.ForceRebuildLayoutImmediate(storeScrollView.content);
+            
+            // Reset scroll position to top
+            storeScrollView.verticalNormalizedPosition = 1f;
+        }
+        
+        Debug.Log($"Displayed {items.Count} store items in content container '{contentContainer.name}'");
+    }
+    
+    /// <summary>
+    /// Refresh the store items - useful for updating content dynamically
+    /// </summary>
+    public void RefreshStoreItems()
+    {
+        if (isStoreOpen)
+        {
+            Debug.Log("StoreManager: Refreshing store items");
+            LoadStoreItems();
+        }
+        else
+        {
+            // Clear items and they will be reloaded when store is opened next time
+            ClearSpawnedItems();
+            Debug.Log("StoreManager: Cleared store items (will reload when store is opened)");
+        }
     }
 
     private void SetupItemUI(GameObject itemObject, StoreItem item)
