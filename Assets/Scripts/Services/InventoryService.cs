@@ -40,9 +40,11 @@ namespace RamRoutes.Services
                 var inventory = new List<InventoryItem>();
                 foreach (var doc in snapshot.Documents)
                 {
-                    var item = doc.ConvertTo<InventoryItem>();
-                    item.inventoryId = doc.Id;
-                    inventory.Add(item);
+                    var item = ConvertDocumentToInventoryItem(doc);
+                    if (item != null)
+                    {
+                        inventory.Add(item);
+                    }
                 }
 
                 return inventory.OrderByDescending(i => i.purchaseDate).ToList();
@@ -66,6 +68,78 @@ namespace RamRoutes.Services
             return allItems.Where(item => item.equipped).ToList();
         }
 
+        /// <summary>
+        /// Safely converts a Firestore document to InventoryItem with proper type handling
+        /// </summary>
+        private InventoryItem ConvertDocumentToInventoryItem(DocumentSnapshot doc)
+        {
+            try
+            {
+                var data = doc.ToDictionary();
+                var item = new InventoryItem();
+                
+                item.inventoryId = doc.Id;
+                item.userId = data.ContainsKey("userId") ? data["userId"].ToString() : "";
+                item.itemId = data.ContainsKey("itemId") ? data["itemId"].ToString() : "";
+                item.itemName = data.ContainsKey("itemName") ? data["itemName"].ToString() : "";
+                item.description = data.ContainsKey("description") ? data["description"].ToString() : "";
+                item.category = data.ContainsKey("category") ? data["category"].ToString() : "general";
+                item.imageUrl = data.ContainsKey("imageUrl") ? data["imageUrl"].ToString() : "";
+                
+                // Handle numeric fields with safe conversion
+                if (data.ContainsKey("pricePaidCoins"))
+                {
+                    if (int.TryParse(data["pricePaidCoins"].ToString(), out int coins))
+                        item.pricePaidCoins = coins;
+                }
+                
+                if (data.ContainsKey("pricePaidKb"))
+                {
+                    if (int.TryParse(data["pricePaidKb"].ToString(), out int kb))
+                        item.pricePaidKb = kb;
+                }
+                
+                // Handle boolean field
+                if (data.ContainsKey("equipped"))
+                {
+                    if (bool.TryParse(data["equipped"].ToString(), out bool equipped))
+                        item.equipped = equipped;
+                }
+                
+                // Handle whisperType with safe conversion (string to int)
+                if (data.ContainsKey("whisperType"))
+                {
+                    var whisperTypeValue = data["whisperType"];
+                    if (int.TryParse(whisperTypeValue.ToString(), out int whisperType))
+                    {
+                        item.whisperType = whisperType;
+                    }
+                    else
+                    {
+                        item.whisperType = 0; // Default to Greeting
+                        Debug.LogWarning($"Could not parse whisperType '{whisperTypeValue}' for item {item.itemName}, defaulting to 0");
+                    }
+                }
+                
+                // Handle timestamp
+                if (data.ContainsKey("purchaseDate") && data["purchaseDate"] is Timestamp timestamp)
+                {
+                    item.purchaseDate = timestamp;
+                }
+                else
+                {
+                    item.purchaseDate = Timestamp.GetCurrentTimestamp();
+                }
+                
+                return item;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Error converting document {doc.Id} to InventoryItem: {ex.Message}");
+                return null;
+            }
+        }
+
         public async Task<bool> EquipItem(string inventoryId)
         {
             string currentUserId = FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
@@ -84,7 +158,13 @@ namespace RamRoutes.Services
                     return false;
                 }
 
-                var item = inventoryDoc.ConvertTo<InventoryItem>();
+                var item = ConvertDocumentToInventoryItem(inventoryDoc);
+                if (item == null)
+                {
+                    Debug.LogError("InventoryService.EquipItem: Failed to convert inventory item");
+                    return false;
+                }
+                
                 if (item.userId != currentUserId)
                 {
                     Debug.LogError("InventoryService.EquipItem: Item doesn't belong to current user");
@@ -142,22 +222,13 @@ namespace RamRoutes.Services
 
                 if (item.category.Equals("Whisper", StringComparison.OrdinalIgnoreCase))
                 {
-                    // For whisper items, you might want to trigger some special behavior
-                    WhisperType whisperType = (WhisperType)item.whisperType;
-                    var userService = new UserService();
-                    bool whisperUpdated = await userService.UpdateWhispers(currentUserId, whisperType);
+                    // For whisper items, just mark as equipped (no need to update user profile)
+                    WhisperType whisperType = MapWhisperNameToType(item.whisperType);
+                    
+                    Debug.Log($"Successfully equipped whisper: {whisperType} for whisper item: {item.itemName}");
 
-                    if (whisperUpdated)
-                    {
-                        Debug.Log($"Successfully updated equipped whisper to: {whisperType} for whisper item: {item.itemName}");
-
-                        // Notify UIManager to refresh user avatar/appearance
-                        NotifyUIManagerWhisperChanged(whisperType);
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"Failed to update equipped whisper for whisper item: {item.itemName}");
-                    }
+                    // Notify managers about the whisper change
+                    NotifyManagersWhisperChanged(whisperType);
                 }
 
                 Debug.Log($"Successfully equipped item: {item.itemName}");
@@ -188,7 +259,23 @@ namespace RamRoutes.Services
                     return false;
                 }
 
-                var item = inventoryDoc.ConvertTo<InventoryItem>();
+                InventoryItem item = null;
+                try
+                {
+                    item = ConvertDocumentToInventoryItem(inventoryDoc);
+                }
+                catch (Exception conversionEx)
+                {
+                    Debug.LogError($"InventoryService.UnequipItem: Error converting document to InventoryItem: {conversionEx.Message}");
+                    return false;
+                }
+                
+                if (item == null)
+                {
+                    Debug.LogError("InventoryService.UnequipItem: Failed to convert inventory item");
+                    return false;
+                }
+                
                 if (item.userId != currentUserId)
                 {
                     Debug.LogError("InventoryService.UnequipItem: Item doesn't belong to current user");
@@ -242,6 +329,17 @@ namespace RamRoutes.Services
                     }
                 }
 
+                // If item is a whisper, notify ChatManager to refresh whisper buttons
+                if (item.category.Equals("Whisper", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (Enum.IsDefined(typeof(WhisperType), item.whisperType))
+                    {
+                        WhisperType whisperType = (WhisperType)item.whisperType;
+                        NotifyManagersWhisperChanged(whisperType);
+                        Debug.Log($"Successfully unequipped whisper: {whisperType} for item: {item.itemName}");
+                    }
+                }
+
                 Debug.Log($"Successfully unequipped item: {item.itemName}");
                 return true;
             }
@@ -270,7 +368,13 @@ namespace RamRoutes.Services
                     return false;
                 }
 
-                var item = inventoryDoc.ConvertTo<InventoryItem>();
+                var item = ConvertDocumentToInventoryItem(inventoryDoc);
+                if (item == null)
+                {
+                    Debug.LogError("InventoryService.SellItem: Failed to convert inventory item");
+                    return false;
+                }
+                
                 if (item.userId != currentUserId)
                 {
                     Debug.LogError("InventoryService.SellItem: Item doesn't belong to current user");
@@ -403,6 +507,18 @@ namespace RamRoutes.Services
             }
         }
 
+        private WhisperType MapWhisperNameToType(int whisperTypeInt)
+        {
+            if (Enum.IsDefined(typeof(WhisperType), whisperTypeInt))
+            {
+                return (WhisperType)whisperTypeInt;
+            }
+            else
+            {
+                return WhisperType.Greeting;
+            }
+        }
+
         /// <summary>
         /// Notifies the SkinManager and UIManager that a skin has been changed
         /// </summary>
@@ -499,8 +615,8 @@ namespace RamRoutes.Services
                 Debug.LogError($"Failed to notify managers of accessory change: {ex.Message}");
             }
         }
-        
-        private void NotifyUIManagerWhisperChanged(WhisperType newWhisper)
+
+        private void NotifyManagersWhisperChanged(WhisperType newWhisper)
         {
             try
             {
@@ -530,6 +646,25 @@ namespace RamRoutes.Services
             catch (System.Exception ex)
             {
                 Debug.LogError($"Failed to notify managers of whisper change: {ex.Message}");
+            }
+
+            // Notify chat manager of new message whisper added
+            try
+            {
+                var chatManager = UnityEngine.Object.FindObjectOfType<ChatManager>();
+                if (chatManager != null)
+                {
+                    chatManager.OnUserWhisperChanged(newWhisper);
+                    Debug.Log($"Notified ChatManager of whisper change to: {newWhisper}");
+                }
+                else
+                {
+                    Debug.LogWarning("ChatManager not found in current scene - cannot update user whisper");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"Failed to notify ChatManager of whisper change: {ex.Message}");
             }
         }
     }

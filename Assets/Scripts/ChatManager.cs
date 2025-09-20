@@ -35,6 +35,9 @@ public class ChatManager : MonoBehaviour
     [Header("Whisper Sprites")]
     [SerializeField] private WhisperSprite[] availableWhispers; // List of available whispers with their sprites
     
+    // Cache for downloaded whisper sprites
+    private Dictionary<string, Sprite> downloadedSpriteCache = new Dictionary<string, Sprite>();
+    
     private ChatService chatService;
     private UserService userService;
     private ShoutOutService shoutOutService;
@@ -61,8 +64,8 @@ public class ChatManager : MonoBehaviour
         // Setup shoutout and friend request buttons
         SetupActionButtons();
         
-        // Create whisper buttons
-        CreateWhisperButtons();
+        // Initialize whisper buttons with user's purchased whispers
+        StartCoroutine(InitializeWhisperButtonsCoroutine());
         
         // Hide chat panel initially
         if (chatPanel != null)
@@ -72,9 +75,88 @@ public class ChatManager : MonoBehaviour
     }
     
     /// <summary>
+    /// Initialize whisper buttons with user's purchased whispers on start
+    /// </summary>
+    private IEnumerator InitializeWhisperButtonsCoroutine()
+    {
+        // Wait a frame to ensure other components are initialized
+        yield return null;
+        
+        // Get current user's purchased whispers from inventory
+        string currentUserId = FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            // If user not authenticated yet, just create basic whispers
+            CreateWhisperButtons(new List<InventoryItem>());
+            yield break;
+        }
+        
+        // Start the async task to get user's whisper inventory items
+        var inventoryService = new InventoryService();
+        var getWhisperInventoryTask = inventoryService.GetInventoryByCategory("Whisper", currentUserId);
+        
+        // Wait for the task to complete
+        yield return new WaitUntil(() => getWhisperInventoryTask.IsCompleted);
+        
+        if (getWhisperInventoryTask.Exception != null)
+        {
+            Debug.LogError($"Failed to get user whisper inventory during initialization: {getWhisperInventoryTask.Exception.Message}");
+            // Fallback to basic whispers
+            CreateWhisperButtons(new List<InventoryItem>());
+            yield break;
+        }
+        
+        // Create whisper buttons with purchased whispers (full inventory items with image URLs)
+        var whisperInventory = getWhisperInventoryTask.Result;
+        CreateWhisperButtons(whisperInventory.Where(w => w.equipped).ToList());
+        Debug.Log($"ChatManager initialized with {whisperInventory.Count} purchased whisper items");
+    }
+    
+    /// <summary>
+    /// Coroutine to refresh whisper buttons including purchased whispers
+    /// </summary>
+    private IEnumerator RefreshWhisperButtonsCoroutine()
+    {
+        // Get current user's purchased whispers from inventory
+        string currentUserId = FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            Debug.LogWarning("Cannot refresh whispers - user not authenticated");
+            yield break;
+        }
+        
+        // Start the async task to get user's whisper inventory items
+        var inventoryService = new InventoryService();
+        var getWhisperInventoryTask = inventoryService.GetInventoryByCategory("Whisper", currentUserId);
+        
+        // Wait for the task to complete
+        yield return new WaitUntil(() => getWhisperInventoryTask.IsCompleted);
+        
+        if (getWhisperInventoryTask.Exception != null)
+        {
+            Debug.LogError($"Failed to get user whisper inventory: {getWhisperInventoryTask.Exception.Message}");
+            yield break;
+        }
+        
+        // Recreate whisper buttons with updated inventory (full inventory items with image URLs)
+        var whisperInventory = getWhisperInventoryTask.Result;
+        CreateWhisperButtons(whisperInventory.Where(w => w.equipped).ToList());
+        Debug.Log($"Refreshed ChatManager with {whisperInventory.Count} purchased whisper items");
+    }
+    
+    /// <summary>
     /// Create whisper selection buttons
     /// </summary>
     private void CreateWhisperButtons()
+    {
+        // Call the overloaded method with empty user whispers list for initial setup
+        CreateWhisperButtons(new List<InventoryItem>());
+    }
+    
+    /// <summary>
+    /// Create whisper selection buttons including user's purchased whispers
+    /// </summary>
+    private void CreateWhisperButtons(List<InventoryItem> userPurchasedWhispers)
     {
         if (whisperContentParent == null || whisperButtonPrefab == null) return;
         
@@ -84,37 +166,119 @@ public class ChatManager : MonoBehaviour
             Destroy(child.gameObject);
         }
         
-        // Create button for each available whisper (only those defined in the list)
+        var createdWhisperTypes = new HashSet<WhisperType>(); // Track created whispers to avoid duplicates
+        
+        // First, create buttons for purchased whispers (ordered by purchase date, newest first)
+        if (userPurchasedWhispers != null && userPurchasedWhispers.Count > 0)
+        {
+            var orderedPurchasedWhispers = userPurchasedWhispers
+                .Where(w => Enum.IsDefined(typeof(WhisperType), w.whisperType))
+                .OrderByDescending(w => w.purchaseDate) // Newest first
+                .ToList();
+            
+            foreach (var purchasedWhisper in orderedPurchasedWhispers)
+            {
+                WhisperType whisperType = (WhisperType)purchasedWhisper.whisperType;
+                
+                // Skip if we already created a button for this whisper type
+                if (createdWhisperTypes.Contains(whisperType)) continue;
+                
+                CreateWhisperButton(whisperType, purchasedWhisper, userPurchasedWhispers);
+                createdWhisperTypes.Add(whisperType);
+            }
+        }
+        
+        // Then, create buttons for hardcoded whispers that haven't been created yet
         if (availableWhispers != null)
         {
-            for (int i = 0; i < availableWhispers.Length; i++)
+            foreach (var whisperSprite in availableWhispers)
             {
-                WhisperSprite whisperSprite = availableWhispers[i];
-                if (whisperSprite.sprite == null) continue; // Skip if no sprite assigned
-                
-                Button whisperBtn = Instantiate(whisperButtonPrefab, whisperContentParent);
-                
-                // Find the "whisper" child and set sprite
-                Transform whisperTransform = FindChildByName(whisperBtn.transform, "whisper");
-                Image whisperImage = whisperTransform?.GetComponent<Image>();
-                if (whisperImage != null)
+                if (whisperSprite.sprite != null && !createdWhisperTypes.Contains(whisperSprite.whisperType))
                 {
-                    whisperImage.sprite = whisperSprite.sprite;
+                    CreateWhisperButton(whisperSprite.whisperType, null, userPurchasedWhispers);
+                    createdWhisperTypes.Add(whisperSprite.whisperType);
+                }
+            }
+        }
+        
+        if (createdWhisperTypes.Count == 0)
+        {
+            Debug.LogWarning("ChatManager: No whispers available (neither hardcoded nor purchased).");
+        }
+        else
+        {
+            Debug.Log($"ChatManager: Created {createdWhisperTypes.Count} whisper buttons (purchased + hardcoded)");
+        }
+    }
+    
+    /// <summary>
+    /// Create a single whisper button
+    /// </summary>
+    private void CreateWhisperButton(WhisperType whisperType, InventoryItem purchasedWhisper, List<InventoryItem> userPurchasedWhispers)
+    {
+        Button whisperBtn = Instantiate(whisperButtonPrefab, whisperContentParent);
+        
+        // Find the "whisper" child
+        Transform whisperTransform = FindChildByName(whisperBtn.transform, "whisper");
+        Image whisperImage = whisperTransform?.GetComponent<Image>();
+        
+        if (whisperImage != null)
+        {
+            // If we have a purchased whisper with image URL, use it
+            if (purchasedWhisper != null && !string.IsNullOrEmpty(purchasedWhisper.imageUrl))
+            {
+                // Download sprite from URL for purchased whisper
+                StartCoroutine(DownloadSpriteFromUrl(purchasedWhisper.imageUrl, (downloadedSprite) =>
+                {
+                    if (downloadedSprite != null && whisperImage != null)
+                    {
+                        whisperImage.sprite = downloadedSprite;
+                    }
+                }));
+            }
+            else
+            {
+                // Try to get sprite from hardcoded list or find purchased whisper with URL
+                Sprite whisperSprite = GetSpriteForWhisperType(whisperType);
+                
+                if (whisperSprite != null)
+                {
+                    // Use hardcoded sprite
+                    whisperImage.sprite = whisperSprite;
                 }
                 else
                 {
-                    Debug.LogWarning($"No 'whisper' child found in whisper button prefab or no Image component on whisper child");
+                    // Try to find matching purchased whisper with image URL
+                    var matchingPurchased = userPurchasedWhispers?.FirstOrDefault(w => 
+                        Enum.IsDefined(typeof(WhisperType), w.whisperType) && 
+                        (WhisperType)w.whisperType == whisperType);
+                    
+                    if (matchingPurchased != null && !string.IsNullOrEmpty(matchingPurchased.imageUrl))
+                    {
+                        // Download sprite from URL
+                        StartCoroutine(DownloadSpriteFromUrl(matchingPurchased.imageUrl, (downloadedSprite) =>
+                        {
+                            if (downloadedSprite != null && whisperImage != null)
+                            {
+                                whisperImage.sprite = downloadedSprite;
+                            }
+                        }));
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"No sprite or image URL found for whisper type {whisperType}");
+                    }
                 }
-                
-                // Add click listener
-                WhisperType currentWhisper = whisperSprite.whisperType; // Capture for closure
-                whisperBtn.onClick.AddListener(() => SendWhisper(currentWhisper));
             }
         }
         else
         {
-            Debug.LogWarning("ChatManager: No available whispers defined. Please assign whispers in the availableWhispers array.");
+            Debug.LogWarning($"No 'whisper' child found in whisper button prefab or no Image component on whisper child");
         }
+        
+        // Add click listener
+        WhisperType currentWhisper = whisperType; // Capture for closure
+        whisperBtn.onClick.AddListener(() => SendWhisper(currentWhisper));
     }
     
     /// <summary>
@@ -141,6 +305,17 @@ public class ChatManager : MonoBehaviour
         }
     }
     
+    public void OnUserWhisperChanged(WhisperType newWhisper)
+    {
+        Debug.Log($"User whisper changed: {newWhisper}");
+        
+        // Clear sprite cache to ensure new whispers are downloaded fresh
+        downloadedSpriteCache.Clear();
+        
+        // Refresh the whisper buttons to include newly purchased whispers
+        StartCoroutine(RefreshWhisperButtonsCoroutine());
+    }
+    
     /// <summary>
     /// Send a shoutout to the current chat target
     /// </summary>
@@ -151,14 +326,14 @@ public class ChatManager : MonoBehaviour
             Debug.LogWarning("No chat target selected for shoutout");
             return;
         }
-        
+
         bool success = await shoutOutService.SendShoutOut(currentChatTargetUser.userId);
         if (success)
         {
             if (UIManager.Instance != null)
             {
                 UIManager.Instance.ShowQuickUpdate("Shoutout sent to " + currentChatTargetUser.name + "!");
-                
+
                 // Update the UI with new player stats after sending shoutout
                 await UpdatePlayerStatsInUI();
             }
@@ -272,7 +447,7 @@ public class ChatManager : MonoBehaviour
         {
             whisperToText.text = "Whisper to " + (user.name ?? "Unknown");
         }
-        
+
         // Find the "profile" image component recursively and update avatar based on rank using UIManager
         Transform profileTransform = FindChildByName(chatPanel.transform, "profile");
         Image profileImage = profileTransform?.GetComponent<Image>();
@@ -368,15 +543,20 @@ public class ChatManager : MonoBehaviour
             {
                 WhisperType whisperType = chat.GetWhisperType();
                 
-                // Find the sprite for this whisper type from available whispers
+                // First try to find the sprite from hardcoded available whispers
                 Sprite whisperSprite = GetSpriteForWhisperType(whisperType);
+                
                 if (whisperSprite != null)
                 {
+                    // Use hardcoded sprite
                     whisperImage.sprite = whisperSprite;
                 }
                 else
                 {
-                    Debug.LogWarning($"No sprite found for whisper type: {whisperType}");
+                    // Try to get sprite from downloaded cache or get inventory item
+                    // For now, we'll use a default placeholder or try to find from user's inventory
+                    // We need to get the sender's inventory to find the correct image URL
+                    StartCoroutine(LoadWhisperSpriteForMessage(whisperImage, whisperType, chat.fromId));
                 }
             }
             else
@@ -585,5 +765,86 @@ public class ChatManager : MonoBehaviour
         }
         
         return null;
+    }
+    
+    /// <summary>
+    /// Download and cache a sprite from a URL
+    /// </summary>
+    /// <param name="url">The URL to download the sprite from</param>
+    /// <returns>Coroutine that downloads the sprite</returns>
+    private IEnumerator DownloadSpriteFromUrl(string url, System.Action<Sprite> onComplete)
+    {
+        // Check cache first
+        if (downloadedSpriteCache.ContainsKey(url))
+        {
+            onComplete?.Invoke(downloadedSpriteCache[url]);
+            yield break;
+        }
+        
+        using (UnityEngine.Networking.UnityWebRequest www = UnityEngine.Networking.UnityWebRequestTexture.GetTexture(url))
+        {
+            yield return www.SendWebRequest();
+            
+            if (www.result == UnityEngine.Networking.UnityWebRequest.Result.Success)
+            {
+                Texture2D texture = UnityEngine.Networking.DownloadHandlerTexture.GetContent(www);
+                Sprite sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+                
+                // Cache the downloaded sprite
+                downloadedSpriteCache[url] = sprite;
+                
+                onComplete?.Invoke(sprite);
+            }
+            else
+            {
+                Debug.LogError($"ChatManager: Failed to load image from {url}: {www.error}");
+                onComplete?.Invoke(null);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Load whisper sprite for a chat message from user's inventory
+    /// </summary>
+    /// <param name="whisperImage">The image component to set the sprite on</param>
+    /// <param name="whisperType">The whisper type to load</param>
+    /// <param name="senderId">The ID of the user who sent the whisper</param>
+    /// <returns>Coroutine that loads the whisper sprite</returns>
+    private IEnumerator LoadWhisperSpriteForMessage(Image whisperImage, WhisperType whisperType, string senderId)
+    {
+        // Get sender's whisper inventory
+        var inventoryService = new InventoryService();
+        var getWhisperInventoryTask = inventoryService.GetInventoryByCategory("Whisper", senderId);
+        
+        // Wait for the task to complete
+        yield return new WaitUntil(() => getWhisperInventoryTask.IsCompleted);
+        
+        if (getWhisperInventoryTask.Exception != null)
+        {
+            Debug.LogError($"Failed to get sender's whisper inventory: {getWhisperInventoryTask.Exception.Message}");
+            yield break;
+        }
+        
+        // Find the matching whisper item
+        var whisperInventory = getWhisperInventoryTask.Result;
+        var matchingWhisper = whisperInventory.FirstOrDefault(w => 
+            Enum.IsDefined(typeof(WhisperType), w.whisperType) && 
+            (WhisperType)w.whisperType == whisperType);
+        
+        if (matchingWhisper != null && !string.IsNullOrEmpty(matchingWhisper.imageUrl))
+        {
+            // Download sprite from URL
+            yield return StartCoroutine(DownloadSpriteFromUrl(matchingWhisper.imageUrl, (downloadedSprite) =>
+            {
+                if (downloadedSprite != null && whisperImage != null)
+                {
+                    whisperImage.sprite = downloadedSprite;
+                }
+            }));
+        }
+        else
+        {
+            Debug.LogWarning($"No inventory item with image URL found for whisper type {whisperType} from sender {senderId}");
+        }
     }
 }

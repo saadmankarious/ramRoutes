@@ -14,7 +14,7 @@ public class StoreManager : MonoBehaviour
     public Button closeStoreButton;
     
     [Header("Store Settings")]
-    public bool useTestData = true;
+    public bool useTestData = false;
     public Color overlayColor = new Color(0, 0, 0, 0.5f); // Semi-transparent black
     
     private StoreService storeService;

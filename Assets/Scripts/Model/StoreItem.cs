@@ -30,6 +30,8 @@ namespace RamRoutes.Model
         
         [FirestoreProperty]
         public bool available { get; set; } = true;
+      [FirestoreProperty]
+      public string whisperType { get; set; } = "0";
 
         public StoreItem()
         {

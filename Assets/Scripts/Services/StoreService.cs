@@ -98,6 +98,7 @@ namespace RamRoutes.Services
                     { "purchaseDate", Timestamp.GetCurrentTimestamp() },
                     { "pricePaidCoins", item.priceCoins },
                     { "pricePaidKb", item.priceKb },
+                    {"whisperType", item.whisperType},
                     { "equipped", false }
                 };
 

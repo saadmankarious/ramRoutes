@@ -205,115 +205,22 @@ namespace RamRoutes.Services
             }
         }
 
+        /*
+        // DEPRECATED: Whispers are now tracked through inventory items, not user profile
         public async Task<bool> UpdateWhispers(string userId, WhisperType whisperType)
         {
-            try
-            {
-                DocumentReference userRef = db.Collection("users").Document(userId);
-                DocumentSnapshot userSnapshot = await userRef.GetSnapshotAsync();
-                
-                if (userSnapshot.Exists)
-                {
-                    // Get current whispers list or create empty list if it doesn't exist
-                    var userData = userSnapshot.ToDictionary();
-                    List<int> currentWhispers = new List<int>();
-                    
-                    if (userData.ContainsKey("whispers") && userData["whispers"] != null)
-                    {
-                        // Convert from Firestore array to List<int>
-                        var whisperArray = userData["whispers"] as System.Collections.IList;
-                        if (whisperArray != null)
-                        {
-                            foreach (var item in whisperArray)
-                            {
-                                if (int.TryParse(item.ToString(), out int whisperValue))
-                                {
-                                    currentWhispers.Add(whisperValue);
-                                }
-                            }
-                        }
-                    }
-                    
-                    // Add the new whisper type if it's not already in the list
-                    int whisperTypeValue = (int)whisperType;
-                    if (!currentWhispers.Contains(whisperTypeValue))
-                    {
-                        currentWhispers.Add(whisperTypeValue);
-                        
-                        // Update the user document with the new whispers list
-                        var updateData = new Dictionary<string, object>
-                        {
-                            { "whispers", currentWhispers }
-                        };
-                        
-                        await userRef.UpdateAsync(updateData);
-                        Debug.Log($"Added whisper type {whisperType} ({whisperTypeValue}) to user {userId}");
-                        return true;
-                    }
-                    else
-                    {
-                        Debug.Log($"User {userId} already has whisper type {whisperType} ({whisperTypeValue})");
-                        return true; // Already exists, consider this a success
-                    }
-                }
-                else
-                {
-                    Debug.LogError($"User {userId} not found when trying to update whispers");
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Failed to add whisper to user {userId}: {ex.Message}");
-                return false;
-            }
+            // This method is no longer used - whispers are managed through inventory system
+            Debug.LogWarning("UpdateWhispers method is deprecated - use inventory system instead");
+            return true;
         }
 
         public async Task<List<WhisperType>> GetUserWhispers(string userId)
         {
-            try
-            {
-                DocumentSnapshot userSnapshot = await db.Collection("users").Document(userId).GetSnapshotAsync();
-                
-                if (userSnapshot.Exists)
-                {
-                    var userData = userSnapshot.ToDictionary();
-                    List<WhisperType> userWhispers = new List<WhisperType>();
-                    
-                    if (userData.ContainsKey("whispers") && userData["whispers"] != null)
-                    {
-                        // Convert from Firestore array to List<WhisperType>
-                        var whisperArray = userData["whispers"] as System.Collections.IList;
-                        if (whisperArray != null)
-                        {
-                            foreach (var item in whisperArray)
-                            {
-                                if (int.TryParse(item.ToString(), out int whisperValue))
-                                {
-                                    if (Enum.IsDefined(typeof(WhisperType), whisperValue))
-                                    {
-                                        userWhispers.Add((WhisperType)whisperValue);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    
-                    Debug.Log($"Retrieved {userWhispers.Count} whispers for user {userId}");
-                    return userWhispers;
-                }
-                else
-                {
-                    Debug.LogError($"User {userId} not found when trying to get whispers");
-                    return new List<WhisperType>();
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Failed to get whispers for user {userId}: {ex.Message}");
-                return new List<WhisperType>();
-            }
+            // This method is no longer used - whispers are managed through inventory system
+            Debug.LogWarning("GetUserWhispers method is deprecated - use inventory system instead");
+            return new List<WhisperType>();
         }
+        */
 
         public async Task<List<User>> GetUsersInBuilding(string buildingName)
         {
