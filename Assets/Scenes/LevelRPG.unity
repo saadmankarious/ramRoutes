@@ -367,6 +367,37 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1331873262}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &12624280
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 12624281}
+  m_Layer: 8
+  m_Name: Rams Spawn (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &12624281
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 12624280}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -11.79, y: -4.22, z: -0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2008107924}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &30668784
 GameObject:
   m_ObjectHideFlags: 0
@@ -2944,8 +2975,8 @@ MonoBehaviour:
   requireTerminalStage: 0
   ramPrefab: {fileID: 3470250536520970455, guid: 35dc22a450e568046b548ae2924ae151,
     type: 3}
-  spawnParent: {fileID: 1681770776}
-  spawnRadius: 8
+  spawnPoints: []
+  spawnRadius: 5
   maxRams: 10
   spawnSound: {fileID: 8300000, guid: b228ee252c52410b8a858ec13aa9f6c5, type: 3}
   despawnSound: {fileID: 8300000, guid: 6e4d3f8f2c09077b38bcd081ac5bae14, type: 3}
@@ -3767,8 +3798,8 @@ MonoBehaviour:
   requireTerminalStage: 0
   ramPrefab: {fileID: 3470250536520970455, guid: 35dc22a450e568046b548ae2924ae151,
     type: 3}
-  spawnParent: {fileID: 423005919}
-  spawnRadius: 8
+  spawnPoints: []
+  spawnRadius: 5
   maxRams: 10
   spawnSound: {fileID: 8300000, guid: b228ee252c52410b8a858ec13aa9f6c5, type: 3}
   despawnSound: {fileID: 8300000, guid: 6e4d3f8f2c09077b38bcd081ac5bae14, type: 3}
@@ -22471,12 +22502,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 697916729}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 8.95, y: -4.15, z: -0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 8.950001, y: -4.15, z: -0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1851404767}
+  m_Father: {fileID: 2008107924}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &712965352
 GameObject:
@@ -27277,8 +27308,8 @@ MonoBehaviour:
   requireTerminalStage: 0
   ramPrefab: {fileID: 3470250536520970455, guid: 35dc22a450e568046b548ae2924ae151,
     type: 3}
-  spawnParent: {fileID: 316913358}
-  spawnRadius: 8
+  spawnPoints: []
+  spawnRadius: 5
   maxRams: 10
   spawnSound: {fileID: 8300000, guid: b228ee252c52410b8a858ec13aa9f6c5, type: 3}
   despawnSound: {fileID: 8300000, guid: 6e4d3f8f2c09077b38bcd081ac5bae14, type: 3}
@@ -36118,8 +36149,8 @@ MonoBehaviour:
   requireTerminalStage: 0
   ramPrefab: {fileID: 3470250536520970455, guid: 35dc22a450e568046b548ae2924ae151,
     type: 3}
-  spawnParent: {fileID: 1353312976}
-  spawnRadius: 8
+  spawnPoints: []
+  spawnRadius: 5
   maxRams: 10
   spawnSound: {fileID: 8300000, guid: b228ee252c52410b8a858ec13aa9f6c5, type: 3}
   despawnSound: {fileID: 8300000, guid: 6e4d3f8f2c09077b38bcd081ac5bae14, type: 3}
@@ -36128,6 +36159,37 @@ MonoBehaviour:
   playerCountCanvasPrefab: {fileID: 8169460406973869816, guid: 2a162713e3beb0acfacdf13a79833938,
     type: 3}
   playerCountSpawnPoint: {fileID: 329316537}
+--- !u!1 &1604112741
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1604112742}
+  m_Layer: 8
+  m_Name: Rams Spawn (3)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1604112742
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1604112741}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 12.78, y: -8.22, z: -0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2008107924}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1613157385
 GameObject:
   m_ObjectHideFlags: 0
@@ -36297,6 +36359,37 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1619025348}
   m_CullTransparentMesh: 1
+--- !u!1 &1621532402
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1621532403}
+  m_Layer: 8
+  m_Name: Rams Spawn (2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1621532403
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1621532402}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -11.79, y: -4.22, z: -0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2008107924}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1624279034
 GameObject:
   m_ObjectHideFlags: 0
@@ -43562,8 +43655,8 @@ MonoBehaviour:
   requireTerminalStage: 0
   ramPrefab: {fileID: 3470250536520970455, guid: 35dc22a450e568046b548ae2924ae151,
     type: 3}
-  spawnParent: {fileID: 423005919}
-  spawnRadius: 8
+  spawnPoints: []
+  spawnRadius: 5
   maxRams: 10
   spawnSound: {fileID: 8300000, guid: b228ee252c52410b8a858ec13aa9f6c5, type: 3}
   despawnSound: {fileID: 8300000, guid: 6e4d3f8f2c09077b38bcd081ac5bae14, type: 3}
@@ -287788,7 +287881,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 783852339}
-  - {fileID: 697916730}
+  - {fileID: 2008107924}
   - {fileID: 2015675560}
   - {fileID: 179463704}
   m_Father: {fileID: 1187746829}
@@ -288051,8 +288144,12 @@ MonoBehaviour:
   requireTerminalStage: 0
   ramPrefab: {fileID: 3470250536520970455, guid: 35dc22a450e568046b548ae2924ae151,
     type: 3}
-  spawnParent: {fileID: 697916730}
-  spawnRadius: 8
+  spawnPoints:
+  - {fileID: 697916730}
+  - {fileID: 12624281}
+  - {fileID: 1621532403}
+  - {fileID: 1621532403}
+  spawnRadius: 5
   maxRams: 10
   spawnSound: {fileID: 8300000, guid: b228ee252c52410b8a858ec13aa9f6c5, type: 3}
   despawnSound: {fileID: 8300000, guid: 6e4d3f8f2c09077b38bcd081ac5bae14, type: 3}
@@ -288837,8 +288934,8 @@ MonoBehaviour:
   requireTerminalStage: 0
   ramPrefab: {fileID: 3470250536520970455, guid: 35dc22a450e568046b548ae2924ae151,
     type: 3}
-  spawnParent: {fileID: 40244687}
-  spawnRadius: 8
+  spawnPoints: []
+  spawnRadius: 5
   maxRams: 10
   spawnSound: {fileID: 8300000, guid: b228ee252c52410b8a858ec13aa9f6c5, type: 3}
   despawnSound: {fileID: 8300000, guid: 6e4d3f8f2c09077b38bcd081ac5bae14, type: 3}
@@ -290567,6 +290664,41 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2000651812}
   m_CullTransparentMesh: 1
+--- !u!1 &2008107923
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2008107924}
+  m_Layer: 8
+  m_Name: Ram Spawn Points
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2008107924
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2008107923}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 697916730}
+  - {fileID: 12624281}
+  - {fileID: 1621532403}
+  - {fileID: 1604112742}
+  m_Father: {fileID: 1851404767}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2008415366
 GameObject:
   m_ObjectHideFlags: 0

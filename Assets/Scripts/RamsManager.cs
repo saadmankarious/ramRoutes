@@ -17,8 +17,8 @@ public class RamsManager : MonoBehaviour
     [SerializeField] private GameObject ramPrefab;
     
     [Header("Spawn Settings")]
-    [SerializeField] private Transform spawnParent;
-    [SerializeField] private float spawnRadius = 5f;
+    [SerializeField] private Transform[] spawnPoints; // Array of spawn points for random spawning
+    [SerializeField] private float spawnRadius = 5f; // Radius around spawn point to spread rams in circle
     [SerializeField] private int maxRams = 10;
     
     [Header("Audio Settings")]
@@ -85,7 +85,64 @@ public class RamsManager : MonoBehaviour
         // Start live monitoring for new players entering buildings
         StartLiveBuildingMonitoring();
         
+        // Validate spawn points configuration
+        ValidateSpawnPoints();
+        
         // Rams will only spawn when OnBuildingActivated() is called from BuildingInteraction
+    }
+    
+    /// <summary>
+    /// Validates spawn points configuration and provides helpful warnings
+    /// </summary>
+    private void ValidateSpawnPoints()
+    {
+        if (spawnPoints == null || spawnPoints.Length == 0)
+        {
+            Debug.LogWarning($"RamsManager on {gameObject.name}: No spawn points assigned! Rams will spawn at RamsManager position. Please assign spawn points in the inspector.");
+            return;
+        }
+        
+        int nullCount = 0;
+        for (int i = 0; i < spawnPoints.Length; i++)
+        {
+            if (spawnPoints[i] == null)
+                nullCount++;
+        }
+        
+        if (nullCount > 0)
+        {
+            Debug.LogWarning($"RamsManager on {gameObject.name}: {nullCount} out of {spawnPoints.Length} spawn points are null. Please assign all spawn points.");
+        }
+        else
+        {
+            Debug.Log($"RamsManager on {gameObject.name}: {spawnPoints.Length} spawn points configured successfully.");
+        }
+    }
+    
+    /// <summary>
+    /// Debug method to visualize spawn points in Scene view
+    /// </summary>
+    [ContextMenu("Debug Spawn Points")]
+    private void DebugSpawnPoints()
+    {
+        if (spawnPoints == null || spawnPoints.Length == 0)
+        {
+            Debug.LogWarning("No spawn points to debug!");
+            return;
+        }
+        
+        Debug.Log($"=== Spawn Points Debug ({spawnPoints.Length} points) ===");
+        for (int i = 0; i < spawnPoints.Length; i++)
+        {
+            if (spawnPoints[i] != null)
+            {
+                Debug.Log($"Spawn Point {i}: {spawnPoints[i].name} at position {spawnPoints[i].position}");
+            }
+            else
+            {
+                Debug.LogWarning($"Spawn Point {i}: NULL");
+            }
+        }
     }
     
     /// <summary>
@@ -761,17 +818,31 @@ public class RamsManager : MonoBehaviour
     /// </summary>
     private void SpawnRamForUser(User user, int index)
     {
-        // Calculate spawn position in a circle around the spawn parent
+        // Calculate spawn position distributed across all spawn points
         Vector3 spawnPosition = CalculateSpawnPosition(index);
 
         // Instantiate ram prefab
         GameObject ramInstance = Instantiate(ramPrefab, spawnPosition, Quaternion.identity);
 
-        // Set parent if specified
-        if (spawnParent != null)
+        // Set parent to the spawn point based on the index distribution
+        Transform parentTransform = transform; // Default fallback
+        if (spawnPoints != null && spawnPoints.Length > 0)
         {
-            ramInstance.transform.SetParent(spawnParent);
+            // Determine which spawn point this ram should belong to
+            int spawnPointIndex = index % spawnPoints.Length;
+            Transform selectedSpawnPoint = spawnPoints[spawnPointIndex];
+            
+            if (selectedSpawnPoint != null)
+            {
+                parentTransform = selectedSpawnPoint;
+            }
+            else
+            {
+                // Find first valid spawn point as fallback
+                parentTransform = spawnPoints.FirstOrDefault(sp => sp != null) ?? transform;
+            }
         }
+        ramInstance.transform.SetParent(parentTransform);
 
         // Note: Scaling will be applied AFTER pop animation to prevent animation from resetting it
 
@@ -1140,14 +1211,38 @@ public class RamsManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Calculates spawn position in a circle pattern
+    /// Calculates spawn position distributed across all spawn points in circles
     /// </summary>
     private Vector3 CalculateSpawnPosition(int index)
     {
-        Vector3 basePosition = spawnParent != null ? spawnParent.position : transform.position;
+        // If no spawn points, use this transform
+        if (spawnPoints == null || spawnPoints.Length == 0)
+        {
+            Vector3 fallbackPosition = transform.position;
+            float fallbackAngle = (360f / maxRams) * index * Mathf.Deg2Rad;
+            float fallbackX = fallbackPosition.x + Mathf.Cos(fallbackAngle) * spawnRadius;
+            float fallbackZ = fallbackPosition.z + Mathf.Sin(fallbackAngle) * spawnRadius;
+            return new Vector3(fallbackX, fallbackPosition.y, fallbackZ);
+        }
         
-        // Arrange in circle pattern
-        float angle = (360f / maxRams) * index * Mathf.Deg2Rad;
+        // Distribute rams across all spawn points
+        int spawnPointIndex = index % spawnPoints.Length;
+        Transform selectedSpawnPoint = spawnPoints[spawnPointIndex];
+        
+        // If selected spawn point is null, use first valid one or fallback
+        if (selectedSpawnPoint == null)
+        {
+            selectedSpawnPoint = spawnPoints.FirstOrDefault(sp => sp != null) ?? transform;
+        }
+        
+        Vector3 basePosition = selectedSpawnPoint.position;
+        
+        // Calculate which "ring" this ram is in around this spawn point
+        int ramsPerSpawnPoint = Mathf.CeilToInt((float)maxRams / spawnPoints.Length);
+        int localIndex = index / spawnPoints.Length; // Which position around this specific spawn point
+        
+        // Spread rams in a circle around the selected spawn point
+        float angle = (360f / ramsPerSpawnPoint) * localIndex * Mathf.Deg2Rad;
         float x = basePosition.x + Mathf.Cos(angle) * spawnRadius;
         float z = basePosition.z + Mathf.Sin(angle) * spawnRadius;
         
