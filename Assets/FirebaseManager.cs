@@ -247,21 +247,14 @@ public class FirebaseMessagingManager : MonoBehaviour
     {
         Debug.Log($"Received message from: {e.Message.From}");
         
-        // Check if this is a whisper notification
-        bool isWhisperNotification = e.Message.Data.ContainsKey("type") && 
-                                   e.Message.Data["type"] == "whisper_received";
-        
         // Handle notification data
         if (e.Message.Notification != null)
         {
             Debug.Log($"Title: {e.Message.Notification.Title}");
             Debug.Log($"Body: {e.Message.Notification.Body}");
 
-            // If it's a whisper, show in-game notification using NotificationManager
-            if (isWhisperNotification)
-            {
-                ShowWhisperNotification(e.Message.Notification.Title, e.Message.Notification.Body);
-            }
+            // Always show in-game notification using NotificationManager for ALL message types
+            ShowInGameNotification(e.Message.Notification.Title, e.Message.Notification.Body);
             
             // Show notification in system tray (works in background/foreground)
             ShowSystemNotification(
@@ -277,18 +270,18 @@ public class FirebaseMessagingManager : MonoBehaviour
         }
     }
 
-    // Show whisper notification using NotificationManager
-    private void ShowWhisperNotification(string title, string body)
+    // Show any notification using NotificationManager
+    private void ShowInGameNotification(string title, string body)
     {
         NotificationManager notificationManager = FindObjectOfType<NotificationManager>();
         if (notificationManager != null)
         {
             notificationManager.ShowNotification(title, body);
-            Debug.Log($"Displayed whisper notification: {title}");
+            Debug.Log($"Displayed in-game notification: {title}");
         }
         else
         {
-            Debug.LogWarning("NotificationManager not found - cannot display whisper notification");
+            Debug.LogWarning("NotificationManager not found - cannot display in-game notification");
         }
     }
 

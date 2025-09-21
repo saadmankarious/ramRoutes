@@ -95,6 +95,10 @@ exports.notifyNewBuildingEventV2 = onDocumentCreated("building-events/{eventId}"
           icon: "ic_notification",
           color: "#4CAF50",
           sound: "default"
+        },
+        priority: "high",
+        data: {
+          force_foreground: "true"
         }
       },
       apns: {
@@ -169,6 +173,10 @@ exports.sendUserJoinedNotification = onDocumentCreated(
                         icon: "ic_notification",
                         color: "#4CAF50",
                         sound: "default"
+                    },
+                    priority: "high",
+                    data: {
+                        force_foreground: "true"
                     }
                 },
                 apns: {
@@ -256,6 +264,10 @@ exports.notifyBuildingUnlocked = onDocumentCreated("unlocked-trials/{unlockId}",
                     icon: "ic_notification",
                     color: "#FF9800", // Orange color for building unlocks
                     sound: "default"
+                },
+                priority: "high",
+                data: {
+                    force_foreground: "true"
                 }
             },
             apns: {
@@ -375,6 +387,10 @@ exports.notifyRankAchievement = onDocumentUpdated("users/{userId}", async (event
                         icon: "ic_notification",
                         color: "#FFD700", // Gold color for rank achievements
                         sound: "default"
+                    },
+                    priority: "high",
+                    data: {
+                        force_foreground: "true"
                     }
                 },
                 apns: {
@@ -503,6 +519,10 @@ exports.notifyShoutoutReceived = onDocumentCreated("shout-outs/{shoutoutId}", as
                     icon: "ic_notification",
                     color: "#E91E63", // Pink color for shoutouts
                     sound: "default"
+                },
+                priority: "high",
+                data: {
+                    force_foreground: "true"
                 }
             },
             apns: {
@@ -631,6 +651,10 @@ exports.notifyFriendRequestReceived = onDocumentCreated("friend-requests/{reques
                     icon: "ic_notification",
                     color: "#2196F3", // Blue color for friend requests
                     sound: "default"
+                },
+                priority: "high",
+                data: {
+                    force_foreground: "true"
                 }
             },
             apns: {
@@ -776,6 +800,10 @@ exports.notifyWhisperReceived = onDocumentCreated("chat/{chatId}", async (event)
                     icon: "ic_notification",
                     color: "#9C27B0", // Purple color for whispers (mysterious)
                     sound: "default"
+                },
+                priority: "high",
+                data: {
+                    force_foreground: "true"
                 }
             },
             apns: {
