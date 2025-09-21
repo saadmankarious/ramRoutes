@@ -8,7 +8,7 @@ function StoreItemEdit({ item, onCancel, onSave }) {
     description: item.description || '',
     priceCoins: item.priceCoins || 0,
     priceKb: item.priceKb || 0,
-    category: item.category || 'general',
+    category: String(item.category || 'general'),
     imageUrl: item.imageUrl || '',
     available: item.available !== undefined ? item.available : true,
     whisperType: item.whisperType || 0
@@ -30,7 +30,9 @@ function StoreItemEdit({ item, onCancel, onSave }) {
     const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? checked : (type === 'number' ? parseInt(value) || 0 : value)
+      [name]: type === 'checkbox' ? checked : 
+              (name === 'category' ? String(value) : 
+              (type === 'number' ? parseInt(value) || 0 : value))
     });
   };
 

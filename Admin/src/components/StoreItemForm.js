@@ -31,7 +31,9 @@ function StoreItemForm({ user, onItemCreated }) {
     const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? checked : (type === 'number' ? parseInt(value) || 0 : value)
+      [name]: type === 'checkbox' ? checked : 
+              (name === 'category' ? String(value) : 
+              (type === 'number' ? parseInt(value) || 0 : value))
     });
   };
 

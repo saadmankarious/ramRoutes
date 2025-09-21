@@ -62,7 +62,7 @@ public class RamClickHandler : MonoBehaviour, IPointerClickHandler
         if (user != null && ramsManager != null)
         {
             Debug.Log($"RamClickHandler: Mouse down on ram {user.name}");
-            ramsManager.HandleRamClick(user);
+            ramsManager.HandleRamClick(user, gameObject);
         }
     }
 
@@ -72,7 +72,7 @@ public class RamClickHandler : MonoBehaviour, IPointerClickHandler
         if (user != null && ramsManager != null)
         {
             Debug.Log($"RamClickHandler: Pointer click on ram {user.name}");
-            ramsManager.HandleRamClick(user);
+            ramsManager.HandleRamClick(user, gameObject);
         }
     }
 }

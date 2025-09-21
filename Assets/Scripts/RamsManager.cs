@@ -24,6 +24,7 @@ public class RamsManager : MonoBehaviour
     [Header("Audio Settings")]
     [SerializeField] private AudioClip spawnSound;
     [SerializeField] private AudioClip despawnSound;
+    [SerializeField] private AudioClip backflipClip;
     
     [Header("User Info Panel")]
     [SerializeField] private UserInfoPanel userInfoPanel;
@@ -814,6 +815,62 @@ public class RamsManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Coroutine that triggers random backflip animations for a specific ram
+    /// </summary>
+    private IEnumerator RandomBackflipAnimation(GameObject ramInstance)
+    {
+        if (ramInstance == null) yield break;
+        
+        // Get the Animator component from the ram
+        Animator animator = ramInstance.GetComponent<Animator>();
+        if (animator == null)
+        {
+            Debug.LogWarning("No Animator found on ram instance - cannot trigger backflip animation");
+            yield break;
+        }
+        
+        // Wait for initial spawn animation to complete
+        yield return new WaitForSeconds(2f);
+        
+        // Continue until the ram is destroyed
+        while (ramInstance != null)
+        {
+            // Wait for a random interval between backflips (10-30 seconds)
+            float waitTime = Random.Range(10f, 30f);
+            yield return new WaitForSeconds(waitTime);
+            
+            // Check if ram still exists before triggering animation
+            if (ramInstance != null && animator != null)
+            {
+                // Trigger the backflip animation
+                animator.SetBool("backflip", true);
+                Debug.Log($"Triggered backflip animation for ram: {ramInstance.name}");
+                
+                // Wait for backflip animation to complete, then set bool to false
+                StartCoroutine(ResumeMovementAfterBackflip(ramInstance, animator));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Resumes movement animation after backflip completes
+    /// </summary>
+    private IEnumerator ResumeMovementAfterBackflip(GameObject ramInstance, Animator animator)
+    {
+        // Wait for the backflip animation duration (adjust this based on your animation length)
+        yield return new WaitForSeconds(.5f); // Assuming backflip takes ~2 seconds
+        
+        // Check if ram and animator still exist
+        if (ramInstance != null && animator != null)
+        {
+            // Set backflip bool to false to return to normal state
+            animator.SetBool("backflip", false);
+            
+            Debug.Log($"Finished backflip for ram: {ramInstance.name}");
+        }
+    }
+
+    /// <summary>
     /// Spawns a single ram for a specific user
     /// </summary>
     private void SpawnRamForUser(User user, int index)
@@ -916,6 +973,9 @@ public class RamsManager : MonoBehaviour
             ApplyUniqueColorToRamText(ramInstance, user);
             Debug.Log($"Applied scale {scale:F2}x and unique color directly (no UIManager)");
         }
+        
+        // Start random backflip animations for this ram
+        StartCoroutine(RandomBackflipAnimation(ramInstance));
         
         Debug.Log($"Spawned ram for user: {user.name} at position {spawnPosition}");
     }
@@ -1032,9 +1092,63 @@ public class RamsManager : MonoBehaviour
     /// <summary>
     /// Called by RamClickHandler when a ram is clicked
     /// </summary>
-    public void HandleRamClick(User user)
+    public void HandleRamClick(User user, GameObject ramInstance)
     {
+        // Trigger backflip animation
+        TriggerRamBackflip(ramInstance);
+        
+        // Play backflip sound
+        PlayBackflipSound();
+        
+        // Continue with existing click behavior
         OnRamClicked(user);
+    }
+
+    /// <summary>
+    /// Triggers backflip animation on a specific ram
+    /// </summary>
+    private void TriggerRamBackflip(GameObject ramInstance)
+    {
+        if (ramInstance == null) return;
+        
+        Animator animator = ramInstance.GetComponent<Animator>();
+        if (animator != null)
+        {
+            // Set backflip bool to true
+            animator.SetBool("backflip", true);
+            Debug.Log($"Triggered click backflip for ram: {ramInstance.name}");
+            
+            // Reset backflip bool after animation completes
+            StartCoroutine(ResumeMovementAfterBackflip(ramInstance, animator));
+        }
+        else
+        {
+            Debug.LogWarning("No Animator found on clicked ram - cannot trigger backflip");
+        }
+    }
+
+    /// <summary>
+    /// Plays the backflip sound effect
+    /// </summary>
+    private void PlayBackflipSound()
+    {
+        if (backflipClip != null && building != null)
+        {
+            var buildingAudioSource = building.GetComponent<AudioSource>();
+            if (buildingAudioSource != null)
+            {
+                buildingAudioSource.PlayOneShot(backflipClip);
+                Debug.Log("Played backflip sound");
+            }
+            else
+            {
+                Debug.LogWarning("No AudioSource found on building - cannot play backflip sound");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("Backflip clip not assigned or building reference missing");
+        }
     }
     
     /// <summary>
