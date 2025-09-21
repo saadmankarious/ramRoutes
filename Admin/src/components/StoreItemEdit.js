@@ -11,7 +11,8 @@ function StoreItemEdit({ item, onCancel, onSave }) {
     category: String(item.category || 'general'),
     imageUrl: item.imageUrl || '',
     available: item.available !== undefined ? item.available : true,
-    whisperType: item.whisperType || 0
+    // Only include whisperType if item is a whisper category
+    ...(item.category === 'whisper' ? { whisperType: item.whisperType || 0 } : {})
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -28,12 +29,30 @@ function StoreItemEdit({ item, onCancel, onSave }) {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : 
-              (name === 'category' ? String(value) : 
-              (type === 'number' ? parseInt(value) || 0 : value))
-    });
+    
+    if (name === 'category') {
+      // When category changes, handle whisperType appropriately
+      const newFormData = {
+        ...formData,
+        [name]: String(value)
+      };
+      
+      // Add whisperType only if category is 'whisper'
+      if (value === 'whisper') {
+        newFormData.whisperType = formData.whisperType || 0; // Keep existing or default to Greeting
+      } else {
+        // Remove whisperType if category is not 'whisper'
+        delete newFormData.whisperType;
+      }
+      
+      setFormData(newFormData);
+    } else {
+      setFormData({
+        ...formData,
+        [name]: type === 'checkbox' ? checked : 
+                (type === 'number' ? parseInt(value) || 0 : value)
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -48,6 +67,11 @@ function StoreItemEdit({ item, onCancel, onSave }) {
         ...formData,
         updatedAt: serverTimestamp()
       };
+
+      // Ensure whisperType is only included for whisper items
+      if (formData.category !== 'whisper') {
+        delete updateData.whisperType;
+      }
 
       const itemRef = doc(db, 'store-items', item.id);
       await updateDoc(itemRef, updateData);
@@ -174,7 +198,7 @@ function StoreItemEdit({ item, onCancel, onSave }) {
             <select
               id="whisperType"
               name="whisperType"
-              value={formData.whisperType}
+              value={formData.whisperType || 0}
               onChange={handleChange}
             >
               <option value={0}>Greeting</option>

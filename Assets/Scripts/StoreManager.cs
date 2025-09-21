@@ -54,10 +54,10 @@ public class StoreManager : MonoBehaviour
         InitializeStoreManager();
         
         // Configure ScrollView if available
-        if (storeScrollView != null)
-        {
-            ConfigureScrollView();
-        }
+        // if (storeScrollView != null)
+        // {
+        //     ConfigureScrollView();
+        // }
         
         // Don't load items immediately - wait for store to be opened
     }

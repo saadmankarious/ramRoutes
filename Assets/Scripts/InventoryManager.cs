@@ -92,9 +92,9 @@ public class InventoryManager : MonoBehaviour
             itemsContainer.gameObject.SetActive(isInventoryOpen);
             
             // Show/hide the parent container accordingly
-            if (itemsContainer.parent.parent != null)
+            if (itemsContainer.parent.parent.parent.parent != null)
             {
-                itemsContainer.parent.parent.gameObject.SetActive(isInventoryOpen);
+                itemsContainer.parent.parent.parent.parent.gameObject.SetActive(isInventoryOpen);
             }
             
             if (isInventoryOpen)

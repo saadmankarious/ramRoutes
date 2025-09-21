@@ -196,7 +196,7 @@ public class RamsManager : MonoBehaviour
         {
             // Small delay to ensure building is properly initialized
             await Task.Delay(500);
-            await DisplayPlayerCount();
+            DisplayPlayerCount();
         }
         catch (System.Exception ex)
         {
@@ -444,7 +444,7 @@ public class RamsManager : MonoBehaviour
             await SpawnRams();
             
             // Display player count if there are players in the building
-            await DisplayPlayerCount();
+            DisplayPlayerCount();
             
             // Start the refresh coroutine to check for new players every 5 seconds
             if (refreshCoroutine == null)
@@ -468,16 +468,14 @@ public class RamsManager : MonoBehaviour
             
             // Update player count display instead of hiding it
             // This will show the remaining players in the building
-            Task.Run(async () => {
-                try
-                {
-                    await DisplayPlayerCount();
-                }
-                catch (System.Exception ex)
-                {
-                    Debug.LogError($"Error updating player count when player leaves: {ex.Message}");
-                }
-            });
+            try
+            {
+                DisplayPlayerCount();
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"Error updating player count when player leaves: {ex.Message}");
+            }
             
             // Stop the refresh coroutine if running
             if (refreshCoroutine != null)
@@ -708,7 +706,7 @@ public class RamsManager : MonoBehaviour
             }
             
             // Update player count display after changes
-            await DisplayPlayerCount();
+            DisplayPlayerCount();
         }
         catch (System.Exception e)
         {
@@ -882,6 +880,8 @@ public class RamsManager : MonoBehaviour
         {
             // Set backflip bool to false to return to normal state
             animator.SetBool("backflip", false);
+                        animator.SetBool("idle", false);
+
             
             Debug.Log($"Finished backflip for ram: {ramInstance.name}");
         }
@@ -1451,28 +1451,42 @@ public class RamsManager : MonoBehaviour
     /// <summary>
     /// Display player count in the building if non-zero and building is active
     /// </summary>
-    private async Task DisplayPlayerCount()
+    private void DisplayPlayerCount()
     {
+        StartCoroutine(DisplayPlayerCountCoroutine());
+    }
+    
+    /// <summary>
+    /// Coroutine to display player count ensuring main thread execution
+    /// </summary>
+    private IEnumerator DisplayPlayerCountCoroutine()
+    {
+        // Check if we're in the Terminal game stage - only display player count during Terminal stage
+        if (requireTerminalStage)
+        {
+            var currentStage = GameStageService.LoadStageFromPrefs();
+            if (currentStage == null || currentStage.area != Stage.Terminal)
+            {
+                Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), hiding player count");
+                // Hide the canvas when not in Terminal stage
+                StartCoroutine(HidePlayerCountCanvas());
+                yield break;
+            }
+        }
+        
+        // Start the async operation
+        var getUsersTask = userService.GetUsersInBuilding(building.buildingName);
+        
+        // Wait for the async operation to complete
+        yield return new WaitUntil(() => getUsersTask.IsCompleted);
+        
         try
         {
-            // Check if we're in the Terminal game stage - only display player count during Terminal stage
-            if (requireTerminalStage)
-            {
-                var currentStage = GameStageService.LoadStageFromPrefs();
-                if (currentStage == null || currentStage.area != Stage.Terminal)
-                {
-                    Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), hiding player count");
-                    // Hide the canvas when not in Terminal stage - use coroutine to ensure main thread
-                    StartCoroutine(HidePlayerCountCanvas());
-                    return;
-                }
-            }
-            
-            // Get the current player count in this building (this runs on background thread)
-            var playersInBuilding = await userService.GetUsersInBuilding(building.buildingName);
+            // Get the result
+            var playersInBuilding = getUsersTask.Result;
             int playerCount = playersInBuilding?.Count ?? 0;
             
-            // Use coroutine to ensure UI updates happen on main thread
+            // Update UI on main thread
             StartCoroutine(UpdatePlayerCountCoroutine(playerCount));
         }
         catch (System.Exception ex)

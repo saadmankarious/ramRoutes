@@ -10,8 +10,8 @@ function StoreItemForm({ user, onItemCreated }) {
     priceKb: 0,
     category: 'general',
     imageUrl: '',
-    available: true,
-    whisperType: 0 // Default to Greeting (0)
+    available: true
+    // whisperType is only added when category is 'whisper'
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -29,12 +29,30 @@ function StoreItemForm({ user, onItemCreated }) {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : 
-              (name === 'category' ? String(value) : 
-              (type === 'number' ? parseInt(value) || 0 : value))
-    });
+    
+    if (name === 'category') {
+      // When category changes, handle whisperType appropriately
+      const newFormData = {
+        ...formData,
+        [name]: String(value)
+      };
+      
+      // Add whisperType only if category is 'whisper'
+      if (value === 'whisper') {
+        newFormData.whisperType = 0; // Default to Greeting
+      } else {
+        // Remove whisperType if category is not 'whisper'
+        delete newFormData.whisperType;
+      }
+      
+      setFormData(newFormData);
+    } else {
+      setFormData({
+        ...formData,
+        [name]: type === 'checkbox' ? checked : 
+                (type === 'number' ? parseInt(value) || 0 : value)
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -53,6 +71,11 @@ function StoreItemForm({ user, onItemCreated }) {
         updatedAt: serverTimestamp()
       };
 
+      // Ensure whisperType is only included for whisper items
+      if (formData.category !== 'whisper') {
+        delete itemData.whisperType;
+      }
+
       const docRef = await addDoc(collection(db, 'store-items'), itemData);
       console.log('Store item created with ID:', docRef.id);
 
@@ -63,8 +86,8 @@ function StoreItemForm({ user, onItemCreated }) {
         priceCoins: 0,
         priceKb: 0,
         category: 'general',
-        available: true,
-        whisperType: 0
+        available: true
+        // whisperType only added when category is 'whisper'
       });
 
       setTimeout(() => {

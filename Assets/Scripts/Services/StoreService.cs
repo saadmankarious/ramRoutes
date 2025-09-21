@@ -99,7 +99,7 @@ namespace RamRoutes.Services
                     { "pricePaidCoins", item.priceCoins },
                     { "pricePaidKb", item.priceKb },
                     {"whisperType", item.whisperType},
-                    { "equipped", false }
+                    { "equipped", true }
                 };
 
                 await db.Collection(USER_INVENTORY_COLLECTION).AddAsync(inventoryData);
