@@ -344,7 +344,7 @@ public class NotificationManager : MonoBehaviour
             Debug.Log($"NotificationManager: Body: {e.Message.Notification.Body}");
 
             // Display all Firebase notifications as in-game notifications
-            ShowNotification(e.Message.Notification.Title, e.Message.Notification.Body);
+            ShowNotification(e.Message.Notification.Title, e.Message.Notification.Title + "\n" + e.Message.Notification.Body);
         }
         
         // Log custom data payload for debugging

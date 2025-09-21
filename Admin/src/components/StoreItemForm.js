@@ -240,11 +240,11 @@ function StoreItemForm({ user, onItemCreated }) {
 
           {formData.category === 'whisper' && (
             <div className="form-group">
-              <label htmlFor="whisperType" className="form-label">Whisper Type</label>
+              <label htmlFor="whisperType" className="form-label">Whisper Type (String)</label>
               <select
                 id="whisperType"
                 name="whisperType"
-                value={formData.whisperType}
+                value={formData.whisperType + ""}
                 onChange={handleChange}
                 className="form-select"
                 disabled={loading}

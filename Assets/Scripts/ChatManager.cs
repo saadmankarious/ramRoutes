@@ -498,14 +498,146 @@ public class ChatManager : MonoBehaviour
         if (string.IsNullOrEmpty(currentUserId)) return;
         
         // Get conversation
-        currentConversation = await chatService.GetConversationAsync(currentUserId, currentChatTargetId);
+        var newConversation = await chatService.GetConversationAsync(currentUserId, currentChatTargetId);
         
-        // Display messages
-        DisplayMessages();
+        // Check if we have new messages to avoid unnecessary updates
+        if (HasNewMessages(newConversation))
+        {
+            currentConversation = newConversation;
+            // Display messages smartly (only add new ones)
+            DisplayMessagesSmartly();
+        }
     }
     
     /// <summary>
-    /// Display chat messages in the UI
+    /// Check if there are new messages compared to current conversation
+    /// </summary>
+    private bool HasNewMessages(List<Chat> newConversation)
+    {
+        // If we have no current conversation, then we have new messages
+        if (currentConversation == null || currentConversation.Count == 0)
+        {
+            return newConversation != null && newConversation.Count > 0;
+        }
+        
+        // If new conversation has more messages, we have new messages
+        if (newConversation.Count > currentConversation.Count)
+        {
+            return true;
+        }
+        
+        // If same count, check if the messages are different (compare by timestamp and content)
+        if (newConversation.Count == currentConversation.Count)
+        {
+            for (int i = 0; i < newConversation.Count; i++)
+            {
+                if (newConversation[i].timestamp != currentConversation[i].timestamp ||
+                    newConversation[i].fromId != currentConversation[i].fromId ||
+                    newConversation[i].toId != currentConversation[i].toId ||
+                    newConversation[i].chatEmojies != currentConversation[i].chatEmojies)
+                {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    /// <summary>
+    /// Display chat messages smartly - only add new messages to preserve existing images
+    /// </summary>
+    private void DisplayMessagesSmartly()
+    {
+        if (chatContentParent == null || senderBubblePrefab == null || receiverBubblePrefab == null) return;
+        
+        string currentUserId = FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+        
+        // Get count of existing message bubbles
+        int existingMessageCount = chatContentParent.childCount;
+        
+        // If we have fewer UI messages than conversation messages, add the missing ones
+        for (int i = existingMessageCount; i < currentConversation.Count; i++)
+        {
+            var chat = currentConversation[i];
+            CreateMessageBubble(chat, currentUserId);
+        }
+        
+        // Scroll to bottom to show most recent messages
+        if (chatScrollView != null)
+        {
+            // Force canvas update first
+            Canvas.ForceUpdateCanvases();
+            
+            // Use a small delay to ensure layout is complete
+            StartCoroutine(ScrollToBottomDelayed());
+        }
+    }
+    
+    /// <summary>
+    /// Create a single message bubble for a chat message
+    /// </summary>
+    private void CreateMessageBubble(Chat chat, string currentUserId)
+    {
+        bool isMyMessage = chat.fromId == currentUserId;
+        
+        // Choose the appropriate prefab based on sender
+        GameObject prefabToUse = isMyMessage ? senderBubblePrefab : receiverBubblePrefab;
+        GameObject bubble = Instantiate(prefabToUse, chatContentParent);
+        
+        // Remove ButtonHandler if no Button component exists
+        ButtonHandler buttonHandler = bubble.GetComponent<ButtonHandler>();
+        Button button = bubble.GetComponent<Button>();
+        if (buttonHandler != null && button == null)
+        {
+            Destroy(buttonHandler);
+        }
+        
+        // Find the "whisper" child and set sprite
+        Transform whisperTransform = FindChildByName(bubble.transform, "whisper");
+        Image whisperImage = whisperTransform?.GetComponent<Image>();
+        if (whisperImage != null)
+        {
+            WhisperType whisperType = chat.GetWhisperType();
+            
+            // First try to find the sprite from hardcoded available whispers
+            Sprite whisperSprite = GetSpriteForWhisperType(whisperType);
+            
+            if (whisperSprite != null)
+            {
+                // Use hardcoded sprite
+                whisperImage.sprite = whisperSprite;
+            }
+            else
+            {
+                // Try to get sprite from downloaded cache or get inventory item
+                // For now, we'll use a default placeholder or try to find from user's inventory
+                // We need to get the sender's inventory to find the correct image URL
+                StartCoroutine(LoadWhisperSpriteForMessage(whisperImage, whisperType, chat.fromId));
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"No 'whisper' child found in chat bubble prefab or no Image component on whisper child");
+        }
+        
+        // Hide any text components since we're using sprites now
+        TextMeshProUGUI messageText = bubble.GetComponentInChildren<TextMeshProUGUI>();
+        if (messageText != null)
+        {
+            messageText.gameObject.SetActive(false);
+        }
+        
+        // Also hide regular Text components
+        Text regularText = bubble.GetComponentInChildren<Text>();
+        if (regularText != null)
+        {
+            regularText.gameObject.SetActive(false);
+        }
+    }
+    
+    /// <summary>
+    /// Display chat messages in the UI (full refresh - used for initial load)
     /// </summary>
     private void DisplayMessages()
     {
@@ -519,64 +651,10 @@ public class ChatManager : MonoBehaviour
         
         string currentUserId = FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
         
-        // Create message bubbles
+        // Create message bubbles for all messages
         foreach (var chat in currentConversation)
         {
-            bool isMyMessage = chat.fromId == currentUserId;
-            
-            // Choose the appropriate prefab based on sender
-            GameObject prefabToUse = isMyMessage ? senderBubblePrefab : receiverBubblePrefab;
-            GameObject bubble = Instantiate(prefabToUse, chatContentParent);
-            
-            // Remove ButtonHandler if no Button component exists
-            ButtonHandler buttonHandler = bubble.GetComponent<ButtonHandler>();
-            Button button = bubble.GetComponent<Button>();
-            if (buttonHandler != null && button == null)
-            {
-                Destroy(buttonHandler);
-            }
-            
-            // Find the "whisper" child and set sprite
-            Transform whisperTransform = FindChildByName(bubble.transform, "whisper");
-            Image whisperImage = whisperTransform?.GetComponent<Image>();
-            if (whisperImage != null)
-            {
-                WhisperType whisperType = chat.GetWhisperType();
-                
-                // First try to find the sprite from hardcoded available whispers
-                Sprite whisperSprite = GetSpriteForWhisperType(whisperType);
-                
-                if (whisperSprite != null)
-                {
-                    // Use hardcoded sprite
-                    whisperImage.sprite = whisperSprite;
-                }
-                else
-                {
-                    // Try to get sprite from downloaded cache or get inventory item
-                    // For now, we'll use a default placeholder or try to find from user's inventory
-                    // We need to get the sender's inventory to find the correct image URL
-                    StartCoroutine(LoadWhisperSpriteForMessage(whisperImage, whisperType, chat.fromId));
-                }
-            }
-            else
-            {
-                Debug.LogWarning($"No 'whisper' child found in chat bubble prefab or no Image component on whisper child");
-            }
-            
-            // Hide any text components since we're using sprites now
-            TextMeshProUGUI messageText = bubble.GetComponentInChildren<TextMeshProUGUI>();
-            if (messageText != null)
-            {
-                messageText.gameObject.SetActive(false);
-            }
-            
-            // Also hide regular Text components
-            Text regularText = bubble.GetComponentInChildren<Text>();
-            if (regularText != null)
-            {
-                regularText.gameObject.SetActive(false);
-            }
+            CreateMessageBubble(chat, currentUserId);
         }
         
         // Scroll to bottom to show most recent messages

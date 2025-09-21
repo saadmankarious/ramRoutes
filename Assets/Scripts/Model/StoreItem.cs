@@ -30,8 +30,12 @@ namespace RamRoutes.Model
         
         [FirestoreProperty]
         public bool available { get; set; } = true;
-      [FirestoreProperty]
-      public string whisperType { get; set; } = "0";
+        
+        [FirestoreProperty]
+        public string whisperType { get; set; } = "0";
+        
+        [FirestoreProperty]
+        public Firebase.Firestore.Timestamp createdAt { get; set; }
 
         public StoreItem()
         {

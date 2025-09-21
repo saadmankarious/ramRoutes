@@ -194,11 +194,11 @@ function StoreItemEdit({ item, onCancel, onSave }) {
 
         {formData.category === 'whisper' && (
           <div className="form-group">
-            <label htmlFor="whisperType">Whisper Type</label>
+            <label htmlFor="whisperType">Whisper Type (String)</label>
             <select
               id="whisperType"
               name="whisperType"
-              value={formData.whisperType || 0}
+              value={formData.whisperType + "" || "0"}
               onChange={handleChange}
             >
               <option value={0}>Greeting</option>

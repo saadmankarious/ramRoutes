@@ -865,3 +865,83 @@ exports.notifyWhisperReceived = onDocumentCreated("chat/{chatId}", async (event)
         return null;
     }
 });
+
+/**
+ * Notify all users when a new store item is added
+ * Triggers when a document is created in the store-items collection
+ */
+exports.notifyNewStoreItem = onDocumentCreated("store-items/{itemId}", async (event) => {
+    try {
+        const itemData = event.data.data();
+        const itemId = event.params.itemId;
+        
+        // Only notify if item is available for purchase
+        if (!itemData.available) {
+            logger.info("Store item not available, skipping notification", { itemId });
+            return null;
+        }
+        
+        const itemName = itemData.name || 'New Item';
+        const category = itemData.category || 'general';
+        
+        logger.info("Sending new store item notification", {
+            itemId: itemId,
+            itemName: itemName,
+            category: category
+        });
+        
+        // Create the notification message
+        const message = {
+            topic: 'updates',
+            notification: {
+                title: 'New Store Item!',
+                body: `${itemName} is now available in the store!`
+            },
+            data: {
+                type: 'new_store_item',
+                itemId: itemId,
+                itemName: itemName,
+                category: category
+            },
+            android: {
+                notification: {
+                    icon: "ic_notification",
+                    color: "#4CAF50",
+                    sound: "default"
+                },
+                priority: "high",
+                data: {
+                    force_foreground: "true"
+                }
+            },
+            apns: {
+                payload: {
+                    aps: {
+                        badge: 1,
+                        sound: "default"
+                    }
+                }
+            }
+        };
+        
+        // Send the notification
+        const response = await getMessaging().send(message);
+        logger.info("Successfully sent new store item notification", {
+            messageId: response,
+            itemId: itemId,
+            itemName: itemName
+        });
+        
+        return null;
+        
+    } catch (error) {
+        logger.error("Error sending new store item notification", {
+            error: error.message,
+            stack: error.stack,
+            itemId: event.params.itemId
+        });
+        
+        // Don't re-throw the error to prevent function retry
+        return null;
+    }
+});

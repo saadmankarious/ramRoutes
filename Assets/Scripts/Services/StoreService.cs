@@ -24,7 +24,11 @@ namespace RamRoutes.Services
         {
             try
             {
-                var query = db.Collection(STORE_COLLECTION).WhereEqualTo("available", true);
+                var query = db.Collection(STORE_COLLECTION)
+                    .WhereEqualTo("available", true);
+                    // Removed .OrderByDescending("createdAt") to avoid requiring Firestore index
+                    // Items will be sorted locally in the client
+
                 var snapshot = await query.GetSnapshotAsync();
 
                 var items = new List<StoreItem>();
@@ -227,7 +231,11 @@ namespace RamRoutes.Services
         {
             try
             {
-                var query = db.Collection(STORE_COLLECTION).WhereEqualTo("available", true);
+                var query = db.Collection(STORE_COLLECTION)
+                    .WhereEqualTo("available", true);
+                    // Removed .OrderByDescending("createdAt") to avoid requiring Firestore index
+                    // Items will be sorted locally in the client
+
                 var snapshot = await query.GetSnapshotAsync();
 
                 var items = new List<StoreItem>();

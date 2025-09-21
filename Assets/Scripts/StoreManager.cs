@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -330,7 +332,23 @@ public class StoreManager : MonoBehaviour
             return;
         }
         
-        foreach (var item in items)
+        // Sort items by creation date (newest first) as fallback for client-side ordering
+        // This ensures newest items appear first even if database ordering fails
+        var sortedItems = items.OrderByDescending(item => 
+        {
+            // If createdAt is available, use it; otherwise fall back to itemId (newer items typically have newer IDs)
+            if (item.createdAt != null && item.createdAt != default(Firebase.Firestore.Timestamp))
+            {
+                return item.createdAt.ToDateTime();
+            }
+            else
+            {
+                // Fallback: newer items often have lexicographically larger IDs
+                return DateTime.MinValue.AddTicks(item.itemId?.GetHashCode() ?? 0);
+            }
+        }).ToList();
+        
+        foreach (var item in sortedItems)
         {
             GameObject itemObject = Instantiate(itemPrefab, contentContainer);
             
@@ -351,7 +369,7 @@ public class StoreManager : MonoBehaviour
             storeScrollView.verticalNormalizedPosition = 1f;
         }
         
-        Debug.Log($"Displayed {items.Count} store items in content container '{contentContainer.name}'");
+        Debug.Log($"Displayed {sortedItems.Count()} store items in content container '{contentContainer.name}' (sorted by creation date)");
     }
     
     /// <summary>

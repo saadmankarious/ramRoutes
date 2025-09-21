@@ -50,6 +50,13 @@ namespace Platformer.Mechanics
         public bool mobileInteractPressed = false;
         public Tilemap paintedTilemap; // Assign in inspector - the tilemap with painted areas
 
+        // Idle backflip functionality
+        [Header("Idle Backflip")]
+        [SerializeField] private float idleBackflipTime = 10f; // Time in seconds before backflip
+        [SerializeField] private AudioClip backflipSound; // Optional backflip sound
+        private float idleTimer = 0f;
+        private bool isPerformingBackflip = false;
+
         // Add this function to your PlayerController class
         private bool IsSteppingOnPaintedTile()
         {
@@ -171,6 +178,9 @@ namespace Platformer.Mechanics
             // Update animation parameters
             if (moveInput.magnitude > 0.01f)
             {
+                // Reset idle timer when moving
+                idleTimer = 0f;
+                
                 // Store direction when moving
                 lastMoveDirection = moveInput;
                 // Set movement animation parameters
@@ -180,6 +190,19 @@ namespace Platformer.Mechanics
             }
             else
             {
+                // Player is idle - update idle timer
+                if (!isPerformingBackflip)
+                {
+                    idleTimer += Time.deltaTime;
+                    
+                    // Check if idle time exceeded and trigger backflip
+                    if (idleTimer >= idleBackflipTime)
+                    {
+                        StartCoroutine(PerformIdleBackflip());
+                        idleTimer = 0f; // Reset timer
+                    }
+                }
+                
                 // Use last direction for idle animation
                 animator.SetFloat("MoveX", lastMoveDirection.x);
                 animator.SetFloat("MoveY", lastMoveDirection.y);
@@ -314,6 +337,40 @@ namespace Platformer.Mechanics
                 }
                 heldTrash = null;
             }
+        }
+
+        /// <summary>
+        /// Coroutine to perform backflip when player has been idle for too long
+        /// </summary>
+        private IEnumerator PerformIdleBackflip()
+        {
+            isPerformingBackflip = true;
+            
+            // Trigger backflip animation
+            if (animator != null)
+            {
+                animator.SetBool("backflip", true);
+                Debug.Log("Player performing idle backflip!");
+                
+                // Play backflip sound if available
+                if (backflipSound != null && audioSource != null)
+                {
+                    audioSource.PlayOneShot(backflipSound, 0.7f);
+                }
+            }
+            
+            // Wait for backflip animation duration (adjust based on animation length)
+            yield return new WaitForSeconds(0.5f);
+
+            // Reset backflip animation state
+            if (animator != null)
+            {
+                animator.SetBool("backflip", false);
+                
+            }
+            
+            isPerformingBackflip = false;
+            Debug.Log("Player idle backflip completed");
         }
     }
 }
