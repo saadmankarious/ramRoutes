@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -45,6 +46,9 @@ public class StoreManager : MonoBehaviour
     public Color overlayColor = new Color(0, 0, 0, 0.5f); // Semi-transparent black
     
     private StoreService storeService;
+        private GameObject emptyText; // Reference to the "empty" text child
+
+    private InventoryService inventoryService;
     private List<GameObject> spawnedItems = new List<GameObject>();
     private Transform contentContainer; // Where items are actually instantiated (ScrollView content or fallback)
     private bool isStoreOpen = false;
@@ -53,6 +57,7 @@ public class StoreManager : MonoBehaviour
     void Start()
     {
         storeService = new StoreService();
+        inventoryService = new InventoryService();
         InitializeStoreManager();
         
         // Configure ScrollView if available
@@ -83,6 +88,14 @@ public class StoreManager : MonoBehaviour
         else
         {
             Debug.Log("StoreManager: Using directly assigned 'items' container for visibility toggle");
+        }
+
+            Transform emptyTransform = FindChildByName(transform, "empty");
+        if (emptyTransform != null)
+        {
+            emptyText = emptyTransform.gameObject;
+            emptyText.SetActive(false); // Hide initially
+            Debug.Log("InventoryManager: Found and using 'empty' text child");
         }
         
         // Determine content container (where items are actually instantiated)
@@ -140,8 +153,8 @@ public class StoreManager : MonoBehaviour
         // Use the new method to properly handle UI activation
         SetStoreUIActive(isStoreOpen);
         
-        // Load items if opening store for the first time
-        if (isStoreOpen && spawnedItems.Count == 0)
+        // Load fresh items every time store is opened to ensure up-to-date data
+        if (isStoreOpen)
         {
             LoadStoreItems();
         }
@@ -306,6 +319,9 @@ public class StoreManager : MonoBehaviour
                 items = await storeService.GetAllStoreItems();
             }
             
+            // Filter out items that the user has already purchased
+            items = await FilterOutPurchasedItems(items);
+            
             DisplayStoreItems(items);
         }
         catch (System.Exception ex)
@@ -316,8 +332,38 @@ public class StoreManager : MonoBehaviour
             if (useTestData)
             {
                 var testItems = storeService.InitializeTestItems();
+                // Also filter test items
+                testItems = await FilterOutPurchasedItems(testItems);
                 DisplayStoreItems(testItems);
             }
+        }
+    }
+    
+    /// <summary>
+    /// Filter out items that the user has already purchased
+    /// </summary>
+    private async Task<List<StoreItem>> FilterOutPurchasedItems(List<StoreItem> storeItems)
+    {
+        try
+        {
+            // Get user's inventory to check what they already own
+            var userInventory = await inventoryService.GetUserInventory();
+            
+            // Extract the store item IDs that the user already owns
+            var ownedItemIds = userInventory.Select(inventoryItem => inventoryItem.itemId).ToHashSet();
+            
+            // Filter out items that are already owned
+            var availableItems = storeItems.Where(storeItem => !ownedItemIds.Contains(storeItem.itemId)).ToList();
+            
+            Debug.Log($"StoreManager: Filtered {storeItems.Count - availableItems.Count} already purchased items. Showing {availableItems.Count} available items.");
+            
+            return availableItems;
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"StoreManager.FilterOutPurchasedItems: Error filtering items: {ex.Message}");
+            // If filtering fails, return all items to avoid blocking the store
+            return storeItems;
         }
     }
     
@@ -332,6 +378,16 @@ public class StoreManager : MonoBehaviour
             return;
         }
         
+                  bool isEmpty = items == null || items.Count == 0;
+
+           // Show/hide empty text based on inventory state
+        if (emptyText != null)
+        {
+            emptyText.SetActive(isEmpty);
+            Debug.Log($"InventoryManager: Empty text {(isEmpty ? "shown" : "hidden")}");
+        }
+        
+
         // Sort items by creation date (newest first) as fallback for client-side ordering
         // This ensures newest items appear first even if database ordering fails
         var sortedItems = items.OrderByDescending(item => 

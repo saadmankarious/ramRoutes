@@ -531,7 +531,18 @@ public class RamsManager : MonoBehaviour
     {
         // Wait 10 seconds before starting despawn process
         Debug.Log("Waiting 10 seconds before despawning rams...");
-        yield return new WaitForSeconds(5f);
+        yield return new WaitForSeconds(7f);
+        ChatManager chat = chatManager;
+          if (chat == null)
+        {
+            chat = FindObjectOfType<ChatManager>();
+        }
+        
+        // Close chat panel if it's open (player has left the building)
+        if (chat != null)
+        {
+            chat.CloseChatPanel();
+        }
         
         // Start despawn coroutine after the delay
         Debug.Log("Starting ram despawn process");
@@ -813,7 +824,7 @@ public class RamsManager : MonoBehaviour
                 
                 // Destroy the ram
                 Destroy(ram);
-                Debug.Log($"Despawned ram {i + 1}/{ramsToDestroy.Count}");
+                // Debug.Log($"Despawned ram {i + 1}/{ramsToDestroy.Count}");
                 
                 // Wait a bit before despawning the next ram (except for the last one)
                 if (i < ramsToDestroy.Count - 1)
