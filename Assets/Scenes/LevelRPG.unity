@@ -4628,10 +4628,10 @@ RectTransform:
   - {fileID: 1975009824}
   - {fileID: 1499820068}
   - {fileID: 195424822}
+  - {fileID: 389767304}
   - {fileID: 1576859069}
   - {fileID: 1877408431}
   - {fileID: 1503913376}
-  - {fileID: 389767304}
   - {fileID: 403309916}
   - {fileID: 448837307}
   - {fileID: 133642104}
@@ -36198,6 +36198,7 @@ MonoBehaviour:
     type: 3}
   openInventoryButton: {fileID: 255536887}
   closeInventoryButton: {fileID: 1405626797}
+  inventoryPanel: {fileID: 0}
   overlayColor: {r: 0, g: 0, b: 0, a: 0.5}
 --- !u!222 &1576859071
 CanvasRenderer:
@@ -275310,6 +275311,7 @@ MonoBehaviour:
   closeStoreButton: {fileID: 0}
   storeScrollView: {fileID: 0}
   itemsContainer: {fileID: 0}
+  storePanel: {fileID: 0}
   useTestData: 1
   overlayColor: {r: 0, g: 0, b: 0, a: 0.5}
 --- !u!114 &1754240618
@@ -289363,6 +289365,7 @@ MonoBehaviour:
   closeStoreButton: {fileID: 9042060689070754940}
   storeScrollView: {fileID: 576989281}
   itemsContainer: {fileID: 0}
+  storePanel: {fileID: 0}
   useTestData: 0
   overlayColor: {r: 0, g: 0, b: 0, a: 0.5}
 --- !u!222 &1877408434

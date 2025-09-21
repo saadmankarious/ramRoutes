@@ -416,7 +416,8 @@ public class ChatManager : MonoBehaviour
         
         if (chatPanel != null)
         {
-            chatPanel.SetActive(true);
+            // Start the slide-up animation
+            StartCoroutine(AnimateChatPanelOpen());
         }
         
         // Load conversation
@@ -693,7 +694,8 @@ public class ChatManager : MonoBehaviour
         
         if (chatPanel != null)
         {
-            chatPanel.SetActive(false);
+            // Start the slide-down animation
+            StartCoroutine(AnimateChatPanelClose());
         }
         
         currentChatTargetId = "";
@@ -925,4 +927,68 @@ public class ChatManager : MonoBehaviour
             Debug.LogWarning($"No inventory item with image URL found for whisper type {whisperType} from sender {senderId}");
         }
     }
+    
+    #region Chat Panel Animation
+    
+    /// <summary>
+    /// Animate the chat panel sliding up from the bottom
+    /// </summary>
+    private IEnumerator AnimateChatPanelOpen()
+    {
+        chatPanel.SetActive(true);
+        
+        RectTransform chatRect = chatPanel.GetComponent<RectTransform>();
+        Vector3 originalPosition = chatRect.anchoredPosition;
+        Vector3 startPosition = originalPosition + Vector3.down * chatRect.rect.height;
+        
+        // Set starting position (below screen)
+        chatRect.anchoredPosition = startPosition;
+        
+        float duration = 0.3f;
+        float elapsed = 0f;
+        
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float progress = elapsed / duration;
+            
+            // Simple ease-out animation
+            progress = 1f - Mathf.Pow(1f - progress, 3f);
+            
+            chatRect.anchoredPosition = Vector3.Lerp(startPosition, originalPosition, progress);
+            yield return null;
+        }
+        
+        chatRect.anchoredPosition = originalPosition;
+    }
+    
+    /// <summary>
+    /// Animate the chat panel sliding down to the bottom
+    /// </summary>
+    private IEnumerator AnimateChatPanelClose()
+    {
+        RectTransform chatRect = chatPanel.GetComponent<RectTransform>();
+        Vector3 originalPosition = chatRect.anchoredPosition;
+        Vector3 endPosition = originalPosition + Vector3.down * chatRect.rect.height;
+        
+        float duration = 0.25f;
+        float elapsed = 0f;
+        
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float progress = elapsed / duration;
+            
+            // Simple ease-in animation
+            progress = Mathf.Pow(progress, 2f);
+            
+            chatRect.anchoredPosition = Vector3.Lerp(originalPosition, endPosition, progress);
+            yield return null;
+        }
+        
+        chatPanel.SetActive(false);
+        chatRect.anchoredPosition = originalPosition; // Reset position for next time
+    }
+    
+    #endregion
 }
