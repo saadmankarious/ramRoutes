@@ -6,6 +6,18 @@ using System.Linq;
 using RamRoutes.Services;
 using RamRoutes.Model;
 
+/// <summary>
+/// Represents a user building entry for batching notifications
+/// </summary>
+[System.Serializable]
+public struct UserBuildingEntry
+{
+    public string userId;
+    public string userName;
+    public string buildingName;
+    public float timestamp;
+}
+
 public class RamsManager : MonoBehaviour
 {
      private BuildingInteraction building;
@@ -52,6 +64,10 @@ public class RamsManager : MonoBehaviour
     
     // Coroutine reference for live building monitoring
     private Coroutine buildingMonitorCoroutine;
+    
+    // Building entry notification batching
+    private List<UserBuildingEntry> pendingBuildingEntries = new List<UserBuildingEntry>();
+    private Coroutine batchProcessingCoroutine;
     
     // Color assignment tracking for unique colors
     private Dictionary<string, Color> userColorAssignments = new Dictionary<string, Color>();
@@ -323,7 +339,7 @@ public class RamsManager : MonoBehaviour
     
     /// <summary>
     /// Checks for new players that have joined THIS building since the last check
-    /// Only notifies about NEW players, not existing ones
+    /// Uses batching to prevent notification spam
     /// </summary>
     private async Task CheckForNewPlayersInBuildings()
     {
@@ -359,32 +375,33 @@ public class RamsManager : MonoBehaviour
                     // Get the new user objects
                     var newUsers = currentUsersInBuilding.Where(u => newUserIds.Contains(u.userId)).ToList();
                     
-                    // Create notification for new players (excluding current player)
+                    // Add new players to batch (excluding current player)
                     foreach (var newUser in newUsers)
                     {
-                        // Skip notification if this is the current player
+                        // Skip if this is the current player
                         if (newUser.userId == currentUserId)
                         {
                             Debug.Log($"RamsManager ({buildingName}): Skipping notification for current player: {newUser.name}");
                             continue;
                         }
                         
-                        string message = $"{newUser.name} just entered {buildingName}. Go say hi!";
-                        
-                        // Show notification if NotificationManager is available
-                        if (notificationManager != null)
+                        // Add to batch
+                        var entry = new UserBuildingEntry
                         {
-                            notificationManager.ShowNotification("New Player Activity", message);
-                            
-                            // Small delay between notifications
-                            await Task.Delay(300);
-                        }
-                        else
-                        {
-                            Debug.Log($"RamsManager: {message}");
-                        }
+                            userId = newUser.userId,
+                            userName = newUser.name,
+                            buildingName = buildingName,
+                            timestamp = Time.time
+                        };
                         
-                        Debug.Log($"RamsManager ({buildingName}): New player detected - {newUser.name} entered building");
+                        pendingBuildingEntries.Add(entry);
+                        Debug.Log($"RamsManager ({buildingName}): Added {newUser.name} to notification batch");
+                    }
+                    
+                    // Start batch processing if not already running
+                    if (batchProcessingCoroutine == null && pendingBuildingEntries.Count > 0)
+                    {
+                        batchProcessingCoroutine = StartCoroutine(ProcessNotificationBatch());
                     }
                 }
                 
@@ -1635,5 +1652,77 @@ public class RamsManager : MonoBehaviour
         
         // Set physics layer for ram-to-ram interaction
         ramInstance.layer = LayerMask.NameToLayer("Rams"); // Create "Rams" layer
+    }
+    
+    /// <summary>
+    /// Processes batched building entry notifications with smart formatting
+    /// Waits for more entries before sending notification to reduce spam
+    /// </summary>
+    private IEnumerator ProcessNotificationBatch()
+    {
+        // Wait 10 seconds to collect more entries
+        yield return new WaitForSeconds(10f);
+        
+        if (pendingBuildingEntries.Count == 0)
+        {
+            batchProcessingCoroutine = null;
+            yield break;
+        }
+        
+        // Group entries by building
+        var entriesByBuilding = pendingBuildingEntries
+            .GroupBy(entry => entry.buildingName)
+            .ToList();
+        
+        foreach (var buildingGroup in entriesByBuilding)
+        {
+            var buildingName = buildingGroup.Key;
+            var entries = buildingGroup.ToList();
+            
+            string title, message;
+            
+            // Create smart notification based on number of players
+            if (entries.Count == 1)
+            {
+                var entry = entries[0];
+                title = $"{entry.userName} entered {buildingName}";
+                message = $"{entry.userName} just joined {buildingName}. Go say hi!";
+            }
+            else if (entries.Count == 2)
+            {
+                var first = entries[0].userName;
+                var second = entries[1].userName;
+                title = $"{first} and {second} entered {buildingName}";
+                message = $"{first} and {second} just joined {buildingName}. Go say hi!";
+            }
+            else
+            {
+                var firstTwo = entries.Take(2).Select(e => e.userName).ToArray();
+                var remaining = entries.Count - 2;
+                title = $"{firstTwo[0]}, {firstTwo[1]} and {remaining} more entered {buildingName}";
+                message = $"{firstTwo[0]}, {firstTwo[1]} and {remaining} more players just joined {buildingName}. Go say hi!";
+            }
+            
+            // Show batched notification
+            if (notificationManager != null)
+            {
+                notificationManager.ShowNotification(title, message);
+                Debug.Log($"RamsManager: Sent batched notification for {entries.Count} players entering {buildingName}");
+                
+                // Small delay between building notifications if multiple buildings
+                if (entriesByBuilding.Count > 1)
+                {
+                    yield return new WaitForSeconds(0.5f);
+                }
+            }
+            else
+            {
+                Debug.Log($"RamsManager: {title} - {message}");
+            }
+        }
+        
+        // Clear processed entries and reset coroutine
+        pendingBuildingEntries.Clear();
+        batchProcessingCoroutine = null;
     }
 }

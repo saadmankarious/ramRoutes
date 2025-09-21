@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
+using Firebase.Messaging;
 
 public class NotificationManager : MonoBehaviour
 {
@@ -44,6 +45,9 @@ public class NotificationManager : MonoBehaviour
     void Start()
     {
         InitializeAudioSource();
+        
+        // Set up Firebase message listening for in-game notifications
+        SetupFirebaseMessageListening();
         
         // Validate required components
         if (notificationPrefab == null)
@@ -287,7 +291,70 @@ public class NotificationManager : MonoBehaviour
         // Clean up any remaining coroutines
         StopAllCoroutines();
         ClearNotifications();
+        
+        // Clean up Firebase listeners
+        CleanupFirebaseListeners();
     }
+
+    #region Firebase Message Handling
+    
+    /// <summary>
+    /// Set up Firebase message listening for in-game notifications
+    /// </summary>
+    private void SetupFirebaseMessageListening()
+    {
+        try
+        {
+            FirebaseMessaging.MessageReceived += OnFirebaseMessageReceived;
+            Debug.Log("NotificationManager: Firebase message listening enabled");
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning($"NotificationManager: Could not set up Firebase listening: {ex.Message}");
+        }
+    }
+    
+    /// <summary>
+    /// Clean up Firebase message listeners
+    /// </summary>
+    private void CleanupFirebaseListeners()
+    {
+        try
+        {
+            FirebaseMessaging.MessageReceived -= OnFirebaseMessageReceived;
+            Debug.Log("NotificationManager: Firebase listeners cleaned up");
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogWarning($"NotificationManager: Error cleaning up Firebase listeners: {ex.Message}");
+        }
+    }
+    
+    /// <summary>
+    /// Handle incoming Firebase messages and display them as in-game notifications
+    /// </summary>
+    private void OnFirebaseMessageReceived(object sender, MessageReceivedEventArgs e)
+    {
+        Debug.Log($"NotificationManager: Received Firebase message from: {e.Message.From}");
+        
+        // Handle notification data
+        if (e.Message.Notification != null)
+        {
+            Debug.Log($"NotificationManager: Title: {e.Message.Notification.Title}");
+            Debug.Log($"NotificationManager: Body: {e.Message.Notification.Body}");
+
+            // Display all Firebase notifications as in-game notifications
+            ShowNotification(e.Message.Notification.Title, e.Message.Notification.Body);
+        }
+        
+        // Log custom data payload for debugging
+        foreach (var pair in e.Message.Data)
+        {
+            Debug.Log($"NotificationManager: Data - {pair.Key}: {pair.Value}");
+        }
+    }
+    
+    #endregion
     
     #if UNITY_EDITOR
     /// <summary>

@@ -253,10 +253,8 @@ public class FirebaseMessagingManager : MonoBehaviour
             Debug.Log($"Title: {e.Message.Notification.Title}");
             Debug.Log($"Body: {e.Message.Notification.Body}");
 
-            // Always show in-game notification using NotificationManager for ALL message types
-            ShowInGameNotification(e.Message.Notification.Title, e.Message.Notification.Body);
-            
             // Show notification in system tray (works in background/foreground)
+            // In-game notifications are now handled by NotificationManager directly
             ShowSystemNotification(
                 e.Message.Notification.Title, 
                 e.Message.Notification.Body
@@ -269,22 +267,6 @@ public class FirebaseMessagingManager : MonoBehaviour
             Debug.Log($"{pair.Key}: {pair.Value}");
         }
     }
-
-    // Show any notification using NotificationManager
-    private void ShowInGameNotification(string title, string body)
-    {
-        NotificationManager notificationManager = FindObjectOfType<NotificationManager>();
-        if (notificationManager != null)
-        {
-            notificationManager.ShowNotification(title, body);
-            Debug.Log($"Displayed in-game notification: {title}");
-        }
-        else
-        {
-            Debug.LogWarning("NotificationManager not found - cannot display in-game notification");
-        }
-    }
-
     // Helper method to display notifications
     private void ShowSystemNotification(string title, string message)
     {

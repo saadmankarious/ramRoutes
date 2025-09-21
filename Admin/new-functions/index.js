@@ -748,6 +748,7 @@ exports.notifyWhisperReceived = onDocumentCreated("chat/{chatId}", async (event)
                 if (senderDoc.exists) {
                     const senderData = senderDoc.data();
                     senderName = senderData.name || 'Someone';
+                    senderBuilding = senderData.currentBuilding || 'Unknown';
                 }
             } catch (error) {
                 logger.warn("Could not fetch sender data", { senderUserId, chatId });
@@ -755,21 +756,21 @@ exports.notifyWhisperReceived = onDocumentCreated("chat/{chatId}", async (event)
         }
         
         // Create dramatic whisper messages
-        const dramaticMessages = [
-            "🌟 A mysterious whisper has found its way to you...",
-            "✨ The winds carry a secret message just for you...",
-            "🔮 Someone has sent you a whisper from the shadows...",
-            "💫 A whisper echoes through the digital realm to reach you...",
-            "🎭 The whispers of the campus have something to tell you...",
-            "🌙 Under the moonlight, a whisper arrives at your doorstep...",
-            "⚡ Lightning carries a whispered message to your ears...",
-            "🍃 The whispers in the wind speak your name...",
-            "🔥 A fiery whisper burns bright with a message for you...",
-            "🌊 Waves of whispers crash upon your consciousness..."
-        ];
+        // const dramaticMessages = [
+        //     "🌟 A mysterious whisper has found its way to you...",
+        //     "✨ The winds carry a secret message just for you...",
+        //     "🔮 Someone has sent you a whisper from the shadows...",
+        //     "💫 A whisper echoes through the digital realm to reach you...",
+        //     "🎭 The whispers of the campus have something to tell you...",
+        //     "🌙 Under the moonlight, a whisper arrives at your doorstep...",
+        //     "⚡ Lightning carries a whispered message to your ears...",
+        //     "🍃 The whispers in the wind speak your name...",
+        //     "🔥 A fiery whisper burns bright with a message for you...",
+        //     "🌊 Waves of whispers crash upon your consciousness..."
+        // ];
         
-        // Select a random dramatic message
-        const randomMessage = dramaticMessages[Math.floor(Math.random() * dramaticMessages.length)];
+        // // Select a random dramatic message
+        // const randomMessage = dramaticMessages[Math.floor(Math.random() * dramaticMessages.length)];
         
         logger.info("Whisper received, sending notification", {
             chatId: chatId,
@@ -784,7 +785,7 @@ exports.notifyWhisperReceived = onDocumentCreated("chat/{chatId}", async (event)
             token: null, // We'll set this below
             notification: {
                 title: `🌟 ${senderName} Whispered to you`,
-                body: randomMessage
+                body: `Sender: ${senderName}, Building: ${senderBuilding}`
             },
             data: {
                 chatId: chatId,
