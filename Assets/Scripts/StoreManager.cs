@@ -358,12 +358,16 @@ public class StoreManager : MonoBehaviour
             // Filter items: Remove non-whisper items that are already owned, but keep all whisper items
             var availableItems = storeItems.Where(storeItem => 
             {
-                // Parse whisperType - if it's a whisper (not "0"), always allow purchase
-                if (int.TryParse(storeItem.whisperType, out int whisperTypeInt) && whisperTypeInt > 0)
+                // Parse category - if it's a whisper (not "whisper") allow purchase
+                if (string.Equals(storeItem.category, "whisper", StringComparison.OrdinalIgnoreCase))
                 {
                     return true; // Always allow whisper items to be purchased
-                }
-                
+                }   
+                // if (int.TryParse(storeItem.category, out int whisperTypeInt) && whisperTypeInt > 0)
+                // {
+                //     return true; // Always allow whisper items to be purchased
+                // }
+
                 // For non-whisper items, only show if not already owned
                 return !ownedNonWhisperItemIds.Contains(storeItem.itemId);
             }).ToList();
