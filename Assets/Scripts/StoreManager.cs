@@ -340,7 +340,7 @@ public class StoreManager : MonoBehaviour
     }
     
     /// <summary>
-    /// Filter out items that the user has already purchased
+    /// Filter out items that the user has already purchased, except whisper items which can be bought multiple times
     /// </summary>
     private async Task<List<StoreItem>> FilterOutPurchasedItems(List<StoreItem> storeItems)
     {
@@ -349,13 +349,27 @@ public class StoreManager : MonoBehaviour
             // Get user's inventory to check what they already own
             var userInventory = await inventoryService.GetUserInventory();
             
-            // Extract the store item IDs that the user already owns
-            var ownedItemIds = userInventory.Select(inventoryItem => inventoryItem.itemId).ToHashSet();
+            // Extract the store item IDs that the user already owns (excluding whispers)
+            var ownedNonWhisperItemIds = userInventory
+                .Where(inventoryItem => inventoryItem.whisperType == 0) // Only non-whisper items
+                .Select(inventoryItem => inventoryItem.itemId)
+                .ToHashSet();
             
-            // Filter out items that are already owned
-            var availableItems = storeItems.Where(storeItem => !ownedItemIds.Contains(storeItem.itemId)).ToList();
+            // Filter items: Remove non-whisper items that are already owned, but keep all whisper items
+            var availableItems = storeItems.Where(storeItem => 
+            {
+                // Parse whisperType - if it's a whisper (not "0"), always allow purchase
+                if (int.TryParse(storeItem.whisperType, out int whisperTypeInt) && whisperTypeInt > 0)
+                {
+                    return true; // Always allow whisper items to be purchased
+                }
+                
+                // For non-whisper items, only show if not already owned
+                return !ownedNonWhisperItemIds.Contains(storeItem.itemId);
+            }).ToList();
             
-            Debug.Log($"StoreManager: Filtered {storeItems.Count - availableItems.Count} already purchased items. Showing {availableItems.Count} available items.");
+            int filteredCount = storeItems.Count - availableItems.Count;
+            Debug.Log($"StoreManager: Filtered {filteredCount} already purchased non-whisper items. Showing {availableItems.Count} available items (whispers can be bought multiple times).");
             
             return availableItems;
         }

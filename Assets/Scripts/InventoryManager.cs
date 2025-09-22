@@ -171,26 +171,19 @@ public class InventoryManager : MonoBehaviour
             return;
         }
         
-        // Group items by itemId and display each unique item once with count
-        var groupedItems = items
-            .GroupBy(item => item.itemId)
-            .Select(group => new {
-                Item = group.First(), // Take first item for display info
-                Count = group.Count(), // Count how many of this item
-                HasEquipped = group.Any(item => item.equipped), // Check if any is equipped
-                AllItems = group.ToList() // Keep all items for operations
-            })
-            .OrderBy(group => group.Item.itemName)
+        // Display items directly using their quantity property instead of grouping
+        var sortedItems = items
+            .OrderBy(item => item.itemName)
             .ToList();
         
-        foreach (var group in groupedItems)
+        foreach (var item in sortedItems)
         {
             GameObject itemObject = Instantiate(itemPrefab, itemsContainer);
-            SetupItemUI(itemObject, group.Item, group.Count, group.HasEquipped, group.AllItems);
+            SetupItemUI(itemObject, item, item.quantity, item.equipped, new List<InventoryItem> { item });
             spawnedItems.Add(itemObject);
         }
         
-        Debug.Log($"Displayed {groupedItems.Count} unique inventory items (total {items.Count} items)");
+        Debug.Log($"Displayed {items.Count} inventory items");
     }
     
     private void SetupItemUI(GameObject itemObject, InventoryItem item, int count, bool hasEquipped, List<InventoryItem> allItems)
@@ -228,7 +221,7 @@ public class InventoryManager : MonoBehaviour
         }
         
         // Add overlay to unequipped items
-        AddOverlayToUnequippedItem(itemObject, hasEquipped);
+        AddOverlayToUnequippedItem(itemObject, item.equipped);
         
         // Set up equip/unequip button
         if (equipButtonTransform != null)
@@ -242,7 +235,7 @@ public class InventoryManager : MonoBehaviour
                 var buttonText = equipButton.GetComponentInChildren<UnityEngine.UI.Text>();
                 if (buttonText == null) buttonText = equipButton.GetComponentInChildren<UnityEngine.UI.Text>();
 
-                if (hasEquipped)
+                if (item.equipped)
                 {
                     if (buttonText != null) buttonText.text = "Unequip";
                     equipButton.onClick.AddListener(() => OnUnequipButtonClicked(allItems));

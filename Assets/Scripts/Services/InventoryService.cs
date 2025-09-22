@@ -85,6 +85,7 @@ namespace RamRoutes.Services
                 item.description = data.ContainsKey("description") ? data["description"].ToString() : "";
                 item.category = data.ContainsKey("category") ? data["category"].ToString() : "general";
                 item.imageUrl = data.ContainsKey("imageUrl") ? data["imageUrl"].ToString() : "";
+                item.quantity = data.ContainsKey("quantity") && int.TryParse(data["quantity"].ToString(), out int qty) ? qty : 1;
                 
                 // Handle numeric fields with safe conversion
                 if (data.ContainsKey("pricePaidCoins"))
@@ -665,6 +666,56 @@ namespace RamRoutes.Services
             catch (System.Exception ex)
             {
                 Debug.LogError($"Failed to notify ChatManager of whisper change: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Decrease the quantity of an inventory item by 1. If quantity reaches 0, remove the item.
+        /// </summary>
+        public async Task<bool> DecreaseItemQuantity(string userId, WhisperType whisperType)
+        {
+            if (string.IsNullOrEmpty(userId))
+            {
+                Debug.LogError("InventoryService.DecreaseItemQuantity: User ID is null or empty");
+                return false;
+            }
+
+            try
+            {
+                // Find the inventory item with the matching whisper type
+                var inventory = await GetUserInventory(userId);
+                var whisperItem = inventory.FirstOrDefault(item => item.whisperType == (int)whisperType && item.quantity > 0);
+                
+                if (whisperItem == null)
+                {
+                    Debug.LogWarning($"InventoryService.DecreaseItemQuantity: No whisper item found with type {whisperType} or quantity is 0");
+                    return false;
+                }
+
+                var inventoryDoc = db.Collection(USER_INVENTORY_COLLECTION).Document(whisperItem.inventoryId);
+                
+                if (whisperItem.quantity <= 1)
+                {
+                    // Remove the item if quantity would reach 0 or below
+                    await inventoryDoc.DeleteAsync();
+                    Debug.Log($"InventoryService.DecreaseItemQuantity: Removed whisper item {whisperType} as quantity reached 0");
+                }
+                else
+                {
+                    // Decrease quantity by 1
+                    await inventoryDoc.UpdateAsync(new Dictionary<string, object>
+                    {
+                        { "quantity", whisperItem.quantity - 1 }
+                    });
+                    Debug.Log($"InventoryService.DecreaseItemQuantity: Decreased whisper {whisperType} quantity to {whisperItem.quantity - 1}");
+                }
+                
+                return true;
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogError($"InventoryService.DecreaseItemQuantity: Error decreasing item quantity: {ex.Message}");
+                return false;
             }
         }
     }

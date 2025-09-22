@@ -42,11 +42,13 @@ public class ChatManager : MonoBehaviour
     private UserService userService;
     private ShoutOutService shoutOutService;
     private FriendRequestService friendRequestService;
+    private InventoryService inventoryService;
     private string currentChatTargetId;
     private string currentChatTargetName;
     private User currentChatTargetUser;
     private List<Chat> currentConversation = new List<Chat>();
     private Coroutine refreshCoroutine;
+    private Coroutine whisperRefreshCoroutine;
     
     void Start()
     {
@@ -54,6 +56,7 @@ public class ChatManager : MonoBehaviour
         userService = new UserService();
         shoutOutService = new ShoutOutService();
         friendRequestService = new FriendRequestService();
+        inventoryService = new InventoryService();
         
         // Setup UI
         if (closeChatButton != null)
@@ -423,8 +426,9 @@ public class ChatManager : MonoBehaviour
         // Load conversation
         await LoadConversation();
         
-        // Start auto-refresh
+        // Start auto-refresh for both chat messages and whisper buttons
         StartChatRefresh();
+        StartWhisperRefresh();
     }
     
     /// <summary>
@@ -482,6 +486,20 @@ public class ChatManager : MonoBehaviour
         if (success)
         {
             UIManager.Instance.ShowQuickUpdate("Whisper sent to " + currentChatTargetUser.name + "!");
+
+            // Decrease the whisper quantity in inventory
+            bool quantityDecreased = await inventoryService.DecreaseItemQuantity(currentUserId, whisperType);
+            if (quantityDecreased)
+            {
+                Debug.Log($"Decreased quantity for whisper type {whisperType}");
+                
+                // Refresh whisper buttons to reflect updated quantities
+                StartCoroutine(RefreshWhisperButtonsCoroutine());
+            }
+            else
+            {
+                Debug.LogWarning($"Failed to decrease quantity for whisper type {whisperType}");
+            }
 
             // Refresh conversation to show the new message
             await LoadConversation();
@@ -689,8 +707,9 @@ public class ChatManager : MonoBehaviour
     /// </summary>
     public void CloseChatPanel()
     {
-        // Stop auto-refresh
+        // Stop auto-refresh for both chat messages and whisper buttons
         StopChatRefresh();
+        StopWhisperRefresh();
         
         if (chatPanel != null)
         {
@@ -731,8 +750,9 @@ public class ChatManager : MonoBehaviour
     
     void OnDestroy()
     {
-        // Stop auto-refresh
+        // Stop auto-refresh for both chat messages and whisper buttons
         StopChatRefresh();
+        StopWhisperRefresh();
         
         if (closeChatButton != null)
         {
@@ -794,6 +814,46 @@ public class ChatManager : MonoBehaviour
                 // Start the async operation and wait for it to complete
                 var loadTask = LoadConversation();
                 yield return new WaitUntil(() => loadTask.IsCompleted);
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Start the whisper buttons refresh coroutine
+    /// </summary>
+    private void StartWhisperRefresh()
+    {
+        StopWhisperRefresh(); // Stop any existing coroutine
+        whisperRefreshCoroutine = StartCoroutine(RefreshWhisperButtonsPeriodically());
+    }
+    
+    /// <summary>
+    /// Stop the whisper buttons refresh coroutine
+    /// </summary>
+    private void StopWhisperRefresh()
+    {
+        if (whisperRefreshCoroutine != null)
+        {
+            StopCoroutine(whisperRefreshCoroutine);
+            whisperRefreshCoroutine = null;
+        }
+    }
+    
+    /// <summary>
+    /// Coroutine to refresh whisper buttons every 5 seconds
+    /// </summary>
+    private IEnumerator RefreshWhisperButtonsPeriodically()
+    {
+        while (!string.IsNullOrEmpty(currentChatTargetId))
+        {
+            yield return new WaitForSeconds(5f);
+            
+            // Only refresh if chat is still open
+            if (!string.IsNullOrEmpty(currentChatTargetId) && chatPanel != null && chatPanel.activeInHierarchy)
+            {
+                // Start the whisper refresh and wait for it to complete
+                var refreshTask = StartCoroutine(RefreshWhisperButtonsCoroutine());
+                yield return refreshTask;
             }
         }
     }

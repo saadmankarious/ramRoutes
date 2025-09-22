@@ -42,13 +42,16 @@ namespace RamRoutes.Model
         
         [FirestoreProperty]
         public int whisperType { get; set; } = 0; // WhisperType as integer
+        
+        [FirestoreProperty]
+        public int quantity { get; set; } = 1; // Item quantity
 
         public InventoryItem()
         {
         }
 
         public InventoryItem(string userId, string itemId, string itemName, string description, 
-            int pricePaidCoins, int pricePaidKb, string category = "general", string imageUrl = "", int whisperType = 0)
+            int pricePaidCoins, int pricePaidKb, string category = "general", string imageUrl = "", int whisperType = 0, int quantity = 1)
         {
             this.userId = userId;
             this.itemId = itemId;
@@ -59,6 +62,7 @@ namespace RamRoutes.Model
             this.category = category;
             this.imageUrl = imageUrl;
             this.whisperType = whisperType;
+            this.quantity = quantity;
             this.purchaseDate = Timestamp.GetCurrentTimestamp();
             this.equipped = false;
         }

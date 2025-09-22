@@ -83,6 +83,11 @@ namespace RamRoutes.Services
                     return false;
                 }
 
+                // Check if user already owns this item
+                var inventoryService = new InventoryService();
+                var userInventory = await inventoryService.GetUserInventory(currentUserId);
+                var existingItem = userInventory.FirstOrDefault(inv => inv.itemId == itemId);
+
                 var userDoc = db.Collection("users").Document(currentUserId);
                 await userDoc.UpdateAsync(new Dictionary<string, object>
                 {
@@ -90,24 +95,38 @@ namespace RamRoutes.Services
                     { "knowledgePoints", userKb - item.priceKb }
                 });
 
-                // Always create a new inventory entry for each purchase
-                var inventoryData = new Dictionary<string, object>
+                if (existingItem != null)
                 {
-                    { "userId", currentUserId },
-                    { "itemId", itemId },
-                    { "itemName", item.name },
-                    { "description", item.description },
-                    { "category", item.category },
-                    { "imageUrl", item.imageUrl },
-                    { "purchaseDate", Timestamp.GetCurrentTimestamp() },
-                    { "pricePaidCoins", item.priceCoins },
-                    { "pricePaidKb", item.priceKb },
-                    {"whisperType", item.whisperType},
-                    { "equipped", true }
-                };
+                    // Item already exists, increase quantity
+                    var inventoryDoc = db.Collection(USER_INVENTORY_COLLECTION).Document(existingItem.inventoryId);
+                    await inventoryDoc.UpdateAsync(new Dictionary<string, object>
+                    {
+                        { "quantity", existingItem.quantity + 1 }
+                    });
+                    Debug.Log($"Increased quantity of {item.name} to {existingItem.quantity + 1}");
+                }
+                else
+                {
+                    // Create new inventory entry
+                    var inventoryData = new Dictionary<string, object>
+                    {
+                        { "userId", currentUserId },
+                        { "itemId", itemId },
+                        { "itemName", item.name },
+                        { "description", item.description },
+                        { "category", item.category },
+                        { "imageUrl", item.imageUrl },
+                        { "purchaseDate", Timestamp.GetCurrentTimestamp() },
+                        { "pricePaidCoins", item.priceCoins },
+                        { "pricePaidKb", item.priceKb },
+                        {"whisperType", item.whisperType},
+                        { "equipped", true },
+                        { "quantity", 1 }
+                    };
 
-                await db.Collection(USER_INVENTORY_COLLECTION).AddAsync(inventoryData);
-                Debug.Log($"Successfully purchased item {item.name}");
+                    await db.Collection(USER_INVENTORY_COLLECTION).AddAsync(inventoryData);
+                    Debug.Log($"Successfully purchased new item {item.name}");
+                }
 
                 return true;
             }
