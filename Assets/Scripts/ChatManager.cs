@@ -279,6 +279,33 @@ public class ChatManager : MonoBehaviour
             Debug.LogWarning($"No 'whisper' child found in whisper button prefab or no Image component on whisper child");
         }
         
+        // Find and set the "count" text component
+        Transform countTransform = FindChildByName(whisperBtn.transform, "count");
+        if (countTransform != null)
+        {
+            // Try TextMeshProUGUI first
+            TextMeshProUGUI countTextTMP = countTransform.GetComponent<TextMeshProUGUI>();
+            if (countTextTMP != null)
+            {
+                int quantity = purchasedWhisper?.quantity ?? 0;
+                countTextTMP.text = quantity.ToString();
+            }
+            else
+            {
+                // Try regular Text component
+                Text countText = countTransform.GetComponent<Text>();
+                if (countText != null)
+                {
+                    int quantity = purchasedWhisper?.quantity ?? 0;
+                    countText.text = quantity.ToString();
+                }
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"No 'count' child found in whisper button prefab");
+        }
+        
         // Add click listener
         WhisperType currentWhisper = whisperType; // Capture for closure
         whisperBtn.onClick.AddListener(() => SendWhisper(currentWhisper));
