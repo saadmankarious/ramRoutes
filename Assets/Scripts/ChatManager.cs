@@ -33,7 +33,7 @@ public class ChatManager : MonoBehaviour
     [SerializeField] private Button whisperButtonPrefab;
     
     [Header("Whisper Sprites")]
-    [SerializeField] private WhisperSprite[] availableWhispers; // List of available whispers with their sprites
+    // [SerializeField] private WhisperSprite[] availableWhispers; // List of available whispers with their sprites
     
     // Cache for downloaded whisper sprites
     private Dictionary<string, Sprite> downloadedSpriteCache = new Dictionary<string, Sprite>();
@@ -184,7 +184,7 @@ public class ChatManager : MonoBehaviour
                 WhisperType whisperType = (WhisperType)purchasedWhisper.whisperType;
                 
                 // Skip if we already created a button for this whisper type
-                if (createdWhisperTypes.Contains(whisperType)) continue;
+                // if (createdWhisperTypes.Contains(whisperType)) continue;
                 
                 CreateWhisperButton(whisperType, purchasedWhisper, userPurchasedWhispers);
                 createdWhisperTypes.Add(whisperType);
@@ -192,17 +192,17 @@ public class ChatManager : MonoBehaviour
         }
         
         // Then, create buttons for hardcoded whispers that haven't been created yet
-        if (availableWhispers != null)
-        {
-            foreach (var whisperSprite in availableWhispers)
-            {
-                if (whisperSprite.sprite != null && !createdWhisperTypes.Contains(whisperSprite.whisperType))
-                {
-                    CreateWhisperButton(whisperSprite.whisperType, null, userPurchasedWhispers);
-                    createdWhisperTypes.Add(whisperSprite.whisperType);
-                }
-            }
-        }
+        // if (availableWhispers != null)
+        // {
+        //     foreach (var whisperSprite in availableWhispers)
+        //     {
+        //         if (whisperSprite.sprite != null && !createdWhisperTypes.Contains(whisperSprite.whisperType))
+        //         {
+        //             CreateWhisperButton(whisperSprite.whisperType, null, userPurchasedWhispers);
+        //             createdWhisperTypes.Add(whisperSprite.whisperType);
+        //         }
+        //     }
+        // }
         
         if (createdWhisperTypes.Count == 0)
         {
@@ -239,40 +239,40 @@ public class ChatManager : MonoBehaviour
                     }
                 }));
             }
-            else
-            {
-                // Try to get sprite from hardcoded list or find purchased whisper with URL
-                Sprite whisperSprite = GetSpriteForWhisperType(whisperType);
+            // else
+            // {
+            //     // Try to get sprite from hardcoded list or find purchased whisper with URL
+            //     Sprite whisperSprite = GetSpriteForWhisperType(whisperType);
                 
-                if (whisperSprite != null)
-                {
-                    // Use hardcoded sprite
-                    whisperImage.sprite = whisperSprite;
-                }
-                else
-                {
-                    // Try to find matching purchased whisper with image URL
-                    var matchingPurchased = userPurchasedWhispers?.FirstOrDefault(w => 
-                        Enum.IsDefined(typeof(WhisperType), w.whisperType) && 
-                        (WhisperType)w.whisperType == whisperType);
+            //     if (whisperSprite != null)
+            //     {
+            //         // Use hardcoded sprite
+            //         whisperImage.sprite = whisperSprite;
+            //     }
+            //     else
+            //     {
+            //         // Try to find matching purchased whisper with image URL
+            //         var matchingPurchased = userPurchasedWhispers?.FirstOrDefault(w => 
+            //             Enum.IsDefined(typeof(WhisperType), w.whisperType) && 
+            //             (WhisperType)w.whisperType == whisperType);
                     
-                    if (matchingPurchased != null && !string.IsNullOrEmpty(matchingPurchased.imageUrl))
-                    {
-                        // Download sprite from URL
-                        StartCoroutine(DownloadSpriteFromUrl(matchingPurchased.imageUrl, (downloadedSprite) =>
-                        {
-                            if (downloadedSprite != null && whisperImage != null)
-                            {
-                                whisperImage.sprite = downloadedSprite;
-                            }
-                        }));
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"No sprite or image URL found for whisper type {whisperType}");
-                    }
-                }
-            }
+            //         if (matchingPurchased != null && !string.IsNullOrEmpty(matchingPurchased.imageUrl))
+            //         {
+            //             // Download sprite from URL
+            //             StartCoroutine(DownloadSpriteFromUrl(matchingPurchased.imageUrl, (downloadedSprite) =>
+            //             {
+            //                 if (downloadedSprite != null && whisperImage != null)
+            //                 {
+            //                     whisperImage.sprite = downloadedSprite;
+            //                 }
+            //             }));
+            //         }
+            //         else
+            //         {
+            //             Debug.LogWarning($"No sprite or image URL found for whisper type {whisperType}");
+            //         }
+            //     }
+            // }
         }
         else
         {
@@ -308,7 +308,7 @@ public class ChatManager : MonoBehaviour
         
         // Add click listener
         WhisperType currentWhisper = whisperType; // Capture for closure
-        whisperBtn.onClick.AddListener(() => SendWhisper(currentWhisper));
+        whisperBtn.onClick.AddListener(() => SendWhisper(purchasedWhisper));
     }
     
     /// <summary>
@@ -492,7 +492,7 @@ public class ChatManager : MonoBehaviour
     /// <summary>
     /// Send a whisper to the current chat target
     /// </summary>
-    private async void SendWhisper(WhisperType whisperType)
+    private async void SendWhisper(InventoryItem whisper)
     {
         if (string.IsNullOrEmpty(currentChatTargetId))
         {
@@ -508,24 +508,24 @@ public class ChatManager : MonoBehaviour
         }
         
         // Send the whisper (store as string representation of enum)
-        bool success = await chatService.SendChatAsync(currentUserId, currentChatTargetId, whisperType.ToString());
+        bool success = await chatService.SendChatAsync(currentUserId, currentChatTargetId, whisper.imageUrl);
         
         if (success)
         {
             UIManager.Instance.ShowQuickUpdate("Whisper sent to " + currentChatTargetUser.name + "!");
 
             // Decrease the whisper quantity in inventory
-            bool quantityDecreased = await inventoryService.DecreaseItemQuantity(currentUserId, whisperType);
+            bool quantityDecreased = await inventoryService.DecreaseItemQuantity(currentUserId, whisper.itemId);
             if (quantityDecreased)
             {
-                Debug.Log($"Decreased quantity for whisper type {whisperType}");
+                Debug.Log($"Decreased quantity for whisper type {whisper}");
                 
                 // Refresh whisper buttons to reflect updated quantities
                 StartCoroutine(RefreshWhisperButtonsCoroutine());
             }
             else
             {
-                Debug.LogWarning($"Failed to decrease quantity for whisper type {whisperType}");
+                Debug.LogWarning($"Failed to decrease quantity for whisper type {whisper}");
             }
 
             // Refresh conversation to show the new message
@@ -580,7 +580,7 @@ public class ChatManager : MonoBehaviour
                 if (newConversation[i].timestamp != currentConversation[i].timestamp ||
                     newConversation[i].fromId != currentConversation[i].fromId ||
                     newConversation[i].toId != currentConversation[i].toId ||
-                    newConversation[i].chatEmojies != currentConversation[i].chatEmojies)
+                    newConversation[i].imageUrl != currentConversation[i].imageUrl)
                 {
                     return true;
                 }
@@ -644,22 +644,21 @@ public class ChatManager : MonoBehaviour
         Image whisperImage = whisperTransform?.GetComponent<Image>();
         if (whisperImage != null)
         {
-            WhisperType whisperType = chat.GetWhisperType();
             
-            // First try to find the sprite from hardcoded available whispers
-            Sprite whisperSprite = GetSpriteForWhisperType(whisperType);
-            
-            if (whisperSprite != null)
+            if (!string.IsNullOrEmpty(chat.imageUrl))
             {
-                // Use hardcoded sprite
-                whisperImage.sprite = whisperSprite;
+                // Download sprite from URL
+                StartCoroutine(DownloadSpriteFromUrl(chat.imageUrl, (downloadedSprite) =>
+                {
+                    if (downloadedSprite != null && whisperImage != null)
+                    {
+                        whisperImage.sprite = downloadedSprite;
+                    }
+                }));
             }
             else
             {
-                // Try to get sprite from downloaded cache or get inventory item
-                // For now, we'll use a default placeholder or try to find from user's inventory
-                // We need to get the sender's inventory to find the correct image URL
-                StartCoroutine(LoadWhisperSpriteForMessage(whisperImage, whisperType, chat.fromId));
+                Debug.LogWarning("Chat message has no imageUrl for whisper");
             }
         }
         else
@@ -919,20 +918,20 @@ public class ChatManager : MonoBehaviour
     /// </summary>
     /// <param name="whisperType">The whisper type to find a sprite for</param>
     /// <returns>The sprite for the whisper type, or null if not found</returns>
-    private Sprite GetSpriteForWhisperType(WhisperType whisperType)
-    {
-        if (availableWhispers == null) return null;
+    // private Sprite GetSpriteForWhisperType(WhisperType whisperType)
+    // {
+    //     if (availableWhispers == null) return null;
         
-        foreach (var whisperSprite in availableWhispers)
-        {
-            if (whisperSprite.whisperType == whisperType && whisperSprite.sprite != null)
-            {
-                return whisperSprite.sprite;
-            }
-        }
+    //     foreach (var whisperSprite in availableWhispers)
+    //     {
+    //         if (whisperSprite.whisperType == whisperType && whisperSprite.sprite != null)
+    //         {
+    //             return whisperSprite.sprite;
+    //         }
+    //     }
         
-        return null;
-    }
+    //     return null;
+    // }
     
     /// <summary>
     /// Download and cache a sprite from a URL

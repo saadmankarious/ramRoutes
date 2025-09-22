@@ -18,7 +18,7 @@ namespace RamRoutes.Model
     {
         public string fromId;
         public string toId;
-        public string chatEmojies; // Will store whisper type as string representation
+        public string imageUrl; // Will store whisper type as string representation
         public DateTime timestamp;
         
         public Chat()
@@ -30,7 +30,7 @@ namespace RamRoutes.Model
         {
             this.fromId = fromId;
             this.toId = toId;
-            this.chatEmojies = chatEmojies;
+            this.imageUrl = chatEmojies;
             this.timestamp = DateTime.UtcNow;
         }
         
@@ -39,7 +39,7 @@ namespace RamRoutes.Model
         /// </summary>
         public WhisperType GetWhisperType()
         {
-            if (System.Enum.TryParse<WhisperType>(chatEmojies, out WhisperType result))
+            if (System.Enum.TryParse<WhisperType>(imageUrl, out WhisperType result))
             {
                 return result;
             }
@@ -51,7 +51,7 @@ namespace RamRoutes.Model
         /// </summary>
         public void SetWhisperType(WhisperType whisperType)
         {
-            chatEmojies = whisperType.ToString();
+            imageUrl = whisperType.ToString();
         }
     }
 }

@@ -672,7 +672,7 @@ namespace RamRoutes.Services
         /// <summary>
         /// Decrease the quantity of an inventory item by 1. If quantity reaches 0, remove the item.
         /// </summary>
-        public async Task<bool> DecreaseItemQuantity(string userId, WhisperType whisperType)
+        public async Task<bool> DecreaseItemQuantity(string userId, string whisperInventoryItemId)
         {
             if (string.IsNullOrEmpty(userId))
             {
@@ -684,11 +684,11 @@ namespace RamRoutes.Services
             {
                 // Find the inventory item with the matching whisper type
                 var inventory = await GetUserInventory(userId);
-                var whisperItem = inventory.FirstOrDefault(item => item.whisperType == (int)whisperType && item.quantity > 0);
+                var whisperItem = inventory.FirstOrDefault(item => item.itemId == whisperInventoryItemId && item.quantity > 0);
                 
                 if (whisperItem == null)
                 {
-                    Debug.LogWarning($"InventoryService.DecreaseItemQuantity: No whisper item found with type {whisperType} or quantity is 0");
+                    Debug.LogWarning($"InventoryService.DecreaseItemQuantity: No whisper item found with type {whisperInventoryItemId} or quantity is 0");
                     return false;
                 }
 
@@ -698,7 +698,7 @@ namespace RamRoutes.Services
                 {
                     // Remove the item if quantity would reach 0 or below
                     await inventoryDoc.DeleteAsync();
-                    Debug.Log($"InventoryService.DecreaseItemQuantity: Removed whisper item {whisperType} as quantity reached 0");
+                    Debug.Log($"InventoryService.DecreaseItemQuantity: Removed whisper item {whisperInventoryItemId} as quantity reached 0");
                 }
                 else
                 {
@@ -707,7 +707,7 @@ namespace RamRoutes.Services
                     {
                         { "quantity", whisperItem.quantity - 1 }
                     });
-                    Debug.Log($"InventoryService.DecreaseItemQuantity: Decreased whisper {whisperType} quantity to {whisperItem.quantity - 1}");
+                    Debug.Log($"InventoryService.DecreaseItemQuantity: Decreased whisper {whisperInventoryItemId} quantity to {whisperItem.quantity - 1}");
                 }
                 
                 return true;

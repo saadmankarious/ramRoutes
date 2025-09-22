@@ -21,21 +21,21 @@ namespace RamRoutes.Services
         /// <summary>
         /// Send a chat message with emojis
         /// </summary>
-        public async Task<bool> SendChatAsync(string fromId, string toId, string emojis)
+        public async Task<bool> SendChatAsync(string fromId, string toId, string whisperImageUrl)
         {
             try
             {
-                var chat = new Chat(fromId, toId, emojis);
+                var chat = new Chat(fromId, toId, whisperImageUrl);
                 var chatData = new Dictionary<string, object>
                 {
                     { "fromId", chat.fromId },
                     { "toId", chat.toId },
-                    { "chatEmojies", chat.chatEmojies },
+                    { "imageUrl", chat.imageUrl },
                     { "timestamp", chat.timestamp }
                 };
                 
                 await db.Collection(COLLECTION_NAME).AddAsync(chatData);
-                Debug.Log($"Chat sent from {fromId} to {toId}: {emojis}");
+                Debug.Log($"Chat sent from {fromId} to {toId}: {whisperImageUrl}");
                 return true;
             }
             catch (Exception ex)
@@ -70,7 +70,7 @@ namespace RamRoutes.Services
                         {
                             fromId = data.ContainsKey("fromId") ? data["fromId"].ToString() : "",
                             toId = data.ContainsKey("toId") ? data["toId"].ToString() : "",
-                            chatEmojies = data.ContainsKey("chatEmojies") ? data["chatEmojies"].ToString() : "",
+                            imageUrl = data.ContainsKey("imageUrl") ? data["imageUrl"].ToString() : "",
                             timestamp = data.ContainsKey("timestamp") ? ((Timestamp)data["timestamp"]).ToDateTime() : DateTime.UtcNow
                         };
                         chats.Add(chat);
@@ -126,7 +126,7 @@ namespace RamRoutes.Services
                         {
                             fromId = data.ContainsKey("fromId") ? data["fromId"].ToString() : "",
                             toId = data.ContainsKey("toId") ? data["toId"].ToString() : "",
-                            chatEmojies = data.ContainsKey("chatEmojies") ? data["chatEmojies"].ToString() : "",
+                            imageUrl = data.ContainsKey("imageUrl") ? data["imageUrl"].ToString() : "",
                             timestamp = data.ContainsKey("timestamp") ? ((Timestamp)data["timestamp"]).ToDateTime() : DateTime.UtcNow
                         };
                         chats.Add(chat);
@@ -143,7 +143,7 @@ namespace RamRoutes.Services
                         {
                             fromId = data.ContainsKey("fromId") ? data["fromId"].ToString() : "",
                             toId = data.ContainsKey("toId") ? data["toId"].ToString() : "",
-                            chatEmojies = data.ContainsKey("chatEmojies") ? data["chatEmojies"].ToString() : "",
+                            imageUrl = data.ContainsKey("imageUrl") ? data["imageUrl"].ToString() : "",
                             timestamp = data.ContainsKey("timestamp") ? ((Timestamp)data["timestamp"]).ToDateTime() : DateTime.UtcNow
                         };
                         chats.Add(chat);
