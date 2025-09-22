@@ -10,7 +10,7 @@ public class RamClickHandler : MonoBehaviour, IPointerClickHandler
 
     void Awake()
     {
-        SetupClickHandling();
+        // SetupClickHandling();
     }
 
     void Start()
@@ -18,29 +18,39 @@ public class RamClickHandler : MonoBehaviour, IPointerClickHandler
         // Re-setup in Start() in case components were added after Awake
         if (!isInitialized)
         {
-            SetupClickHandling();
+            // SetupClickHandling();
         }
     }
 
-    private void SetupClickHandling()
-    {
-        // Ensure we have a collider for click detection
-        Collider2D collider = GetComponent<Collider2D>();
-        if (collider == null)
-        {
-            // Check for CircleCollider2D first (rams already have this)
-            CircleCollider2D circleCollider = GetComponent<CircleCollider2D>();
-            if (circleCollider == null)
-            {
-                BoxCollider2D boxCollider = gameObject.AddComponent<BoxCollider2D>();
-                boxCollider.isTrigger = true;
-                Debug.Log($"RamClickHandler: Added BoxCollider2D to {gameObject.name}");
-            }
-        }
+    // private void SetupClickHandling()
+    // {
+    //     // Ensure we have a collider for click detection
+    //     BoxCollider2D boxCollider = GetComponent<BoxCollider2D>();
+    //     if (boxCollider == null)
+    //     {
+    //         boxCollider = gameObject.AddComponent<BoxCollider2D>();
+    //         Debug.Log($"RamClickHandler: Added BoxCollider2D to {gameObject.name}");
+    //     }
         
-        Debug.Log($"RamClickHandler: Set up ram click for {gameObject.name}");
-        isInitialized = true;
-    }
+    //     // Ensure the collider is enabled
+    //     boxCollider.enabled = true;
+        
+    //     // Setup button click handling if there's a button component
+    //     UnityEngine.UI.Button button = GetComponent<UnityEngine.UI.Button>();
+    //     if (button != null)
+    //     {
+    //         button.onClick.RemoveAllListeners();
+    //         button.onClick.AddListener(() => {
+    //             if (user != null && ramsManager != null)
+    //             {
+    //                 ramsManager.HandleRamClick(user, gameObject);
+    //             }
+    //         });
+    //         Debug.Log($"RamClickHandler: Setup button click listener for {gameObject.name}");
+    //     }
+        
+    //     isInitialized = true;
+    // }
 
     public void Initialize(User user, RamsManager ramsManager)
     {
@@ -48,10 +58,10 @@ public class RamClickHandler : MonoBehaviour, IPointerClickHandler
         this.ramsManager = ramsManager;
         
         // Ensure click handling is set up after initialization
-        if (!isInitialized)
-        {
-            SetupClickHandling();
-        }
+        // if (!isInitialized)
+        // {
+        //     SetupClickHandling();
+        // }
         
         Debug.Log($"RamClickHandler: Initialized {gameObject.name} for user {user.name}");
     }
@@ -61,7 +71,6 @@ public class RamClickHandler : MonoBehaviour, IPointerClickHandler
         // Handle direct mouse clicks on the ram sprite
         if (user != null && ramsManager != null)
         {
-            Debug.Log($"RamClickHandler: Mouse down on ram {user.name}");
             ramsManager.HandleRamClick(user, gameObject);
         }
     }
@@ -71,8 +80,25 @@ public class RamClickHandler : MonoBehaviour, IPointerClickHandler
     {
         if (user != null && ramsManager != null)
         {
-            Debug.Log($"RamClickHandler: Pointer click on ram {user.name}");
             ramsManager.HandleRamClick(user, gameObject);
         }
+    }
+
+    // Handle collision detection for chat initiation
+    void OnTriggerEnter(Collider other)
+    {
+        // Check if the colliding object is the player
+        if (IsPlayer(other) && user != null && ramsManager != null)
+        {
+            Debug.Log($"Player collided with ram for user: {user.name}");
+            ramsManager.HandleRamClick(user, gameObject);
+        }
+    }
+
+    private bool IsPlayer(Collider other)
+    {
+        return other.CompareTag("Player") || 
+               other.GetComponent<CharacterController>() != null ||
+               other.gameObject.name.ToLower().Contains("player");
     }
 }

@@ -206,10 +206,20 @@ public class ChatManager : MonoBehaviour
         
         if (createdWhisperTypes.Count == 0)
         {
+            var noWhispersBoughtText = FindChildByName(chatPanel.transform, "no-whispers-bought")?.GetComponent<Text>();
+            if (noWhispersBoughtText != null)
+            {
+                noWhispersBoughtText.gameObject.SetActive(true);
+            }
             Debug.LogWarning("ChatManager: No whispers available (neither hardcoded nor purchased).");
         }
         else
         {
+            var noWhispersBoughtText = FindChildByName(chatPanel.transform, "no-whispers-bought")?.GetComponent<Text>();
+            if (noWhispersBoughtText != null)
+            {
+                noWhispersBoughtText.gameObject.SetActive(false);
+            }
             Debug.Log($"ChatManager: Created {createdWhisperTypes.Count} whisper buttons (purchased + hardcoded)");
         }
     }
@@ -335,9 +345,8 @@ public class ChatManager : MonoBehaviour
         }
     }
     
-    public void OnUserWhisperChanged(WhisperType newWhisper)
+    public void OnUserWhisperChanged()
     {
-        Debug.Log($"User whisper changed: {newWhisper}");
         
         // Clear sprite cache to ensure new whispers are downloaded fresh
         downloadedSpriteCache.Clear();
@@ -437,6 +446,9 @@ public class ChatManager : MonoBehaviour
     {
         if (user == null) return;
         
+        // Check if we're switching to a different user
+        bool isDifferentUser = currentChatTargetUser == null || currentChatTargetUser.userId != user.userId;
+        
         currentChatTargetUser = user;
         currentChatTargetId = user.userId;
         currentChatTargetName = user.name;
@@ -448,6 +460,12 @@ public class ChatManager : MonoBehaviour
         {
             // Start the slide-up animation
             StartCoroutine(AnimateChatPanelOpen());
+        }
+        
+        // If switching to a different user, clear existing conversation UI
+        if (isDifferentUser)
+        {
+            ClearConversationDisplay();
         }
         
         // Load conversation
@@ -532,25 +550,39 @@ public class ChatManager : MonoBehaviour
             await LoadConversation();
         }
     }
-    
+
     /// <summary>
     /// Load and display the conversation with current target
     /// </summary>
     private async Task LoadConversation()
     {
         if (string.IsNullOrEmpty(currentChatTargetId)) return;
-        
+
         string currentUserId = FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
         if (string.IsNullOrEmpty(currentUserId)) return;
-        
+
         // Get conversation
         var newConversation = await chatService.GetConversationAsync(currentUserId, currentChatTargetId);
+
+        currentConversation = newConversation;
         
-        // Check if we have new messages to avoid unnecessary updates
-        if (HasNewMessages(newConversation))
+        if (newConversation.Count == 0)
         {
-            currentConversation = newConversation;
-            // Display messages smartly (only add new ones)
+            chatContentParent.gameObject.SetActive(false);
+            var noWhispersText = FindChildByName(chatPanel.transform, "no-whispers")?.GetComponent<Text>();
+            if (noWhispersText != null)
+            {
+                noWhispersText.gameObject.SetActive(true);
+            }
+        }
+        else
+        {
+            chatContentParent.gameObject.SetActive(true);
+            var noWhispersText = FindChildByName(chatPanel.transform, "no-whispers")?.GetComponent<Text>();
+            if (noWhispersText != null)
+            {
+                noWhispersText.gameObject.SetActive(false);
+            }
             DisplayMessagesSmartly();
         }
     }
@@ -588,6 +620,25 @@ public class ChatManager : MonoBehaviour
         }
         
         return false;
+    }
+    
+    /// <summary>
+    /// Clear all existing message bubbles from the conversation display
+    /// </summary>
+    private void ClearConversationDisplay()
+    {
+        if (chatContentParent == null) return;
+        
+        // Destroy all existing message bubbles
+        for (int i = chatContentParent.childCount - 1; i >= 0; i--)
+        {
+            DestroyImmediate(chatContentParent.GetChild(i).gameObject);
+        }
+        
+        // Clear the current conversation list
+        currentConversation.Clear();
+        
+        Debug.Log("Cleared conversation display for new user");
     }
     
     /// <summary>
@@ -834,13 +885,13 @@ public class ChatManager : MonoBehaviour
         {
             yield return new WaitForSeconds(3f);
             
-            // Only refresh if chat is still open
-            if (!string.IsNullOrEmpty(currentChatTargetId) && chatPanel != null && chatPanel.activeInHierarchy)
-            {
-                // Start the async operation and wait for it to complete
-                var loadTask = LoadConversation();
-                yield return new WaitUntil(() => loadTask.IsCompleted);
-            }
+            // // Only refresh if chat is still open
+            // if (!string.IsNullOrEmpty(currentChatTargetId) && chatPanel != null && chatPanel.activeInHierarchy)
+            // {
+            //     // Start the async operation and wait for it to complete
+            //     var loadTask = LoadConversation();
+            //     yield return new WaitUntil(() => loadTask.IsCompleted);
+            // }
         }
     }
     

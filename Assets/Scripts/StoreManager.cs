@@ -637,6 +637,15 @@ public class StoreManager : MonoBehaviour
         
         if (success)
         {
+              var chatManager = UnityEngine.Object.FindObjectOfType<ChatManager>();
+                if (chatManager != null)
+                {
+                    chatManager.OnUserWhisperChanged();
+                }
+                else
+                {
+                    Debug.LogWarning("ChatManager not found in current scene - cannot update user whisper");
+                }
             Debug.Log($"Successfully purchased {item.name}!");
             
             // Close the store

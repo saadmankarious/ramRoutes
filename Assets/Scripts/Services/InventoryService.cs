@@ -655,8 +655,7 @@ namespace RamRoutes.Services
                 var chatManager = UnityEngine.Object.FindObjectOfType<ChatManager>();
                 if (chatManager != null)
                 {
-                    chatManager.OnUserWhisperChanged(newWhisper);
-                    Debug.Log($"Notified ChatManager of whisper change to: {newWhisper}");
+                    chatManager.OnUserWhisperChanged();
                 }
                 else
                 {
