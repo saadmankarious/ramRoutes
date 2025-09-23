@@ -74,6 +74,8 @@ public class BuildingInteraction : MonoBehaviour
     public ScrollRect usersScrollView;
     public Transform usersContentParent;
     public GameObject userPrefab;
+        public GameObject rsvpUserPrefab;
+
     public GameObject usersWhoUnlockedPanel;
 
     private List<BuildingEvent> cachedBuildingEvents;
@@ -889,7 +891,7 @@ public class BuildingInteraction : MonoBehaviour
             var user = await userService.RetrieveUserById(userId);
             if (user != null)
             {
-                GameObject studentGO = Instantiate(userPrefab, studentsContentParent);
+                GameObject studentGO = Instantiate(rsvpUserPrefab, studentsContentParent);
                 
                 Text userNameText = studentGO.GetComponentInChildren<Text>(true);
                 Image userImage = studentGO.GetComponentInChildren<Image>(true);
