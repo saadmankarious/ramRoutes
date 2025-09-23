@@ -426,6 +426,13 @@ public class RamsManager : MonoBehaviour
     /// </summary>
     public async void OnBuildingActivated()
     {
+        // Prevent duplicate spawning if rams are already active
+        if (spawnedRams.Count > 0)
+        {
+            Debug.Log($"Building {building.buildingName} activation called but rams already spawned, ignoring");
+            return;
+        }
+        
         if (building.activated && !hasBeenActivated)
         {
             // Check if we're in the Terminal game stage - only activate ram system during Terminal stage
@@ -1012,27 +1019,7 @@ public class RamsManager : MonoBehaviour
     {
         Debug.Log($"Ram clicked for user: {user.name}");
         
-        // Try assigned reference first, then singleton, then find in scene for UserInfoPanel
-        // UserInfoPanel panel = userInfoPanel;
-        // if (panel == null)
-        // {
-        //     panel = UserInfoPanel.Instance;
-        // }
-        // if (panel == null)
-        // {
-        //     panel = FindObjectOfType<UserInfoPanel>();
-        // }
-        
-        // // Show user info panel
-        // if (panel != null)
-        // {
-        //     panel.ShowUserInfo(user);
-        // }
-        // else
-        // {
-        //     Debug.LogWarning("RamsManager: No UserInfoPanel found in scene!");
-        // }
-        
+
         // Start chat with the clicked user
         ChatManager chat = chatManager;
         if (chat == null)
