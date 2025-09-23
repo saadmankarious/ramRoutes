@@ -18,6 +18,7 @@ namespace RamRoutes.Model
         public string buildingId { set; get; }
         public string buildingName  { set; get; }
         public string eventName  { set; get; }
+        public string description { set; get; } // Added description property
         public string eventId { set; get; }  // Added explicit eventId field
         public DateTime date  { set; get; }
         public EventType eventType { set; get; }
@@ -27,11 +28,13 @@ namespace RamRoutes.Model
 
         public BuildingEvent(string buildingId, string buildingName, string eventName, DateTime date, 
                             EventType eventType = EventType.Scheduled, string recurrenceData = null, 
-                            List<string> attendees = null, string eventId = null, List<string> interestedUsers = null)
+                            List<string> attendees = null, string eventId = null, List<string> interestedUsers = null,
+                            string description = null)
         {
             this.buildingId = buildingId;
             this.buildingName = buildingName;
             this.eventName = eventName;
+            this.description = description ?? ""; // Default to empty string if not provided
             this.eventId = eventId ?? buildingId; // Use eventId if provided, otherwise use buildingId
             this.date = date;
             this.eventType = eventType;

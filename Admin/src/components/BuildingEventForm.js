@@ -17,7 +17,8 @@ function BuildingEventForm({ user, onEventCreated }) {
     buildingName: '',
     eventName: '',
     eventType: 'scheduled', // 'scheduled', 'always', 'weekly', 'daily', 'monthly'
-    date: ''
+    date: '',
+    description: ''
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -38,7 +39,7 @@ function BuildingEventForm({ user, onEventCreated }) {
 
     try {
       console.log('Starting building event creation...');
-      const { buildingName, eventName, eventType, date } = formData;
+      const { buildingName, eventName, eventType, date, description } = formData;
 
       // Generate a unique buildingId
       const buildingId = generateBuildingId();
@@ -49,6 +50,7 @@ function BuildingEventForm({ user, onEventCreated }) {
         buildingName,
         eventName,
         eventType, // Store the event type explicitly
+        description: description || '', // Add description field
         createdBy: user?.uid || 'unknown', // Track who created the event
         createdAt: serverTimestamp()
       };
@@ -81,7 +83,8 @@ function BuildingEventForm({ user, onEventCreated }) {
         buildingName: '',
         eventName: '',
         eventType: 'scheduled',
-        date: ''
+        date: '',
+        description: ''
       });
 
       // Callback for parent component
@@ -162,6 +165,21 @@ function BuildingEventForm({ user, onEventCreated }) {
               disabled={loading}
               placeholder="Enter event name"
               className="form-input"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="description" className="form-label">Description (Optional)</label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              disabled={loading}
+              placeholder="Enter event description"
+              className="form-input"
+              rows="3"
+              style={{ resize: 'vertical', minHeight: '80px' }}
             />
           </div>
 

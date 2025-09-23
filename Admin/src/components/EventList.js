@@ -284,6 +284,13 @@ function EventList({ user, onEditEvent }) {
                     <span className="detail-value">{event.buildingName}</span>
                   </div>
                   
+                  {event.description && (
+                    <div className="event-detail">
+                      <span className="detail-label">Description:</span>
+                      <span className="detail-value description-text">{event.description}</span>
+                    </div>
+                  )}
+                  
                   {event.buildingId && (
                     <div className="event-detail">
                       <span className="detail-label">Building ID:</span>

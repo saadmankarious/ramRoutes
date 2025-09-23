@@ -1064,6 +1064,22 @@ public class BuildingInteraction : MonoBehaviour
                     titleText.text += $"\n{formattedDate}";
                 }
                 
+                // Find and populate description text component
+                GameObject descObject = eventGO.transform.Find("desc")?.gameObject;
+                if (descObject != null)
+                {
+                    Text descText = descObject.GetComponent<Text>();
+                    if (descText != null && !string.IsNullOrEmpty(evt.description))
+                    {
+                        descText.text = evt.description;
+                    }
+                    else if (descText != null)
+                    {
+                        // Hide or set empty if no description
+                        descText.text = "";
+                    }
+                }
+                
                 // Add animation or visual effects if needed
                 // StartCoroutine(AnimateEventEntry(eventGO));
             }

@@ -7,7 +7,8 @@ function EventEdit({ event, onCancel, onSave }) {
     buildingName: event.buildingName || '',
     eventName: event.eventName || '',
     eventType: event.eventType || (event.date ? 'scheduled' : 'always'), // Use explicit eventType or infer from date
-    date: event.date ? formatDateForInput(event.date) : ''
+    date: event.date ? formatDateForInput(event.date) : '',
+    description: event.description || ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -50,13 +51,14 @@ function EventEdit({ event, onCancel, onSave }) {
       console.log('Updating event:', event.id);
       console.log('Form data:', formData);
 
-      const { buildingName, eventName, eventType, date } = formData;
+      const { buildingName, eventName, eventType, date, description } = formData;
 
       // Create update data - preserve buildingId from original event
       const updateData = {
         buildingName,
         eventName,
         eventType, // Include the event type in updates
+        description: description || '', // Add description field
         updatedAt: serverTimestamp()
       };
 
@@ -166,6 +168,21 @@ function EventEdit({ event, onCancel, onSave }) {
               disabled={loading}
               placeholder="Enter event name"
               className="form-input"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="description" className="form-label">Description (Optional)</label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              disabled={loading}
+              placeholder="Enter event description"
+              className="form-input"
+              rows="3"
+              style={{ resize: 'vertical', minHeight: '80px' }}
             />
           </div>
 

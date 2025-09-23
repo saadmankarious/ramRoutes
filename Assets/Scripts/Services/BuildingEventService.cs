@@ -118,7 +118,9 @@ namespace RamRoutes.Services
                         eventType,
                         recurrenceData,
                         attendees,
-                        documentId  // Pass the document ID as the event ID
+                        documentId,  // Pass the document ID as the event ID
+                        null,  // interested users will be populated separately if needed
+                        data.ContainsKey("description") ? data["description"].ToString() : string.Empty
                     );
                     events.Add(buildingEvent);
                 }
@@ -184,7 +186,8 @@ namespace RamRoutes.Services
                         recurrenceData,
                         attendees,
                         eventId,
-                        interestedUsers
+                        interestedUsers,
+                        data.ContainsKey("description") ? data["description"].ToString() : string.Empty
                     );
                 }
             }
