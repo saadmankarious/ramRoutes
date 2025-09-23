@@ -17,6 +17,13 @@ public class WhisperSprite
     public Sprite sprite;
 }
 
+[System.Serializable]
+public class FreeWhisperItem
+{
+    public string name;
+    public Sprite sprite;
+}
+
 public class ChatManager : MonoBehaviour
 {
     [Header("Chat UI")]
@@ -26,6 +33,7 @@ public class ChatManager : MonoBehaviour
     [SerializeField] private GameObject senderBubblePrefab; // Prefab for messages you send
     [SerializeField] private GameObject receiverBubblePrefab; // Prefab for messages you receive
     [SerializeField] private Button closeChatButton;
+    private Button overlayButton; // Overlay button to close chat when clicked
     
     [Header("Whisper Selection")]
     [SerializeField] private ScrollRect whisperScrollView;
@@ -34,6 +42,9 @@ public class ChatManager : MonoBehaviour
     
     [Header("Whisper Sprites")]
     // [SerializeField] private WhisperSprite[] availableWhispers; // List of available whispers with their sprites
+    
+    [Header("Free Whispers")]
+    [SerializeField] private FreeWhisperItem[] freeWhispers; // Hardcoded free whispers available to everyone
     
     // Cache for downloaded whisper sprites
     private Dictionary<string, Sprite> downloadedSpriteCache = new Dictionary<string, Sprite>();
@@ -62,6 +73,32 @@ public class ChatManager : MonoBehaviour
         if (closeChatButton != null)
         {
             closeChatButton.onClick.AddListener(CloseChatPanel);
+        }
+        else if (chatPanel != null)
+        {
+            // Find the close button nested under the chat panel
+            Transform closeTransform = FindChildByName(chatPanel.transform, "close");
+            closeChatButton = closeTransform?.GetComponent<Button>();
+            if (closeChatButton != null)
+            {
+                closeChatButton.onClick.AddListener(CloseChatPanel);
+            }
+            else
+            {
+                Debug.LogWarning("Close button not found in chat panel hierarchy");
+            }
+        }
+        
+        // Setup chat panel itself as overlay button to close chat when clicked
+        if (chatPanel != null)
+        {
+            overlayButton = chatPanel.GetComponent<Button>();
+            if (overlayButton == null)
+            {
+                // Add a Button component to the chat panel itself
+                overlayButton = chatPanel.AddComponent<Button>();
+            }
+            overlayButton.onClick.AddListener(CloseChatPanel);
         }
         
         // Setup shoutout and friend request buttons
@@ -191,20 +228,23 @@ public class ChatManager : MonoBehaviour
             }
         }
         
-        // Then, create buttons for hardcoded whispers that haven't been created yet
-        // if (availableWhispers != null)
-        // {
-        //     foreach (var whisperSprite in availableWhispers)
-        //     {
-        //         if (whisperSprite.sprite != null && !createdWhisperTypes.Contains(whisperSprite.whisperType))
-        //         {
-        //             CreateWhisperButton(whisperSprite.whisperType, null, userPurchasedWhispers);
-        //             createdWhisperTypes.Add(whisperSprite.whisperType);
-        //         }
-        //     }
-        // }
+        // Add hardcoded free whispers at the bottom
+        if (freeWhispers != null && freeWhispers.Length > 0)
+        {
+            foreach (var freeWhisper in freeWhispers)
+            {
+                if (freeWhisper.sprite != null && !string.IsNullOrEmpty(freeWhisper.name))
+                {
+                    CreateFreeWhisperButton(freeWhisper);
+                }
+            }
+        }
         
-        if (createdWhisperTypes.Count == 0)
+        // Show "no whispers" message only if no purchased AND no free whispers
+        bool hasAnyWhispers = (userPurchasedWhispers != null && userPurchasedWhispers.Count > 0) || 
+                             (freeWhispers != null && freeWhispers.Length > 0);
+        
+        if (!hasAnyWhispers)
         {
             var noWhispersBoughtText = FindChildByName(chatPanel.transform, "no-whispers-bought")?.GetComponent<Text>();
             if (noWhispersBoughtText != null)
@@ -319,6 +359,46 @@ public class ChatManager : MonoBehaviour
         // Add click listener
         WhisperType currentWhisper = whisperType; // Capture for closure
         whisperBtn.onClick.AddListener(() => SendWhisper(purchasedWhisper));
+    }
+    
+    /// <summary>
+    /// Create a single free whisper button (no count, no WhisperType)
+    /// </summary>
+    private void CreateFreeWhisperButton(FreeWhisperItem freeWhisper)
+    {
+        Button whisperBtn = Instantiate(whisperButtonPrefab, whisperContentParent);
+        
+        // Find the "whisper" child and set the sprite
+        Transform whisperTransform = FindChildByName(whisperBtn.transform, "whisper");
+        Image whisperImage = whisperTransform?.GetComponent<Image>();
+        
+        if (whisperImage != null)
+        {
+            whisperImage.sprite = freeWhisper.sprite;
+        }
+        else
+        {
+            Debug.LogWarning($"No 'whisper' child found in whisper button prefab or no Image component on whisper child");
+        }
+        
+        // Hide the count for free whispers
+        Transform countTransform = FindChildByName(whisperBtn.transform, "count");
+        if (countTransform != null)
+        {
+            countTransform.gameObject.SetActive(false);
+        }
+        
+        // Add click listener - create a fake InventoryItem for free whispers
+        whisperBtn.onClick.AddListener(() => {
+            var freeWhisperItem = new InventoryItem
+            {
+                itemName = freeWhisper.name,
+                imageUrl = freeWhisper.name, // Use name as identifier
+                quantity = -1, // Special marker for free whispers
+                whisperType = -1 // No specific whisper type
+            };
+            SendWhisper(freeWhisperItem);
+        });
     }
     
     /// <summary>
@@ -532,18 +612,28 @@ public class ChatManager : MonoBehaviour
         {
             UIManager.Instance.ShowQuickUpdate("Whisper sent to " + currentChatTargetUser.name + "!");
 
-            // Decrease the whisper quantity in inventory
-            bool quantityDecreased = await inventoryService.DecreaseItemQuantity(currentUserId, whisper.itemId);
-            if (quantityDecreased)
+            // Check if this is a free whisper (quantity -1) or a purchased whisper
+            bool isFreeWhisper = whisper.quantity == -1;
+            
+            if (!isFreeWhisper)
             {
-                Debug.Log($"Decreased quantity for whisper type {whisper}");
-                
-                // Refresh whisper buttons to reflect updated quantities
-                StartCoroutine(RefreshWhisperButtonsCoroutine());
+                // Decrease the whisper quantity in inventory only for purchased whispers
+                bool quantityDecreased = await inventoryService.DecreaseItemQuantity(currentUserId, whisper.itemId);
+                if (quantityDecreased)
+                {
+                    Debug.Log($"Decreased quantity for whisper type {whisper}");
+                    
+                    // Refresh whisper buttons to reflect updated quantities
+                    StartCoroutine(RefreshWhisperButtonsCoroutine());
+                }
+                else
+                {
+                    Debug.LogWarning($"Failed to decrease quantity for whisper type {whisper}");
+                }
             }
             else
             {
-                Debug.LogWarning($"Failed to decrease quantity for whisper type {whisper}");
+                Debug.Log($"Sent free whisper {whisper.itemName} - no quantity decrease needed");
             }
 
             // Refresh conversation to show the new message
@@ -698,14 +788,29 @@ public class ChatManager : MonoBehaviour
             
             if (!string.IsNullOrEmpty(chat.imageUrl))
             {
-                // Download sprite from URL
-                StartCoroutine(DownloadSpriteFromUrl(chat.imageUrl, (downloadedSprite) =>
+                // First check if this is a free whisper (imageUrl contains the whisper name)
+                FreeWhisperItem matchingFreeWhisper = null;
+                if (freeWhispers != null)
                 {
-                    if (downloadedSprite != null && whisperImage != null)
+                    matchingFreeWhisper = System.Array.Find(freeWhispers, fw => fw.name == chat.imageUrl);
+                }
+                
+                if (matchingFreeWhisper != null)
+                {
+                    // Use the sprite directly from the free whisper
+                    whisperImage.sprite = matchingFreeWhisper.sprite;
+                }
+                else
+                {
+                    // Download sprite from URL for purchased whispers
+                    StartCoroutine(DownloadSpriteFromUrl(chat.imageUrl, (downloadedSprite) =>
                     {
-                        whisperImage.sprite = downloadedSprite;
-                    }
-                }));
+                        if (downloadedSprite != null && whisperImage != null)
+                        {
+                            whisperImage.sprite = downloadedSprite;
+                        }
+                    }));
+                }
             }
             else
             {
@@ -834,6 +939,11 @@ public class ChatManager : MonoBehaviour
         if (closeChatButton != null)
         {
             closeChatButton.onClick.RemoveListener(CloseChatPanel);
+        }
+        
+        if (overlayButton != null)
+        {
+            overlayButton.onClick.RemoveListener(CloseChatPanel);
         }
         
         // Remove action button listeners
