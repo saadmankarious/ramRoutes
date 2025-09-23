@@ -104,6 +104,11 @@ public class LoginManager : MonoBehaviour
     private float countdownTimer = 0f;
     private bool isCountingDown = false;
 
+    // Bio UI components - found by name at runtime
+    public InputField bioInputField;
+    public Button bioSaveButton;
+    private bool isEditingBio = false;
+
     private async void Start()
     {
         // Setup background music
@@ -167,6 +172,9 @@ public class LoginManager : MonoBehaviour
             backToLoginButton.onClick.AddListener(OnBackToLoginClicked);
         }
 
+        // Setup bio input and button (find by name)
+        SetupBioComponents();
+
         // Initialize residence hall dropdown
         InitializeResidenceHallDropdown();
         
@@ -213,6 +221,52 @@ public class LoginManager : MonoBehaviour
             // Start playing the music
             musicSource.Play();
         }
+    }
+
+    private void SetupBioComponents()
+    {
+        // Find bio input field by name recursively
+        // bioInputField = FindDeepChild(transform, "bio")?.GetComponent<InputField>();
+        
+        // // Find bio save button by name recursively
+        // bioSaveButton = FindDeepChild(transform, "save")?.GetComponent<Button>();
+        
+                    if (bioSaveButton != null)
+        {
+            bioSaveButton.onClick.AddListener(OnBioButtonClicked);
+        }
+        
+        // Set initial state - bio is not editable
+        if (bioInputField != null)
+        {
+            bioInputField.interactable = false;
+        }
+        
+        if (bioSaveButton != null)
+        {
+            var buttonText = bioSaveButton.GetComponentInChildren<Text>();
+            if (buttonText != null)
+            {
+                buttonText.text = "Edit";
+            }
+        }
+    }
+    
+    private Transform FindDeepChild(Transform parent, string name)
+    {
+        foreach (Transform child in parent)
+        {
+            if (child.name.Equals(name, System.StringComparison.OrdinalIgnoreCase))
+            {
+                return child;
+            }
+            var result = FindDeepChild(child, name);
+            if (result != null)
+            {
+                return result;
+            }
+        }
+        return null;
     }
 
     private async Task InitializeFirebase()
@@ -915,6 +969,24 @@ public class LoginManager : MonoBehaviour
                 }
             }
 
+            // Set user bio
+            if (bioInputField != null)
+            {
+                bioInputField.text = userProfile.bio ?? "";
+                bioInputField.interactable = false; // Start in view mode
+            }
+            
+            // Ensure bio button shows "Edit" initially
+            if (bioSaveButton != null)
+            {
+                var buttonText = bioSaveButton.GetComponentInChildren<Text>();
+                if (buttonText != null)
+                {
+                    buttonText.text = "Edit";
+                }
+                isEditingBio = false;
+            }
+
             // Hide the old welcome text
             if (welcomeText != null)
             {
@@ -1352,6 +1424,91 @@ public class LoginManager : MonoBehaviour
         }
         
         statusText.text = "Logged out successfully";
+    }
+
+    private async void OnBioButtonClicked()
+    {
+        if (bioInputField == null || bioSaveButton == null)
+        {
+            Debug.LogWarning("Bio components not found");
+            return;
+        }
+
+        var buttonText = bioSaveButton.GetComponentInChildren<Text>();
+        
+        if (!isEditingBio)
+        {
+            // Switch to edit mode
+            isEditingBio = true;
+            bioInputField.interactable = true;
+            bioInputField.ActivateInputField();
+            
+            if (buttonText != null)
+            {
+                buttonText.text = "Save";
+            }
+        }
+        else
+        {
+            // Save the bio
+            string newBio = bioInputField.text.Trim();
+            
+            // Validate bio length
+            if (newBio.Length > 33)
+            {
+                Debug.LogWarning("Bio too long, maximum 33 characters allowed");
+                if (buttonText != null)
+                {
+                    StartCoroutine(ShowTemporaryButtonText(buttonText, "Too Long", "Save"));
+                }
+                bioInputField.text = newBio.Substring(0, 33);
+                return;
+            }
+            
+            if (newBio.Length == 0)
+            {
+                Debug.LogWarning("Bio is empty");
+                if (buttonText != null)
+                {
+                    StartCoroutine(ShowTemporaryButtonText(buttonText, "Too Short", "Save"));
+                }
+                return;
+            }
+            
+            // Get current user ID
+            if (auth?.CurrentUser != null)
+            {
+                try
+                {
+                    var userService = new RamRoutes.Services.UserService();
+                    await userService.UpdateUserBio(auth.CurrentUser.UserId, newBio);
+                    
+                    // Switch back to view mode
+                    isEditingBio = false;
+                    bioInputField.interactable = false;
+                    
+                    if (buttonText != null)
+                    {
+                        buttonText.text = "Edit";
+                    }
+                }
+                catch (System.Exception e)
+                {
+                    Debug.LogError($"Failed to update bio: {e.Message}");
+                    // Stay in edit mode on error
+                }
+            }
+        }
+    }
+
+    private IEnumerator ShowTemporaryButtonText(Text buttonText, string temporaryText, string originalText, float duration = 2f)
+    {
+        if (buttonText != null)
+        {
+            buttonText.text = temporaryText;
+            yield return new WaitForSeconds(duration);
+            buttonText.text = originalText;
+        }
     }
 
     private string GetFirebaseErrorMessage(FirebaseException e)

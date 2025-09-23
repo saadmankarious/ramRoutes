@@ -58,6 +58,7 @@ namespace RamRoutes.Services
                     int knowledgePoints = data.ContainsKey("knowledgePoints") ? Convert.ToInt32(data["knowledgePoints"]) : 0;
                     string currentBuilding = data.ContainsKey("currentBuilding") && data["currentBuilding"] != null ? data["currentBuilding"].ToString() : "";
                     string residenceHall = data.ContainsKey("residenceHall") && data["residenceHall"] != null ? data["residenceHall"].ToString() : "Not specified";
+                    string bio = data.ContainsKey("bio") && data["bio"] != null ? data["bio"].ToString() : "";
                     
                     // Handle friends list
                     List<string> friends = new List<string>();
@@ -81,6 +82,7 @@ namespace RamRoutes.Services
                     user.knowledgePoints = knowledgePoints;
                     user.currentBuilding = currentBuilding;
                     user.residenceHall = residenceHall;
+                    user.bio = bio;
                     user.friends = friends;
                     return user;
                 }
@@ -115,6 +117,7 @@ namespace RamRoutes.Services
                     int knowledgePoints = data.ContainsKey("knowledgePoints") ? Convert.ToInt32(data["knowledgePoints"]) : 0;
                     string currentBuilding = data.ContainsKey("currentBuilding") && data["currentBuilding"] != null ? data["currentBuilding"].ToString() : "";
                     string residenceHall = data.ContainsKey("residenceHall") && data["residenceHall"] != null ? data["residenceHall"].ToString() : "Not specified";
+                    string bio = data.ContainsKey("bio") && data["bio"] != null ? data["bio"].ToString() : "";
                     
                     // Handle friends list
                     List<string> friends = new List<string>();
@@ -138,6 +141,7 @@ namespace RamRoutes.Services
                     user.knowledgePoints = knowledgePoints;
                     user.currentBuilding = currentBuilding;
                     user.residenceHall = residenceHall;
+                    user.bio = bio;
                     user.friends = friends;
                     return user;
                 }
@@ -333,12 +337,14 @@ namespace RamRoutes.Services
                     int knowledgePoints = data.ContainsKey("knowledgePoints") ? Convert.ToInt32(data["knowledgePoints"]) : 0;
                     string currentBuilding = data.ContainsKey("currentBuilding") && data["currentBuilding"] != null ? data["currentBuilding"].ToString() : "";
                     string residenceHall = data.ContainsKey("residenceHall") && data["residenceHall"] != null ? data["residenceHall"].ToString() : "";
+                    string bio = data.ContainsKey("bio") && data["bio"] != null ? data["bio"].ToString() : "";
                     string equippedSkin = data.ContainsKey("equippedSkin") && data["equippedSkin"] != null ? data["equippedSkin"].ToString() : "Default";
                     var user = new User(id, token, name, email);
                     user.coins = coins;
                     user.knowledgePoints = knowledgePoints;
                     user.currentBuilding = currentBuilding;
                     user.residenceHall = residenceHall;
+                    user.bio = bio;
                     user.SetEquippedSkinFromString(equippedSkin);
                     users.Add(user);
                 }
@@ -381,6 +387,7 @@ namespace RamRoutes.Services
                     int knowledgePoints = data.ContainsKey("knowledgePoints") ? Convert.ToInt32(data["knowledgePoints"]) : 0;
                     string currentBuilding = data.ContainsKey("currentBuilding") && data["currentBuilding"] != null ? data["currentBuilding"].ToString() : "";
                     string residenceHall = data.ContainsKey("residenceHall") && data["residenceHall"] != null ? data["residenceHall"].ToString() : "";
+                    string bio = data.ContainsKey("bio") && data["bio"] != null ? data["bio"].ToString() : "";
                     string equippedSkin = data.ContainsKey("equippedSkin") && data["equippedSkin"] != null ? data["equippedSkin"].ToString() : "Default";
                     
                     // Only process users with valid currentBuilding
@@ -391,6 +398,7 @@ namespace RamRoutes.Services
                         user.knowledgePoints = knowledgePoints;
                         user.currentBuilding = currentBuilding;
                         user.residenceHall = residenceHall;
+                        user.bio = bio;
                         user.SetEquippedSkinFromString(equippedSkin);
                         
                         // Add user to the appropriate building list
@@ -506,6 +514,7 @@ namespace RamRoutes.Services
                     { "name", username },
                     { "email", email },
                     { "residenceHall", residenceHall },
+                    { "bio", "" }, // Initialize with empty bio
                     { "points", 0 }, // Legacy field, keep for compatibility
                     { "coins", startingCoins },
                     { "knowledgePoints", startingKnowledgePoints },
@@ -617,6 +626,25 @@ namespace RamRoutes.Services
             catch (Exception ex)
             {
                 Debug.LogError($"Failed to update knowledge points for user {userId}: {ex.Message}");
+            }
+        }
+
+        public async Task UpdateUserBio(string userId, string bio)
+        {
+            try
+            {
+                var userDoc = db.Collection("users").Document(userId);
+                await userDoc.UpdateAsync(new Dictionary<string, object>
+                {
+                    { "bio", bio }
+                });
+                
+                Debug.Log($"Updated bio for user {userId}");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Failed to update bio for user {userId}: {ex.Message}");
+                throw;
             }
         }
 

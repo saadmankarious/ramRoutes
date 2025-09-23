@@ -562,11 +562,18 @@ public class ChatManager : MonoBehaviour
         // Find the "name" text component recursively
         Transform nameTransform = FindChildByName(chatPanel.transform, "name");
         Transform whisperTo = FindChildByName(chatPanel.transform, "whisper-to");
+        Transform bioTransform = FindChildByName(chatPanel.transform, "bio");
+
         Text whisperToText = whisperTo?.GetComponent<Text>();
         Text nameText = nameTransform?.GetComponent<Text>();
+        Text bioText = bioTransform?.GetComponent<Text>();
         if (nameText != null)
         {
             nameText.text = user.name ?? "Unknown";
+        }
+        if (bioText != null)
+        {
+            bioText.text = string.IsNullOrEmpty(user.bio) ? "" : user.bio;
         }
         
         if (whisperToText != null)

@@ -33,6 +33,7 @@ namespace RamRoutes.Model
         public int knowledgePoints { set; get; }
         public string currentBuilding { set; get; }
         public string residenceHall { set; get; }
+        public string bio { set; get; } = "";
         public EquippedSkin equippedSkin { set; get; } = EquippedSkin.Default;
         public EquippedAccessory equippedAccessory { set; get; } = EquippedAccessory.None;
         public List<string> friends { set; get; } = new List<string>();
