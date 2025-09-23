@@ -135,27 +135,25 @@ namespace RamRoutes.Services
             }
         }
 
-        public async Task<BuildingEvent> GetBuildingEventByIdAsync(string buildingId)
+        public async Task<BuildingEvent> GetBuildingEventByIdAsync(string eventId)
         {
-            // First try to find in cache
+            // First try to find in cache by eventId
             if (cachedEvents != null)
             {
-                var cachedEvent = cachedEvents.Find(e => e.buildingId == buildingId);
+                var cachedEvent = cachedEvents.Find(e => e.eventId == eventId);
                 if (cachedEvent != null)
                 {
-                    Debug.Log($"Found building event {buildingId} in cache");
+                    Debug.Log($"Found building event {eventId} in cache");
                     return cachedEvent;
                 }
             }
 
             try
             {
-                var query = await db.Collection("building-events")
-                    .WhereEqualTo("buildingId", buildingId)
-                    .GetSnapshotAsync();
+                DocumentReference eventRef = db.Collection("building-events").Document(eventId);
+                DocumentSnapshot doc = await eventRef.GetSnapshotAsync();
 
-                var doc = query.Documents.FirstOrDefault();
-                if (doc != null)
+                if (doc.Exists)
                 {
                     var data = doc.ToDictionary();
                     
@@ -164,19 +162,35 @@ namespace RamRoutes.Services
                     DateTime eventDate = ParseEventDate(data, eventType);
                     string recurrenceData = data.ContainsKey("recurrenceData") ? data["recurrenceData"]?.ToString() : null;
                     
+                    // Parse attendees and interested users lists
+                    List<string> attendees = new List<string>();
+                    if (data.ContainsKey("attendees") && data["attendees"] is IEnumerable<object> attendeesArray)
+                    {
+                        attendees = attendeesArray.Select(x => x?.ToString()).Where(x => !string.IsNullOrEmpty(x)).ToList();
+                    }
+                    
+                    List<string> interestedUsers = new List<string>();
+                    if (data.ContainsKey("interestedUsers") && data["interestedUsers"] is IEnumerable<object> interestedArray)
+                    {
+                        interestedUsers = interestedArray.Select(x => x?.ToString()).Where(x => !string.IsNullOrEmpty(x)).ToList();
+                    }
+                    
                     return new BuildingEvent(
                         data["buildingId"].ToString(),
                         data["buildingName"].ToString(),
                         data["eventName"].ToString(),
                         eventDate,
                         eventType,
-                        recurrenceData
+                        recurrenceData,
+                        attendees,
+                        eventId,
+                        interestedUsers
                     );
                 }
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Error fetching building event {buildingId}: {ex.Message}");
+                Debug.LogError($"Error fetching building event {eventId}: {ex.Message}");
             }
 
             return null;
@@ -292,11 +306,90 @@ namespace RamRoutes.Services
         
         public bool HasPlayerAttended(string eventId, string playerId)
         {
-            // Try to find by eventId first, then by buildingId as fallback
-            var evt = cachedEvents?.FirstOrDefault(e => e.eventId == eventId) ?? 
-                      cachedEvents?.FirstOrDefault(e => e.buildingId == eventId);
+            // Find by eventId only
+            var evt = cachedEvents?.FirstOrDefault(e => e.eventId == eventId);
                       
             return evt != null && evt.attendees != null && evt.attendees.Contains(playerId);
+        }
+
+        /// <summary>
+        /// Record interest/RSVP for an event
+        /// </summary>
+        /// <param name="eventId">The event ID</param>
+        /// <param name="playerId">The player ID showing interest</param>
+        /// <returns>True if successful</returns>
+        public async Task<bool> RecordInterestAsync(string eventId, string playerId)
+        {
+            try
+            {
+                DocumentReference eventRef = db.Collection("building-events").Document(eventId);
+                
+                await eventRef.UpdateAsync("interestedUsers", FieldValue.ArrayUnion(playerId));
+                
+                // Update cached data if available
+                var cachedEvent = cachedEvents?.FirstOrDefault(e => e.eventId == eventId);
+                if (cachedEvent != null)
+                {
+                    if (cachedEvent.interestedUsers == null)
+                        cachedEvent.interestedUsers = new List<string>();
+                    
+                    if (!cachedEvent.interestedUsers.Contains(playerId))
+                        cachedEvent.interestedUsers.Add(playerId);
+                }
+                
+                Debug.Log($"Successfully recorded interest for player {playerId} in event {eventId}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Error recording interest for event {eventId}: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Remove interest/RSVP for an event
+        /// </summary>
+        /// <param name="eventId">The event ID</param>
+        /// <param name="playerId">The player ID removing interest</param>
+        /// <returns>True if successful</returns>
+        public async Task<bool> RemoveInterestAsync(string eventId, string playerId)
+        {
+            try
+            {
+                DocumentReference eventRef = db.Collection("building-events").Document(eventId);
+
+                await eventRef.UpdateAsync("interestedUsers", FieldValue.ArrayRemove(playerId));
+                
+                // Update cached data if available
+                var cachedEvent = cachedEvents?.FirstOrDefault(e => e.eventId == eventId);
+                if (cachedEvent != null && cachedEvent.interestedUsers != null)
+                {
+                    cachedEvent.interestedUsers.Remove(playerId);
+                }
+                
+                Debug.Log($"Successfully removed interest for player {playerId} from event {eventId}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Error removing interest for event {eventId}: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Check if a player has shown interest in an event
+        /// </summary>
+        /// <param name="eventId">The event ID</param>
+        /// <param name="playerId">The player ID</param>
+        /// <returns>True if player has shown interest</returns>
+        public bool HasPlayerShownInterest(string eventId, string playerId)
+        {
+            // Find by eventId only
+            var evt = cachedEvents?.FirstOrDefault(e => e.eventId == eventId);
+                      
+            return evt != null && evt.interestedUsers != null && evt.interestedUsers.Contains(playerId);
         }
     }
 }

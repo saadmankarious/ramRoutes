@@ -82,6 +82,9 @@ public class BuildingInteraction : MonoBehaviour
     private BuildingProximityDetector proximityDetector;
     private RamsManager ramsManager;
     
+    // RSVP tracking
+    private Dictionary<string, List<string>> eventRsvpLists = new Dictionary<string, List<string>>();
+    
     // Event for virtual building entry/exit
     public delegate void VirtualBuildingEntryEvent(BuildingInteraction buildingData);
     public static event VirtualBuildingEntryEvent OnVirtualBuildingEntered;
@@ -770,6 +773,140 @@ public class BuildingInteraction : MonoBehaviour
         Debug.Log("fetching events for building " + buildingName + cachedBuildingEvents.Count);
 
         eventsLoaded = true;
+    }
+
+    /// <summary>
+    /// Adds current user to event interest/RSVP list
+    /// </summary>
+    /// <param name="eventId">The event ID to RSVP to</param>
+    private async void RsvpToEvent(string eventId)
+    {
+        string userId = FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.UserId : "unknown";
+        
+        var eventService = new BuildingEventService();
+        await eventService.RecordInterestAsync(eventId, userId);
+        
+        // Refresh the RSVP list for this event
+        await LoadEventRsvpList(eventId);
+        
+        // Find and update the event display
+        UpdateEventRsvpDisplay(eventId);
+    }
+    
+    /// <summary>
+    /// Loads interest/RSVP list for a specific event
+    /// </summary>
+    /// <param name="eventId">The event ID</param>
+    private async Task LoadEventRsvpList(string eventId)
+    {
+        var eventService = new BuildingEventService();
+        var eventData = await eventService.GetBuildingEventByIdAsync(eventId);
+        if (eventData != null)
+        {
+            eventRsvpLists[eventId] = eventData.interestedUsers ?? new List<string>();
+        }
+        else
+        {
+            eventRsvpLists[eventId] = new List<string>();
+        }
+    }
+    
+    /// <summary>
+    /// Coroutine to load and display RSVP list
+    /// </summary>
+    private System.Collections.IEnumerator LoadAndDisplayRsvpList(GameObject eventGO, string eventId)
+    {
+        var loadTask = LoadEventRsvpList(eventId);
+        yield return new WaitUntil(() => loadTask.IsCompleted);
+        
+        PopulateEventRsvpList(eventGO, eventId);
+    }
+    
+    /// <summary>
+    /// Updates the RSVP display for a specific event
+    /// </summary>
+    /// <param name="eventId">The event ID</param>
+    private void UpdateEventRsvpDisplay(string eventId)
+    {
+        // Find the event GameObject by searching through the content parent
+        foreach (Transform child in eventsContentParent)
+        {
+            var eventData = child.GetComponent<EventDisplayData>();
+            if (eventData != null && eventData.eventId == eventId)
+            {
+                PopulateEventRsvpList(child.gameObject, eventId);
+                break;
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Populates the RSVP student list for an event
+    /// </summary>
+    /// <param name="eventGO">The event GameObject</param>
+    /// <param name="eventId">The event ID</param>
+    private async void PopulateEventRsvpList(GameObject eventGO, string eventId)
+    {
+        ScrollRect studentsScrollView = null;
+        Transform studentsContentParent = null;
+        
+        // Find the students-list scroll view
+        ScrollRect[] scrollRects = eventGO.GetComponentsInChildren<ScrollRect>();
+        foreach (var scroll in scrollRects)
+        {
+            if (scroll.gameObject.name == "students-list")
+            {
+                studentsScrollView = scroll;
+                studentsContentParent = scroll.content;
+                break;
+            }
+        }
+        
+        if (studentsScrollView == null || studentsContentParent == null)
+        {
+            Debug.LogWarning($"Students list not found in event prefab for event {eventId}");
+            return;
+        }
+        
+        // Clear existing student entries
+        foreach (Transform child in studentsContentParent)
+        {
+            Destroy(child.gameObject);
+        }
+        
+        // Get RSVP list for this event
+        if (!eventRsvpLists.ContainsKey(eventId))
+        {
+            await LoadEventRsvpList(eventId);
+        }
+        
+        var rsvpList = eventRsvpLists.ContainsKey(eventId) ? eventRsvpLists[eventId] : new List<string>();
+        
+        // Create user entries for each RSVP'd student
+        var userService = new UserService();
+        foreach (var userId in rsvpList)
+        {
+            var user = await userService.RetrieveUserById(userId);
+            if (user != null)
+            {
+                GameObject studentGO = Instantiate(userPrefab, studentsContentParent);
+                
+                Text userNameText = studentGO.GetComponentInChildren<Text>(true);
+                Image userImage = studentGO.GetComponentInChildren<Image>(true);
+                
+                if (userNameText != null)
+                {
+                    userNameText.text = user.name;
+                }
+                
+                if (userImage != null && uiManager != null)
+                {
+                    var userPoints = await userService.GetUserCoins(userId);
+                    var userKnowledgePoints = await userService.GetUserKnowledgePoints(userId);
+                    userImage.sprite = uiManager.GetUserAvatarBasedOnPoints(userPoints, userKnowledgePoints);
+                }
+            }
+        }
     }    private void DisplayBuildingEvents()
     {
         if (eventsContentParent == null || eventPrefab == null)
@@ -787,24 +924,35 @@ public class BuildingInteraction : MonoBehaviour
             buildingEventsPanel.SetActive(true);
               // Animate the panel appearing
             StartCoroutine(uiManager.AnimatePanelPopup(buildingEventsPanel));
-            // Sort events by priority: Always > Recurring > Scheduled (by date)
+            // Sort events by date: Most recent events on top
             var sortedEvents = new List<BuildingEvent>(cachedBuildingEvents);
             sortedEvents.Sort((a, b) => {
-                // Always-happening events go first
-                if (a.IsAlwaysHappening && !b.IsAlwaysHappening) return -1;
-                if (!a.IsAlwaysHappening && b.IsAlwaysHappening) return 1;
-                if (a.IsAlwaysHappening && b.IsAlwaysHappening) return 0;
-                
-                // Recurring events go next
-                if (a.IsRecurring && !b.IsRecurring) return -1;
-                if (!a.IsRecurring && b.IsRecurring) return 1;
-                
-                // For events of same type, sort by date (most recent first)
+                // Sort by date (most recent first)
                 return b.date.CompareTo(a.date);
             });
               foreach (var evt in sortedEvents)
             {
                 GameObject eventGO = Instantiate(eventPrefab, eventsContentParent);
+                
+                // Add event data component to track event ID
+                var eventData = eventGO.GetComponent<EventDisplayData>();
+                if (eventData == null)
+                {
+                    eventData = eventGO.AddComponent<EventDisplayData>();
+                }
+                eventData.eventId = evt.eventId;
+                
+                // Setup RSVP button
+                ButtonHandler rsvpButtonHandler = eventGO.GetComponentInChildren<ButtonHandler>();
+                
+                if (rsvpButtonHandler != null)
+                {
+                            rsvpButtonHandler.Initialize("data", () => RsvpToEvent(evt.eventId));
+
+                }
+                
+                // Load and populate RSVP list
+                StartCoroutine(LoadAndDisplayRsvpList(eventGO, evt.eventId));
                 
                 // Get separate text components for title and date
                 Text[] textComponents = eventGO.GetComponentsInChildren<Text>();

@@ -23,10 +23,11 @@ namespace RamRoutes.Model
         public EventType eventType { set; get; }
         public string recurrenceData { set; get; } // JSON string for complex recurrence patterns
         public List<string> attendees { set; get; } // List of player IDs who have checked in
+        public List<string> interestedUsers { set; get; } // List of player IDs who have shown interest/RSVP'd
 
         public BuildingEvent(string buildingId, string buildingName, string eventName, DateTime date, 
                             EventType eventType = EventType.Scheduled, string recurrenceData = null, 
-                            List<string> attendees = null, string eventId = null)
+                            List<string> attendees = null, string eventId = null, List<string> interestedUsers = null)
         {
             this.buildingId = buildingId;
             this.buildingName = buildingName;
@@ -36,6 +37,7 @@ namespace RamRoutes.Model
             this.eventType = eventType;
             this.recurrenceData = recurrenceData;
             this.attendees = attendees ?? new List<string>();
+            this.interestedUsers = interestedUsers ?? new List<string>();
         }
         
         // Helper property to check if this is an always-happening event
