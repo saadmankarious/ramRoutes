@@ -60,6 +60,7 @@ public class ChatManager : MonoBehaviour
     private List<Chat> currentConversation = new List<Chat>();
     private Coroutine refreshCoroutine;
     private Coroutine whisperRefreshCoroutine;
+    private Coroutine animationCoroutine; // Track panel animation coroutines
     
     void Start()
     {
@@ -520,8 +521,21 @@ public class ChatManager : MonoBehaviour
         
         if (chatPanel != null)
         {
+            // Stop any running animation before starting new one
+            if (animationCoroutine != null)
+            {
+                StopCoroutine(animationCoroutine);
+                animationCoroutine = null;
+            }
+            
+            // Ensure panel is in correct position before animating
+            EnsurePanelPosition();
+            
             // Start the slide-up animation
-            StartCoroutine(AnimateChatPanelOpen());
+            animationCoroutine = StartCoroutine(AnimateChatPanelOpen());
+            
+            // Add a fallback to ensure panel shows after a reasonable time
+            StartCoroutine(EnsurePanelShowsFallback());
         }
         
         // If switching to a different user, clear existing conversation UI
@@ -908,8 +922,15 @@ public class ChatManager : MonoBehaviour
         
         if (chatPanel != null)
         {
+            // Stop any running animation before starting new one
+            if (animationCoroutine != null)
+            {
+                StopCoroutine(animationCoroutine);
+                animationCoroutine = null;
+            }
+            
             // Start the slide-down animation
-            StartCoroutine(AnimateChatPanelClose());
+            animationCoroutine = StartCoroutine(AnimateChatPanelClose());
         }
         
         currentChatTargetId = "";
@@ -948,6 +969,13 @@ public class ChatManager : MonoBehaviour
         // Stop auto-refresh for both chat messages and whisper buttons
         StopChatRefresh();
         StopWhisperRefresh();
+        
+        // Stop animation coroutine if running
+        if (animationCoroutine != null)
+        {
+            StopCoroutine(animationCoroutine);
+            animationCoroutine = null;
+        }
         
         if (closeChatButton != null)
         {
@@ -1187,6 +1215,56 @@ public class ChatManager : MonoBehaviour
     #region Chat Panel Animation
     
     /// <summary>
+    /// Ensures the chat panel is in the correct default position (reset from any stuck position)
+    /// </summary>
+    private void EnsurePanelPosition()
+    {
+        if (chatPanel != null)
+        {
+            RectTransform chatRect = chatPanel.GetComponent<RectTransform>();
+            // Reset to original anchored position (this should be the "open" position)
+            // The animation will set the starting position below screen
+            Vector3 originalPosition = Vector3.zero; // Default anchored position
+            chatRect.anchoredPosition = originalPosition;
+        }
+    }
+    
+    /// <summary>
+    /// Force the chat panel to show immediately without animation (emergency recovery)
+    /// </summary>
+    public void ForceShowChatPanel()
+    {
+        if (chatPanel != null)
+        {
+            // Stop any running animation
+            if (animationCoroutine != null)
+            {
+                StopCoroutine(animationCoroutine);
+                animationCoroutine = null;
+            }
+            
+            // Force panel to visible position
+            chatPanel.SetActive(true);
+            RectTransform chatRect = chatPanel.GetComponent<RectTransform>();
+            chatRect.anchoredPosition = Vector3.zero; // Force to default position
+        }
+    }
+    
+    /// <summary>
+    /// Fallback coroutine to ensure panel shows after animation should have completed
+    /// </summary>
+    private IEnumerator EnsurePanelShowsFallback()
+    {
+        yield return new WaitForSeconds(0.5f); // Wait longer than animation duration
+        
+        // If panel is not active or not visible, force it to show
+        if (chatPanel != null && !chatPanel.activeInHierarchy)
+        {
+            ForceShowChatPanel();
+        }
+    }
+    
+    /// <summary>
     /// Animate the chat panel sliding up from the bottom
     /// </summary>
     private IEnumerator AnimateChatPanelOpen()
@@ -1216,6 +1294,7 @@ public class ChatManager : MonoBehaviour
         }
         
         chatRect.anchoredPosition = originalPosition;
+        animationCoroutine = null; // Clear reference when animation completes
     }
     
     /// <summary>
@@ -1244,6 +1323,7 @@ public class ChatManager : MonoBehaviour
         
         chatPanel.SetActive(false);
         chatRect.anchoredPosition = originalPosition; // Reset position for next time
+        animationCoroutine = null; // Clear reference when animation completes
     }
     
     #endregion

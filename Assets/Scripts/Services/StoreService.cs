@@ -101,8 +101,18 @@ namespace RamRoutes.Services
                     var inventoryDoc = db.Collection(USER_INVENTORY_COLLECTION).Document(existingItem.inventoryId);
                     await inventoryDoc.UpdateAsync(new Dictionary<string, object>
                     {
-                        { "quantity", existingItem.quantity + 1 }
+                        { "quantity", existingItem.quantity + 1 },
+                        { "equipped", true } // Ensure the item is equipped after purchase
                     });
+                    
+                    // If this is a skin or accessory item, update the user's equipped item in Firestore
+                    if (item.category.Equals("Clothing", StringComparison.OrdinalIgnoreCase) || 
+                        item.category.Equals("Accessories", StringComparison.OrdinalIgnoreCase))
+                    {
+                        
+                        // Call EquipItem to properly update the user's equipped skin/accessory in Firestore
+                        await inventoryService.EquipItem(existingItem.inventoryId);
+                    }
                 }
                 else
                 {
@@ -123,7 +133,17 @@ namespace RamRoutes.Services
                         { "quantity", 1 }
                     };
 
-                    await db.Collection(USER_INVENTORY_COLLECTION).AddAsync(inventoryData);
+                    var newInventoryRef = await db.Collection(USER_INVENTORY_COLLECTION).AddAsync(inventoryData);
+                    
+                    // If this is a skin or accessory item, update the user's equipped item in Firestore
+                    if (item.category.Equals("Clothing", StringComparison.OrdinalIgnoreCase) || 
+                        item.category.Equals("Accessories", StringComparison.OrdinalIgnoreCase))
+                    {
+                        string newInventoryId = newInventoryRef.Id;
+                        
+                        // Call EquipItem to properly update the user's equipped skin/accessory in Firestore
+                        await inventoryService.EquipItem(newInventoryId);
+                    }
                 }
 
                 return true;

@@ -49,7 +49,9 @@ public class RamsManager : MonoBehaviour
     [SerializeField] private Transform playerCountSpawnPoint;
     
     // Chat tracking
-    private User currentChatUser = null; // Track which user we're currently chatting with
+    private User currentChatUser;
+    private float lastClickTime = 0f;
+    private const float CLICK_DEBOUNCE_TIME = 0.5f; // Prevent clicks within 0.5 seconds
     
     private UserService userService;
     private NotificationManager notificationManager; // Will be found automatically
@@ -901,8 +903,7 @@ public class RamsManager : MonoBehaviour
         {
             // Display "Me" if this is the current player, otherwise show username
             string displayName = isCurrentPlayer ? "just me" : user.name;
-            var building = " (" + user.currentBuilding + ")";
-            nameText.text = displayName + (isCurrentPlayer ? "" : building);
+            nameText.text = displayName;
         }
     
         
@@ -959,6 +960,13 @@ public class RamsManager : MonoBehaviour
 
     private void OnRamClicked(User user)
     {
+        // Debounce rapid clicks - prevent multiple clicks within CLICK_DEBOUNCE_TIME
+        float currentTime = Time.time;
+        if (currentTime - lastClickTime < CLICK_DEBOUNCE_TIME)
+        {
+            return; // Ignore this click
+        }
+        lastClickTime = currentTime;
         
         ChatManager chat = chatManager;
         if (chat == null)
