@@ -74,7 +74,7 @@ public class BuildingInteraction : MonoBehaviour
     public ScrollRect usersScrollView;
     public Transform usersContentParent;
     public GameObject userPrefab;
-        public GameObject rsvpUserPrefab;
+    public GameObject rsvpUserPrefab;
 
     public GameObject usersWhoUnlockedPanel;
 
@@ -778,7 +778,7 @@ public class BuildingInteraction : MonoBehaviour
     }
 
     /// <summary>
-    /// Adds current user to event interest/RSVP list
+    /// Toggles current user's interest/RSVP for an event
     /// </summary>
     /// <param name="eventId">The event ID to RSVP to</param>
     private async void RsvpToEvent(string eventId)
@@ -786,7 +786,22 @@ public class BuildingInteraction : MonoBehaviour
         string userId = FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.UserId : "unknown";
         
         var eventService = new BuildingEventService();
-        await eventService.RecordInterestAsync(eventId, userId);
+        
+        // Check if user is already interested
+        bool isAlreadyInterested = await eventService.HasPlayerShownInterest(eventId, userId);
+        
+        if (isAlreadyInterested)
+        {
+            // Remove interest
+            await eventService.RemoveInterestAsync(eventId, userId);
+            Debug.Log($"Removed interest for user {userId} from event {eventId}");
+        }
+        else
+        {
+            // Add interest
+            await eventService.RecordInterestAsync(eventId, userId);
+            Debug.Log($"Added interest for user {userId} to event {eventId}");
+        }
         
         // Refresh the RSVP list for this event
         await LoadEventRsvpList(eventId);
@@ -851,8 +866,9 @@ public class BuildingInteraction : MonoBehaviour
     {
         ScrollRect studentsScrollView = null;
         Transform studentsContentParent = null;
+        Text emptyStateText = null;
         
-        // Find the students-list scroll view
+        // Find the students-list scroll view and empty text
         ScrollRect[] scrollRects = eventGO.GetComponentsInChildren<ScrollRect>();
         foreach (var scroll in scrollRects)
         {
@@ -860,6 +876,17 @@ public class BuildingInteraction : MonoBehaviour
             {
                 studentsScrollView = scroll;
                 studentsContentParent = scroll.content;
+                break;
+            }
+        }
+        
+        // Find empty state text (look for a Text component named "empty" or with specific tag)
+        Text[] texts = eventGO.GetComponentsInChildren<Text>(true);
+        foreach (var text in texts)
+        {
+            if (text.gameObject.name.ToLower().Contains("empty") || text.gameObject.name == "empty")
+            {
+                emptyStateText = text;
                 break;
             }
         }
@@ -883,6 +910,12 @@ public class BuildingInteraction : MonoBehaviour
         }
         
         var rsvpList = eventRsvpLists.ContainsKey(eventId) ? eventRsvpLists[eventId] : new List<string>();
+        
+        // Show/hide empty state text
+        if (emptyStateText != null)
+        {
+            emptyStateText.gameObject.SetActive(rsvpList.Count == 0);
+        }
         
         // Create user entries for each RSVP'd student
         var userService = new UserService();

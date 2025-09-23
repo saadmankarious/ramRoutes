@@ -384,12 +384,33 @@ namespace RamRoutes.Services
         /// <param name="eventId">The event ID</param>
         /// <param name="playerId">The player ID</param>
         /// <returns>True if player has shown interest</returns>
-        public bool HasPlayerShownInterest(string eventId, string playerId)
+        public async Task<bool> HasPlayerShownInterest(string eventId, string playerId)
         {
-            // Find by eventId only
-            var evt = cachedEvents?.FirstOrDefault(e => e.eventId == eventId);
-                      
-            return evt != null && evt.interestedUsers != null && evt.interestedUsers.Contains(playerId);
+            try
+            {
+                DocumentReference eventRef = db.Collection("building-events").Document(eventId);
+                DocumentSnapshot doc = await eventRef.GetSnapshotAsync();
+
+                if (!doc.Exists)
+                {
+                    Debug.LogWarning($"Event {eventId} not found when checking player interest");
+                    return false;
+                }
+
+                var data = doc.ToDictionary();
+                if (data.ContainsKey("interestedUsers") && data["interestedUsers"] is IEnumerable<object> interestedArray)
+                {
+                    var interestedUsers = interestedArray.Select(x => x?.ToString()).Where(x => !string.IsNullOrEmpty(x)).ToList();
+                    return interestedUsers.Contains(playerId);
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Error checking player interest for event {eventId}: {ex.Message}");
+                return false;
+            }
         }
     }
 }
