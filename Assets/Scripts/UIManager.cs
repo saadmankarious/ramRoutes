@@ -22,7 +22,7 @@ public class UIManager : MonoBehaviour
         { Stage.TC, 0 },
         { Stage.EasternCampus, 0 },
         { Stage.FirstStreet, 0 },
-        { Stage.Pedmall, 180 },
+        { Stage.Pedmall, 0 },
         { Stage.Terminal, 0 }
     };
     public static UIManager Instance { get; private set; }
