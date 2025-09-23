@@ -560,22 +560,23 @@ exports.notifyShoutoutReceived = onDocumentCreated("shout-outs/{shoutoutId}", as
             });
             
             return response;
-        } else {
-            // Fallback: send to updates topic (all users will see it but it's better than nothing)
-            delete message.token;
-            message.topic = 'updates';
-            message.notification.body = `${senderName} sent a shoutout to ${receiverData.name || 'a player'}!`;
+        } 
+        // else {
+        //     // Fallback: send to updates topic (all users will see it but it's better than nothing)
+        //     delete message.token;
+        //     message.topic = 'updates';
+        //     message.notification.body = `${senderName} sent a shoutout to ${receiverData.name || 'a player'}!`;
             
-            const response = await getMessaging().send(message);
-            logger.info("Sent shoutout notification to updates topic (no FCM token found)", {
-                messageId: response,
-                shoutoutId: shoutoutId,
-                receiverUserId: receiverUserId,
-                senderName: senderName
-            });
+        //     const response = await getMessaging().send(message);
+        //     logger.info("Sent shoutout notification to updates topic (no FCM token found)", {
+        //         messageId: response,
+        //         shoutoutId: shoutoutId,
+        //         receiverUserId: receiverUserId,
+        //         senderName: senderName
+        //     });
             
-            return response;
-        }
+        //     return response;
+        // }
         
     } catch (error) {
         logger.error("Error sending shoutout notification", {

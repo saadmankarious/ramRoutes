@@ -48,6 +48,9 @@ public class RamsManager : MonoBehaviour
     [SerializeField] private GameObject playerCountCanvasPrefab;
     [SerializeField] private Transform playerCountSpawnPoint;
     
+    // Chat tracking
+    private User currentChatUser = null; // Track which user we're currently chatting with
+    
     private UserService userService;
     private NotificationManager notificationManager; // Will be found automatically
     private List<GameObject> spawnedRams = new List<GameObject>();
@@ -100,7 +103,7 @@ public class RamsManager : MonoBehaviour
         // GetPlayersInAllBuildingsAndNotify();
         
         // Start live monitoring for new players entering buildings
-        StartLiveBuildingMonitoring();
+        // StartLiveBuildingMonitoring();
         
         // Validate spawn points configuration
         ValidateSpawnPoints();
@@ -549,6 +552,7 @@ public class RamsManager : MonoBehaviour
         if (chat != null)
         {
             chat.CloseChatPanel();
+            currentChatUser = null; // Reset current chat user when closing chat
         }
         
         // Start despawn coroutine after the delay
@@ -1019,8 +1023,6 @@ public class RamsManager : MonoBehaviour
     {
         Debug.Log($"Ram clicked for user: {user.name}");
         
-
-        // Start chat with the clicked user
         ChatManager chat = chatManager;
         if (chat == null)
         {
@@ -1029,13 +1031,35 @@ public class RamsManager : MonoBehaviour
         
         if (chat != null)
         {
-            chat.StartChatWithUser(user);
-            Debug.Log($"Started chat with user: {user.name}");
+            // Check if we're clicking on the same ram that we're already chatting with
+            if (currentChatUser != null && currentChatUser.userId == user.userId)
+            {
+                // Close the chat if clicking on the same ram
+                chat.CloseChatPanel();
+                currentChatUser = null;
+                Debug.Log($"Closed chat with user: {user.name}");
+            }
+            else
+            {
+                // Start chat with the clicked user
+                chat.StartChatWithUser(user);
+                currentChatUser = user;
+                Debug.Log($"Started chat with user: {user.name}");
+            }
         }
         else
         {
             Debug.LogWarning("RamsManager: No ChatManager found in scene!");
         }
+    }
+    
+    /// <summary>
+    /// Reset the current chat user tracking (called when chat is closed externally)
+    /// </summary>
+    public void ResetCurrentChatUser()
+    {
+        currentChatUser = null;
+        Debug.Log("Current chat user reset");
     }
     
     /// <summary>
