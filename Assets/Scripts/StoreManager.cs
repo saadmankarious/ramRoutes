@@ -77,7 +77,7 @@ public class StoreManager : MonoBehaviour
             itemsContainer = FindChildByName(transform, "items");
             if (itemsContainer == null)
             {
-                Debug.LogError("StoreManager: No 'items' container found. Please assign the 'items' container that should be hidden/shown.");
+                // Debug.LogError("StoreManager: No 'items' container found. Please assign the 'items' container that should be hidden/shown.");
                 return;
             }
             else

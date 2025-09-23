@@ -10,6 +10,7 @@
 const {setGlobalOptions} = require("firebase-functions");
 const {onRequest} = require("firebase-functions/https");
 const {onDocumentCreated, onDocumentUpdated} = require("firebase-functions/v2/firestore");
+const {onSchedule} = require("firebase-functions/v2/scheduler");
 const {initializeApp} = require("firebase-admin/app");
 const {getMessaging} = require("firebase-admin/messaging");
 const logger = require("firebase-functions/logger");
@@ -131,15 +132,16 @@ exports.notifyNewBuildingEventV2 = onDocumentCreated("building-events/{eventId}"
 
 /**
  * Notify all users when someone joins for the first time
- * Triggers when a new user document is created in the users collection
+ * Triggers when a user document is updated with notificationToken for the first time
  */
-exports.sendUserJoinedNotification = onDocumentCreated(
+exports.sendUserJoinedNotification = onDocumentUpdated(
     'users/{userId}',
     async (event) => {
         try {
-            const userData = event.data.data();
+            const beforeData = event.data.before.data();
+            const afterData = event.data.after.data();
             const userId = event.params.userId;
-            const userEmail = userData.email || '';
+            const userEmail = afterData.email || '';
             
             // Skip notification for guest users with @ramroutes.com emails
             if (userEmail.endsWith('@ramroutes.com')) {
@@ -150,10 +152,19 @@ exports.sendUserJoinedNotification = onDocumentCreated(
                 return null;
             }
             
+            // Only trigger if notificationToken was added for the first time
+            const hadToken = beforeData.notificationToken && beforeData.notificationToken.trim() !== '';
+            const hasToken = afterData.notificationToken && afterData.notificationToken.trim() !== '';
+            
+            if (hadToken || !hasToken) {
+                // User already had a token or still doesn't have one
+                return null;
+            }
+            
             logger.info("New user joined the game. Pushing a notification", {
                 userId: userId,
-                userName: userData.name,
-                email: userData.email
+                userName: afterData.name,
+                email: afterData.email
             });
 
             // Send notification to all users subscribed to 'updates' topic
@@ -161,11 +172,11 @@ exports.sendUserJoinedNotification = onDocumentCreated(
                 topic: 'updates',
                 notification: {
                     title: 'New Player Joined!',
-                    body: `${userData.name || 'A new player'} has joined the game. Welcome them to the community!`
+                    body: `${afterData.name || 'A new player'} has joined the game. Welcome them to the community!`
                 },
                 data: {
                     userId: userId,
-                    userName: userData.name || "",
+                    userName: afterData.name || "",
                     type: "user_joined"
                 },
                 android: {
@@ -193,7 +204,7 @@ exports.sendUserJoinedNotification = onDocumentCreated(
             logger.info("Successfully sent user joined notification to 'updates' topic", {
                 messageId: response,
                 userId: userId,
-                userName: userData.name
+                userName: afterData.name
             });
 
             return response;
@@ -942,6 +953,123 @@ exports.notifyNewStoreItem = onDocumentCreated("store-items/{itemId}", async (ev
         });
         
         // Don't re-throw the error to prevent function retry
+        return null;
+    }
+});
+
+/**
+ * Schedule upcoming event notifications when events are created
+ * More efficient than polling - schedules individual notifications
+ */
+exports.scheduleEventReminder = onDocumentCreated("building-events/{eventId}", async (event) => {
+    try {
+        const eventData = event.data.data();
+        const eventId = event.params.eventId;
+        
+        // Skip if no date or event is in the past
+        if (!eventData.date) return null;
+        
+        const eventTime = eventData.date.toDate();
+        const now = new Date();
+        const reminderTime = new Date(eventTime.getTime() - 15 * 60 * 1000); // 15 minutes before
+        
+        // Skip if reminder time has already passed
+        if (reminderTime <= now) return null;
+        
+        // Store reminder in a collection for a daily cleanup job to process
+        const admin = require("firebase-admin");
+        const db = admin.firestore();
+        
+        await db.collection("event-reminders").doc(eventId).set({
+            eventId: eventId,
+            eventName: eventData.eventName,
+            buildingName: eventData.buildingName,
+            eventTime: eventTime,
+            reminderTime: reminderTime,
+            processed: false,
+            createdAt: now
+        });
+        
+        logger.info("Event reminder scheduled", {
+            eventId: eventId,
+            reminderTime: reminderTime.toISOString()
+        });
+        
+        return null;
+        
+    } catch (error) {
+        logger.error("Error scheduling event reminder:", {
+            message: error.message,
+            stack: error.stack,
+            eventId: event.params.eventId
+        });
+        return null;
+    }
+});
+
+/**
+ * Process scheduled event reminders
+ * Runs once per hour to send due notifications
+ */
+exports.processEventReminders = onSchedule("every 60 minutes", async (event) => {
+    try {
+        const admin = require("firebase-admin");
+        const db = admin.firestore();
+        const now = new Date();
+        
+        // Find unprocessed reminders that are due
+        const remindersSnapshot = await db.collection("event-reminders")
+            .where("processed", "==", false)
+            .where("reminderTime", "<=", now)
+            .limit(50)
+            .get();
+        
+        if (remindersSnapshot.empty) return null;
+        
+        const batch = db.batch();
+        
+        for (const reminderDoc of remindersSnapshot.docs) {
+            const reminder = reminderDoc.data();
+            
+            // Send notification
+            const message = {
+                topic: 'updates',
+                notification: {
+                    title: `Event Starting Soon!`,
+                    body: `${reminder.eventName} at ${reminder.buildingName} starts in 15 minutes`
+                },
+                data: {
+                    eventId: reminder.eventId,
+                    eventName: reminder.eventName || "",
+                    buildingName: reminder.buildingName || "",
+                    type: "upcoming_event"
+                },
+                android: {
+                    notification: {
+                        icon: "ic_notification",
+                        color: "#FF9800",
+                        sound: "default"
+                    },
+                    priority: "high"
+                }
+            };
+            
+            await getMessaging().send(message);
+            
+            // Mark as processed
+            batch.update(reminderDoc.ref, { processed: true, processedAt: now });
+            
+            logger.info("Event reminder sent", { eventId: reminder.eventId });
+        }
+        
+        await batch.commit();
+        return null;
+        
+    } catch (error) {
+        logger.error("Error processing event reminders:", {
+            message: error.message,
+            stack: error.stack
+        });
         return null;
     }
 });
