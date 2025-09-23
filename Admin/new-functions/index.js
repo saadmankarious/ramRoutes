@@ -855,6 +855,7 @@ exports.notifyWhisperReceived = onDocumentCreated("chat/{chatId}", async (event)
                 return null;
             }
         } else {
+            
             logger.info("No valid FCM token found for user, cannot send whisper notification", {
                 chatId: chatId,
                 receiverUserId: receiverUserId,

@@ -18,10 +18,10 @@ public class ButtonHandler : MonoBehaviour
         {
             button.onClick.AddListener(OnButtonClick);
         }
-        else
-        {
-            Debug.LogWarning("ButtonHandler: No Button component found. This component should be attached to a GameObject with a Button component.");
-        }
+        // else
+        // {
+        //     Debug.LogWarning("ButtonHandler: No Button component found. This component should be attached to a GameObject with a Button component.");
+        // }
     }
 
     public void Initialize(string data, System.Action onClick)

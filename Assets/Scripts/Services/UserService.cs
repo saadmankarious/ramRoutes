@@ -6,6 +6,7 @@ namespace RamRoutes.Services
     using Firebase.Firestore;
     using RamRoutes.Model;
     using System.Collections.Generic;
+    using System.Linq;
     using UnityEngine.SocialPlatforms;
     using Unity.VisualScripting;
 
@@ -92,6 +93,64 @@ namespace RamRoutes.Services
             catch (Exception ex)
             {
                 Debug.LogError($"Failed to retrieve user {userId}: {ex.Message}");
+            }
+            return null;
+        }
+
+        public async Task<User> RetrieveUserByName(string username)
+        {
+            try
+            {
+                Query query = db.Collection("users").WhereEqualTo("name", username).Limit(1);
+                QuerySnapshot querySnapshot = await query.GetSnapshotAsync();
+                
+                var doc = querySnapshot.Documents.FirstOrDefault();
+                if (doc != null && doc.Exists)
+                {
+                    var data = doc.ToDictionary();
+                    string id = data.ContainsKey("id") && data["id"] != null ? data["id"].ToString() : "";
+                    string token = data.ContainsKey("notificationToken") && data["notificationToken"] != null ? data["notificationToken"].ToString() : "";
+                    string name = data.ContainsKey("name") && data["name"] != null ? data["name"].ToString() : "";
+                    string email = data.ContainsKey("email") && data["email"] != null ? data["email"].ToString() : "";
+                    int coins = data.ContainsKey("coins") ? Convert.ToInt32(data["coins"]) : 0;
+                    int knowledgePoints = data.ContainsKey("knowledgePoints") ? Convert.ToInt32(data["knowledgePoints"]) : 0;
+                    string currentBuilding = data.ContainsKey("currentBuilding") && data["currentBuilding"] != null ? data["currentBuilding"].ToString() : "";
+                    string residenceHall = data.ContainsKey("residenceHall") && data["residenceHall"] != null ? data["residenceHall"].ToString() : "Not specified";
+                    
+                    // Handle friends list
+                    List<string> friends = new List<string>();
+                    if (data.ContainsKey("friends") && data["friends"] != null)
+                    {
+                        var friendsData = data["friends"];
+                        if (friendsData is List<object> friendsList)
+                        {
+                            foreach (var friend in friendsList)
+                            {
+                                if (friend != null)
+                                {
+                                    friends.Add(friend.ToString());
+                                }
+                            }
+                        }
+                    }
+                    
+                    var user = new User(id, token, name, email);
+                    user.coins = coins;
+                    user.knowledgePoints = knowledgePoints;
+                    user.currentBuilding = currentBuilding;
+                    user.residenceHall = residenceHall;
+                    user.friends = friends;
+                    Debug.Log($"User {name} retrieved by name from Firestore");
+                    return user;
+                }
+                else
+                {
+                    Debug.LogWarning($"User with name '{username}' not found in Firestore");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Failed to retrieve user by name '{username}': {ex.Message}");
             }
             return null;
         }
