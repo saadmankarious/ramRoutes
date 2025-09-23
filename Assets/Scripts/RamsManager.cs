@@ -86,7 +86,7 @@ public class RamsManager : MonoBehaviour
         notificationManager = FindObjectOfType<NotificationManager>();
         if (notificationManager != null)
         {
-            Debug.Log("RamsManager: Found NotificationManager in scene");
+            // Found NotificationManager - continue without logging
         }
         else
         {
@@ -135,7 +135,7 @@ public class RamsManager : MonoBehaviour
         }
         else
         {
-            Debug.Log($"RamsManager on {gameObject.name}: {spawnPoints.Length} spawn points configured successfully.");
+            // Spawn points configured successfully - continue without logging
         }
     }
     
@@ -147,22 +147,11 @@ public class RamsManager : MonoBehaviour
     {
         if (spawnPoints == null || spawnPoints.Length == 0)
         {
-            Debug.LogWarning("No spawn points to debug!");
-            return;
+        Debug.LogWarning("No spawn points to debug!");
+        return;
         }
         
-        Debug.Log($"=== Spawn Points Debug ({spawnPoints.Length} points) ===");
-        for (int i = 0; i < spawnPoints.Length; i++)
-        {
-            if (spawnPoints[i] != null)
-            {
-                Debug.Log($"Spawn Point {i}: {spawnPoints[i].name} at position {spawnPoints[i].position}");
-            }
-            else
-            {
-                Debug.LogWarning($"Spawn Point {i}: NULL");
-            }
-        }
+        // Removed debug logging for spawn points
     }
     
     /// <summary>
@@ -187,7 +176,7 @@ public class RamsManager : MonoBehaviour
         availableColors.Add(new Color(0.2f, 0.6f, 0.8f));      // Light Blue
         
         colorIndex = 0;
-        Debug.Log($"Initialized {availableColors.Count} colors visible on green background");
+        // Initialized colors
     }
     
     /// <summary>
@@ -218,7 +207,7 @@ public class RamsManager : MonoBehaviour
             // Check if we've already notified about building activity this session
             if (hasNotifiedBuildingActivity)
             {
-                Debug.Log("RamsManager: Building activity already notified this session, skipping");
+                // Skip notification logging
                 return;
             }
             
@@ -241,7 +230,7 @@ public class RamsManager : MonoBehaviour
             
             if (buildingUsers.Count == 0)
             {
-                Debug.Log("RamsManager: No players found in any buildings");
+                // No players found in any buildings
                 if (notificationManager != null)
                 {
                     notificationManager.ShowNotification("Campus Status", "No players currently in any buildings");
@@ -284,12 +273,12 @@ public class RamsManager : MonoBehaviour
                     }
                     else
                     {
-                        Debug.Log($"RamsManager: {message}");
+                        // Message logged to console when no notification manager available
                     }
                 }
             }
             
-            Debug.Log($"RamsManager: Notified current player about {buildingUsers.Count} buildings with active players");
+            // Successfully notified about building occupancy
         }
         catch (System.Exception ex)
         {
@@ -305,7 +294,7 @@ public class RamsManager : MonoBehaviour
         if (buildingMonitorCoroutine == null)
         {
             buildingMonitorCoroutine = StartCoroutine(MonitorBuildingOccupancyCoroutine());
-            Debug.Log("RamsManager: Started live building occupancy monitoring (10 second intervals)");
+            // Started live building occupancy monitoring
         }
     }
     
@@ -384,7 +373,7 @@ public class RamsManager : MonoBehaviour
                         // Skip if this is the current player
                         if (newUser.userId == currentUserId)
                         {
-                            Debug.Log($"RamsManager ({buildingName}): Skipping notification for current player: {newUser.name}");
+                            // Skipping current player notification
                             continue;
                         }
                         
@@ -707,10 +696,7 @@ public class RamsManager : MonoBehaviour
                     // Spawn new users with delay
                     StartCoroutine(SpawnNewUsersWithDelay(newUsers.Take(usersToSpawn).ToList()));
                 }
-                else
-                {
-                    Debug.Log($"Max rams ({maxRams}) reached, cannot spawn more users");
-                }
+              
             }
             
             // Remove users who are no longer in the building
@@ -862,7 +848,6 @@ public class RamsManager : MonoBehaviour
         Animator animator = ramInstance.GetComponent<Animator>();
         if (animator == null)
         {
-            Debug.LogWarning("No Animator found on ram instance - cannot trigger backflip animation");
             yield break;
         }
         
@@ -881,7 +866,6 @@ public class RamsManager : MonoBehaviour
             {
                 // Trigger the backflip animation
                 animator.SetBool("backflip", true);
-                Debug.Log($"Triggered backflip animation for ram: {ramInstance.name}");
                 
                 // Wait for backflip animation to complete, then set bool to false
                 StartCoroutine(ResumeMovementAfterBackflip(ramInstance, animator));
@@ -905,7 +889,6 @@ public class RamsManager : MonoBehaviour
                         animator.SetBool("idle", false);
 
             
-            Debug.Log($"Finished backflip for ram: {ramInstance.name}");
         }
     }
 
@@ -958,10 +941,7 @@ public class RamsManager : MonoBehaviour
             var building = " (" + user.currentBuilding + ")";
             nameText.text = displayName + (isCurrentPlayer ? "" : building);
         }
-        else
-        {
-            Debug.LogWarning($"No 'name' Text component found in ram prefab for user {user.name}");
-        }
+    
         
         // Find the "coins" text component and display knowledge points
         var coinsText = allTexts.FirstOrDefault(t => t.gameObject.name.ToLower().Contains("coins"));
@@ -969,10 +949,7 @@ public class RamsManager : MonoBehaviour
         {
             coinsText.text = $"{user.knowledgePoints}";
         }
-        else
-        {
-            Debug.LogWarning($"No 'coins' Text component found in ram prefab for user {user.name}");
-        }
+      
 
         // Fallback: Try TMPro text components if UI Text not found
         if (nameText == null)
@@ -1010,18 +987,15 @@ public class RamsManager : MonoBehaviour
             float scale = CalculateRamScaleByRank(user);
             ramInstance.transform.localScale = Vector3.one * scale;
             ApplyUniqueColorToRamText(ramInstance, user);
-            Debug.Log($"Applied scale {scale:F2}x and unique color directly (no UIManager)");
         }
         
         // Start random backflip animations for this ram
         StartCoroutine(RandomBackflipAnimation(ramInstance));
         
-        Debug.Log($"Spawned ram for user: {user.name} at position {spawnPosition}");
     }
 
     private void OnRamClicked(User user)
     {
-        Debug.Log($"Ram clicked for user: {user.name}");
         
         ChatManager chat = chatManager;
         if (chat == null)
@@ -1037,20 +1011,15 @@ public class RamsManager : MonoBehaviour
                 // Close the chat if clicking on the same ram
                 chat.CloseChatPanel();
                 currentChatUser = null;
-                Debug.Log($"Closed chat with user: {user.name}");
             }
             else
             {
                 // Start chat with the clicked user
                 chat.StartChatWithUser(user);
                 currentChatUser = user;
-                Debug.Log($"Started chat with user: {user.name}");
             }
         }
-        else
-        {
-            Debug.LogWarning("RamsManager: No ChatManager found in scene!");
-        }
+      
     }
     
     /// <summary>
@@ -1059,7 +1028,6 @@ public class RamsManager : MonoBehaviour
     public void ResetCurrentChatUser()
     {
         currentChatUser = null;
-        Debug.Log("Current chat user reset");
     }
     
     /// <summary>
@@ -1071,7 +1039,6 @@ public class RamsManager : MonoBehaviour
         string currentUserId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
         if (!string.IsNullOrEmpty(currentUserId) && user.userId == currentUserId)
         {
-            Debug.Log($"Skipping click handler setup for current player's ram: {user.name}");
             return;
         }
         
@@ -1081,7 +1048,6 @@ public class RamsManager : MonoBehaviour
         // Initialize RamClickHandler with user and manager reference
         ramClickHandler.Initialize(user, this);
         
-        Debug.Log($"RamClickHandler setup for ram: {user.name}");
     }
     
     /// <summary>
@@ -1097,7 +1063,6 @@ public class RamsManager : MonoBehaviour
             var ramAnimator = ramInstance.GetComponent<Animator>();
             if (ramAnimator == null)
             {
-                Debug.LogWarning($"No Animator component found on RAM for user {user.name} - cannot apply skin");
                 return;
             }
             
@@ -1105,7 +1070,6 @@ public class RamsManager : MonoBehaviour
             var skinManager = FindObjectOfType<SkinManager>();
             if (skinManager == null)
             {
-                Debug.LogWarning("SkinManager not found in scene - cannot apply user skin to RAM");
                 return;
             }
             
