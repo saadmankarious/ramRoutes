@@ -387,7 +387,6 @@ public class RamsManager : MonoBehaviour
                         };
                         
                         pendingBuildingEntries.Add(entry);
-                        Debug.Log($"RamsManager ({buildingName}): Added {newUser.name} to notification batch");
                     }
                     
                     // Start batch processing if not already running
@@ -421,7 +420,6 @@ public class RamsManager : MonoBehaviour
         // Prevent duplicate spawning if rams are already active
         if (spawnedRams.Count > 0)
         {
-            Debug.Log($"Building {building.buildingName} activation called but rams already spawned, ignoring");
             return;
         }
         
@@ -433,13 +431,11 @@ public class RamsManager : MonoBehaviour
                 var currentStage = GameStageService.LoadStageFromPrefs();
                 if (currentStage == null || currentStage.area != Stage.Terminal)
                 {
-                    Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), skipping ram system activation");
                     return;
                 }
             }
             
             hasBeenActivated = true;
-            Debug.Log($"Building {building.buildingName} activated in Terminal stage, spawning rams");
             await SpawnRams();
             
             // Display player count if there are players in the building
@@ -449,13 +445,9 @@ public class RamsManager : MonoBehaviour
             if (refreshCoroutine == null)
             {
                 refreshCoroutine = StartCoroutine(RefreshPlayersCoroutine());
-                Debug.Log("Started refresh coroutine to check for new players every 5 seconds");
             }
         }
-        else if (hasBeenActivated)
-        {
-            Debug.Log($"Building {building.buildingName} activation called again, ignoring duplicate call");
-        }
+     
     }
     
     public void OnPlayerLeavesBuilding()
@@ -463,7 +455,6 @@ public class RamsManager : MonoBehaviour
         if (hasBeenActivated)
         {
             hasBeenActivated = false;
-            Debug.Log($"Building {building.buildingName} deactivated, despawning rams in 10 seconds");
             
             // Update player count display instead of hiding it
             // This will show the remaining players in the building
@@ -481,7 +472,6 @@ public class RamsManager : MonoBehaviour
             {
                 StopCoroutine(refreshCoroutine);
                 refreshCoroutine = null;
-                Debug.Log("Stopped refresh coroutine as building is no longer activated");
             }
             
             // Check if GameObject is active before starting coroutine
@@ -493,7 +483,6 @@ public class RamsManager : MonoBehaviour
             else
             {
                 // GameObject is inactive, handle cleanup immediately using a static method
-                Debug.Log("GameObject is inactive, handling cleanup immediately");
                 HandleImmediateCleanup();
             }
         }
@@ -505,22 +494,7 @@ public class RamsManager : MonoBehaviour
     private async void HandleImmediateCleanup()
     {
         // Clear rams immediately
-        ClearSpawnedRams();
-        
-        // Clear current building for this user
-        string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
-        if (!string.IsNullOrEmpty(userId))
-        {
-            try
-            {
-                //await userService.ClearCurrentUserBuilding();
-                Debug.Log($"Successfully cleared current building for user {userId}");
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError($"Failed to clear current building: {e.Message}");
-            }
-        }
+        ClearSpawnedRams();       
     }
     
     /// <summary>
@@ -529,7 +503,6 @@ public class RamsManager : MonoBehaviour
     private IEnumerator HandlePlayerLeavingWithDelay()
     {
         // Wait 10 seconds before starting despawn process
-        Debug.Log("Waiting 10 seconds before despawning rams...");
         yield return new WaitForSeconds(7f);
         ChatManager chat = chatManager;
           if (chat == null)
@@ -545,14 +518,12 @@ public class RamsManager : MonoBehaviour
         }
         
         // Start despawn coroutine after the delay
-        Debug.Log("Starting ram despawn process");
         yield return StartCoroutine(DespawnRamsWithDelay());
         
         // Clear current building for this user after despawning
         string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
         if (string.IsNullOrEmpty(userId))
         {
-            Debug.LogWarning("No authenticated user found, cannot clear current building");
             yield break;
         }
 
@@ -581,7 +552,6 @@ public class RamsManager : MonoBehaviour
             var currentStage = GameStageService.LoadStageFromPrefs();
             if (currentStage == null || currentStage.area != Stage.Terminal)
             {
-                Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), skipping ram spawning");
                 return;
             }
         }
@@ -607,7 +577,6 @@ public class RamsManager : MonoBehaviour
             // Include current player in ram spawning along with other players
             string currentUserId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
             
-            Debug.Log($"Found {usersInBuilding.Count} users in {buildingName} (including current player)");
 
             // Clear existing rams and reset tracking
             ClearSpawnedRams();
@@ -661,7 +630,6 @@ public class RamsManager : MonoBehaviour
             var currentStage = GameStageService.LoadStageFromPrefs();
             if (currentStage == null || currentStage.area != Stage.Terminal)
             {
-                Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), skipping new player check");
                 return;
             }
         }
@@ -685,8 +653,6 @@ public class RamsManager : MonoBehaviour
             
             if (newUsers.Count > 0)
             {
-                Debug.Log($"Found {newUsers.Count} new users to spawn in {buildingName}");
-                
                 // Check if we can spawn more rams (within maxRams limit)
                 int availableSlots = maxRams - spawnedRams.Count;
                 int usersToSpawn = Mathf.Min(newUsers.Count, availableSlots);
@@ -705,8 +671,6 @@ public class RamsManager : MonoBehaviour
             
             if (usersToRemove.Count > 0)
             {
-                Debug.Log($"Removing {usersToRemove.Count} users who left the building");
-
                 // Play despawn sound for users leaving
                 PlayDespawnSound();
                 
@@ -834,7 +798,6 @@ public class RamsManager : MonoBehaviour
         // Clear the lists after all rams are despawned
         spawnedRams.Clear();
         spawnedUserIds.Clear();
-        Debug.Log("All rams despawned successfully");
     }
 
     /// <summary>
@@ -1079,7 +1042,6 @@ public class RamsManager : MonoBehaviour
             {
                 // Apply the skin's animator controller to the RAM
                 ramAnimator.runtimeAnimatorController = skinAnimator;
-                Debug.Log($"Applied {user.equippedSkin} skin to RAM for user {user.name}");
             }
             else
             {
@@ -1119,7 +1081,6 @@ public class RamsManager : MonoBehaviour
         {
             // Set backflip bool to true
             animator.SetBool("backflip", true);
-            Debug.Log($"Triggered click backflip for ram: {ramInstance.name}");
             
             // Reset backflip bool after animation completes
             StartCoroutine(ResumeMovementAfterBackflip(ramInstance, animator));
@@ -1141,7 +1102,6 @@ public class RamsManager : MonoBehaviour
             if (buildingAudioSource != null)
             {
                 buildingAudioSource.PlayOneShot(backflipClip);
-                Debug.Log("Played backflip sound");
             }
             else
             {
@@ -1223,7 +1183,6 @@ public class RamsManager : MonoBehaviour
         userColorAssignments[userId] = assignedColor;
         
         colorIndex++;
-        Debug.Log($"Assigned unique color {assignedColor} to user {userId}");
         
         return assignedColor;
     }
@@ -1244,14 +1203,12 @@ public class RamsManager : MonoBehaviour
         if (nameText != null)
         {
             nameText.color = userColor;
-            Debug.Log($"Applied unique color {userColor} to RAM name text for user {user.name}");
         }
         
         // Apply same color to knowledge points text
         if (coinsText != null)
         {
             coinsText.color = userColor;
-            Debug.Log($"Applied unique color {userColor} to RAM knowledge points text for user {user.name}");
         }
         
         // Fallback: Try TextMeshPro if regular Text components not found
@@ -1259,15 +1216,6 @@ public class RamsManager : MonoBehaviour
         {
             var tmpTexts = ramInstance.GetComponentsInChildren<TMPro.TextMeshProUGUI>();
             
-            if (nameText == null)
-            {
-                var tmpNameText = tmpTexts.FirstOrDefault(t => t.gameObject.name.ToLower().Contains("name"));
-                if (tmpNameText != null)
-                {
-                    tmpNameText.color = userColor;
-                    Debug.Log($"Applied unique color {userColor} to RAM TMPro name text for user {user.name}");
-                }
-            }
             
             if (coinsText == null)
             {
@@ -1275,7 +1223,6 @@ public class RamsManager : MonoBehaviour
                 if (tmpCoinsText != null)
                 {
                     tmpCoinsText.color = userColor;
-                    Debug.Log($"Applied unique color {userColor} to RAM TMPro knowledge points text for user {user.name}");
                 }
             }
             
@@ -1384,7 +1331,6 @@ public class RamsManager : MonoBehaviour
         // Clear color assignments to allow fresh unique colors
         userColorAssignments.Clear();
         colorIndex = 0;
-        Debug.Log("Cleared all spawned rams and reset color assignments");
     }
     
     /// <summary>
@@ -1411,7 +1357,6 @@ public class RamsManager : MonoBehaviour
         // Apply scale to the ram
         ramInstance.transform.localScale = Vector3.one * scaleMultiplier;
         
-        Debug.Log($"Scaled ram for user with {knowledgePoints} KB to {scaleMultiplier:F2}x scale");
     }
 
     
@@ -1431,7 +1376,6 @@ public class RamsManager : MonoBehaviour
         ApplyUniqueColorToRamText(ramInstance, user);
         
         int userRank = userService.CalculateUserRank(user.coins, user.knowledgePoints);
-        Debug.Log($"Applied rank-based scale {scale:F2}x and unique color AFTER pop animation for user {user.name} (Rank {userRank})");
     }
     
     /// <summary>
@@ -1453,7 +1397,6 @@ public class RamsManager : MonoBehaviour
             var currentStage = GameStageService.LoadStageFromPrefs();
             if (currentStage == null || currentStage.area != Stage.Terminal)
             {
-                Debug.Log($"RamsManager: Not in Terminal stage (current: {currentStage?.area}), hiding player count");
                 // Hide the canvas when not in Terminal stage
                 StartCoroutine(HidePlayerCountCanvas());
                 yield break;
@@ -1508,7 +1451,6 @@ public class RamsManager : MonoBehaviour
                     // Use spawn point if assigned, otherwise use this transform
                     Transform spawnParentTransform = playerCountSpawnPoint != null ? playerCountSpawnPoint : transform;
                     playerCountCanvasInstance = Instantiate(playerCountCanvasPrefab, spawnParentTransform);
-                    Debug.Log($"Created player count canvas for building {building.buildingName} at spawn point");
                 }
                 
                 // Update the count display and show it
@@ -1549,11 +1491,9 @@ public class RamsManager : MonoBehaviour
             {
                 tmpText.text = count.ToString();
                 playerCountCanvasInstance.SetActive(true);
-                Debug.Log($"Updated TMPro player count display to: {count}");
                 return;
             }
             
-            Debug.LogWarning("No Text or TextMeshPro component found in player count canvas");
             return;
         }
         
@@ -1564,7 +1504,6 @@ public class RamsManager : MonoBehaviour
         // Start beating animation to attract attention
         StartCoroutine(BeatingAnimation());
         
-        Debug.Log($"Updated player count display to: {count}");
     }
     
     /// <summary>
@@ -1593,7 +1532,6 @@ public class RamsManager : MonoBehaviour
     public static void ResetBuildingActivityNotification()
     {
         hasNotifiedBuildingActivity = false;
-        Debug.Log("RamsManager: Building activity notification flag reset - will allow showing notifications again");
     }
     
     private void OnDestroy()
@@ -1707,7 +1645,6 @@ public class RamsManager : MonoBehaviour
             if (notificationManager != null)
             {
                 notificationManager.ShowNotification(title, message);
-                Debug.Log($"RamsManager: Sent batched notification for {entries.Count} players entering {buildingName}");
                 
                 // Small delay between building notifications if multiple buildings
                 if (entriesByBuilding.Count > 1)
@@ -1715,10 +1652,7 @@ public class RamsManager : MonoBehaviour
                     yield return new WaitForSeconds(0.5f);
                 }
             }
-            else
-            {
-                Debug.Log($"RamsManager: {title} - {message}");
-            }
+           
         }
         
         // Clear processed entries and reset coroutine

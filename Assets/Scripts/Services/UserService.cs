@@ -82,7 +82,6 @@ namespace RamRoutes.Services
                     user.currentBuilding = currentBuilding;
                     user.residenceHall = residenceHall;
                     user.friends = friends;
-                    Debug.Log($"User {id} retrieved from Firestore");
                     return user;
                 }
                 else
@@ -140,7 +139,6 @@ namespace RamRoutes.Services
                     user.currentBuilding = currentBuilding;
                     user.residenceHall = residenceHall;
                     user.friends = friends;
-                    Debug.Log($"User {name} retrieved by name from Firestore");
                     return user;
                 }
                 else
@@ -163,7 +161,6 @@ namespace RamRoutes.Services
                 string json = JsonUtility.ToJson(user);
                 PlayerPrefs.SetString("current_user_profile", json);
                 PlayerPrefs.Save();
-                Debug.Log($"Current user profile cached locally");
             }
             return user;
         }
@@ -204,7 +201,6 @@ namespace RamRoutes.Services
                 string json = JsonUtility.ToJson(remoteUser);
                 PlayerPrefs.SetString("current_user_profile", json);
                 PlayerPrefs.Save();
-                Debug.Log($"User profile loaded from Firestore and cached: {remoteUser.userId}, {remoteUser.name}");
                 return remoteUser;
             }
             Debug.LogWarning("User profile not found in cache or Firestore.");
@@ -255,7 +251,6 @@ namespace RamRoutes.Services
                     string json = JsonUtility.ToJson(user);
                     PlayerPrefs.SetString("current_user_profile", json);
                     PlayerPrefs.Save();
-                    Debug.Log($"Updated current building for user {userId} to {buildingName}");
                 }
             }
             catch (Exception ex)
@@ -269,14 +264,12 @@ namespace RamRoutes.Services
         public async Task<bool> UpdateWhispers(string userId, WhisperType whisperType)
         {
             // This method is no longer used - whispers are managed through inventory system
-            Debug.LogWarning("UpdateWhispers method is deprecated - use inventory system instead");
             return true;
         }
 
         public async Task<List<WhisperType>> GetUserWhispers(string userId)
         {
             // This method is no longer used - whispers are managed through inventory system
-            Debug.LogWarning("GetUserWhispers method is deprecated - use inventory system instead");
             return new List<WhisperType>();
         }
         */
@@ -306,7 +299,6 @@ namespace RamRoutes.Services
                     users.Add(user);
                 }
 
-                Debug.Log($"Found {users.Count} users in building {buildingName}");
                 return users;
             }
             catch (Exception ex)
@@ -410,12 +402,6 @@ namespace RamRoutes.Services
                     }
                 }
 
-                Debug.Log($"Found users in {buildingUsers.Count} buildings:");
-                foreach (var kvp in buildingUsers)
-                {
-                    Debug.Log($"  {kvp.Key}: {kvp.Value.Count} users");
-                }
-
                 return buildingUsers;
             }
             catch (Exception ex)
@@ -460,7 +446,6 @@ namespace RamRoutes.Services
                     }
                 }
 
-                Debug.Log($"Found {users.Count} total users currently in buildings");
                 return users;
             }
             catch (Exception ex)
@@ -480,7 +465,6 @@ namespace RamRoutes.Services
                     { "lastLogin", Timestamp.GetCurrentTimestamp() }
                 });
 
-                Debug.Log($"Updated last login timestamp for user {userId}");
             }
             catch (Exception ex)
             {
@@ -691,11 +675,10 @@ namespace RamRoutes.Services
                     //     }
                     // }
                     
-                    Debug.Log($"Added friend {friendName} to user {userId}");
                 }
                 else
                 {
-                    Debug.Log($"User {userId} already has {friendName} as a friend");
+                    // User already has this friend
                 }
             }
             catch (Exception ex)
@@ -844,7 +827,6 @@ namespace RamRoutes.Services
                 }
 
                 PlayerPrefs.Save();
-                Debug.Log("UserService: Cleared all user cache data");
             }
             catch (System.Exception ex)
             {
@@ -938,7 +920,6 @@ namespace RamRoutes.Services
                 };
 
                 await db.Collection("users").Document(userId).UpdateAsync(updateData);
-                Debug.Log($"UserService: Updated equipped skin for user {userId} to {newSkin}");
                 return true;
             }
             catch (Exception ex)
@@ -964,7 +945,6 @@ namespace RamRoutes.Services
                 };
 
                 await db.Collection("users").Document(userId).UpdateAsync(updateData);
-                Debug.Log($"UserService: Updated equipped accessory for user {userId} to {newAccessory}");
                 return true;
             }
             catch (Exception ex)

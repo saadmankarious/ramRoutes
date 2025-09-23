@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -36,6 +37,7 @@ public class BuildingInteraction : MonoBehaviour
     [SerializeField] private Button closeUnlockedPanelButton;
     [SerializeField] private float fadeDuration = 1f;
     [SerializeField] private GameObject buildingEventsPanel;
+    [SerializeField] private ScrollRect eventsScrollView;
     [SerializeField] private Transform eventsContentParent;
     [SerializeField] private GameObject eventPrefab;
     public string preUnlockMessage;
@@ -46,6 +48,12 @@ public class BuildingInteraction : MonoBehaviour
     [Header("Debug")]
     [SerializeField] private bool showUnlockedPanelOnStart = false;
     [SerializeField] private bool simulateEntry = false;
+
+    [Header("Auto Scroll Settings")]
+    [SerializeField] private float eventsScrollSpeed = 0.001f; // Speed of scroll (slower than login)
+    [SerializeField] private float eventsResetDelay = 2f; // Delay before resetting to top
+    private bool isEventsScrollingPaused = false;
+    private bool isEventsResetting = false;
 
     [Header("Gate Integration")]
     [Tooltip("Deprecated: Gate unlocking is now handled by UIManager via mapping.")]
@@ -329,6 +337,33 @@ public class BuildingInteraction : MonoBehaviour
                     uiManager.HideDialog();
                     
                     StartCoroutine(ShowUpdatedDialog(currentGpsProximity));
+                }
+            }
+        }
+        
+        // Auto-scroll the building events list
+        if (eventsScrollView != null && !isEventsScrollingPaused && eventsContentParent.childCount > 0 && buildingEventsPanel != null && buildingEventsPanel.activeInHierarchy)
+        {
+            // Calculate content height
+            float contentHeight = 0;
+            foreach (RectTransform child in eventsContentParent)
+            {
+                contentHeight += child.rect.height;
+            }
+
+            // Only scroll if there's enough content to scroll
+            if (contentHeight > eventsScrollView.viewport.rect.height)
+            {
+                float newPosition = eventsScrollView.verticalNormalizedPosition - eventsScrollSpeed;
+
+                if (newPosition <= 0)
+                {
+                    // When reaching bottom, wait a moment then reset to top
+                    StartCoroutine(ResetEventsScrollPosition());
+                }
+                else
+                {
+                    eventsScrollView.verticalNormalizedPosition = newPosition;
                 }
             }
         }
@@ -969,7 +1004,11 @@ public class BuildingInteraction : MonoBehaviour
         }        if (cachedBuildingEvents != null && cachedBuildingEvents.Count > 0 && buildingEventsPanel != null)
         {
             buildingEventsPanel.SetActive(true);
-              // Animate the panel appearing
+            
+            // Set up auto-scroll event triggers for the events scroll view
+            SetupEventsScrollAutoScrollTriggers();
+            
+            // Animate the panel appearing
             StartCoroutine(uiManager.AnimatePanelPopup(buildingEventsPanel));
             // Sort events by date: Most recent events on top
             var sortedEvents = new List<BuildingEvent>(cachedBuildingEvents);
@@ -1169,5 +1208,68 @@ public class BuildingInteraction : MonoBehaviour
             Debug.LogWarning("Could not find player object with 'Player' tag to move");
         }
     }
+    
+    #region Auto Scroll Methods
+    
+    /// <summary>
+    /// Set up event triggers for pausing auto-scroll on user interaction
+    /// </summary>
+    private void SetupEventsScrollAutoScrollTriggers()
+    {
+        if (eventsScrollView != null)
+        {
+            var eventTrigger = eventsScrollView.gameObject.GetComponent<EventTrigger>();
+            if (eventTrigger == null)
+            {
+                eventTrigger = eventsScrollView.gameObject.AddComponent<EventTrigger>();
+            }
+            
+            // Clear existing triggers to avoid duplicates
+            eventTrigger.triggers.Clear();
+
+            var pointerEnterEntry = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
+            pointerEnterEntry.callback.AddListener((data) => { OnEventsScrollViewPointerEnter(); });
+            eventTrigger.triggers.Add(pointerEnterEntry);
+
+            var pointerExitEntry = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
+            pointerExitEntry.callback.AddListener((data) => { OnEventsScrollViewPointerExit(); });
+            eventTrigger.triggers.Add(pointerExitEntry);
+        }
+    }
+    
+    /// <summary>
+    /// Reset the events scroll position to top after reaching bottom
+    /// </summary>
+    private IEnumerator ResetEventsScrollPosition()
+    {
+        if (!isEventsResetting)
+        {
+            isEventsResetting = true;
+            yield return new WaitForSeconds(eventsResetDelay);
+            if (eventsScrollView != null)
+            {
+                eventsScrollView.verticalNormalizedPosition = 1f; // Reset to top
+            }
+            isEventsResetting = false;
+        }
+    }
+    
+    /// <summary>
+    /// Pause auto-scrolling when user interacts with events scroll view
+    /// </summary>
+    public void OnEventsScrollViewPointerEnter()
+    {
+        isEventsScrollingPaused = true;
+    }
+    
+    /// <summary>
+    /// Resume auto-scrolling when user stops interacting with events scroll view
+    /// </summary>
+    public void OnEventsScrollViewPointerExit()
+    {
+        isEventsScrollingPaused = false;
+    }
+    
+    #endregion
     
 }

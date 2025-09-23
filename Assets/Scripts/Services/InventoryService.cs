@@ -188,7 +188,6 @@ namespace RamRoutes.Services
 
                     if (skinUpdated)
                     {
-                        Debug.Log($"Successfully updated equipped skin to: {newSkin} for clothing item: {item.itemName}");
 
                         // Notify UIManager to refresh user avatar/appearance
                         NotifyUIManagerSkinChanged(newSkin);
@@ -210,7 +209,6 @@ namespace RamRoutes.Services
 
                     if (accessoryUpdated)
                     {
-                        Debug.Log($"Successfully updated equipped accessory to: {newAccessory} for accessory item: {item.itemName}");
 
                         // Notify UIManager to refresh user avatar/appearance
                         NotifyUIManagerAccessoryChanged(newAccessory);
@@ -226,13 +224,11 @@ namespace RamRoutes.Services
                     // For whisper items, just mark as equipped (no need to update user profile)
                     WhisperType whisperType = MapWhisperNameToType(item.whisperType);
                     
-                    Debug.Log($"Successfully equipped whisper: {whisperType} for whisper item: {item.itemName}");
 
                     // Notify managers about the whisper change
                     NotifyManagersWhisperChanged(whisperType);
                 }
 
-                Debug.Log($"Successfully equipped item: {item.itemName}");
                 return true;
             }
             catch (Exception ex)
@@ -267,19 +263,16 @@ namespace RamRoutes.Services
                 }
                 catch (Exception conversionEx)
                 {
-                    Debug.LogError($"InventoryService.UnequipItem: Error converting document to InventoryItem: {conversionEx.Message}");
                     return false;
                 }
                 
                 if (item == null)
                 {
-                    Debug.LogError("InventoryService.UnequipItem: Failed to convert inventory item");
                     return false;
                 }
                 
                 if (item.userId != currentUserId)
                 {
-                    Debug.LogError("InventoryService.UnequipItem: Item doesn't belong to current user");
                     return false;
                 }
 
@@ -298,15 +291,11 @@ namespace RamRoutes.Services
 
                     if (skinUpdated)
                     {
-                        Debug.Log($"Successfully updated equipped skin to: {newSkin} for clothing item: {item.itemName}");
 
                         // Notify UIManager to refresh user avatar/appearance
                         NotifyUIManagerSkinChanged(newSkin);
                     }
-                    else
-                    {
-                        Debug.LogWarning($"Failed to update equipped skin for clothing item: {item.itemName}");
-                    }
+                   
                 }
 
                 // If item is an accessory, revert to no accessory
@@ -319,7 +308,6 @@ namespace RamRoutes.Services
 
                     if (accessoryUpdated)
                     {
-                        Debug.Log($"Successfully updated equipped accessory to: {newAccessory} for accessory item: {item.itemName}");
 
                         // Notify UIManager to refresh user avatar/appearance
                         NotifyUIManagerAccessoryChanged(newAccessory);
@@ -341,7 +329,6 @@ namespace RamRoutes.Services
                     }
                 }
 
-                Debug.Log($"Successfully unequipped item: {item.itemName}");
                 return true;
             }
             catch (Exception ex)
@@ -397,7 +384,6 @@ namespace RamRoutes.Services
                 // Remove item from inventory
                 await db.Collection(USER_INVENTORY_COLLECTION).Document(inventoryId).DeleteAsync();
 
-                Debug.Log($"Successfully sold item {item.itemName} for {sellPriceCoins} coins and {sellPriceKb} KB");
                 return true;
             }
             catch (Exception ex)
@@ -442,7 +428,6 @@ namespace RamRoutes.Services
 
             testItems.Add(testItem);
 
-            Debug.Log($"Initialized {testItems.Count} test inventory items");
             return testItems;
         }
 
@@ -532,7 +517,6 @@ namespace RamRoutes.Services
                 var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
                 if (currentScene != "LevelRPG")
                 {
-                    Debug.Log($"Skipping skin change notification - not in game scene (current: {currentScene})");
                     return;
                 }
 
@@ -541,7 +525,6 @@ namespace RamRoutes.Services
                 if (skinManager != null)
                 {
                     skinManager.OnUserSkinChanged(newSkin);
-                    Debug.Log($"Notified SkinManager of skin change to: {newSkin}");
                 }
                 else
                 {
@@ -554,8 +537,6 @@ namespace RamRoutes.Services
                 {
                     // Show a quick notification about the skin change
                     uiManager.ShowQuickUpdate($"Equipped {newSkin} skin!");
-
-                    Debug.Log($"Notified UIManager of skin change to: {newSkin}");
                 }
                 else
                 {
@@ -580,7 +561,6 @@ namespace RamRoutes.Services
                 var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
                 if (currentScene != "LevelRPG")
                 {
-                    Debug.Log($"Skipping accessory change notification - not in game scene (current: {currentScene})");
                     return;
                 }
 
@@ -589,7 +569,6 @@ namespace RamRoutes.Services
                 if (skinManager != null)
                 {
                     skinManager.OnUserAccessoryChanged(newAccessory);
-                    Debug.Log($"Notified SkinManager of accessory change to: {newAccessory}");
                 }
                 else
                 {
@@ -604,7 +583,6 @@ namespace RamRoutes.Services
                     string accessoryDisplayName = newAccessory == EquippedAccessory.None ? "No accessory" : newAccessory.ToString();
                     uiManager.ShowQuickUpdate($"Equipped {accessoryDisplayName}!");
 
-                    Debug.Log($"Notified UIManager of accessory change to: {newAccessory}");
                 }
                 else
                 {
@@ -625,7 +603,6 @@ namespace RamRoutes.Services
                 var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
                 if (currentScene != "LevelRPG")
                 {
-                    Debug.Log($"Skipping whisper change notification - not in game scene (current: {currentScene})");
                     return;
                 }
 
@@ -637,12 +614,8 @@ namespace RamRoutes.Services
                     string whisperDisplayName = newWhisper.ToString();
                     uiManager.ShowQuickUpdate($"Equipped {whisperDisplayName} whisper!");
 
-                    Debug.Log($"Notified UIManager of whisper change to: {newWhisper}");
                 }
-                else
-                {
-                    Debug.LogWarning("UIManager not found in scene - cannot notify of whisper change");
-                }
+               
             }
             catch (System.Exception ex)
             {
@@ -657,10 +630,7 @@ namespace RamRoutes.Services
                 {
                     chatManager.OnUserWhisperChanged();
                 }
-                else
-                {
-                    Debug.LogWarning("ChatManager not found in current scene - cannot update user whisper");
-                }
+               
             }
             catch (System.Exception ex)
             {

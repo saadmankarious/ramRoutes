@@ -678,6 +678,47 @@ public class ChatManager : MonoBehaviour
     }
     
     /// <summary>
+    /// Load conversation silently for automatic refresh - only updates if there are new messages
+    /// </summary>
+    private async Task LoadConversationSilently()
+    {
+        if (string.IsNullOrEmpty(currentChatTargetId)) return;
+
+        string currentUserId = FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+        if (string.IsNullOrEmpty(currentUserId)) return;
+
+        // Get conversation
+        var newConversation = await chatService.GetConversationAsync(currentUserId, currentChatTargetId);
+
+        // Only update if there are actually new messages
+        if (HasNewMessages(newConversation))
+        {
+            currentConversation = newConversation;
+            
+            if (newConversation.Count == 0)
+            {
+                chatContentParent.gameObject.SetActive(false);
+                var noWhispersText = FindChildByName(chatPanel.transform, "no-whispers")?.GetComponent<Text>();
+                if (noWhispersText != null)
+                {
+                    noWhispersText.gameObject.SetActive(true);
+                }
+            }
+            else
+            {
+                chatContentParent.gameObject.SetActive(true);
+                var noWhispersText = FindChildByName(chatPanel.transform, "no-whispers")?.GetComponent<Text>();
+                if (noWhispersText != null)
+                {
+                    noWhispersText.gameObject.SetActive(false);
+                }
+                // Use smart display to only add new messages without disrupting existing ones
+                DisplayMessagesSmartly();
+            }
+        }
+    }
+    
+    /// <summary>
     /// Check if there are new messages compared to current conversation
     /// </summary>
     private bool HasNewMessages(List<Chat> newConversation)
@@ -995,13 +1036,13 @@ public class ChatManager : MonoBehaviour
         {
             yield return new WaitForSeconds(3f);
             
-            // // Only refresh if chat is still open
-            // if (!string.IsNullOrEmpty(currentChatTargetId) && chatPanel != null && chatPanel.activeInHierarchy)
-            // {
-            //     // Start the async operation and wait for it to complete
-            //     var loadTask = LoadConversation();
-            //     yield return new WaitUntil(() => loadTask.IsCompleted);
-            // }
+            // Only refresh if chat is still open
+            if (!string.IsNullOrEmpty(currentChatTargetId) && chatPanel != null && chatPanel.activeInHierarchy)
+            {
+                // Start the async operation and wait for it to complete
+                var loadTask = LoadConversationSilently();
+                yield return new WaitUntil(() => loadTask.IsCompleted);
+            }
         }
     }
     
@@ -1124,7 +1165,6 @@ public class ChatManager : MonoBehaviour
             }
             else
             {
-                Debug.LogError($"ChatManager: Failed to load image from {url}: {www.error}");
                 onComplete?.Invoke(null);
             }
         }

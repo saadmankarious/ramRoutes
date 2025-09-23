@@ -103,7 +103,6 @@ namespace RamRoutes.Services
                     {
                         { "quantity", existingItem.quantity + 1 }
                     });
-                    Debug.Log($"Increased quantity of {item.name} to {existingItem.quantity + 1}");
                 }
                 else
                 {
@@ -125,7 +124,6 @@ namespace RamRoutes.Services
                     };
 
                     await db.Collection(USER_INVENTORY_COLLECTION).AddAsync(inventoryData);
-                    Debug.Log($"Successfully purchased new item {item.name}");
                 }
 
                 return true;
@@ -175,12 +173,10 @@ namespace RamRoutes.Services
 
                 await db.Collection(USER_INVENTORY_COLLECTION).Document(inventoryItemId).DeleteAsync();
 
-                Debug.Log($"Successfully sold item for {sellPriceCoins} coins and {sellPriceKb} KB");
                 return true;
             }
             catch (Exception ex)
             {
-                Debug.LogError($"StoreService.SellItem: Error selling item: {ex.Message}");
                 return false;
             }
         }
@@ -194,7 +190,6 @@ namespace RamRoutes.Services
 
             if (string.IsNullOrEmpty(userId))
             {
-                Debug.LogError("StoreService.GetUserInventory: No user ID provided");
                 return new List<Dictionary<string, object>>();
             }
 
@@ -215,7 +210,6 @@ namespace RamRoutes.Services
             }
             catch (Exception ex)
             {
-                Debug.LogError($"StoreService.GetUserInventory: Error getting inventory: {ex.Message}");
                 return new List<Dictionary<string, object>>();
             }
         }
@@ -241,7 +235,6 @@ namespace RamRoutes.Services
 
             testItems.Add(hatItem);
 
-            Debug.Log($"Initialized {testItems.Count} test store items");
             return testItems;
         }
 

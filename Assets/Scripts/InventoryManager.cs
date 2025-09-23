@@ -40,7 +40,6 @@ public class InventoryManager : MonoBehaviour
         }
         else
         {
-            Debug.Log("InventoryManager: Found and using 'whereitemslive' child GameObject");
             // Hide items container initially
             itemsContainer.gameObject.SetActive(false);
         }
@@ -51,7 +50,6 @@ public class InventoryManager : MonoBehaviour
         {
             emptyText = emptyTransform.gameObject;
             emptyText.SetActive(false); // Hide initially
-            Debug.Log("InventoryManager: Found and using 'empty' text child");
         }
         else
         {
@@ -63,7 +61,6 @@ public class InventoryManager : MonoBehaviour
         {
             openInventoryButton.onClick.RemoveAllListeners();
             openInventoryButton.onClick.AddListener(ToggleInventory);
-            Debug.Log("InventoryManager: Set up inventory toggle button");
         }
         else
         {
@@ -75,7 +72,6 @@ public class InventoryManager : MonoBehaviour
         {
             closeInventoryButton.onClick.RemoveAllListeners();
             closeInventoryButton.onClick.AddListener(CloseInventory);
-            Debug.Log("InventoryManager: Set up inventory close button");
         }
         else
         {
@@ -102,8 +98,6 @@ public class InventoryManager : MonoBehaviour
                 // Always reload items when opening the inventory to ensure counts are updated
                 LoadInventoryItems();
             }
-            
-            Debug.Log($"InventoryManager: Inventory {(isInventoryOpen ? "opened" : "closed")}");
         }
     }
     
@@ -162,12 +156,10 @@ public class InventoryManager : MonoBehaviour
         if (emptyText != null)
         {
             emptyText.SetActive(isEmpty);
-            Debug.Log($"InventoryManager: Empty text {(isEmpty ? "shown" : "hidden")}");
         }
         
         if (isEmpty)
         {
-            Debug.Log("InventoryManager: No items to display - showing empty message");
             return;
         }
         
@@ -182,8 +174,6 @@ public class InventoryManager : MonoBehaviour
             SetupItemUI(itemObject, item, item.quantity, item.equipped, new List<InventoryItem> { item });
             spawnedItems.Add(itemObject);
         }
-        
-        Debug.Log($"Displayed {items.Count} inventory items");
     }
     
     private void SetupItemUI(GameObject itemObject, InventoryItem item, int count, bool hasEquipped, List<InventoryItem> allItems)
@@ -286,10 +276,6 @@ public class InventoryManager : MonoBehaviour
         {
             StartCoroutine(LoadImageFromUrl(imageComponent, imageUrl));
         }
-        else
-        {
-            Debug.LogWarning($"InventoryManager: No Image component found on 'image' GameObject");
-        }
     }
     
     private System.Collections.IEnumerator LoadImageFromUrl(UnityEngine.UI.Image imageComponent, string url)
@@ -346,8 +332,6 @@ public class InventoryManager : MonoBehaviour
             return;
         }
         
-        Debug.Log($"Attempting to equip item: {firstItem.itemName}");
-        
         // Use the first unequipped item for equipping
         var itemToEquip = items.FirstOrDefault(item => !item.equipped);
         if (itemToEquip == null)
@@ -360,8 +344,6 @@ public class InventoryManager : MonoBehaviour
         
         if (success)
         {
-            Debug.Log($"Successfully equipped {firstItem.itemName}!");
-            
             // Show success message using UIManager
             var uiManager = FindObjectOfType<UIManager>();
             if (uiManager != null)
@@ -374,8 +356,6 @@ public class InventoryManager : MonoBehaviour
         }
         else
         {
-            Debug.Log($"Failed to equip {firstItem.itemName}. Check console for details.");
-            
             // Show error message using UIManager
             var uiManager = FindObjectOfType<UIManager>();
             if (uiManager != null)
@@ -394,8 +374,6 @@ public class InventoryManager : MonoBehaviour
             return;
         }
         
-        Debug.Log($"Attempting to unequip item: {firstItem.itemName}");
-        
         // Use the equipped item for unequipping
         var itemToUnequip = items.FirstOrDefault(item => item.equipped);
         if (itemToUnequip == null)
@@ -408,8 +386,6 @@ public class InventoryManager : MonoBehaviour
         
         if (success)
         {
-            Debug.Log($"Successfully unequipped {firstItem.itemName}!");
-            
             // Show success message using UIManager
             var uiManager = FindObjectOfType<UIManager>();
             if (uiManager != null)
@@ -422,8 +398,6 @@ public class InventoryManager : MonoBehaviour
         }
         else
         {
-            Debug.Log($"Failed to unequip {firstItem.itemName}. Check console for details.");
-            
             // Show error message using UIManager
             var uiManager = FindObjectOfType<UIManager>();
             if (uiManager != null)
@@ -442,8 +416,6 @@ public class InventoryManager : MonoBehaviour
             return;
         }
         
-        Debug.Log($"Attempting to sell item: {firstItem.itemName}");
-        
         // Use the first available item for selling
         var itemToSell = items.FirstOrDefault();
         if (itemToSell == null)
@@ -460,8 +432,6 @@ public class InventoryManager : MonoBehaviour
         
         if (success)
         {
-            Debug.Log($"Successfully sold {firstItem.itemName}!");
-            
             // Show success message using UIManager
             var uiManager = FindObjectOfType<UIManager>();
             if (uiManager != null)
@@ -482,8 +452,6 @@ public class InventoryManager : MonoBehaviour
         }
         else
         {
-            Debug.Log($"Failed to sell {firstItem.itemName}. Check console for details.");
-            
             // Show error message using UIManager
             var uiManager = FindObjectOfType<UIManager>();
             if (uiManager != null)
@@ -549,8 +517,6 @@ public class InventoryManager : MonoBehaviour
         
         // Set as last sibling to appear on top
         overlayObject.transform.SetAsLastSibling();
-        
-        Debug.Log($"Added unequipped overlay to item: {itemObject.name}");
     }
     
     private void RemoveOverlayFromItem(GameObject itemObject)
@@ -560,7 +526,6 @@ public class InventoryManager : MonoBehaviour
         if (overlayTransform != null)
         {
             DestroyImmediate(overlayTransform.gameObject);
-            Debug.Log($"Removed unequipped overlay from item: {itemObject.name}");
         }
     }
     

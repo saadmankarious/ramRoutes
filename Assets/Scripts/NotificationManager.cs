@@ -267,7 +267,6 @@ public class NotificationManager : MonoBehaviour
     public void ClearNotifications()
     {
         notificationQueue.Clear();
-        Debug.Log("NotificationManager: Cleared all pending notifications");
     }
     
     /// <summary>
