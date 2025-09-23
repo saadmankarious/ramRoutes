@@ -795,12 +795,24 @@ public class BuildingInteraction : MonoBehaviour
             // Remove interest
             await eventService.RemoveInterestAsync(eventId, userId);
             Debug.Log($"Removed interest for user {userId} from event {eventId}");
+            
+            // Show brief UI notification for removal
+            if (uiManager != null)
+            {
+                uiManager.ShowQuickUpdate("Removed from event");
+            }
         }
         else
         {
             // Add interest
             await eventService.RecordInterestAsync(eventId, userId);
             Debug.Log($"Added interest for user {userId} to event {eventId}");
+            
+            // Show brief UI notification for addition
+            if (uiManager != null)
+            {
+                uiManager.ShowQuickUpdate("Added to event!");
+            }
         }
         
         // Refresh the RSVP list for this event
@@ -1077,6 +1089,28 @@ public class BuildingInteraction : MonoBehaviour
                     {
                         // Hide or set empty if no description
                         descText.text = "";
+                    }
+                }
+                
+                // Find and populate gained coins text component
+                GameObject gainedCoinsObject = eventGO.transform.Find("gained-coins")?.gameObject;
+                if (gainedCoinsObject != null)
+                {
+                    Text gainedCoinsText = gainedCoinsObject.GetComponent<Text>();
+                    if (gainedCoinsText != null)
+                    {
+                        gainedCoinsText.text = evt.gainedCoins > 0 ? "+" + evt.gainedCoins.ToString() : "+50";
+                    }
+                }
+                
+                // Find and populate gained knowledge points text component
+                GameObject gainedKbObject = eventGO.transform.Find("gained-kb")?.gameObject;
+                if (gainedKbObject != null)
+                {
+                    Text gainedKbText = gainedKbObject.GetComponent<Text>();
+                    if (gainedKbText != null)
+                    {
+                        gainedKbText.text = evt.gainedKb > 0 ? "+" + evt.gainedKb.ToString() : "+50";
                     }
                 }
                 

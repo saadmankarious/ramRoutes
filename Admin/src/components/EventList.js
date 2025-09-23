@@ -291,6 +291,20 @@ function EventList({ user, onEditEvent }) {
                     </div>
                   )}
                   
+                  {(event.gainedCoins !== undefined && event.gainedCoins !== null) && (
+                    <div className="event-detail">
+                      <span className="detail-label">Gained Coins:</span>
+                      <span className="detail-value">{event.gainedCoins}</span>
+                    </div>
+                  )}
+                  
+                  {(event.gainedKb !== undefined && event.gainedKb !== null) && (
+                    <div className="event-detail">
+                      <span className="detail-label">Gained Knowledge Points:</span>
+                      <span className="detail-value">{event.gainedKb}</span>
+                    </div>
+                  )}
+                  
                   {event.buildingId && (
                     <div className="event-detail">
                       <span className="detail-label">Building ID:</span>

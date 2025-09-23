@@ -120,7 +120,9 @@ namespace RamRoutes.Services
                         attendees,
                         documentId,  // Pass the document ID as the event ID
                         null,  // interested users will be populated separately if needed
-                        data.ContainsKey("description") ? data["description"].ToString() : string.Empty
+                        data.ContainsKey("description") ? data["description"].ToString() : string.Empty,
+                        data.ContainsKey("gainedCoins") ? Convert.ToInt32(data["gainedCoins"]) : 0,
+                        data.ContainsKey("gainedKb") ? Convert.ToInt32(data["gainedKb"]) : 0
                     );
                     events.Add(buildingEvent);
                 }
@@ -187,7 +189,9 @@ namespace RamRoutes.Services
                         attendees,
                         eventId,
                         interestedUsers,
-                        data.ContainsKey("description") ? data["description"].ToString() : string.Empty
+                        data.ContainsKey("description") ? data["description"].ToString() : string.Empty,
+                        data.ContainsKey("gainedCoins") ? Convert.ToInt32(data["gainedCoins"]) : 0,
+                        data.ContainsKey("gainedKb") ? Convert.ToInt32(data["gainedKb"]) : 0
                     );
                 }
             }

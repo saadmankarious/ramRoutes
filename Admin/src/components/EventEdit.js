@@ -8,7 +8,9 @@ function EventEdit({ event, onCancel, onSave }) {
     eventName: event.eventName || '',
     eventType: event.eventType || (event.date ? 'scheduled' : 'always'), // Use explicit eventType or infer from date
     date: event.date ? formatDateForInput(event.date) : '',
-    description: event.description || ''
+    description: event.description || '',
+    gainedCoins: event.gainedCoins || 0,
+    gainedKb: event.gainedKb || 0
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -51,7 +53,7 @@ function EventEdit({ event, onCancel, onSave }) {
       console.log('Updating event:', event.id);
       console.log('Form data:', formData);
 
-      const { buildingName, eventName, eventType, date, description } = formData;
+      const { buildingName, eventName, eventType, date, description, gainedCoins, gainedKb } = formData;
 
       // Create update data - preserve buildingId from original event
       const updateData = {
@@ -59,6 +61,8 @@ function EventEdit({ event, onCancel, onSave }) {
         eventName,
         eventType, // Include the event type in updates
         description: description || '', // Add description field
+        gainedCoins: parseInt(gainedCoins) || 0, // Add gainedCoins field
+        gainedKb: parseInt(gainedKb) || 0, // Add gainedKb field
         updatedAt: serverTimestamp()
       };
 
@@ -183,6 +187,36 @@ function EventEdit({ event, onCancel, onSave }) {
               className="form-input"
               rows="3"
               style={{ resize: 'vertical', minHeight: '80px' }}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="gainedCoins" className="form-label">Gained Coins</label>
+            <input
+              type="number"
+              id="gainedCoins"
+              name="gainedCoins"
+              value={formData.gainedCoins}
+              onChange={handleChange}
+              disabled={loading}
+              placeholder="Enter coins gained from this event"
+              className="form-input"
+              min="0"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="gainedKb" className="form-label">Gained Knowledge Points</label>
+            <input
+              type="number"
+              id="gainedKb"
+              name="gainedKb"
+              value={formData.gainedKb}
+              onChange={handleChange}
+              disabled={loading}
+              placeholder="Enter knowledge points gained from this event"
+              className="form-input"
+              min="0"
             />
           </div>
 
