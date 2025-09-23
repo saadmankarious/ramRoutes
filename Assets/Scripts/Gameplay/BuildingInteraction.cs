@@ -972,7 +972,12 @@ public class BuildingInteraction : MonoBehaviour
             if (user != null)
             {
                 GameObject studentGO = Instantiate(rsvpUserPrefab, studentsContentParent);
-                
+            ButtonHandler rsvpButtonHandler = studentGO.GetComponentInChildren<ButtonHandler>();
+
+            if (rsvpButtonHandler != null)
+            {
+                rsvpButtonHandler.Initialize("data", () => ChatWithFriend(user));
+            }
                 Text userNameText = studentGO.GetComponentInChildren<Text>(true);
                 Image userImage = studentGO.GetComponentInChildren<Image>(true);
                 
@@ -989,7 +994,22 @@ public class BuildingInteraction : MonoBehaviour
                 }
             }
         }
-    }    private void DisplayBuildingEvents()
+    }   
+    
+    private void ChatWithFriend(User user)
+    {
+        if (user.userId == FirebaseAuth.DefaultInstance.CurrentUser.UserId)
+        {
+            return;
+        }
+         ChatManager chatManager = FindObjectOfType<ChatManager>();
+        if (chatManager != null)
+        {
+            chatManager.StartChatWithUser(user);
+        }
+    }
+
+    private void DisplayBuildingEvents()
     {
         if (eventsContentParent == null || eventPrefab == null)
         {
@@ -1001,25 +1021,27 @@ public class BuildingInteraction : MonoBehaviour
         foreach (Transform child in eventsContentParent)
         {
             Destroy(child.gameObject);
-        }        if (cachedBuildingEvents != null && cachedBuildingEvents.Count > 0 && buildingEventsPanel != null)
+        }
+        if (cachedBuildingEvents != null && cachedBuildingEvents.Count > 0 && buildingEventsPanel != null)
         {
             buildingEventsPanel.SetActive(true);
-            
+
             // Set up auto-scroll event triggers for the events scroll view
             SetupEventsScrollAutoScrollTriggers();
-            
+
             // Animate the panel appearing
             StartCoroutine(uiManager.AnimatePanelPopup(buildingEventsPanel));
             // Sort events by date: Most recent events on top
             var sortedEvents = new List<BuildingEvent>(cachedBuildingEvents);
-            sortedEvents.Sort((a, b) => {
+            sortedEvents.Sort((a, b) =>
+            {
                 // Sort by date (most recent first)
                 return b.date.CompareTo(a.date);
             });
-              foreach (var evt in sortedEvents)
+            foreach (var evt in sortedEvents)
             {
                 GameObject eventGO = Instantiate(eventPrefab, eventsContentParent);
-                
+
                 // Add event data component to track event ID
                 var eventData = eventGO.GetComponent<EventDisplayData>();
                 if (eventData == null)
@@ -1027,24 +1049,24 @@ public class BuildingInteraction : MonoBehaviour
                     eventData = eventGO.AddComponent<EventDisplayData>();
                 }
                 eventData.eventId = evt.eventId;
-                
+
                 // Setup RSVP button
                 ButtonHandler rsvpButtonHandler = eventGO.GetComponentInChildren<ButtonHandler>();
-                
+
                 if (rsvpButtonHandler != null)
                 {
-                            rsvpButtonHandler.Initialize("data", () => RsvpToEvent(evt.eventId));
+                    rsvpButtonHandler.Initialize("data", () => RsvpToEvent(evt.eventId));
 
                 }
-                
+
                 // Load and populate RSVP list
                 StartCoroutine(LoadAndDisplayRsvpList(eventGO, evt.eventId));
-                
+
                 // Get separate text components for title and date
                 Text[] textComponents = eventGO.GetComponentsInChildren<Text>();
                 Text titleText = null;
                 Text dateText = null;
-                
+
                 // Look specifically for Text components tagged as "MainText" and "SubText"
                 foreach (var text in textComponents)
                 {
@@ -1057,7 +1079,7 @@ public class BuildingInteraction : MonoBehaviour
                         dateText = text;
                     }
                 }
-                
+
                 // Fallback logic if tags are not found
                 if (titleText == null || dateText == null)
                 {
@@ -1073,7 +1095,7 @@ public class BuildingInteraction : MonoBehaviour
                             dateText = text;
                         }
                     }
-                    
+
                     // If we still don't have both and there are at least 2 components, use the first two
                     if ((titleText == null || dateText == null) && textComponents.Length >= 2)
                     {
@@ -1086,24 +1108,24 @@ public class BuildingInteraction : MonoBehaviour
                         titleText = textComponents[0];
                     }
                 }
-                
+
                 // Format and set text using the helper method
                 string formattedDate = evt.GetDisplayDate();
-                
+
                 if (titleText != null)
                 {
                     titleText.text = evt.eventName;
-                    
+
                     if (titleText.supportRichText)
                     {
                         titleText.text = $"<b>{evt.eventName}</b>";
                     }
                 }
-                
+
                 if (dateText != null)
                 {
                     dateText.text = formattedDate;
-                    
+
                     if (dateText.supportRichText)
                     {
                         dateText.text = $"<color=#888888>{formattedDate}</color>";
@@ -1114,7 +1136,7 @@ public class BuildingInteraction : MonoBehaviour
                     // Fallback if we only have one text component
                     titleText.text += $"\n{formattedDate}";
                 }
-                
+
                 // Find and populate description text component
                 GameObject descObject = eventGO.transform.Find("desc")?.gameObject;
                 if (descObject != null)
@@ -1130,7 +1152,7 @@ public class BuildingInteraction : MonoBehaviour
                         descText.text = "";
                     }
                 }
-                
+
                 // Find and populate gained coins text component
                 GameObject gainedCoinsObject = eventGO.transform.Find("gained-coins")?.gameObject;
                 if (gainedCoinsObject != null)
@@ -1141,7 +1163,7 @@ public class BuildingInteraction : MonoBehaviour
                         gainedCoinsText.text = evt.gainedCoins > 0 ? "+" + evt.gainedCoins.ToString() : "+50";
                     }
                 }
-                
+
                 // Find and populate gained knowledge points text component
                 GameObject gainedKbObject = eventGO.transform.Find("gained-kb")?.gameObject;
                 if (gainedKbObject != null)
@@ -1152,7 +1174,7 @@ public class BuildingInteraction : MonoBehaviour
                         gainedKbText.text = evt.gainedKb > 0 ? "+" + evt.gainedKb.ToString() : "+50";
                     }
                 }
-                
+
                 // Add animation or visual effects if needed
                 // StartCoroutine(AnimateEventEntry(eventGO));
             }
