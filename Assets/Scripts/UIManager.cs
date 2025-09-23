@@ -1457,11 +1457,12 @@ private void HideObjectsWithTag(string tag)
                 {
             kbGained.text = "+" + buildingInfo.kbGained.ToString();
                 }
-        
-        // Update NPC information from NPCSpawner
-        if (NPCSpawner.Instance != null)
+
+        // Get NPC spawner in another way
+        var npcSpawner = FindObjectOfType<NPCSpawner>();
+        if (npcSpawner != null)
         {
-            var npcInfo = NPCSpawner.Instance.GetFirstNPCForBuilding(buildingName);
+            var npcInfo = npcSpawner.GetFirstNPCForBuilding(buildingName);
             if (npcInfo != null)
             {
                 if (npcTitle != null)
