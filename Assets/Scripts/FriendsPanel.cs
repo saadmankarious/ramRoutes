@@ -54,7 +54,6 @@ public class FriendsPanel : MonoBehaviour
             var currentUser = await userService.RetrieveUserById(currentUserId);
             if (currentUser?.friends == null || currentUser.friends.Count == 0)
             {
-                Debug.Log("FriendsPanel: No friends found for current user");
                 ShowEmptyState("No friends added yet");
                 return;
             }
@@ -68,13 +67,11 @@ public class FriendsPanel : MonoBehaviour
             
             if (isInitialLoad)
             {
-                Debug.Log($"FriendsPanel: Initial load completed with {currentUser.friends.Count} friends");
                 isInitialLoad = false;
             }
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"FriendsPanel: Error loading friends: {e.Message}");
             ShowEmptyState("Unable to load friends");
         }
     }
@@ -151,7 +148,6 @@ public class FriendsPanel : MonoBehaviour
     {
         if (friendPrefab == null || contentParent == null)
         {
-            Debug.LogError("FriendsPanel: Friend prefab or content parent not assigned");
             return null;
         }
         
@@ -161,7 +157,6 @@ public class FriendsPanel : MonoBehaviour
             var friendUser = await userService.RetrieveUserByName(friendUsername);
             if (friendUser == null)
             {
-                Debug.LogWarning($"FriendsPanel: Could not find user profile for {friendUsername}");
                 return null;
             }
             
@@ -180,7 +175,6 @@ public class FriendsPanel : MonoBehaviour
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"FriendsPanel: Error creating friend entry for {friendUsername}: {e.Message}");
             return null;
         }
     }
@@ -194,10 +188,7 @@ public class FriendsPanel : MonoBehaviour
         {
             chatManager.StartChatWithUser(friend);
         }
-        else
-        {
-            Debug.LogError("FriendsPanel: RamsManager not found in scene");
-        }
+       
     }
     /// <summary>
     /// Populate the friend UI components with user data
@@ -240,7 +231,6 @@ public class FriendsPanel : MonoBehaviour
             }
         }
 
-        Debug.Log($"FriendsPanel: Populated UI for friend {friendUser.name}");
     }
     
     /// <summary>
@@ -280,7 +270,6 @@ public class FriendsPanel : MonoBehaviour
             emptyText.gameObject.SetActive(true);
         }
         
-        Debug.Log($"FriendsPanel: {message}");
     }
     
     /// <summary>
@@ -299,7 +288,6 @@ public class FriendsPanel : MonoBehaviour
         if (autoRefreshCoroutine == null)
         {
             autoRefreshCoroutine = StartCoroutine(AutoRefreshCoroutine());
-            Debug.Log("FriendsPanel: Started auto-refresh");
         }
     }
     
@@ -312,7 +300,6 @@ public class FriendsPanel : MonoBehaviour
         {
             StopCoroutine(autoRefreshCoroutine);
             autoRefreshCoroutine = null;
-            Debug.Log("FriendsPanel: Stopped auto-refresh");
         }
     }
     

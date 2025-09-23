@@ -83,10 +83,7 @@ public class ChatManager : MonoBehaviour
             {
                 closeChatButton.onClick.AddListener(CloseChatPanel);
             }
-            else
-            {
-                Debug.LogWarning("Close button not found in chat panel hierarchy");
-            }
+            
         }
         
         // Setup chat panel itself as overlay button to close chat when clicked
@@ -140,7 +137,6 @@ public class ChatManager : MonoBehaviour
         
         if (getWhisperInventoryTask.Exception != null)
         {
-            Debug.LogError($"Failed to get user whisper inventory during initialization: {getWhisperInventoryTask.Exception.Message}");
             // Fallback to basic whispers
             CreateWhisperButtons(new List<InventoryItem>());
             yield break;
@@ -149,7 +145,6 @@ public class ChatManager : MonoBehaviour
         // Create whisper buttons with purchased whispers (full inventory items with image URLs)
         var whisperInventory = getWhisperInventoryTask.Result;
         CreateWhisperButtons(whisperInventory.Where(w => w.equipped).ToList());
-        Debug.Log($"ChatManager initialized with {whisperInventory.Count} purchased whisper items");
     }
     
     /// <summary>
@@ -161,7 +156,6 @@ public class ChatManager : MonoBehaviour
         string currentUserId = FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
         if (string.IsNullOrEmpty(currentUserId))
         {
-            Debug.LogWarning("Cannot refresh whispers - user not authenticated");
             yield break;
         }
         
@@ -181,7 +175,6 @@ public class ChatManager : MonoBehaviour
         // Recreate whisper buttons with updated inventory (full inventory items with image URLs)
         var whisperInventory = getWhisperInventoryTask.Result;
         CreateWhisperButtons(whisperInventory.Where(w => w.equipped).ToList());
-        Debug.Log($"Refreshed ChatManager with {whisperInventory.Count} purchased whisper items");
     }
     
     /// <summary>
@@ -251,7 +244,6 @@ public class ChatManager : MonoBehaviour
             {
                 noWhispersBoughtText.gameObject.SetActive(true);
             }
-            Debug.LogWarning("ChatManager: No whispers available (neither hardcoded nor purchased).");
         }
         else
         {
@@ -260,7 +252,6 @@ public class ChatManager : MonoBehaviour
             {
                 noWhispersBoughtText.gameObject.SetActive(false);
             }
-            Debug.Log($"ChatManager: Created {createdWhisperTypes.Count} whisper buttons (purchased + hardcoded)");
         }
     }
     
@@ -324,10 +315,7 @@ public class ChatManager : MonoBehaviour
             //     }
             // }
         }
-        else
-        {
-            Debug.LogWarning($"No 'whisper' child found in whisper button prefab or no Image component on whisper child");
-        }
+       
         
         // Find and set the "count" text component
         Transform countTransform = FindChildByName(whisperBtn.transform, "count");
@@ -351,11 +339,7 @@ public class ChatManager : MonoBehaviour
                 }
             }
         }
-        else
-        {
-            Debug.LogWarning($"No 'count' child found in whisper button prefab");
-        }
-        
+       
         // Add click listener
         WhisperType currentWhisper = whisperType; // Capture for closure
         whisperBtn.onClick.AddListener(() => SendWhisper(purchasedWhisper));
@@ -466,7 +450,6 @@ public class ChatManager : MonoBehaviour
     {
         if (currentChatTargetUser == null)
         {
-            Debug.LogWarning("No chat target selected for friend request");
             return;
         }
         
@@ -510,7 +493,6 @@ public class ChatManager : MonoBehaviour
                 UIManager.Instance.UpdateCoins(updatedUser.coins);
                 UIManager.Instance.UpdateKnowledgePoints(updatedUser.knowledgePoints);
                 
-                Debug.Log($"Updated UI stats after shoutout - Coins: {updatedUser.coins}, KB: {updatedUser.knowledgePoints}");
             }
         }
         catch (System.Exception e)
@@ -594,14 +576,12 @@ public class ChatManager : MonoBehaviour
     {
         if (string.IsNullOrEmpty(currentChatTargetId))
         {
-            Debug.LogWarning("No chat target selected");
             return;
         }
         
         string currentUserId = FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
         if (string.IsNullOrEmpty(currentUserId))
         {
-            Debug.LogWarning("User not authenticated");
             return;
         }
         
@@ -621,20 +601,13 @@ public class ChatManager : MonoBehaviour
                 bool quantityDecreased = await inventoryService.DecreaseItemQuantity(currentUserId, whisper.itemId);
                 if (quantityDecreased)
                 {
-                    Debug.Log($"Decreased quantity for whisper type {whisper}");
                     
                     // Refresh whisper buttons to reflect updated quantities
                     StartCoroutine(RefreshWhisperButtonsCoroutine());
                 }
-                else
-                {
-                    Debug.LogWarning($"Failed to decrease quantity for whisper type {whisper}");
-                }
+                
             }
-            else
-            {
-                Debug.Log($"Sent free whisper {whisper.itemName} - no quantity decrease needed");
-            }
+           
 
             // Refresh conversation to show the new message
             await LoadConversation();
@@ -769,7 +742,6 @@ public class ChatManager : MonoBehaviour
         // Clear the current conversation list
         currentConversation.Clear();
         
-        Debug.Log("Cleared conversation display for new user");
     }
     
     /// <summary>
@@ -1209,10 +1181,7 @@ public class ChatManager : MonoBehaviour
                 }
             }));
         }
-        else
-        {
-            Debug.LogWarning($"No inventory item with image URL found for whisper type {whisperType} from sender {senderId}");
-        }
+       
     }
     
     #region Chat Panel Animation
