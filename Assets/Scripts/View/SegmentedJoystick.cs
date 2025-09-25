@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
-
+using RamRoutes.Services;
 public class SegmentedJoystick : MonoBehaviour, IDragHandler, IPointerDownHandler, IPointerUpHandler
 {
     [Header("Settings")]
@@ -18,6 +18,9 @@ public class SegmentedJoystick : MonoBehaviour, IDragHandler, IPointerDownHandle
     // Building names for each segment: 0: TC, 1: PR, 2: McWethy, 3: SAW, 4: Stoner, 5: Ebersole, 6: Library
     private string[] buildingNames = { "PR", "TC", "Ebersole", "Library", "Stoner", "McWethy", "SAW" };
     
+    [Header("Audio")]
+    public AudioClip teleportSound; // Sound to play when teleportation begins
+    
     public RectTransform handle;
     private Vector2 initialPosition;
     private int currentSegment = -1;
@@ -30,6 +33,12 @@ public class SegmentedJoystick : MonoBehaviour, IDragHandler, IPointerDownHandle
     {
         handle = transform.GetChild(0).GetComponent<RectTransform>();
         initialPosition = handle.anchoredPosition;
+        
+        // Check game stage and show/hide wheel accordingly
+        CheckGameStageVisibility();
+        
+        // Check stage periodically in case it changes during gameplay
+        InvokeRepeating(nameof(CheckGameStageVisibility), 1f, 2f);
     }
     
     public void OnPointerDown(PointerEventData eventData)
@@ -115,6 +124,13 @@ public class SegmentedJoystick : MonoBehaviour, IDragHandler, IPointerDownHandle
         if (building != null)
         {
             isMoving = true;
+            
+            // Play teleport sound when teleportation begins
+            if (teleportSound != null)
+            {
+                AudioSource.PlayClipAtPoint(teleportSound, Camera.main.transform.position);
+            }
+            
             StartCoroutine(MovePlayerToBuildingSmooth(building));
             Debug.Log($"Teleporting player to building: {buildingName}");
         }
@@ -183,5 +199,26 @@ public class SegmentedJoystick : MonoBehaviour, IDragHandler, IPointerDownHandle
         
         // Reset movement flag
         isMoving = false;
+    }
+    
+    /// <summary>
+    /// Check current game stage and show/hide wheel accordingly
+    /// </summary>
+    private void CheckGameStageVisibility()
+    {
+        var currentStage = GameStageService.LoadStageFromPrefs();
+        bool shouldShowWheel = currentStage != null && currentStage.area == RamRoutes.Model.Stage.Terminal;
+        
+        // Show/hide the entire joystick gameObject
+        gameObject.SetActive(shouldShowWheel);
+        
+        if (shouldShowWheel)
+        {
+            Debug.Log("SegmentedJoystick: Showing wheel - Terminal stage active");
+        }
+        else
+        {
+            Debug.Log($"SegmentedJoystick: Hiding wheel - Current stage: {currentStage?.area}");
+        }
     }
 }
