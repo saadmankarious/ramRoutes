@@ -419,5 +419,52 @@ namespace RamRoutes.Services
                 return false;
             }
         }
+
+        /// <summary>
+        /// Get events happening today (includes always happening events and today's scheduled events)
+        /// </summary>
+        public async Task<List<BuildingEvent>> GetDailyEvents()
+        {
+            try
+            {
+                // Get all events first
+                var allEvents = await GetBuildingEventsAsync(forceRefresh: true);
+                
+                // Filter for today's events
+                DateTime today = DateTime.Today;
+                DateTime tomorrow = today.AddDays(1);
+                
+                var dailyEvents = allEvents.FindAll(e => 
+                {
+                    // Always include events marked as always happening
+                    if (e.eventType == RamRoutes.Model.EventType.Always)
+                    {
+                        return true;
+                    }else if (e.eventType == RamRoutes.Model.EventType.Daily)
+                    {
+                        return true;
+                    }
+                    
+                    // For scheduled events, check if they're happening today
+                    DateTime eventDate = e.date.Date;
+                    bool isToday = eventDate >= today && eventDate < tomorrow;
+                    
+                    if (isToday)
+                    {
+                        return true;
+                    }
+                    
+                    return false;
+                });
+                
+                Debug.Log($"BuildingEventService: Found {dailyEvents.Count} daily events out of {allEvents.Count} total events");
+                return dailyEvents;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"BuildingEventService: Error getting daily events: {ex.Message}");
+                return new List<BuildingEvent>();
+            }
+        }
     }
 }
