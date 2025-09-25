@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using System.Collections;
 using System.Collections.Generic;
 
 public class SegmentedJoystick : MonoBehaviour, IDragHandler, IPointerDownHandler, IPointerUpHandler
@@ -13,9 +14,17 @@ public class SegmentedJoystick : MonoBehaviour, IDragHandler, IPointerDownHandle
     [Header("Events")]
     public System.Action<int> OnSegmentChanged; // Segment index event
     
+    [Header("Building Associations")]
+    // Building names for each segment: 0: TC, 1: PR, 2: McWethy, 3: SAW, 4: Stoner, 5: Ebersole, 6: Library
+    private string[] buildingNames = { "PR", "TC", "Ebersole", "Library", "Stoner", "McWethy", "SAW" };
+    
     public RectTransform handle;
     private Vector2 initialPosition;
     private int currentSegment = -1;
+    private int selectedSegment = -1; // The segment selected when released
+    private bool isMoving = false; // Prevent multiple teleportations
+    private float lastTeleportTime = 0f;
+    private float teleportCooldown = 1.5f; // Minimum time between teleportations
     
     void Start()
     {
@@ -52,7 +61,7 @@ public class SegmentedJoystick : MonoBehaviour, IDragHandler, IPointerDownHandle
             // Update handle position
             handle.anchoredPosition = direction * radius;
             
-            // Trigger segment change
+            // Trigger segment change (but don't teleport yet)
             if (segment != currentSegment)
             {
                 currentSegment = segment;
@@ -73,11 +82,106 @@ public class SegmentedJoystick : MonoBehaviour, IDragHandler, IPointerDownHandle
     
     public void OnPointerUp(PointerEventData eventData)
     {
+        // Store the selected segment before resetting
+        selectedSegment = currentSegment;
+        
         handle.anchoredPosition = initialPosition;
+        
+        // Teleport to building if a valid segment was selected and cooldown has passed
+        if (selectedSegment >= 0 && selectedSegment < buildingNames.Length && 
+            !isMoving && Time.time - lastTeleportTime >= teleportCooldown)
+        {
+            TeleportPlayerToBuilding(buildingNames[selectedSegment]);
+            lastTeleportTime = Time.time;
+        }
+        
         if (currentSegment != -1)
         {
             currentSegment = -1;
             OnSegmentChanged?.Invoke(-1);
         }
+    }
+    
+    /// <summary>
+    /// Teleport player to the specified building
+    /// </summary>
+    private void TeleportPlayerToBuilding(string buildingName)
+    {
+        // Prevent multiple simultaneous teleportations
+        if (isMoving) return;
+        
+        // Find the building by name
+        BuildingInteraction building = FindBuildingByName(buildingName);
+        if (building != null)
+        {
+            isMoving = true;
+            StartCoroutine(MovePlayerToBuildingSmooth(building));
+            Debug.Log($"Teleporting player to building: {buildingName}");
+        }
+        else
+        {
+            Debug.LogWarning($"Building '{buildingName}' not found for teleportation");
+        }
+    }
+    
+    /// <summary>
+    /// Find a BuildingInteraction component by building name
+    /// </summary>
+    private BuildingInteraction FindBuildingByName(string buildingName)
+    {
+        BuildingInteraction[] allBuildings = FindObjectsOfType<BuildingInteraction>();
+        foreach (var building in allBuildings)
+        {
+            if (building.buildingName == buildingName)
+            {
+                return building;
+            }
+        }
+        return null;
+    }
+    
+    /// <summary>
+    /// Smoothly moves the player to the specified building (copied from BuildingInteraction)
+    /// </summary>
+    private System.Collections.IEnumerator MovePlayerToBuildingSmooth(BuildingInteraction building)
+    {
+        GameObject player = GameObject.FindWithTag("Player");
+        
+        if (player != null && building != null)
+        {
+            // Check if target point is assigned, otherwise fallback to building position
+            Vector3 targetPosition = building.playerTargetPoint != null ? building.playerTargetPoint.transform.position : building.transform.position;
+            Vector3 startPosition = player.transform.position;
+            float duration = 2.0f; // 2 seconds for smooth movement
+            float elapsedTime = 0f;
+            
+            string targetName = building.playerTargetPoint != null ? building.playerTargetPoint.name : building.buildingName;
+            Debug.Log($"Starting smooth movement to target '{targetName}' from {startPosition} to {targetPosition}");
+            
+            while (elapsedTime < duration)
+            {
+                elapsedTime += Time.deltaTime;
+                float progress = elapsedTime / duration;
+                
+                // Use smooth step for eased movement
+                float smoothProgress = Mathf.SmoothStep(0f, 1f, progress);
+                
+                // Interpolate position
+                player.transform.position = Vector3.Lerp(startPosition, targetPosition, smoothProgress);
+                
+                yield return null; // Wait one frame
+            }
+            
+            // Ensure we end exactly at target position
+            player.transform.position = targetPosition;
+            Debug.Log($"Completed smooth movement to target '{targetName}' at position {targetPosition}");
+        }
+        else
+        {
+            Debug.LogWarning("Could not find player object with 'Player' tag to move");
+        }
+        
+        // Reset movement flag
+        isMoving = false;
     }
 }

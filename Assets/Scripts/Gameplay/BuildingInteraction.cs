@@ -64,7 +64,7 @@ public class BuildingInteraction : MonoBehaviour
     [SerializeField] public bool bypassGpsCheck = false;
 
     [Header("Player Movement")]
-    [SerializeField] private GameObject playerTargetPoint;
+    [SerializeField] public GameObject playerTargetPoint;
 
     public bool isPlayerInRange = false;
     private int currentLineIndex = 0;
@@ -103,6 +103,8 @@ public class BuildingInteraction : MonoBehaviour
     // NEW: Switch into building viewing mode (same behavior as when entering an unlocked building)
     private async void EnterBuildingViewingMode(bool showEventsHappening = true)
     {
+        //wait for a couple seconds
+        await Task.Delay(1000);
         // Update title UI
         if (buildingTitleUnlcoked != null)
         {
@@ -426,6 +428,7 @@ public class BuildingInteraction : MonoBehaviour
             // Display building events and current users when player is in range
             if (activated)
             {
+                //delay for 1 second
                 // Switch to building viewing mode
                 EnterBuildingViewingMode();
             }
