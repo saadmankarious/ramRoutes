@@ -138,10 +138,12 @@ public class DailyEvents : MonoBehaviour
     private void CreateEventItem(BuildingEvent evt)
     {
         if (eventPrefab == null || eventListContent == null) return;
-        
+
         // Only show events with status "Terminal"
-        if (evt.status != "Terminal") return;
-        
+        var gameStage = GameStageService.LoadStageFromPrefs();
+
+        if (gameStage != null && gameStage.area != Stage.Terminal) return;
+
         GameObject eventItem = Instantiate(eventPrefab, eventListContent);
         
         // Find the required objects by name: "name", "coins", "kb"
