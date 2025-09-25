@@ -1807,7 +1807,7 @@ private void HideObjectsWithTag(string tag)
                 if (!pair.gate.IsUnlocked())
                 {
                     // Silent to avoid dialog spam at startup
-                    pair.gate.UnlockGateSilently();
+                    // pair.gate.UnlockGateSilently();
                     Debug.Log($"UIManager: Restored gate '{pair.gate.gameObject.name}' for unlocked building '{bName}' (silent).");
                 }
             }

@@ -562,7 +562,7 @@ public class NpcAutoMovement : MonoBehaviour
     }
     
     // Conversation System
-    void StartConversation()
+   public  void StartConversation()
     {
         if (conversationLines.Length == 0) return;
         if (npcPanel == null || conversationText == null) return;

@@ -26,21 +26,21 @@ public class NPCSpawner : MonoBehaviour
 {
     [Header("NPC Configuration")]
     public BuildingNPC[] buildingNPCs;
-    
+
     [Header("Spawn Settings")]
     public bool spawnOnStart = false; // For testing - spawn all NPCs immediately
-    
+
     [Header("UI References")]
     public UnityEngine.UI.Image npcPanel; // Main NPC panel in the scene
     public UnityEngine.UI.Text npcNameText; // Text component for NPC name
     public UnityEngine.UI.Text conversationText; // Text component for conversation
     public UnityEngine.UI.Image npcSpriteImage; // Image component for NPC sprite
-    
+
     private Dictionary<string, GameObject> spawnedNPCs = new Dictionary<string, GameObject>();
     private UIManager uiManager;
-    
+
     public static NPCSpawner Instance { get; private set; }
-    
+
     void Awake()
     {
         // if (Instance == null)
@@ -53,15 +53,15 @@ public class NPCSpawner : MonoBehaviour
         //     Destroy(gameObject);
         // }
     }
-    
+
     void Start()
     {
         Debug.Log($"NPCSpawner: Starting up with {buildingNPCs?.Length ?? 0} NPCs configured");
-        
+
         // Check if we're in Terminal stage and despawn all NPCs if so
         CheckAndHideNPCsInTerminalStage();
     }
-    
+
     public void SpawnNPCForBuildingOnEnter(string buildingName)
     {
         // Check if we're in the Terminal game stage - hide NPCs during Terminal stage
@@ -71,23 +71,28 @@ public class NPCSpawner : MonoBehaviour
             Debug.Log($"NPCSpawner: In Terminal stage, hiding NPCs for building '{buildingName}'");
             return;
         }
-        
+
         Debug.Log($"NPCSpawner: Player entered building '{buildingName}', spawning NPCs");
-        
+
         // Find NPCs associated with this building
         foreach (var buildingNPC in buildingNPCs)
         {
             if (buildingNPC.associatedBuilding == buildingName && !spawnedNPCs.ContainsKey(buildingNPC.npcName))
             {
                 Debug.Log($"NPCSpawner: Found matching NPC '{buildingNPC.npcName}', spawning now");
-                
+
                 if (buildingNPC.npcPrefab != null && buildingNPC.spawnPoint != null)
                 {
                     Vector3 spawnPosition = buildingNPC.spawnPoint.position;
                     Debug.Log($"NPCSpawner: Spawning at position {spawnPosition}");
-                    
+
                     GameObject npcInstance = Instantiate(buildingNPC.npcPrefab, spawnPosition, Quaternion.identity);
-                    
+                    ButtonHandler rsvpButtonHandler = npcInstance.GetComponentInChildren<ButtonHandler>();
+
+                    if (rsvpButtonHandler != null)
+                    {
+                        rsvpButtonHandler.Initialize("data", () => OpenConversation(npcInstance));
+                    }
                     // Configure NPC with building association
                     NpcAutoMovement npcMovement = npcInstance.GetComponent<NpcAutoMovement>();
                     if (npcMovement != null)
@@ -97,13 +102,13 @@ public class NPCSpawner : MonoBehaviour
                         npcMovement.spawnPoint = buildingNPC.spawnPoint;
                         npcMovement.npcSpawner = this;
                         npcMovement.npcName = buildingNPC.npcName; // Set NPC name for UI
-                        
+
                         // Assign UI references from spawner
                         npcMovement.npcPanel = this.npcPanel;
                         npcMovement.npcNameText = this.npcNameText;
                         npcMovement.conversationText = this.conversationText;
                         npcMovement.npcSpriteImage = this.npcSpriteImage;
-                        
+
                         // Set the NPC sprite in the UI
                         if (this.npcSpriteImage != null)
                         {
@@ -118,16 +123,16 @@ public class NPCSpawner : MonoBehaviour
                                 Debug.LogWarning($"NPCSpawner: No SpriteRenderer or sprite found on '{buildingNPC.npcName}'");
                             }
                         }
-                        
+
                         // Set the NPC's name for identification
                         npcInstance.name = $"{buildingNPC.npcName} (Building: {buildingName})";
-                        
+
                         Debug.Log($"NPCSpawner: Assigned UI references to '{buildingNPC.npcName}' - using conversation lines from prefab");
                     }
-                    
+
                     // Store spawned NPC
                     spawnedNPCs[buildingNPC.npcName] = npcInstance;
-                    
+
                     Debug.Log($"NPCSpawner: Spawned NPC '{buildingNPC.npcName}' for building '{buildingName}' at position {spawnPosition}");
                     Debug.Log($"NPCSpawner: Current spawned NPCs count: {spawnedNPCs.Count}");
                 }
@@ -145,7 +150,17 @@ public class NPCSpawner : MonoBehaviour
             }
         }
     }
+
+    private void OpenConversation(GameObject npcInstance)
+    {
+        NpcAutoMovement npcMovement = npcInstance.GetComponent<NpcAutoMovement>();
+        if (npcMovement != null)
+        {
+            npcMovement.StartConversation();
+        }
     
+
+    }
     
     // Method to spawn all NPCs (for testing or loading saved game state)
     public void SpawnAllNPCs()

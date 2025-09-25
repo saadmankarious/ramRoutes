@@ -10,8 +10,9 @@ using System;
 public class DailyEvents : MonoBehaviour
 {
     public static DailyEvents Instance { get; private set; }
-    
+
     [Header("Events ScrollView")]
+    public GameObject containerPanel;
     public ScrollRect eventsScrollView; // ScrollView component
     public Transform eventListContent; // Content area of the ScrollView
     public GameObject eventPrefab; // Prefab with "name", "coins", "kb" objects
@@ -142,7 +143,16 @@ public class DailyEvents : MonoBehaviour
         // Only show events with status "Terminal"
         var gameStage = GameStageService.LoadStageFromPrefs();
 
-        if (gameStage != null && gameStage.area != Stage.Terminal) return;
+        if (gameStage != null && gameStage.area != Stage.Terminal)
+        {
+            containerPanel.SetActive(false);
+              return;
+        } else
+        {
+            containerPanel.SetActive(true);
+        }  
+        
+         // if (gameStage != null && gameStage.area != Stage.Terminal) return; --- IGNORE --- 
 
         GameObject eventItem = Instantiate(eventPrefab, eventListContent);
         

@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
-
+using RamRoutes.Services;
+using RamRoutes.Model;
 public class Gate : MonoBehaviour
 {
     [Header("Gate Settings")]
@@ -13,6 +14,11 @@ public class Gate : MonoBehaviour
     public Animator gateAnimator;
     public string unlockAnimParam = "unlock"; // Animation parameter name
     
+    [Header("Arrow Indicator")]
+    public GameObject arrowIndicator; // Child arrow sprite to show when gate first opens
+    public float beatAnimationScale = 1.2f; // Scale multiplier for beating animation
+    public float beatAnimationSpeed = 2f; // Speed of beating animation
+    [SerializeField] private Stage stageToRender;
     [Header("Audio")]
     public AudioClip unlockSound;
     public AudioClip blockedSound; // Sound when player tries to pass locked gate
@@ -30,6 +36,8 @@ public class Gate : MonoBehaviour
     private AudioSource audioSource;
     private Rigidbody2D gateRigidbody;
     private bool wasUnlocked; // Track previous state for change detection
+    private bool hasShownArrow = false; // Track if arrow has been shown for first unlock
+    private Vector3 originalArrowScale; // Store original arrow scale
     
     // UI Manager reference
     private UIManager uiManager;
@@ -82,11 +90,14 @@ public class Gate : MonoBehaviour
         gateRigidbody.bodyType = RigidbodyType2D.Static; // Static = immovable
         gateRigidbody.simulated = true;
         
+        // Initialize arrow indicator
+        InitializeArrowIndicator();
+        
         // Initialize gate state (locked by default)
         wasUnlocked = isUnlocked;
         UpdateGateState();
     }
-    
+
     void Update()
     {
         // Check if gate state changed in inspector during runtime
@@ -95,6 +106,15 @@ public class Gate : MonoBehaviour
             wasUnlocked = isUnlocked;
             UpdateGateState();
         }
+        var stage = GameStageService.LoadStageFromPrefs();
+        if(stage.area == stageToRender)
+        {
+           UnlockGateSilently();
+        }
+        // else
+        // {
+        //     gameObject.SetActive(false);
+        // }
     }
     
     void UpdateGateState()
@@ -141,6 +161,66 @@ public class Gate : MonoBehaviour
         }
     }
     
+    void InitializeArrowIndicator()
+    {
+        if (arrowIndicator != null)
+        {
+            // Store original scale
+            originalArrowScale = arrowIndicator.transform.localScale;
+            // Hide arrow initially
+            arrowIndicator.SetActive(false);
+        }
+    }
+    
+    void ShowArrowWithAnimation()
+    {
+        if (arrowIndicator != null && !hasShownArrow)
+        {
+            hasShownArrow = true;
+            arrowIndicator.SetActive(true);
+            StartCoroutine(BeatingAnimation());
+        }
+    }
+    
+    System.Collections.IEnumerator BeatingAnimation()
+    {
+        if (arrowIndicator == null) yield break;
+        
+        while (arrowIndicator.activeInHierarchy)
+        {
+            // Scale up
+            float elapsedTime = 0f;
+            Vector3 startScale = originalArrowScale;
+            Vector3 targetScale = originalArrowScale * beatAnimationScale;
+            
+            while (elapsedTime < (1f / beatAnimationSpeed))
+            {
+                if (arrowIndicator == null) yield break;
+                elapsedTime += Time.deltaTime;
+                float t = elapsedTime / (1f / beatAnimationSpeed);
+                arrowIndicator.transform.localScale = Vector3.Lerp(startScale, targetScale, t);
+                yield return null;
+            }
+            
+            // Scale down
+            elapsedTime = 0f;
+            startScale = targetScale;
+            targetScale = originalArrowScale;
+            
+            while (elapsedTime < (1f / beatAnimationSpeed))
+            {
+                if (arrowIndicator == null) yield break;
+                elapsedTime += Time.deltaTime;
+                float t = elapsedTime / (1f / beatAnimationSpeed);
+                arrowIndicator.transform.localScale = Vector3.Lerp(startScale, targetScale, t);
+                yield return null;
+            }
+            
+            // Small pause between beats
+            yield return new WaitForSeconds(0.1f);
+        }
+    }
+
     // Public methods for other scripts to control the gate
     public void UnlockGate()
     {
@@ -162,6 +242,8 @@ public class Gate : MonoBehaviour
             isUnlocked = true;
             wasUnlocked = true;
             UpdateGateState();
+                        ShowArrowWithAnimation(); // Show arrow with beating animation on first unlock
+
             Debug.Log($"Gate {gameObject.name} unlocked silently.");
         }
     }
@@ -221,11 +303,21 @@ public class Gate : MonoBehaviour
         }
     }
     
+    public void HideArrowIndicator()
+    {
+        if (arrowIndicator != null)
+        {
+            arrowIndicator.SetActive(false);
+        }
+    }
+
     // Trigger detection for when gate is unlocked (trigger collider)
     void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Player") && isUnlocked)
         {
+            // Hide arrow when player passes through gate
+            // HideArrowIndicator();
             Debug.Log("Player passed through unlocked gate.");
         }
     }
