@@ -495,8 +495,17 @@ public class EventCheckin : MonoBehaviour
             buildingTitleText.text = $"Now happening at {buildingName}";
         }
         
-        // Display the events since we're close enough
-        DisplayEvents(relevantEvents, buildingName);
+        // Display the events since we're close enough (with 5-second delay)
+        StartCoroutine(DelayedDisplayEvents(relevantEvents, buildingName));
+    }
+    
+    /// <summary>
+    /// Coroutine to delay event display by 5 seconds after entering building
+    /// </summary>
+    private System.Collections.IEnumerator DelayedDisplayEvents(List<BuildingEvent> events, string buildingName)
+    {
+        yield return new WaitForSeconds(5f);
+        DisplayEvents(events, buildingName);
     }
     
     void OnVirtualBuildingExited(BuildingInteraction buildingData)
@@ -563,8 +572,8 @@ public class EventCheckin : MonoBehaviour
         }
         else if (evt.IsAlwaysHappening)
         {
-            // Always happening events are always eligible
-            return true;
+            // Skip always happening events from check-in display
+            return false;
         }
 
         return false;

@@ -1157,7 +1157,7 @@ public class RamsManager : MonoBehaviour
             var buildingAudioSource = building.GetComponent<AudioSource>();
             if (buildingAudioSource != null)
             {
-                buildingAudioSource.PlayOneShot(despawnSound);
+                // buildingAudioSource.PlayOneShot(despawnSound);
             }
             else
             {
