@@ -631,6 +631,8 @@ public class BuildingInteraction : MonoBehaviour
 
     public async void UnlockBuilding()
     {
+        // Activate building after unlock
+        activated = true;
         closeUnlockedPanelButton.interactable = false; // Prevent multiple clicks
         if (uiManager != null)
         {
@@ -644,8 +646,7 @@ public class BuildingInteraction : MonoBehaviour
             await DisplayUsersWhoUnlocked();
         }
 
-        // Activate building after unlock
-        activated = true;
+       
 
         // // Notify RamsManager that building is now activated
         // if (ramsManager != null)
@@ -704,7 +705,7 @@ public class BuildingInteraction : MonoBehaviour
         // Update progress bar when building is revealed
         if (uiManager != null)
         {
-            uiManager.UpdateProgressBarOnReveal();
+            uiManager.UpdateProgressBarOnReveal(buildingName);
         }
         // If player is already in range, immediately switch to viewing mode
         if (isPlayerInRange)

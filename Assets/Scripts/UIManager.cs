@@ -140,7 +140,7 @@ public class UIManager : MonoBehaviour
     
     [Header("Scene Transition Settings")]
     [Tooltip("Delay in seconds before executing scene transition after building unlock conditions are met.")]
-    [SerializeField] private float sceneTransitionDelay = 10f;
+    [SerializeField] private float sceneTransitionDelay = 5f;
     
     [Header("Scene Transition Effects")]
     [Tooltip("UI Image component to use as fade overlay during scene transitions.")]
@@ -151,7 +151,7 @@ public class UIManager : MonoBehaviour
     [System.Serializable]
     public class BuildingGatePair
     {
-        public BuildingInteraction building;
+        public BuildingInteraction[] buildings; // Multiple buildings required to unlock this gate
         public Gate gate;
     }
 
@@ -877,10 +877,17 @@ public class UIManager : MonoBehaviour
             buildingGateMap = new Dictionary<BuildingInteraction, Gate>();
             foreach (var pair in buildingGatePairs)
             {
-                if (pair != null && pair.building != null && pair.gate != null && !buildingGateMap.ContainsKey(pair.building))
+                if (pair != null && pair.buildings != null && pair.gate != null)
                 {
-                    buildingGateMap.Add(pair.building, pair.gate);
-                    Debug.Log($"UIManager: Mapped building '{pair.building.buildingName}' to gate '{pair.gate.gameObject.name}'");
+                    // Map each building in the array to the same gate
+                    foreach (var building in pair.buildings)
+                    {
+                        if (building != null && !buildingGateMap.ContainsKey(building))
+                        {
+                            buildingGateMap.Add(building, pair.gate);
+                            Debug.Log($"UIManager: Mapped building '{building.buildingName}' to gate '{pair.gate.gameObject.name}'");
+                        }
+                    }
                 }
             }
             Debug.Log($"UIManager: Initialized building-gate mapping with {buildingGateMap.Count} pairs");
@@ -1594,62 +1601,107 @@ private void HideObjectsWithTag(string tag)
     public void UnlockGateForBuilding(BuildingInteraction building)
     {
         if (building == null) return;
+        
+        // Build map lazily if needed with new multiple buildings format
         if (buildingGateMap == null || buildingGateMap.Count == 0)
         {
             if (buildingGatePairs != null && buildingGatePairs.Length > 0)
             {
-                // Build map lazily if needed
                 buildingGateMap = new Dictionary<BuildingInteraction, Gate>();
                 foreach (var pair in buildingGatePairs)
                 {
-                    if (pair != null && pair.building != null && pair.gate != null && !buildingGateMap.ContainsKey(pair.building))
+                    if (pair != null && pair.buildings != null && pair.gate != null)
                     {
-                        buildingGateMap.Add(pair.building, pair.gate);
+                        // Map each building in the array to the same gate
+                        foreach (var bldg in pair.buildings)
+                        {
+                            if (bldg != null && !buildingGateMap.ContainsKey(bldg))
+                            {
+                                buildingGateMap.Add(bldg, pair.gate);
+                            }
+                        }
                     }
                 }
             }
         }
 
+        // Check if this building is mapped to a gate
         if (buildingGateMap != null && buildingGateMap.TryGetValue(building, out var gate) && gate != null)
         {
-            // First: unlock the mapped gate
-            //gate.UnlockGate();
-            Debug.Log($"UIManager: Unlocked mapped gate '{gate.gameObject.name}' for building '{building.buildingName}'.");
-
-            // Then: switch game stage based on gate name '1','2','3' AFTER unlocking
-            var gateName = gate.gameObject.name?.Trim();
-            if (!string.IsNullOrEmpty(gateName))
+            // Find the gate pair that contains this building
+            BuildingGatePair targetPair = null;
+            foreach (var pair in buildingGatePairs)
             {
-                RamRoutes.Model.Stage? nextStage = null;
-                if (gateName == "1") nextStage = RamRoutes.Model.Stage.EasternCampus;
-                else if (gateName == "2") nextStage = RamRoutes.Model.Stage.FirstStreet;
-                else if (gateName == "3") nextStage = RamRoutes.Model.Stage.Pedmall;
-
-                if (nextStage.HasValue)
+                if (pair != null && pair.buildings != null && pair.gate == gate)
                 {
-                    var current = GameStageService.LoadStageFromPrefs();
-                    var gs = GameStage.FromArea(nextStage.Value);
-
-                    // Update UI
-                    SetCurrentStageText(gs);
-
-                    // Persist locally immediately and remote in background
-                    GameStageService.SaveStageToPrefs(gs);
-                    _ = GameStageService.SaveStageToFirestore(gs);
-
-                    // Update background music for the new stage
-                    // SetBackgroundMusicForStage(nextStage.Value);
-
-                    // If stage actually changed, mark for scene change after unlock flow completes
-                    if (current == null || current.area != nextStage.Value)
+                    foreach (var bldg in pair.buildings)
                     {
-                        Debug.Log($"UIManager: Stage changed {current?.area} -> {gs.area} after gate unlock. Will load Onboarding on progress bar reveal.");
-                        pendingSceneAfterUnlock = true;
+                        if (bldg == building)
+                        {
+                            targetPair = pair;
+                            break;
+                        }
                     }
-                    else
+                    if (targetPair != null) break;
+                }
+            }
+
+            if (targetPair != null)
+            {
+                // Check if ALL buildings in this gate pair are unlocked
+                bool allBuildingsUnlocked = true;
+                foreach (var bldg in targetPair.buildings)
+                {
+                    if (bldg != null && !bldg.activated)
                     {
-                        Debug.Log($"UIManager: Stage set to {gs.area} based on gate '{gateName}' after unlocking.");
+                        allBuildingsUnlocked = false;
+                        break;
                     }
+                }
+
+                if (allBuildingsUnlocked)
+                {
+                    // All buildings for this gate are unlocked - unlock the gate
+                    //gate.UnlockGate();
+                    Debug.Log($"UIManager: All buildings completed for gate '{gate.gameObject.name}' - unlocking gate!");
+
+                    // Switch game stage based on gate name '1','2','3' AFTER unlocking
+                    var gateName = gate.gameObject.name?.Trim();
+                    if (!string.IsNullOrEmpty(gateName))
+                    {
+                        RamRoutes.Model.Stage? nextStage = null;
+                        if (gateName == "1") nextStage = RamRoutes.Model.Stage.EasternCampus;
+                        else if (gateName == "2") nextStage = RamRoutes.Model.Stage.FirstStreet;
+                        else if (gateName == "3") nextStage = RamRoutes.Model.Stage.Pedmall;
+
+                        if (nextStage.HasValue)
+                        {
+                            var current = GameStageService.LoadStageFromPrefs();
+                            var gs = GameStage.FromArea(nextStage.Value);
+
+                            // Update UI
+                            SetCurrentStageText(gs);
+
+                            // Persist locally immediately and remote in background
+                            GameStageService.SaveStageToPrefs(gs);
+                            _ = GameStageService.SaveStageToFirestore(gs);
+
+                            // If stage actually changed, mark for scene change after unlock flow completes
+                            if (current == null || current.area != nextStage.Value)
+                            {
+                                Debug.Log($"UIManager: Stage changed {current?.area} -> {gs.area} after gate unlock. Will load Onboarding on progress bar reveal.");
+                                pendingSceneAfterUnlock = true;
+                            }
+                            else
+                            {
+                                Debug.Log($"UIManager: Stage set to {gs.area} based on gate '{gateName}' after unlocking.");
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    Debug.Log($"UIManager: Building '{building.buildingName}' unlocked, but waiting for other buildings in the group to complete before unlocking gate '{gate.gameObject.name}'.");
                 }
             }
         }
@@ -1673,7 +1725,7 @@ private void HideObjectsWithTag(string tag)
         }
     }
 
-    public async Task UpdateProgressBarOnReveal()
+    public async Task UpdateProgressBarOnReveal(string buildingName)
     {
         UpdateProgressBar();
 
@@ -1794,24 +1846,24 @@ private void HideObjectsWithTag(string tag)
     // Unlock any mapped gates for the provided set of unlocked building names
     private void OpenMappedGatesForUnlocked(HashSet<string> unlockedBuildingNames)
     {
-        if (unlockedBuildingNames == null || unlockedBuildingNames.Count == 0) return;
-        if (buildingGatePairs == null || buildingGatePairs.Length == 0) return;
+        // if (unlockedBuildingNames == null || unlockedBuildingNames.Count == 0) return;
+        // if (buildingGatePairs == null || buildingGatePairs.Length == 0) return;
 
-        foreach (var pair in buildingGatePairs)
-        {
-            if (pair == null || pair.building == null || pair.gate == null) continue;
+        // foreach (var pair in buildingGatePairs)
+        // {
+        //     if (pair == null || pair.building == null || pair.gate == null) continue;
 
-            string bName = pair.building.buildingName;
-            if (!string.IsNullOrEmpty(bName) && unlockedBuildingNames.Contains(bName))
-            {
-                if (!pair.gate.IsUnlocked())
-                {
-                    // Silent to avoid dialog spam at startup
-                    // pair.gate.UnlockGateSilently();
-                    Debug.Log($"UIManager: Restored gate '{pair.gate.gameObject.name}' for unlocked building '{bName}' (silent).");
-                }
-            }
-        }
+        //     string bName = pair.building.buildingName;
+        //     if (!string.IsNullOrEmpty(bName) && unlockedBuildingNames.Contains(bName))
+        //     {
+        //         if (!pair.gate.IsUnlocked())
+        //         {
+        //             // Silent to avoid dialog spam at startup
+        //             // pair.gate.UnlockGateSilently();
+        //             Debug.Log($"UIManager: Restored gate '{pair.gate.gameObject.name}' for unlocked building '{bName}' (silent).");
+        //         }
+        //     }
+        // }
     }
 
     public IEnumerator AnimatePanelPopup(GameObject panel)

@@ -505,7 +505,7 @@ public class RamsManager : MonoBehaviour
     private IEnumerator HandlePlayerLeavingWithDelay()
     {
         // Wait 10 seconds before starting despawn process
-        yield return new WaitForSeconds(7f);
+        yield return new WaitForSeconds(20f);
         ChatManager chat = chatManager;
           if (chat == null)
         {

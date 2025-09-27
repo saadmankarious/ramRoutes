@@ -328,9 +328,9 @@ public class SegmentedJoystick : MonoBehaviour, IDragHandler, IPointerDownHandle
         {
             Debug.Log("SegmentedJoystick: Showing wheel - Terminal stage active");
         }
-        else
-        {
-            Debug.Log($"SegmentedJoystick: Hiding wheel - Current stage: {currentStage?.area}");
-        }
+        // else
+        // {
+        //     Debug.Log($"SegmentedJoystick: Hiding wheel - Current stage: {currentStage?.area}");
+        // }
     }
 }
