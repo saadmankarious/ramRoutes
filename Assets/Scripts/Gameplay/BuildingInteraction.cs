@@ -1236,6 +1236,13 @@ public class BuildingInteraction : MonoBehaviour
     /// </summary>
     private IEnumerator MovePlayerToBuildingSmooth()
     {
+        // Perform flash light effect at the start of movement
+        var lightManager = FindObjectOfType<LightManager>();
+        if (lightManager != null)
+        {
+            lightManager.PerformFlashEffect(1.2f); // Smooth 1.2 second flash effect
+        }
+        
         GameObject player = GameObject.FindWithTag("Player");
         // if (player == null)
         // {

@@ -163,6 +163,12 @@ public class SegmentedJoystick : MonoBehaviour, IDragHandler, IPointerDownHandle
     /// </summary>
     private System.Collections.IEnumerator MovePlayerToBuildingSmooth(BuildingInteraction building)
     {
+              var lightManager = FindObjectOfType<LightManager>();
+        if (lightManager != null)
+        {
+            lightManager.PerformFlashEffect(1.2f); // 0.8 second flash with 4 pulses
+        }
+        
         GameObject player = GameObject.FindWithTag("Player");
         
         if (player != null && building != null)

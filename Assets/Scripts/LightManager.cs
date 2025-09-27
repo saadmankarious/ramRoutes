@@ -608,4 +608,65 @@ public class LightManager : MonoBehaviour
         Light2D[] stageLights = GetLightsForStage(stage);
         return stageLights != null && stageLights.Length > 0;
     }
+    
+    /// <summary>
+    /// Performs a smooth flash light effect using the nightLight
+    /// </summary>
+    /// <param name="flashDuration">Total duration of the flash effect</param>
+    public void PerformFlashEffect(float flashDuration = 0.8f)
+    {
+        if (nightLight != null)
+        {
+            StartCoroutine(FlashEffectCoroutine(flashDuration));
+        }
+        else
+        {
+            Debug.LogWarning("LightManager: nightLight is not assigned, cannot perform flash effect");
+        }
+    }
+    
+    /// <summary>
+    /// Coroutine that handles the smooth flash effect
+    /// </summary>
+    private IEnumerator FlashEffectCoroutine(float flashDuration)
+    {
+        // Store original state
+        float originalIntensity = nightLight.intensity;
+        bool originalEnabled = nightLight.enabled;
+        
+        // Enable the light if it wasn't already
+        nightLight.enabled = true;
+        
+        float halfDuration = flashDuration * 0.5f;
+        float minIntensity = Mathf.Max(originalIntensity * 0.3f, 0.2f); // Don't go completely dark
+        float maxIntensity = Mathf.Max(originalIntensity * 1.5f, 1.0f); // Brighter than original
+        
+        // Fade up to maximum intensity (smooth increase)
+        float elapsedTime = 0f;
+        while (elapsedTime < halfDuration)
+        {
+            elapsedTime += Time.deltaTime;
+            float progress = elapsedTime / halfDuration;
+            float smoothProgress = Mathf.SmoothStep(0f, 1f, progress);
+            
+            nightLight.intensity = Mathf.Lerp(originalIntensity, maxIntensity, smoothProgress);
+            yield return null;
+        }
+        
+        // Fade down to minimum intensity (smooth decrease)
+        elapsedTime = 0f;
+        while (elapsedTime < halfDuration)
+        {
+            elapsedTime += Time.deltaTime;
+            float progress = elapsedTime / halfDuration;
+            float smoothProgress = Mathf.SmoothStep(0f, 1f, progress);
+            
+            nightLight.intensity = Mathf.Lerp(maxIntensity, minIntensity, smoothProgress);
+            yield return null;
+        }
+        
+        // Restore original state
+        nightLight.intensity = originalIntensity;
+        nightLight.enabled = originalEnabled;
+    }
 }

@@ -2275,7 +2275,12 @@ private void HideObjectsWithTag(string tag)
             foreach (var user in buildingUsers)
             {
                 GameObject userGO = Instantiate(currentUserPrefab, currentUsersContentParent);
-                
+                   ButtonHandler rsvpButtonHandler = userGO.GetComponentInChildren<ButtonHandler>();
+
+            if (rsvpButtonHandler != null)
+            {
+                rsvpButtonHandler.Initialize("data", () => ChatWithFriend(user));
+            }
                 // Get the single text component for user name
                 Text nameText = userGO.GetComponentInChildren<Text>();
 
@@ -2337,6 +2342,18 @@ private void HideObjectsWithTag(string tag)
         }
     }
 
+    
+    private void ChatWithFriend(User friend)
+    {
+        // Assuming there's a ChatManager in the scene that handles chat
+        ChatManager chatManager = FindObjectOfType<ChatManager>();
+        if (chatManager != null)
+        {
+            chatManager.StartChatWithUser(friend);
+        }
+       
+    }
+
     /// <summary>
     /// Auto-scrolls through the current users list
     /// </summary>
@@ -2350,22 +2367,22 @@ private void HideObjectsWithTag(string tag)
                 currentUsersScrollRect = currentUsersPanel.GetComponentInChildren<ScrollRect>();
             }
         }
-        
+
         if (currentUsersScrollRect == null)
         {
             Debug.LogWarning("UIManager: No ScrollRect found for auto-scroll functionality");
             yield break;
         }
-        
+
         // Wait a frame for UI to settle
         yield return null;
         yield return null;
-        
+
         // Auto-scroll parameters
         float scrollSpeed = 0.5f; // Speed of scrolling (0.5 = moderate speed)
         float scrollInterval = 2f; // Time between scroll movements in seconds
         float scrollAmount = 0.2f; // How much to scroll each time (0.2 = 20% of content)
-        
+
         while (currentUsersPanel != null && currentUsersPanel.activeInHierarchy)
         {
             // Check if there's content to scroll
@@ -2373,39 +2390,39 @@ private void HideObjectsWithTag(string tag)
             {
                 // Get current scroll position
                 float currentPos = currentUsersScrollRect.verticalNormalizedPosition;
-                
+
                 // Calculate target position
                 float targetPos = currentPos - scrollAmount;
-                
+
                 // If we've reached the bottom, scroll back to top
                 if (targetPos <= 0f)
                 {
                     targetPos = 1f; // Top of the scroll
                 }
-                
+
                 // Smoothly scroll to target position
                 float elapsedTime = 0f;
                 float startPos = currentPos;
-                
+
                 while (elapsedTime < scrollSpeed && currentUsersPanel != null && currentUsersPanel.activeInHierarchy)
                 {
                     elapsedTime += Time.deltaTime;
                     float progress = elapsedTime / scrollSpeed;
-                    
+
                     // Use smooth lerping for natural scrolling feel
                     float newPos = Mathf.SmoothStep(startPos, targetPos, progress);
                     currentUsersScrollRect.verticalNormalizedPosition = newPos;
-                    
+
                     yield return null;
                 }
-                
+
                 // Ensure we reach the exact target position
                 if (currentUsersScrollRect != null)
                 {
                     currentUsersScrollRect.verticalNormalizedPosition = targetPos;
                 }
             }
-            
+
             // Wait before next scroll
             yield return new WaitForSeconds(scrollInterval);
         }
