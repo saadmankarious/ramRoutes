@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using RamRoutes.Services;
 using RamRoutes.Model;
+ 
 public class Gate : MonoBehaviour
 {
     [Header("Gate Settings")]
@@ -40,7 +41,6 @@ public class Gate : MonoBehaviour
     private Vector3 originalArrowScale; // Store original arrow scale
     
     // UI Manager reference
-    private UIManager uiManager;
 
     // One-shot flag to suppress dialog in UpdateGateState
     private bool suppressDialogOnce = false;
@@ -59,20 +59,20 @@ public class Gate : MonoBehaviour
         }
         
         // Find UI Manager
-        if (uiManager == null)
-        {
-            uiManager = FindObjectOfType<UIManager>();
-            if (uiManager == null)
-            {
-                // Try to find by singleton pattern
-                uiManager = UIManager.Instance;
-            }
-        }
+        // if (uiManager == null)
+        // {
+        //     uiManager = FindObjectOfType<UIManager>();
+        //     if (uiManager == null)
+        //     {
+        //         // Try to find by singleton pattern
+        //         uiManager = UIManager.Instance;
+        //     }
+        // }
         
-        if (uiManager == null)
-        {
-            Debug.LogWarning("UIManager not found. Gate messages will not be displayed.");
-        }
+        // if (uiManager == null)
+        // {
+        //     Debug.LogWarning("UIManager not found. Gate messages will not be displayed.");
+        // }
         
         // Create AudioSource if it doesn't exist
         if (audioSource == null)
@@ -290,16 +290,16 @@ public class Gate : MonoBehaviour
             // Player hit solid locked gate
             OnPlayerBlocked?.Invoke();
             PlaySound(blockedSound, blockedVolume);
-            
+
             // Show lock message via UI Manager
-            if (uiManager != null)
-            {
-                uiManager.ShowDialog(lockMessage, 10f, false);
-            }
-            else
-            {
-                Debug.Log(lockMessage); // Fallback to console
-            }
+            
+                var notificationManager = FindObjectOfType<NotificationManager>();
+                if (notificationManager != null)
+                {
+                    notificationManager.ShowNotification("Gate Locked", lockMessage);
+                }
+
+            
         }
     }
     

@@ -59,6 +59,7 @@ public class UIManager : MonoBehaviour
     public GameObject currentUsersPanel;
     public Transform currentUsersContentParent;
     public GameObject currentUserPrefab;
+    public ScrollRect currentUsersScrollRect;
 
     [Header("Rank Up Panel")]
     public GameObject rankUpPanel;
@@ -114,6 +115,7 @@ public class UIManager : MonoBehaviour
     
     // Dictionary to track active popup animations to prevent conflicts
     private Dictionary<GameObject, Coroutine> activePopupAnimations = new Dictionary<GameObject, Coroutine>();
+    private Coroutine autoScrollCoroutine;
     
     private float lastTypingSoundTime;
     [SerializeField] private float typingSoundVolume = 0.3f;
@@ -2296,18 +2298,37 @@ private void HideObjectsWithTag(string tag)
                 {
                     Debug.LogError("UIManager: No Text component found in current user prefab!");
                 }
-                
-                // Display rank frame based on user's points using the same function
-                Image avatarImage = userGO.GetComponentInChildren<Image>();
-                if (avatarImage != null)
+
+                // Display rank frame on the Image component within the "profile" object
+                Transform profileTransform = userGO.transform.Find("profile");
+                if (profileTransform != null)
                 {
-                    Sprite rankSprite = GetUserAvatarBasedOnPoints(user.coins, user.knowledgePoints);
-                    avatarImage.sprite = rankSprite;
-                                    }
+                    Image avatarImage = profileTransform.GetComponent<Image>();
+                    if (avatarImage != null)
+                    {
+                        Sprite rankSprite = GetUserAvatarBasedOnPoints(user.coins, user.knowledgePoints);
+                        avatarImage.sprite = rankSprite;
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"No Image component found in 'profile' object of user prefab for rank display");
+                    }
+                }
                 else
                 {
-                    Debug.LogWarning($"No Image component found in user prefab for rank display");
+                    Debug.LogWarning($"No 'profile' object found in user prefab for avatar display");
                 }
+            }
+            
+            // Start auto-scroll after all users have been instantiated
+            if (buildingUsers.Count > 0)
+            {
+                // Stop any existing auto-scroll first
+                if (autoScrollCoroutine != null)
+                {
+                    StopCoroutine(autoScrollCoroutine);
+                }
+                autoScrollCoroutine = StartCoroutine(AutoScrollCurrentUsers());
             }
         }
         else if (currentUsersPanel != null)
@@ -2316,11 +2337,92 @@ private void HideObjectsWithTag(string tag)
         }
     }
 
+    /// <summary>
+    /// Auto-scrolls through the current users list
+    /// </summary>
+    private IEnumerator AutoScrollCurrentUsers()
+    {
+        if (currentUsersScrollRect == null)
+        {
+            // Try to find ScrollRect component if not assigned
+            if (currentUsersPanel != null)
+            {
+                currentUsersScrollRect = currentUsersPanel.GetComponentInChildren<ScrollRect>();
+            }
+        }
+        
+        if (currentUsersScrollRect == null)
+        {
+            Debug.LogWarning("UIManager: No ScrollRect found for auto-scroll functionality");
+            yield break;
+        }
+        
+        // Wait a frame for UI to settle
+        yield return null;
+        yield return null;
+        
+        // Auto-scroll parameters
+        float scrollSpeed = 0.5f; // Speed of scrolling (0.5 = moderate speed)
+        float scrollInterval = 2f; // Time between scroll movements in seconds
+        float scrollAmount = 0.2f; // How much to scroll each time (0.2 = 20% of content)
+        
+        while (currentUsersPanel != null && currentUsersPanel.activeInHierarchy)
+        {
+            // Check if there's content to scroll
+            if (currentUsersContentParent != null && currentUsersContentParent.childCount > 0)
+            {
+                // Get current scroll position
+                float currentPos = currentUsersScrollRect.verticalNormalizedPosition;
+                
+                // Calculate target position
+                float targetPos = currentPos - scrollAmount;
+                
+                // If we've reached the bottom, scroll back to top
+                if (targetPos <= 0f)
+                {
+                    targetPos = 1f; // Top of the scroll
+                }
+                
+                // Smoothly scroll to target position
+                float elapsedTime = 0f;
+                float startPos = currentPos;
+                
+                while (elapsedTime < scrollSpeed && currentUsersPanel != null && currentUsersPanel.activeInHierarchy)
+                {
+                    elapsedTime += Time.deltaTime;
+                    float progress = elapsedTime / scrollSpeed;
+                    
+                    // Use smooth lerping for natural scrolling feel
+                    float newPos = Mathf.SmoothStep(startPos, targetPos, progress);
+                    currentUsersScrollRect.verticalNormalizedPosition = newPos;
+                    
+                    yield return null;
+                }
+                
+                // Ensure we reach the exact target position
+                if (currentUsersScrollRect != null)
+                {
+                    currentUsersScrollRect.verticalNormalizedPosition = targetPos;
+                }
+            }
+            
+            // Wait before next scroll
+            yield return new WaitForSeconds(scrollInterval);
+        }
+    }
+
     public void HideCurrentUsersPanel()
     {
         if (currentUsersPanel != null)
         {
             currentUsersPanel.SetActive(false);
+            
+            // Stop any ongoing auto-scroll coroutines when hiding the panel
+            if (autoScrollCoroutine != null)
+            {
+                StopCoroutine(autoScrollCoroutine);
+                autoScrollCoroutine = null;
+            }
         }
     }
 

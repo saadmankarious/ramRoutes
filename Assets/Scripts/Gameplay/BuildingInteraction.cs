@@ -145,11 +145,10 @@ public class BuildingInteraction : MonoBehaviour
             }
         }
 
-        // Show current users panel through UIManager
-        // if (uiManager != null)
-        // {
-        //     uiManager.DisplayCurrentUsersForBuilding(buildingName);
-        // }
+        if (uiManager != null)
+        {
+            uiManager.DisplayCurrentUsersForBuilding(buildingName);
+        }
         if (ramsManager != null)
         {
             ramsManager.OnBuildingActivated();
@@ -487,7 +486,7 @@ public class BuildingInteraction : MonoBehaviour
                     {
                         var buildingInfo = BuildingDataManager.GetBuildingInfo(buildingName);
                         string lockedMessage = !string.IsNullOrEmpty(preUnlockMessage) ? preUnlockMessage : 
-                            $"You're close to {buildingInfo.displayName}. Press the button below to unlock this building!";
+                            $"You're close to {buildingInfo.displayName}";
                         
                         uiManager.ShowDialog(lockedMessage, 10f, "🔓 Unlock", () => {
                             // Trigger unlock logic
