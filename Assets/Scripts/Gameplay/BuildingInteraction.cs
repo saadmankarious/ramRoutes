@@ -26,6 +26,7 @@ public class BuildingInteraction : MonoBehaviour
     [SerializeField] private int coinPoints = 100;
     [SerializeField] private int knowledgePoints = 250;
 
+
     // [Header("Mobile Controls")]
     // [SerializeField] private Button mobileInteractButton;
 
@@ -40,6 +41,8 @@ public class BuildingInteraction : MonoBehaviour
     [SerializeField] private ScrollRect eventsScrollView;
     [SerializeField] private Transform eventsContentParent;
     [SerializeField] private GameObject eventPrefab;
+        [SerializeField] private Button buildingEventsToggle; // Reference to the toggle
+
     public string preUnlockMessage;
 
     [Header("User Location Display")]
@@ -234,6 +237,12 @@ public class BuildingInteraction : MonoBehaviour
             });
         }
 
+        // Set up toggle events visibility button listener (only once)
+        if(buildingEventsToggle != null)
+        {
+            buildingEventsToggle.onClick.AddListener(ToggleEventsVisibility);
+        }
+
         _ = FetchBuildingEvents();
     }
 
@@ -275,6 +284,20 @@ public class BuildingInteraction : MonoBehaviour
     {
         BuildingProximityDetector.OnApproachBuilding -= HandleApproachBuilding;
         BuildingProximityDetector.OnEnterBuilding -= HandleEnteringBuilding;
+    }
+
+    void OnDestroy()
+    {
+        // Clean up button event listeners to prevent memory leaks
+        if (buildingEventsToggle != null)
+        {
+            buildingEventsToggle.onClick.RemoveListener(ToggleEventsVisibility);
+        }
+        
+        if (closeUnlockedPanelButton != null)
+        {
+            closeUnlockedPanelButton.onClick.RemoveAllListeners();
+        }
     }
 
     void Update()
@@ -342,6 +365,8 @@ public class BuildingInteraction : MonoBehaviour
                 }
             }
         }
+
+        // Event listener management moved to Start() to prevent accumulation
         
         // Auto-scroll the building events list
         if (eventsScrollView != null && !isEventsScrollingPaused && eventsContentParent.childCount > 0 && buildingEventsPanel != null && buildingEventsPanel.activeInHierarchy)
@@ -371,17 +396,36 @@ public class BuildingInteraction : MonoBehaviour
         }
     }
     
+    private float lastToggleTime = 0f;
+    private const float TOGGLE_COOLDOWN = 0.2f; // Minimum time between toggles
+    
+    public void ToggleEventsVisibility()
+    {
+        // Prevent rapid clicking/spamming
+        if (Time.time - lastToggleTime < TOGGLE_COOLDOWN)
+        {
+            return;
+        }
+        lastToggleTime = Time.time;
+        
+        if (buildingEventsPanel != null)
+        {
+            bool isCurrentlyActive = buildingEventsPanel.activeSelf;
+            buildingEventsPanel.SetActive(!isCurrentlyActive);
+        }
+    }
     private System.Collections.IEnumerator ShowUpdatedDialog(bool isCloseInRealLife)
     {
         yield return new WaitForEndOfFrame(); // Wait a frame to ensure previous dialog is hidden
-        
+
         if (isCloseInRealLife)
         {
             var buildingInfo = BuildingDataManager.GetBuildingInfo(buildingName);
-            string lockedMessage = !string.IsNullOrEmpty(preUnlockMessage) ? preUnlockMessage : 
+            string lockedMessage = !string.IsNullOrEmpty(preUnlockMessage) ? preUnlockMessage :
                 $"You're now close to {buildingInfo.displayName}. Press the button below to unlock this building!";
-            
-            uiManager.ShowDialog(lockedMessage, 0f, "🔓 Unlock", () => {
+
+            uiManager.ShowDialog(lockedMessage, 0f, "🔓 Unlock", () =>
+            {
                 // Trigger unlock logic
                 UnlockBuilding();
             });
@@ -389,9 +433,9 @@ public class BuildingInteraction : MonoBehaviour
         else
         {
             var buildingInfo = BuildingDataManager.GetBuildingInfo(buildingName);
-            string distanceMessage = !string.IsNullOrEmpty(preUnlockMessage) ? preUnlockMessage : 
+            string distanceMessage = !string.IsNullOrEmpty(preUnlockMessage) ? preUnlockMessage :
                 $"You've moved away from {buildingInfo.displayName}. You need to be physically close to this location to unlock it.";
-            
+
             // Show message without unlock button since player is not close enough
             uiManager.ShowDialog(distanceMessage, 15f);
         }
@@ -837,19 +881,18 @@ public class BuildingInteraction : MonoBehaviour
             // Show brief UI notification for removal
             if (uiManager != null)
             {
-                uiManager.ShowQuickUpdate("Removed from event");
+                uiManager.ShowQuickUpdate("Removed from event interest");
             }
         }
         else
         {
             // Add interest
             await eventService.RecordInterestAsync(eventId, userId);
-            Debug.Log($"Added interest for user {userId} to event {eventId}");
             
             // Show brief UI notification for addition
             if (uiManager != null)
             {
-                uiManager.ShowQuickUpdate("Added to event!");
+                uiManager.ShowQuickUpdate("Added to Interest List!");
             }
         }
         

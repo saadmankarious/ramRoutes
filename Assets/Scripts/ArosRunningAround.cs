@@ -133,10 +133,10 @@ public class ArosRunningAround : MonoBehaviour
         spriteRenderer.flipX = false;
 
         // Show dialog after disappearing
-        if (uiManager != null)
-        {
-            uiManager.ShowQuickUpdate("Eros is near!");
-        }
+        // if (uiManager != null)
+        // {
+        //     uiManager.ShowQuickUpdate("Eros is near!");
+        // }
     }
 
     private IEnumerator MoveRoutine()
