@@ -140,7 +140,7 @@ public class UIManager : MonoBehaviour
     
     [Header("Scene Transition Settings")]
     [Tooltip("Delay in seconds before executing scene transition after building unlock conditions are met.")]
-    [SerializeField] private float sceneTransitionDelay = 5f;
+    [SerializeField] private float sceneTransitionDelay = 2f;
     
     [Header("Scene Transition Effects")]
     [Tooltip("UI Image component to use as fade overlay during scene transitions.")]
@@ -1701,15 +1701,17 @@ private void HideObjectsWithTag(string tag)
                 }
                 else
                 {
-                    Debug.Log($"UIManager: Building '{building.buildingName}' unlocked, but waiting for other buildings in the group to complete before unlocking gate '{gate.gameObject.name}'.");
+                    // Start notifying player of missing buildings
+                    // StartMissingBuildingsNotifications(targetPair);
                 }
+
             }
         }
-        else
-        {
-            Debug.Log($"UIManager: No mapped gate found for building '{building.buildingName}'.");
-        }
+      
     }
+
+
+    
 
     private void UpdateProgressBar()
     {

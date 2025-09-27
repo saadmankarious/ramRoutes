@@ -324,10 +324,10 @@ public class SegmentedJoystick : MonoBehaviour, IDragHandler, IPointerDownHandle
         // Show/hide the entire joystick gameObject
         gameObject.SetActive(shouldShowWheel);
         
-        if (shouldShowWheel)
-        {
-            Debug.Log("SegmentedJoystick: Showing wheel - Terminal stage active");
-        }
+        // if (shouldShowWheel)
+        // {
+        //     Debug.Log("SegmentedJoystick: Showing wheel - Terminal stage active");
+        // }
         // else
         // {
         //     Debug.Log($"SegmentedJoystick: Hiding wheel - Current stage: {currentStage?.area}");
