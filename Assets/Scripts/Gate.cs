@@ -96,6 +96,21 @@ public class Gate : MonoBehaviour
         // Initialize gate state (locked by default)
         wasUnlocked = isUnlocked;
         UpdateGateState();
+        
+        // Check if gate should be unlocked based on current stage at scene start
+        CheckInitialGateState();
+    }
+    
+    /// <summary>
+    /// Checks if gate should be unlocked based on current stage at scene start only
+    /// </summary>
+    private void CheckInitialGateState()
+    {
+        var stage = GameStageService.LoadStageFromPrefs();
+        if(stage.area == stageToRender)
+        {
+           UnlockGateSilently();
+        }
     }
 
     void Update()
@@ -106,11 +121,13 @@ public class Gate : MonoBehaviour
             wasUnlocked = isUnlocked;
             UpdateGateState();
         }
-        var stage = GameStageService.LoadStageFromPrefs();
-        if(stage.area == stageToRender)
-        {
-           UnlockGateSilently();
-        }
+        // Commenting out automatic gate unlock based on stage
+        // This prevents gates from automatically unlocking when stage changes
+        // var stage = GameStageService.LoadStageFromPrefs();
+        // if(stage.area == stageToRender)
+        // {
+        //    UnlockGateSilently();
+        // }
         // else
         // {
         //     gameObject.SetActive(false);
