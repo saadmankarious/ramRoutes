@@ -20,6 +20,8 @@ public class LoginManager : MonoBehaviour
     public Button loginButton;
     public Button playButton;
     public Button logoutButton;
+    public Button deleteAccountButton;
+    public GameObject deleteConfirmationPanel;
     public Text statusText;
     public GameObject loginPanel;
     public GameObject welcomePanel;
@@ -109,6 +111,10 @@ public class LoginManager : MonoBehaviour
     public Button bioSaveButton;
     private bool isEditingBio = false;
 
+    // Delete account confirmation state
+    private bool isAwaitingDeleteConfirmation = false;
+    private TaskCompletionSource<bool> deleteConfirmationTask;
+
     private async void Start()
     {
         // Setup background music
@@ -127,6 +133,12 @@ public class LoginManager : MonoBehaviour
         playButton.onClick.AddListener(OnPlayClicked);
         logoutButton.onClick.AddListener(OnLogoutClicked);
         resetPasswordButton.onClick.AddListener(OnResetPasswordButtonClicked);
+        
+        // Setup delete account button listener
+        if (deleteAccountButton != null)
+        {
+            deleteAccountButton.onClick.AddListener(OnDeleteAccountClicked);
+        }
         
         // Setup toggle text click listener
         if (toggleText != null)
@@ -1373,6 +1385,274 @@ public class LoginManager : MonoBehaviour
         resetUsernameInput.text = "";
         if (resetStatusText != null)
             resetStatusText.text = "";
+    }
+
+    private async void OnDeleteAccountClicked()
+    {
+        // Show confirmation dialog (you might want to implement a proper confirmation UI)
+        if (!await ShowDeleteConfirmation())
+        {
+            return;
+        }
+
+        if (auth?.CurrentUser == null)
+        {
+            statusText.text = "No user logged in";
+            return;
+        }
+
+        string userId = auth.CurrentUser.UserId;
+        string userEmail = auth.CurrentUser.Email;
+        
+        statusText.text = "Deleting account...";
+        deleteAccountButton.interactable = false;
+
+        try
+        {
+            var db = FirebaseFirestore.DefaultInstance;
+            
+            // Delete user data from Firestore collections
+            await DeleteUserDataFromFirestore(userId, db);
+            
+            // Delete the Firebase Auth user
+            await auth.CurrentUser.DeleteAsync();
+            
+            // Clear all local data
+            ClearAllUserData();
+            
+            // Reset UI to login state
+            ResetToLoginState();
+            
+            statusText.text = "Account deleted successfully";
+            
+            Debug.Log($"Successfully deleted account for user: {userEmail}");
+        }
+        catch (FirebaseException e)
+        {
+            statusText.text = $"Failed to delete account: {GetFirebaseErrorMessage(e)}";
+            deleteAccountButton.interactable = true;
+            Debug.LogError($"Firebase error deleting account: {e.Message}");
+        }
+        catch (System.Exception e)
+        {
+            statusText.text = $"Failed to delete account: {e.Message}";
+            deleteAccountButton.interactable = true;
+            Debug.LogError($"Error deleting account: {e.Message}");
+        }
+    }
+
+    private async Task<bool> ShowDeleteConfirmation()
+    {
+        // Set up the confirmation state
+        isAwaitingDeleteConfirmation = true;
+        deleteConfirmationTask = new TaskCompletionSource<bool>();
+        
+        // Show the confirmation dialog panel
+        if (deleteConfirmationPanel != null)
+        {
+            deleteConfirmationPanel.SetActive(true);
+        }
+        
+        // Set status message
+        statusText.text = "Please confirm account deletion in the dialog.";
+        
+        // Wait for the user's response
+        bool result = await deleteConfirmationTask.Task;
+        
+        // Hide the confirmation dialog panel
+        if (deleteConfirmationPanel != null)
+        {
+            deleteConfirmationPanel.SetActive(false);
+        }
+        
+        // Clean up
+        isAwaitingDeleteConfirmation = false;
+        deleteConfirmationTask = null;
+        
+        return result;
+    }
+
+    /// <summary>
+    /// Call this method when the user confirms deletion in the dialog (attach to Yes button)
+    /// </summary>
+    public void OnDeleteConfirmationYes()
+    {
+        if (isAwaitingDeleteConfirmation && deleteConfirmationTask != null)
+        {
+            statusText.text = "Deletion confirmed. Processing...";
+            deleteConfirmationTask.SetResult(true);
+        }
+        else
+        {
+            Debug.LogWarning("OnDeleteConfirmationYes called but no deletion is pending");
+        }
+    }
+
+    /// <summary>
+    /// Call this method when the user cancels deletion in the dialog (attach to No button)
+    /// </summary>
+    public void OnDeleteConfirmationNo()
+    {
+        if (isAwaitingDeleteConfirmation && deleteConfirmationTask != null)
+        {
+            statusText.text = "Account deletion cancelled";
+            deleteConfirmationTask.SetResult(false);
+        }
+        else
+        {
+            Debug.LogWarning("OnDeleteConfirmationNo called but no deletion is pending");
+        }
+    }
+
+    private async Task DeleteUserDataFromFirestore(string userId, FirebaseFirestore db)
+    {
+        try
+        {
+            // Delete from users collection
+            await db.Collection("users").Document(userId).DeleteAsync();
+            Debug.Log("Deleted user profile document");
+            
+            // Delete from unlocked-trials collection
+            var unlocksQuery = await db.Collection("unlocked-trials")
+                .WhereEqualTo("userId", userId)
+                .GetSnapshotAsync();
+                
+            foreach (var doc in unlocksQuery.Documents)
+            {
+                await doc.Reference.DeleteAsync();
+            }
+            Debug.Log($"Deleted {unlocksQuery.Count} unlock records");
+            
+            // Delete from building-events collection (if user created any)
+            var eventsQuery = await db.Collection("building-events")
+                .WhereEqualTo("userId", userId)
+                .GetSnapshotAsync();
+                
+            foreach (var doc in eventsQuery.Documents)
+            {
+                await doc.Reference.DeleteAsync();
+            }
+            Debug.Log($"Deleted {eventsQuery.Count} building event records");
+            
+            // Delete from friend requests (both sent and received)
+            var sentRequestsQuery = await db.Collection("friend-requests")
+                .WhereEqualTo("fromUserId", userId)
+                .GetSnapshotAsync();
+                
+            foreach (var doc in sentRequestsQuery.Documents)
+            {
+                await doc.Reference.DeleteAsync();
+            }
+            
+            var receivedRequestsQuery = await db.Collection("friend-requests")
+                .WhereEqualTo("toUserId", userId)
+                .GetSnapshotAsync();
+                
+            foreach (var doc in receivedRequestsQuery.Documents)
+            {
+                await doc.Reference.DeleteAsync();
+            }
+            Debug.Log($"Deleted {sentRequestsQuery.Count + receivedRequestsQuery.Count} friend request records");
+            
+            // Delete from friends collection
+            var friendsQuery = await db.Collection("friends")
+                .WhereArrayContains("userIds", userId)
+                .GetSnapshotAsync();
+                
+            foreach (var doc in friendsQuery.Documents)
+            {
+                await doc.Reference.DeleteAsync();
+            }
+            Debug.Log($"Deleted {friendsQuery.Count} friendship records");
+            
+            // Delete from game-stages collection
+            await db.Collection("game-stages").Document(userId).DeleteAsync();
+            Debug.Log("Deleted game stage document");
+            
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Error deleting user data from Firestore: {e.Message}");
+            throw; // Re-throw to be handled by caller
+        }
+    }
+
+    private void ClearAllUserData()
+    {
+        // Clear all user-related cache data
+        RamRoutes.Services.UserService.ClearUserCache();
+        RamRoutes.Services.BuildingEventService.ClearBuildingEventsCache();
+        UIManager.ClearStaticCache();
+        RamRoutes.Services.UnlockedBuildingService.ClearUnlockedBuildingsCache();
+        RamRoutes.Services.GameStageService.ClearGameStageCache();
+        
+        // Clear PlayerPrefs
+        PlayerPrefs.DeleteKey("PlayerName");
+        PlayerPrefs.DeleteKey("UserName");
+        PlayerPrefs.DeleteKey("ResidenceHall");
+        
+        // Clear any first-time user flags (though the user won't exist anymore)
+        string userId = auth?.CurrentUser?.UserId;
+        if (!string.IsNullOrEmpty(userId))
+        {
+            PlayerPrefs.DeleteKey($"FirstTime_{userId}");
+        }
+        
+        PlayerPrefs.Save();
+        
+        Debug.Log("Cleared all local user data and cache");
+    }
+
+    private void ResetToLoginState()
+    {
+        // Stop friend request refresh
+        StopFriendRequestRefresh();
+
+        // Reset to login mode
+        isSignupMode = false;
+        isResetPasswordMode = false;
+        UpdateToggleText();
+        TogglePanels();
+        
+        welcomePanel.SetActive(false);
+        playButton.interactable = false;
+        deleteAccountButton.interactable = true;
+        
+        // Clear input fields
+        emailInput.text = "";
+        passwordInput.text = "";
+        signupUsernameInput.text = "";
+        signupPasswordInput.text = "";
+        resetUsernameInput.text = "";
+        
+        if (residenceHallDropdown != null)
+        {
+            residenceHallDropdown.value = 0;
+        }
+        
+        if (verificationStatusText != null)
+        {
+            verificationStatusText.text = "";
+        }
+        
+        // Clear bio field
+        if (bioInputField != null)
+        {
+            bioInputField.text = "";
+            bioInputField.interactable = false;
+        }
+        
+        if (bioSaveButton != null)
+        {
+            var buttonText = bioSaveButton.GetComponentInChildren<Text>();
+            if (buttonText != null)
+            {
+                buttonText.text = "Edit";
+            }
+            isEditingBio = false;
+        }
+        
+        Debug.Log("Reset UI to login state after account deletion");
     }
 
     private void OnLogoutClicked()
