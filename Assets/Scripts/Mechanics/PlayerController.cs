@@ -60,7 +60,11 @@ namespace Platformer.Mechanics
         // Add this function to your PlayerController class
         private bool IsSteppingOnPaintedTile()
         {
-            if (paintedTilemap == null) return false;
+            if (paintedTilemap == null)
+            {
+                Debug.LogWarning("[PlayerController] paintedTilemap is NULL!");
+                return false;
+            }
 
             // Get player's position and movement direction
             Vector3 playerWorldPos = transform.position;
@@ -68,8 +72,12 @@ namespace Platformer.Mechanics
             Vector3Int cellPosition = paintedTilemap.WorldToCell(playerWorldPos);
 
             // Check current tile first (must always be valid)
-            if (paintedTilemap.GetTile(cellPosition) == null)
+            var currentTile = paintedTilemap.GetTile(cellPosition);
+            if (currentTile == null)
+            {
+                Debug.Log($"[PlayerController] No tile at current position! Cell: {cellPosition}, WorldPos: {playerWorldPos}");
                 return false;
+            }
 
             // If not moving, only check current tile
             if (moveInput.magnitude < 0.1f)
@@ -89,7 +97,12 @@ namespace Platformer.Mechanics
             }
 
             // Check if predicted tile is painted
-            return paintedTilemap.GetTile(predictedCell) != null;
+            var predictedTile = paintedTilemap.GetTile(predictedCell);
+            if (predictedTile == null)
+            {
+                Debug.Log($"[PlayerController] No tile at predicted position! PredictedCell: {predictedCell}, moveInput: {moveInput}");
+            }
+            return predictedTile != null;
         }
 
 
@@ -107,6 +120,11 @@ namespace Platformer.Mechanics
             }
 
             rb = GetComponent<Rigidbody2D>();
+            // Set to Kinematic so Rigidbody doesn't override transform movement
+            if (rb != null)
+            {
+                rb.bodyType = RigidbodyType2D.Kinematic;
+            }
             health = GetComponent<Health>();
             audioSource = GetComponent<AudioSource>();
             collider2d = GetComponent<Collider2D>();
@@ -223,6 +241,13 @@ namespace Platformer.Mechanics
 
             // Handle walking sounds (alternate two steps)
             HandleFootsteps();
+            
+            // Move player directly in Update (bypassing FixedUpdate/Rigidbody issues)
+            if (IsSteppingOnPaintedTile() && moveInput.magnitude > 0.1f)
+            {
+                Vector3 movement = new Vector3(moveInput.x, moveInput.y, 0) * moveSpeed * Time.deltaTime;
+                transform.position += movement;
+            }
         }
 
         // Play alternating footstep sounds when walking
@@ -260,19 +285,20 @@ namespace Platformer.Mechanics
         private float timeOffTile = 0f;
         private bool wasOnTileLastFrame = true;
 
-        void FixedUpdate()
-        {
-            bool isOnTile = IsSteppingOnPaintedTile();
-
-            if (isOnTile)
-            {
-                rb.linearVelocity = moveInput * moveSpeed;
-            }
-            else
-            {
-                rb.linearVelocity = Vector2.zero;
-            }
-        }
+        // FixedUpdate disabled - movement now handled in Update() directly
+        // void FixedUpdate()
+        // {
+        //     bool isOnTile = IsSteppingOnPaintedTile();
+        //
+        //     if (isOnTile)
+        //     {
+        //         rb.linearVelocity = moveInput * moveSpeed;
+        //     }
+        //     else
+        //     {
+        //         rb.linearVelocity = Vector2.zero;
+        //     }
+        // }
 
         // Mobile input methods
         public void OnMobileLeftPressed() { mobileLeftPressed = true; }
