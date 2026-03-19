@@ -13,6 +13,9 @@ import EventEdit from './components/EventEdit';
 import StoreItemForm from './components/StoreItemForm';
 import StoreItemList from './components/StoreItemList';
 import StoreItemEdit from './components/StoreItemEdit';
+import SchoolForm from './components/SchoolForm';
+import SchoolList from './components/SchoolList';
+import SchoolEdit from './components/SchoolEdit';
 import './App.css';
 
 function App() {
@@ -22,6 +25,7 @@ function App() {
   const [editingEvent, setEditingEvent] = useState(null);
   const [editingAdmin, setEditingAdmin] = useState(null);
   const [editingStoreItem, setEditingStoreItem] = useState(null);
+  const [editingSchool, setEditingSchool] = useState(null);
 
   useEffect(() => {
     console.log('Setting up auth state listener...');
@@ -92,6 +96,7 @@ function App() {
     setEditingEvent(null);
     setEditingAdmin(null);
     setEditingStoreItem(null);
+    setEditingSchool(null);
   };
 
   const handleEditAdmin = (admin) => {
@@ -159,6 +164,27 @@ function App() {
     console.log('Store item created, navigating to items list:', itemId);
     if (itemId === 'view') {
       setCurrentView('view-store-items');
+    }
+  };
+
+  const handleEditSchool = (school) => {
+    setEditingSchool(school);
+    setCurrentView('edit-school');
+  };
+
+  const handleSaveSchool = () => {
+    setEditingSchool(null);
+    setCurrentView('view-schools');
+  };
+
+  const handleCancelSchoolEdit = () => {
+    setEditingSchool(null);
+    setCurrentView('view-schools');
+  };
+
+  const handleSchoolCreated = (schoolId) => {
+    if (schoolId === 'view') {
+      setCurrentView('view-schools');
     }
   };
 
@@ -244,6 +270,30 @@ function App() {
           );
         }
         return <div className="access-denied">Access denied or no store item selected for editing.</div>;
+      
+      case 'schools':
+        if (user.role === 'superadmin') {
+          return <SchoolForm onSchoolCreated={handleSchoolCreated} />;
+        }
+        return <div className="access-denied">Access denied. Super admin role required.</div>;
+      
+      case 'view-schools':
+        if (user.role === 'superadmin') {
+          return <SchoolList onEditSchool={handleEditSchool} />;
+        }
+        return <div className="access-denied">Access denied. Super admin role required.</div>;
+      
+      case 'edit-school':
+        if (user.role === 'superadmin' && editingSchool) {
+          return (
+            <SchoolEdit
+              school={editingSchool}
+              onCancel={handleCancelSchoolEdit}
+              onSave={handleSaveSchool}
+            />
+          );
+        }
+        return <div className="access-denied">Access denied or no school selected for editing.</div>;
       
       default:
         return <BuildingEventForm user={user} onEventCreated={handleEventCreated} />;

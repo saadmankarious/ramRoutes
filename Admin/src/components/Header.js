@@ -62,6 +62,18 @@ function Header({ user, currentView, setCurrentView, onLogout }) {
               >
                 View Store Items
               </button>
+              <button
+                className={`nav-button ${currentView === 'schools' ? 'active' : ''}`}
+                onClick={() => setCurrentView('schools')}
+              >
+                Create School
+              </button>
+              <button
+                className={`nav-button ${currentView === 'view-schools' ? 'active' : ''}`}
+                onClick={() => setCurrentView('view-schools')}
+              >
+                View Schools
+              </button>
             </>
           )}
           
