@@ -12,11 +12,21 @@ function EventList({ user, onEditEvent }) {
   const [expandedEvents, setExpandedEvents] = useState({});
   const [attendeeData, setAttendeeData] = useState({});
   const [selectedBuilding, setSelectedBuilding] = useState('all');
+  const [buildingOptions, setBuildingOptions] = useState([]);
 
-  // Building options - same as in BuildingEventForm
-  const buildingOptions = [
-    'McWethy', 'TC', 'Ebersole', 'SAW', 'Library', 'PR', 'Stoner'
-  ];
+  useEffect(() => {
+    const fetchBuildings = async () => {
+      try {
+        const snapshot = await getDocs(query(collection(db, 'buildings'), orderBy('createdAt', 'desc')));
+        const list = [];
+        snapshot.forEach((doc) => list.push(doc.data().buildingName));
+        setBuildingOptions(list);
+      } catch (err) {
+        console.error('Error fetching buildings:', err);
+      }
+    };
+    fetchBuildings();
+  }, []);
 
   useEffect(() => {
     loadEvents();

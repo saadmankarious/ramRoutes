@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
+import { collection, addDoc, getDocs, query, orderBy, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 
 // Generate a buildingId in the format "BEeee65f46"
@@ -25,6 +25,21 @@ function BuildingEventForm({ user, onEventCreated }) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState(null);
+  const [buildings, setBuildings] = useState([]);
+
+  useEffect(() => {
+    const fetchBuildings = async () => {
+      try {
+        const snapshot = await getDocs(query(collection(db, 'buildings'), orderBy('createdAt', 'desc')));
+        const list = [];
+        snapshot.forEach((doc) => list.push({ id: doc.id, ...doc.data() }));
+        setBuildings(list);
+      } catch (err) {
+        console.error('Error fetching buildings:', err);
+      }
+    };
+    fetchBuildings();
+  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -46,6 +61,9 @@ function BuildingEventForm({ user, onEventCreated }) {
       // Generate a unique buildingId
       const buildingId = generateBuildingId();
 
+      // Get school info from the selected building
+      const selectedBuilding = buildings.find(b => b.buildingName === buildingName);
+
       // Create building event document in Firestore - Firebase will auto-generate the document ID
       const eventData = {
         buildingId,
@@ -56,8 +74,8 @@ function BuildingEventForm({ user, onEventCreated }) {
         gainedCoins: parseInt(gainedCoins) || 0, // Add gainedCoins field
         gainedKb: parseInt(gainedKb) || 0, // Add gainedKb field
         createdBy: user?.uid || 'unknown', // Track who created the event
-        schoolId: user?.schoolId || '',
-        schoolName: user?.schoolName || '',
+        schoolId: selectedBuilding?.schoolId || '',
+        schoolName: selectedBuilding?.schoolName || '',
         createdAt: serverTimestamp()
       };
 
@@ -151,13 +169,11 @@ function BuildingEventForm({ user, onEventCreated }) {
               className="form-select"
             >
               <option value="">Select Building</option>
-              <option value="McWethy">McWethy</option>
-              <option value="TC">TC</option>
-              <option value="Ebersole">Ebersole</option>
-              <option value="SAW">SAW</option>
-              <option value="Library">Library</option>
-              <option value="PR">PR</option>
-              <option value="Stoner">Stoner</option>
+              {buildings.map((b) => (
+                <option key={b.id} value={b.buildingName}>
+                  {b.buildingName} ({b.schoolName})
+                </option>
+              ))}
             </select>
           </div>
 
