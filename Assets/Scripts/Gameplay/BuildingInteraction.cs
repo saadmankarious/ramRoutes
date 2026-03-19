@@ -12,53 +12,22 @@ using System;
 public class BuildingInteraction : MonoBehaviour
 {
 
-    [Header("Interaction Settings")]
-    [SerializeField] private KeyCode interactKey = KeyCode.J;
-
-    [Header("Popup")]
-    [SerializeField] private bool doesTheBuildingHavePopup = false;
-    [SerializeField] private GameObject popupPrefab;
-    [SerializeField] private GameObject popupLocation;
-
-
-    [Header("Josie Settings")]
-    [SerializeField] private AudioClip rewardSound;
-    [SerializeField] private int coinPoints = 100;
-    [SerializeField] private int knowledgePoints = 250;
-
-
-
     [Header("Inactive Display")]
             public Text buildingTitleUnlcoked;
-    [SerializeField] private GameObject inactivePrefab;
-    [SerializeField] private Material lockedMaterial;    [Header("UI Panels")]
-    [SerializeField] private GameObject buildingUnlockedPanel;
-    [SerializeField] private Button closeUnlockedPanelButton;
-    [SerializeField] private float fadeDuration = 1f;
     [SerializeField] private GameObject buildingEventsPanel;
     [SerializeField] private ScrollRect eventsScrollView;
     [SerializeField] private Transform eventsContentParent;
     [SerializeField] private GameObject eventPrefab;
         [SerializeField] private Button buildingEventsToggle;
 
-    public string preUnlockMessage;
 
     [Header("User Location Display")]
     private Dictionary<string, GameObject> activeUserLocations = new Dictionary<string, GameObject>();
 
-    [Header("Debug")]
-    [SerializeField] private bool showUnlockedPanelOnStart = false;
-    [SerializeField] private bool simulateEntry = false;
-
-    [Header("Auto Scroll Settings")]
-    [SerializeField] private float eventsScrollSpeed = 0.001f;
-    [SerializeField] private float eventsResetDelay = 2f;
+     private float eventsScrollSpeed = 0.001f;
+   private float eventsResetDelay = 2f;
     private bool isEventsScrollingPaused = false;
     private bool isEventsResetting = false;
-
-    [Header("Gate Integration")]
-    [Tooltip("Deprecated: Gate unlocking is now handled by UIManager via mapping.")]
-    [SerializeField] private Gate connectedGate;
 
     [Header("GPS Integration")]
     [SerializeField] public bool bypassGpsCheck = false;
@@ -67,22 +36,16 @@ public class BuildingInteraction : MonoBehaviour
     [SerializeField] public GameObject playerTargetPoint;
 
     public bool isPlayerInRange = false;
-    private int currentLineIndex = 0;
-    private bool extraLineShown = false;
+
     private AudioSource audioSource;
-    private bool dialogActive = false;
     public string buildingName;
     private GameObject inactiveInstance;
     private Material originalMaterial;
     private SpriteRenderer sr;
     private bool lastGpsProximityState = false;
 
-    public ScrollRect usersScrollView;
-    public Transform usersContentParent;
-    public GameObject userPrefab;
-    public GameObject rsvpUserPrefab;
 
-    public GameObject usersWhoUnlockedPanel;
+    public GameObject rsvpUserPrefab;
 
     private List<BuildingEvent> cachedBuildingEvents;
     private bool eventsLoaded = false;
@@ -180,38 +143,8 @@ public class BuildingInteraction : MonoBehaviour
         uiManager = UIManager.Instance;
         proximityDetector = FindObjectOfType<BuildingProximityDetector>();
         ramsManager = GetComponent<RamsManager>();
-        
-        if (inactivePrefab != null)
-        {
-            Vector3 spawnPos = transform.position;
-            spawnPos.z = -1f;
-            inactiveInstance = Instantiate(inactivePrefab, spawnPos, Quaternion.identity, transform);
-            inactiveInstance.SetActive(true);
-        }
 
         var service = new UnlockedBuildingService();
-
-        if (closeUnlockedPanelButton != null && buildingUnlockedPanel != null)
-        {
-            closeUnlockedPanelButton.onClick.AddListener(() =>
-            {
-                buildingUnlockedPanel.SetActive(false);
-
-                if (uiManager != null)
-                {
-                    uiManager.ResetArosVisibility(true);
-                }
-
-                                    EnterBuildingViewingMode();
-
-
-                if (uiManager != null)
-                {
-                    uiManager.OnUnlockPanelClosed();
-                }
-
-            });
-        }
 
         if(buildingEventsToggle != null)
         {
@@ -221,29 +154,6 @@ public class BuildingInteraction : MonoBehaviour
         _ = FetchBuildingEvents();
     }
 
-    private IEnumerator SetActiveIfEntered(UnlockedBuildingService service)
-    {
-        string userId = FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.UserId : "unknown";
-        var task = service.RetrieveUnlockedBuildings(userId);
-        while (!task.IsCompleted) yield return null;
-        var enteredBuildings = task.Result;
-        if (enteredBuildings != null && enteredBuildings.Exists(b => b.buildingName == buildingName && b.userId == userId))
-        {
-            
-            
-            if (inactiveInstance != null) inactiveInstance.SetActive(false);
-            if (sr != null && originalMaterial != null)
-            {
-                sr.material = originalMaterial;
-                var c = sr.color;
-                c.a = 1f;
-                sr.color = c;
-            }
-        }
-    }
-
-
-
 
     void OnDestroy()
     {
@@ -252,24 +162,11 @@ public class BuildingInteraction : MonoBehaviour
             buildingEventsToggle.onClick.RemoveListener(ToggleEventsVisibility);
         }
         
-        if (closeUnlockedPanelButton != null)
-        {
-            closeUnlockedPanelButton.onClick.RemoveAllListeners();
-        }
     }
 
     void Update()
     {
-
-
-
-
-        
-            
-                
-                    
-
-        
+    
         if (eventsScrollView != null && !isEventsScrollingPaused && eventsContentParent.childCount > 0 && buildingEventsPanel != null && buildingEventsPanel.activeInHierarchy)
         {
             float contentHeight = 0;
@@ -313,22 +210,12 @@ public class BuildingInteraction : MonoBehaviour
     }
 
 
-
-
-
-
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Player") || other.CompareTag("Spaceship"))
         {
             isPlayerInRange = true;
-
-            
-                            EnterBuildingViewingMode();
-
-                    
-                        
-                        
+            EnterBuildingViewingMode();                
         }
     }
 
@@ -385,44 +272,7 @@ public class BuildingInteraction : MonoBehaviour
         Debug.Log("Building Interaction:: Approaching building " + building.name);
     }
 
-    public void ShowBuildingUnlockedPanel()
-    {
-        if (buildingUnlockedPanel != null)
-        {
-            buildingUnlockedPanel.SetActive(true);
 
-            if (uiManager != null)
-            {
-                StartCoroutine(uiManager.AnimatePanelPopup(buildingUnlockedPanel));
-            }
-        }
-    }
-
-
-            
-            
-            
-            
-            
-                    
-
-
-       
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
     private bool IsPlayerCloseToBuilding()
     {
         if (bypassGpsCheck)
@@ -470,13 +320,6 @@ public class BuildingInteraction : MonoBehaviour
         
         return distance <= targetBuilding.detectionRadius;
     }
-
-
-                
-
-
-
-
 
 
     private async Task FetchBuildingEvents()

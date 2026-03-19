@@ -1549,15 +1549,6 @@ private void HideObjectsWithTag(string tag)
         int delayMs = Mathf.RoundToInt(celebrationDuration * 1000f);
         await Task.Delay(delayMs);
     }
-
-    public void HandlePreUnlock(BuildingInteraction building)
-    {
-        if (!string.IsNullOrEmpty(building.preUnlockMessage))
-        {
-            ShowDialog(building.preUnlockMessage, 5f);
-        }
-    }
-
     
 
     private void UpdateProgressBar()
