@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 
 // Utility function to generate random password
@@ -17,11 +17,27 @@ function AdminForm() {
   const [formData, setFormData] = useState({
     username: '',
     name: '',
-    password: ''
+    password: '',
+    schoolId: ''
   });
+  const [schools, setSchools] = useState([]);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchSchools = async () => {
+      try {
+        const snapshot = await getDocs(query(collection(db, 'schools'), orderBy('createdAt', 'desc')));
+        const list = [];
+        snapshot.forEach((doc) => list.push({ id: doc.id, ...doc.data() }));
+        setSchools(list);
+      } catch (err) {
+        console.error('Error fetching schools:', err);
+      }
+    };
+    fetchSchools();
+  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -37,7 +53,7 @@ function AdminForm() {
     setSuccess(null);
 
     try {
-      const { username, name, password: providedPassword } = formData;
+      const { username, name, password: providedPassword, schoolId } = formData;
 
       // Validate and use provided password or generate random one
       let password;
@@ -46,6 +62,10 @@ function AdminForm() {
       } else {
         password = generateRandomPassword();
       }
+
+      // Find selected school name
+      const selectedSchool = schools.find(s => s.schoolId === schoolId);
+      const schoolName = selectedSchool ? selectedSchool.schoolName : '';
 
       // Create email format from username
       const email = `${username}@admin.local`;
@@ -63,6 +83,8 @@ function AdminForm() {
         name,
         email,
         role: 'admin',
+        schoolId,
+        schoolName,
         createdAt: serverTimestamp(),
         createdBy: 'superadmin'
       });
@@ -73,14 +95,16 @@ function AdminForm() {
         username,
         email,
         password,
-        name
+        name,
+        schoolName
       });
 
       // Reset form
       setFormData({
         username: '',
         name: '',
-        password: ''
+        password: '',
+        schoolId: ''
       });
 
     } catch (error) {
@@ -120,6 +144,7 @@ function AdminForm() {
               <p><strong>Name:</strong> {success.name}</p>
               <p><strong>Username:</strong> {success.username}</p>
               <p><strong>Email:</strong> {success.email}</p>
+              <p><strong>School:</strong> {success.schoolName}</p>
               <p><strong>Generated Password:</strong> <span className="password-text">{success.password}</span></p>
               <p className="warning-text">⚠️ Please save these credentials as the password cannot be retrieved later.</p>
             </div>
@@ -176,6 +201,26 @@ function AdminForm() {
               minLength="6"
             />
             <small className="form-help">Minimum 6 characters, or leave blank for auto-generated secure password</small>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="schoolId" className="form-label">School</label>
+            <select
+              id="schoolId"
+              name="schoolId"
+              value={formData.schoolId}
+              onChange={handleChange}
+              required
+              disabled={loading}
+              className="form-select"
+            >
+              <option value="">Select a school</option>
+              {schools.map((school) => (
+                <option key={school.id} value={school.schoolId}>
+                  {school.schoolName}
+                </option>
+              ))}
+            </select>
           </div>
 
           <button 

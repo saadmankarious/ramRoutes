@@ -1,22 +1,39 @@
 import React, { useState, useEffect } from 'react';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, serverTimestamp, collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
 
 function AdminEdit({ adminToEdit, onCancel, onSave }) {
   const [formData, setFormData] = useState({
     username: '',
     name: '',
-    role: 'admin'
+    role: 'admin',
+    schoolId: ''
   });
+  const [schools, setSchools] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchSchools = async () => {
+      try {
+        const snapshot = await getDocs(query(collection(db, 'schools'), orderBy('createdAt', 'desc')));
+        const list = [];
+        snapshot.forEach((doc) => list.push({ id: doc.id, ...doc.data() }));
+        setSchools(list);
+      } catch (err) {
+        console.error('Error fetching schools:', err);
+      }
+    };
+    fetchSchools();
+  }, []);
 
   useEffect(() => {
     if (adminToEdit) {
       setFormData({
         username: adminToEdit.username || '',
         name: adminToEdit.name || '',
-        role: adminToEdit.role || 'admin'
+        role: adminToEdit.role || 'admin',
+        schoolId: adminToEdit.schoolId || ''
       });
     }
   }, [adminToEdit]);
@@ -38,10 +55,15 @@ function AdminEdit({ adminToEdit, onCancel, onSave }) {
       
       const adminRef = doc(db, 'admins', adminToEdit.id);
       
+      const selectedSchool = schools.find(s => s.schoolId === formData.schoolId);
+      const schoolName = selectedSchool ? selectedSchool.schoolName : '';
+
       await updateDoc(adminRef, {
         username: formData.username,
         name: formData.name,
         role: formData.role,
+        schoolId: formData.schoolId,
+        schoolName,
         updatedAt: serverTimestamp(),
         updatedBy: 'superadmin'
       });
@@ -128,6 +150,26 @@ function AdminEdit({ adminToEdit, onCancel, onSave }) {
               <option value="superadmin">Super Admin</option>
             </select>
             <small className="form-help">Super admin can manage other admins</small>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="schoolId" className="form-label">School</label>
+            <select
+              id="schoolId"
+              name="schoolId"
+              value={formData.schoolId}
+              onChange={handleChange}
+              required
+              disabled={loading}
+              className="form-select"
+            >
+              <option value="">Select a school</option>
+              {schools.map((school) => (
+                <option key={school.id} value={school.schoolId}>
+                  {school.schoolName}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="form-actions">

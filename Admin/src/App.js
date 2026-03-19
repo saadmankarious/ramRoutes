@@ -54,7 +54,9 @@ function App() {
                 uid: firebaseUser.uid,
                 email: firebaseUser.email,
                 role: userData.role || 'admin',
-                name: userData.name
+                name: userData.name,
+                schoolId: userData.schoolId || '',
+                schoolName: userData.schoolName || ''
               });
               console.log('Admin user authenticated with role:', userData.role);
             } else {

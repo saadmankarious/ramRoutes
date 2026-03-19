@@ -56,6 +56,8 @@ function BuildingEventForm({ user, onEventCreated }) {
         gainedCoins: parseInt(gainedCoins) || 0, // Add gainedCoins field
         gainedKb: parseInt(gainedKb) || 0, // Add gainedKb field
         createdBy: user?.uid || 'unknown', // Track who created the event
+        schoolId: user?.schoolId || '',
+        schoolName: user?.schoolName || '',
         createdAt: serverTimestamp()
       };
 

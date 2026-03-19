@@ -19,6 +19,7 @@ function Header({ user, currentView, setCurrentView, onLogout }) {
           <h1 className="app-title">Ram Routes Admin</h1>
           <span className="user-badge">
             {user.name} 
+            {user.schoolName && <span className="school-badge">🏫 {user.schoolName}</span>}
             <span className={`role-badge role-${user.role}`}>{user.role}</span>
           </span>
         </div>

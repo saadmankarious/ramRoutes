@@ -140,6 +140,7 @@ function AdminList({ user, onEditAdmin }) {
                 <div className="admin-details">
                   <p><strong>Username:</strong> {admin.username}</p>
                   <p><strong>Email:</strong> {admin.email}</p>
+                  <p><strong>School:</strong> {admin.schoolName || 'Not assigned'}</p>
                   <p><strong>Created:</strong> {formatDate(admin.createdAt)}</p>
                   {admin.createdBy && <p><strong>Created By:</strong> {admin.createdBy}</p>}
                 </div>
