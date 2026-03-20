@@ -98,7 +98,55 @@ public class BuildingProximityDetector : MonoBehaviour
 
         nextUpdateTime = Time.time + updateInterval;
         StartCoroutine(LocationUpdateRoutine());
+
+#if UNITY_IOS && !UNITY_EDITOR
+        // Start iOS background location tracking
+        if (BackgroundLocationService.Instance != null)
+        {
+            BackgroundLocationService.Instance.StartTracking(5f);
+            BackgroundLocationService.Instance.OnLocationUpdated += OnBackgroundLocationUpdate;
+            Debug.Log("[BuildingProximity] Subscribed to iOS background location");
+        }
+#endif
     }
+
+#if UNITY_IOS && !UNITY_EDITOR
+    private void OnBackgroundLocationUpdate(double lat, double lon, float accuracy)
+    {
+        // Create a LocationInfo-like check using background data
+        var location = Input.location.lastData;
+        // Override with background data by calling proximity check directly
+        CheckBuildingProximityFromBackground((float)lat, (float)lon);
+    }
+
+    void CheckBuildingProximityFromBackground(float lat, float lon)
+    {
+        closestBuilding = null;
+        float minDistance = float.MaxValue;
+
+        foreach (var building in buildings)
+        {
+            float distance = CalculatePreciseDistance(lat, lon, building.entranceGPS.x, building.entranceGPS.y);
+
+            if (distance < minDistance)
+            {
+                minDistance = distance;
+                closestBuilding = building;
+            }
+
+            if (distance <= building.closeProximityRadius)
+            {
+                OnBuildingEntered(building);
+            }
+            else if (distance <= building.detectionRadius)
+            {
+                OnBuildingApproached(building);
+            }
+        }
+
+        distanceToBuilding = minDistance;
+    }
+#endif
 
     System.Collections.IEnumerator LocationUpdateRoutine()
     {
@@ -271,7 +319,14 @@ public class BuildingProximityDetector : MonoBehaviour
     void OnDestroy()
     {
         if (Input.location.isEnabledByUser)
-        Input.location.Stop();
+            Input.location.Stop();
+
+#if UNITY_IOS && !UNITY_EDITOR
+        if (BackgroundLocationService.Instance != null)
+        {
+            BackgroundLocationService.Instance.OnLocationUpdated -= OnBackgroundLocationUpdate;
+        }
+#endif
     }
 
     void OnGUI()
