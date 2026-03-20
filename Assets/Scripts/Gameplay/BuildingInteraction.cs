@@ -152,6 +152,12 @@ public class BuildingInteraction : MonoBehaviour
         }
 
         _ = FetchBuildingEvents();
+
+        // Subscribe to physical building changes from background location
+        if (BackgroundLocationService.Instance != null)
+        {
+            BackgroundLocationService.Instance.OnPhysicalBuildingChanged += OnPhysicalBuildingChanged;
+        }
     }
 
 
@@ -161,7 +167,11 @@ public class BuildingInteraction : MonoBehaviour
         {
             buildingEventsToggle.onClick.RemoveListener(ToggleEventsVisibility);
         }
-        
+
+        if (BackgroundLocationService.Instance != null)
+        {
+            BackgroundLocationService.Instance.OnPhysicalBuildingChanged -= OnPhysicalBuildingChanged;
+        }
     }
 
     void Update()
@@ -649,7 +659,16 @@ public class BuildingInteraction : MonoBehaviour
         }
     }
     
-    private IEnumerator MovePlayerToBuildingSmooth()
+    private void OnPhysicalBuildingChanged(string changedBuildingName)
+    {
+        // Only the BuildingInteraction that matches the building name should move the player
+        if (!string.Equals(buildingName, changedBuildingName, StringComparison.OrdinalIgnoreCase)) return;
+
+        Debug.Log($"[BuildingInteraction] Physical building changed to {changedBuildingName}, moving player");
+        StartCoroutine(MovePlayerToBuildingSmooth());
+    }
+
+    public IEnumerator MovePlayerToBuildingSmooth()
     {
         var lightManager = FindObjectOfType<LightManager>();
         if (lightManager != null)

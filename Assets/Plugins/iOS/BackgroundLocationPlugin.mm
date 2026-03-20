@@ -9,7 +9,10 @@ extern void UnitySendMessage(const char* obj, const char* method, const char* ms
 @property (copy, nonatomic) NSString *gameObjectName;
 @property (assign, nonatomic) BOOL preciseTrackingActive;
 @property (copy, nonatomic) NSString *deviceId;
+@property (copy, nonatomic) NSString *userId;                           // Firebase user ID for currentPhysicalBuilding updates
+@property (copy, nonatomic) NSString *currentPhysicalBuilding;          // last building sent to Firestore (avoid redundant writes)
 @property (strong, nonatomic) NSDate *lastFirestoreLog;
+@property (strong, nonatomic) NSDate *lastBuildingUpdate;               // throttle building updates
 @property (strong, nonatomic) NSMutableDictionary *registeredBuildings; // name → {lat, lon, radius}
 @property (strong, nonatomic) NSMutableSet *notifiedBuildings;          // buildings already notified (avoid spam)
 @property (strong, nonatomic) NSDate *lastNotificationReset;            // reset notified set periodically
@@ -117,6 +120,75 @@ static BackgroundLocationPlugin *_instance = nil;
     };
 }
 
+#pragma mark - Universal Building Mapping
+
+/// Returns the name of the nearest building within its radius for the given lat/lon, or nil if none.
+- (NSString *)nearestBuildingForLatitude:(double)lat longitude:(double)lon {
+    __block NSString *nearest = nil;
+    __block CLLocationDistance minDistance = DBL_MAX;
+    CLLocation *loc = [[CLLocation alloc] initWithLatitude:lat longitude:lon];
+
+    [self.registeredBuildings enumerateKeysAndObjectsUsingBlock:^(NSString *name, NSDictionary *info, BOOL *stop) {
+        double bLat = [info[@"latitude"] doubleValue];
+        double bLon = [info[@"longitude"] doubleValue];
+        double bRadius = [info[@"radius"] doubleValue];
+        CLLocation *bLoc = [[CLLocation alloc] initWithLatitude:bLat longitude:bLon];
+        CLLocationDistance dist = [loc distanceFromLocation:bLoc];
+        if (dist <= bRadius && dist < minDistance) {
+            minDistance = dist;
+            nearest = name;
+        }
+    }];
+    return nearest;
+}
+
+/// Updates currentPhysicalBuilding on the user's Firestore document via REST PATCH.
+/// Only fires when the resolved building changes and userId is set.
+- (void)updateCurrentPhysicalBuilding:(NSString *)buildingName {
+    if (!self.userId || self.userId.length == 0) {
+        NSLog(@"[BackgroundLocation] Cannot update currentPhysicalBuilding — no userId set");
+        return;
+    }
+    // Avoid redundant writes
+    if ([buildingName isEqualToString:self.currentPhysicalBuilding]) return;
+
+    // Throttle: at most once every 10 seconds
+    NSDate *now = [NSDate date];
+    if (self.lastBuildingUpdate && [now timeIntervalSinceDate:self.lastBuildingUpdate] < 10.0) return;
+    self.lastBuildingUpdate = now;
+
+    self.currentPhysicalBuilding = buildingName;
+
+    NSString *projectId = @"trials-of-venus";
+    NSString *url = [NSString stringWithFormat:
+        @"https://firestore.googleapis.com/v1/projects/%@/databases/(default)/documents/users/%@?updateMask.fieldPaths=currentPhysicalBuilding",
+        projectId, self.userId];
+
+    NSDictionary *body = @{
+        @"fields": @{
+            @"currentPhysicalBuilding": @{@"stringValue": buildingName ?: @""}
+        }
+    };
+
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:body options:0 error:nil];
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:url]];
+    request.HTTPMethod = @"PATCH";
+    request.HTTPBody = jsonData;
+    [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+
+    [[NSURLSession.sharedSession dataTaskWithRequest:request completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+        if (error) {
+            NSLog(@"[BackgroundLocation] currentPhysicalBuilding update error: %@", error.localizedDescription);
+        } else {
+            NSLog(@"[BackgroundLocation] currentPhysicalBuilding → %@ for user %@", buildingName, self.userId);
+        }
+    }] resume];
+
+    // Also tell Unity so it can update in-memory state
+    NSString *msg = [NSString stringWithFormat:@"%@", buildingName];
+    UnitySendMessage([self.gameObjectName UTF8String], "OnPhysicalBuildingChangedNative", [msg UTF8String]);
+}
+
 - (void)logToFirestore:(NSString *)eventType latitude:(double)lat longitude:(double)lon accuracy:(double)acc extra:(NSString *)extra {
     // Firestore REST API — no SDK needed, works even when Unity is not initialized
     NSString *projectId = @"trials-of-venus";
@@ -203,6 +275,12 @@ static BackgroundLocationPlugin *_instance = nil;
         }
     }];
 
+    // Update currentPhysicalBuilding based on nearest building within radius
+    NSString *nearestBuilding = [self nearestBuildingForLatitude:loc.coordinate.latitude longitude:loc.coordinate.longitude];
+    if (nearestBuilding) {
+        [self updateCurrentPhysicalBuilding:nearestBuilding];
+    }
+
     UnitySendMessage([self.gameObjectName UTF8String], "OnNativeLocationUpdate", [msg UTF8String]);
 }
 
@@ -218,6 +296,9 @@ static BackgroundLocationPlugin *_instance = nil;
 
     // Mark as notified so didUpdateLocations doesn't double-notify
     [self.notifiedBuildings addObject:region.identifier];
+
+    // Update currentPhysicalBuilding in Firestore
+    [self updateCurrentPhysicalBuilding:region.identifier];
 
     // Notify Unity
     UnitySendMessage([self.gameObjectName UTF8String], "OnGeofenceEntered", [region.identifier UTF8String]);
@@ -258,5 +339,11 @@ extern "C" {
     void _RegisterGeofence(const char* identifier, double latitude, double longitude, double radius) {
         NSString *idStr = [NSString stringWithUTF8String:identifier];
         [[BackgroundLocationPlugin sharedInstance] registerGeofenceWithId:idStr latitude:latitude longitude:longitude radius:radius];
+    }
+
+    void _SetUserId(const char* userId) {
+        NSString *uid = [NSString stringWithUTF8String:userId];
+        [BackgroundLocationPlugin sharedInstance].userId = uid;
+        NSLog(@"[BackgroundLocation] userId set: %@", uid);
     }
 }

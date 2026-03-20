@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.Android;
 using UnityEngine.UI;
 using RamRoutes.Services;
+using Firebase.Auth;
 
 public class BuildingProximityDetector : MonoBehaviour
 {
@@ -120,6 +121,16 @@ public class BuildingProximityDetector : MonoBehaviour
             }
 
             Debug.Log("[BuildingProximity] Subscribed to iOS background location + geofences registered");
+
+            // Pass the userId to native plugin so it can update currentPhysicalBuilding via Firestore REST
+            string userId = FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                BackgroundLocationService.Instance.SetUserId(userId);
+            }
+
+            // When native plugin resolves a new physical building, also update via UserService (in-app cache sync)
+            BackgroundLocationService.Instance.OnPhysicalBuildingChanged += OnNativePhysicalBuildingChanged;
         }
 #endif
     }
@@ -159,6 +170,16 @@ public class BuildingProximityDetector : MonoBehaviour
         }
 
         distanceToBuilding = minDistance;
+    }
+
+    private async void OnNativePhysicalBuildingChanged(string buildingName)
+    {
+        string userId = FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+        if (string.IsNullOrEmpty(userId)) return;
+
+        var userService = new UserService();
+        await userService.UpdateCurrentPhysicalBuilding(userId, buildingName);
+        Debug.Log($"[BuildingProximity] UserService.UpdateCurrentPhysicalBuilding → {buildingName}");
     }
 #endif
 

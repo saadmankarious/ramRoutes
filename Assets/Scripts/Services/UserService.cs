@@ -263,6 +263,32 @@ namespace RamRoutes.Services
             }
         }
 
+                public async Task UpdateCurrentPhysicalBuilding(string userId, string buildingName)
+        {
+            try
+            {
+                var userDoc = db.Collection("users").Document(userId);
+                await userDoc.UpdateAsync(new Dictionary<string, object>
+                {
+                    { "currentPhysicalBuilding", buildingName }
+                });
+
+                // Update the cached user profile
+                var user = await GetUserProfileCachedOrRemoteAsync(userId);
+                if (user != null)
+                {
+                    user.currentPhysicalBuilding = buildingName;
+                    string json = JsonUtility.ToJson(user);
+                    PlayerPrefs.SetString("current_user_profile", json);
+                    PlayerPrefs.Save();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Failed to update current building for user {userId}: {ex.Message}");
+            }
+        }
+
         /*
         // DEPRECATED: Whispers are now tracked through inventory items, not user profile
         public async Task<bool> UpdateWhispers(string userId, WhisperType whisperType)

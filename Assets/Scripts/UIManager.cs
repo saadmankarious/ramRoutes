@@ -70,6 +70,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private float celebrationPlaybackSpeed = 1f; // 1f = normal speed, 2f = double speed, 0.5f = half speed
     [SerializeField] private float celebrationDuration = 2f; // Total duration of celebration in seconds (controls both sound and particles)
 
+    [SerializeField] private Text CurrentBuildingName;
     public Text timerText;
     public Text heldItem;
     public GameObject dialogPanel;
@@ -196,6 +197,14 @@ public class UIManager : MonoBehaviour
         else
         {
             PauseGame();
+        }
+    }
+
+    public void SetCurrentBuildingName(string name)
+    {
+        if (CurrentBuildingName != null)
+        {
+            CurrentBuildingName.text = name;
         }
     }
 

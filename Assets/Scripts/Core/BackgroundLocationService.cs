@@ -15,10 +15,15 @@ public class BackgroundLocationService : MonoBehaviour
     /// <summary>Fired when a geofence region is entered (building name).</summary>
     public event Action<string> OnGeofenceTriggered;
 
+    /// <summary>Fired when the native plugin resolves a new currentPhysicalBuilding (building name).</summary>
+    public event Action<string> OnPhysicalBuildingChanged;
+
     public double Latitude { get; private set; }
     public double Longitude { get; private set; }
     public float Accuracy { get; private set; }
     public bool IsRunning { get; private set; }
+    [SerializeField] private string[] geofenceBuildingNames;
+    [SerializeField] private double geofenceRadiusMeters = 100.0;
 
 #if UNITY_IOS && !UNITY_EDITOR
     [DllImport("__Internal")]
@@ -29,6 +34,9 @@ public class BackgroundLocationService : MonoBehaviour
 
     [DllImport("__Internal")]
     private static extern void _RegisterGeofence(string identifier, double latitude, double longitude, double radius);
+
+    [DllImport("__Internal")]
+    private static extern void _SetUserId(string userId);
 #endif
 
     void Awake()
@@ -75,6 +83,17 @@ public class BackgroundLocationService : MonoBehaviour
 #endif
     }
 
+    /// <summary>Pass the logged-in user's Firebase ID to the native plugin so it can update currentPhysicalBuilding.</summary>
+    public void SetUserId(string userId)
+    {
+#if UNITY_IOS && !UNITY_EDITOR
+        _SetUserId(userId);
+        Debug.Log($"[BackgroundLocation] UserId sent to native: {userId}");
+#else
+        Debug.Log($"[BackgroundLocation] SetUserId not supported in editor: {userId}");
+#endif
+    }
+
     /// <summary>Called from native plugin via UnitySendMessage. Do not rename.</summary>
     public void OnNativeLocationUpdate(string message)
     {
@@ -93,6 +112,14 @@ public class BackgroundLocationService : MonoBehaviour
     {
         Debug.Log($"[BackgroundLocation] Geofence entered: {identifier}");
         OnGeofenceTriggered?.Invoke(identifier);
+    }
+
+    /// <summary>Called from native plugin when currentPhysicalBuilding changes. Do not rename.</summary>
+    public void OnPhysicalBuildingChangedNative(string buildingName)
+    {
+        Debug.Log($"[BackgroundLocation] Physical building changed: {buildingName}");
+        OnPhysicalBuildingChanged?.Invoke(buildingName);
+        UIManager.Instance.SetCurrentBuildingName(buildingName);
     }
 
     void OnDestroy()
