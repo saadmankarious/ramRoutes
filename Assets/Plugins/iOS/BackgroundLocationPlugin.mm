@@ -31,11 +31,8 @@ static BackgroundLocationPlugin *_instance = nil;
     self.locationManager.allowsBackgroundLocationUpdates = YES;
     self.locationManager.pausesLocationUpdatesAutomatically = NO;
 
-    if ([CLLocationManager authorizationStatus] == kCLAuthorizationStatusNotDetermined) {
-        [self.locationManager requestAlwaysAuthorization];
-    } else {
-        [self.locationManager startUpdatingLocation];
-    }
+    // Just request authorization — the delegate callback will start updates
+    [self.locationManager requestAlwaysAuthorization];
 }
 
 - (void)stop {
@@ -63,7 +60,9 @@ static BackgroundLocationPlugin *_instance = nil;
 
 #pragma mark - CLLocationManagerDelegate
 
-- (void)locationManager:(CLLocationManager *)manager didChangeAuthorizationStatus:(CLAuthorizationStatus)status {
+- (void)locationManagerDidChangeAuthorization:(CLLocationManager *)manager {
+    CLAuthorizationStatus status = manager.authorizationStatus;
+    NSLog(@"[BackgroundLocation] Authorization status: %d", (int)status);
     if (status == kCLAuthorizationStatusAuthorizedAlways || status == kCLAuthorizationStatusAuthorizedWhenInUse) {
         [self.locationManager startUpdatingLocation];
     }
