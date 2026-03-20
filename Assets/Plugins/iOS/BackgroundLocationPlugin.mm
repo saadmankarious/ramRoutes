@@ -1,9 +1,10 @@
 #import <CoreLocation/CoreLocation.h>
+#import <UserNotifications/UserNotifications.h>
 
 // Forward declaration for Unity's message function
 extern void UnitySendMessage(const char* obj, const char* method, const char* msg);
 
-@interface BackgroundLocationPlugin : NSObject <CLLocationManagerDelegate>
+@interface BackgroundLocationPlugin : NSObject <CLLocationManagerDelegate, UNUserNotificationCenterDelegate>
 @property (strong, nonatomic) CLLocationManager *locationManager;
 @property (copy, nonatomic) NSString *gameObjectName;
 @property (assign, nonatomic) BOOL preciseTrackingActive;
@@ -36,6 +37,48 @@ static BackgroundLocationPlugin *_instance = nil;
 
     // Just request authorization — the delegate callback will start updates
     [self.locationManager requestAlwaysAuthorization];
+
+    // Request notification permission
+    UNUserNotificationCenter *center = [UNUserNotificationCenter currentNotificationCenter];
+    center.delegate = self;
+    [center requestAuthorizationWithOptions:(UNAuthorizationOptionAlert | UNAuthorizationOptionSound | UNAuthorizationOptionBadge)
+                          completionHandler:^(BOOL granted, NSError * _Nullable error) {
+        if (granted) {
+            NSLog(@"[BackgroundLocation] Notification permission granted");
+        } else {
+            NSLog(@"[BackgroundLocation] Notification permission denied: %@", error.localizedDescription);
+        }
+    }];
+}
+
+#pragma mark - UNUserNotificationCenterDelegate
+
+// Show notification even when app is in foreground
+- (void)userNotificationCenter:(UNUserNotificationCenter *)center
+       willPresentNotification:(UNNotification *)notification
+         withCompletionHandler:(void (^)(UNNotificationPresentationOptions))completionHandler {
+    completionHandler(UNNotificationPresentationOptionBanner | UNNotificationPresentationOptionSound);
+}
+
+- (void)sendLocalNotification:(NSString *)buildingName {
+    UNMutableNotificationContent *content = [[UNMutableNotificationContent alloc] init];
+    content.title = @"Ram Routes";
+    content.body = [NSString stringWithFormat:@"You're near %@! Open the app to start your adventure.", buildingName];
+    content.sound = [UNNotificationSound defaultSound];
+
+    // Fire immediately (1 second delay required for time-interval trigger)
+    UNTimeIntervalNotificationTrigger *trigger = [UNTimeIntervalNotificationTrigger triggerWithTimeInterval:1 repeats:NO];
+
+    NSString *requestId = [NSString stringWithFormat:@"geofence-%@-%f", buildingName, [[NSDate date] timeIntervalSince1970]];
+    UNNotificationRequest *request = [UNNotificationRequest requestWithIdentifier:requestId content:content trigger:trigger];
+
+    [[UNUserNotificationCenter currentNotificationCenter] addNotificationRequest:request withCompletionHandler:^(NSError * _Nullable error) {
+        if (error) {
+            NSLog(@"[BackgroundLocation] Local notification error: %@", error.localizedDescription);
+        } else {
+            NSLog(@"[BackgroundLocation] Local notification scheduled for: %@", buildingName);
+        }
+    }];
 }
 
 - (void)stop {
@@ -132,6 +175,9 @@ static BackgroundLocationPlugin *_instance = nil;
     // Log geofence entry to Firestore
     CLCircularRegion *circular = (CLCircularRegion *)region;
     [self logToFirestore:@"geofence_entered" latitude:circular.center.latitude longitude:circular.center.longitude accuracy:0 extra:region.identifier];
+
+    // Fire local notification (works even after app kill)
+    [self sendLocalNotification:region.identifier];
 
     // Notify Unity
     UnitySendMessage([self.gameObjectName UTF8String], "OnGeofenceEntered", [region.identifier UTF8String]);
