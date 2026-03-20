@@ -107,13 +107,15 @@ public class BuildingProximityDetector : MonoBehaviour
             BackgroundLocationService.Instance.OnLocationUpdated += OnBackgroundLocationUpdate;
 
             // Register each building as a geofence (survives app kill, max 20)
+            // Use 150m radius for geofence wake-up — iOS is unreliable below 100m
+            // Precise detection still uses building.detectionRadius once GPS is active
             foreach (var building in buildings)
             {
                 BackgroundLocationService.Instance.RegisterBuildingGeofence(
                     building.name,
                     building.entranceGPS.x,
                     building.entranceGPS.y,
-                    building.detectionRadius
+                    150.0
                 );
             }
 

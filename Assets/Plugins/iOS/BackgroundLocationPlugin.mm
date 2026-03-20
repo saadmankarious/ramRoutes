@@ -7,6 +7,8 @@ extern void UnitySendMessage(const char* obj, const char* method, const char* ms
 @property (strong, nonatomic) CLLocationManager *locationManager;
 @property (copy, nonatomic) NSString *gameObjectName;
 @property (assign, nonatomic) BOOL preciseTrackingActive;
+@property (copy, nonatomic) NSString *deviceId;
+@property (strong, nonatomic) NSDate *lastFirestoreLog;
 @end
 
 static BackgroundLocationPlugin *_instance = nil;
@@ -23,6 +25,7 @@ static BackgroundLocationPlugin *_instance = nil;
 - (void)startWithGameObject:(NSString *)goName distanceFilter:(float)distFilter {
     self.gameObjectName = goName;
     self.preciseTrackingActive = YES;
+    self.deviceId = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
 
     self.locationManager = [[CLLocationManager alloc] init];
     self.locationManager.delegate = self;
@@ -58,6 +61,42 @@ static BackgroundLocationPlugin *_instance = nil;
     NSLog(@"[BackgroundLocation] Geofence registered: %@ (%.6f, %.6f, %.0fm)", identifier, lat, lon, clampedRadius);
 }
 
+- (void)logToFirestore:(NSString *)eventType latitude:(double)lat longitude:(double)lon accuracy:(double)acc extra:(NSString *)extra {
+    // Firestore REST API — no SDK needed, works even when Unity is not initialized
+    NSString *projectId = @"trials-of-venus";
+    NSString *url = [NSString stringWithFormat:
+        @"https://firestore.googleapis.com/v1/projects/%@/databases/(default)/documents/background-location-logs",
+        projectId];
+
+    NSString *now = [[NSISO8601DateFormatter new] stringFromDate:[NSDate date]];
+
+    NSDictionary *body = @{
+        @"fields": @{
+            @"deviceId":  @{@"stringValue": self.deviceId ?: @"unknown"},
+            @"eventType": @{@"stringValue": eventType},
+            @"latitude":  @{@"doubleValue": @(lat)},
+            @"longitude": @{@"doubleValue": @(lon)},
+            @"accuracy":  @{@"doubleValue": @(acc)},
+            @"extra":     @{@"stringValue": extra ?: @""},
+            @"timestamp": @{@"timestampValue": now}
+        }
+    };
+
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:body options:0 error:nil];
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:url]];
+    request.HTTPMethod = @"POST";
+    request.HTTPBody = jsonData;
+    [request setValue:@"application/json" forHTTPHeaderField:@"Content-Type"];
+
+    [[NSURLSession.sharedSession dataTaskWithRequest:request completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+        if (error) {
+            NSLog(@"[BackgroundLocation] Firestore log error: %@", error.localizedDescription);
+        } else {
+            NSLog(@"[BackgroundLocation] Firestore log OK: %@", eventType);
+        }
+    }] resume];
+}
+
 #pragma mark - CLLocationManagerDelegate
 
 - (void)locationManagerDidChangeAuthorization:(CLLocationManager *)manager {
@@ -76,11 +115,23 @@ static BackgroundLocationPlugin *_instance = nil;
                      loc.horizontalAccuracy];
 
     NSLog(@"[BackgroundLocation] Update: %@", msg);
+
+    // Throttle Firestore logging to once every 30 seconds
+    NSDate *now = [NSDate date];
+    if (!self.lastFirestoreLog || [now timeIntervalSinceDate:self.lastFirestoreLog] >= 30.0) {
+        self.lastFirestoreLog = now;
+        [self logToFirestore:@"location_update" latitude:loc.coordinate.latitude longitude:loc.coordinate.longitude accuracy:loc.horizontalAccuracy extra:@""];
+    }
+
     UnitySendMessage([self.gameObjectName UTF8String], "OnNativeLocationUpdate", [msg UTF8String]);
 }
 
 - (void)locationManager:(CLLocationManager *)manager didEnterRegion:(CLRegion *)region {
     NSLog(@"[BackgroundLocation] Entered geofence: %@", region.identifier);
+
+    // Log geofence entry to Firestore
+    CLCircularRegion *circular = (CLCircularRegion *)region;
+    [self logToFirestore:@"geofence_entered" latitude:circular.center.latitude longitude:circular.center.longitude accuracy:0 extra:region.identifier];
 
     // Notify Unity
     UnitySendMessage([self.gameObjectName UTF8String], "OnGeofenceEntered", [region.identifier UTF8String]);
