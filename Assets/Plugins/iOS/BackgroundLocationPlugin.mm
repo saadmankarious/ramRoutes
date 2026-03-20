@@ -10,6 +10,9 @@ extern void UnitySendMessage(const char* obj, const char* method, const char* ms
 @property (assign, nonatomic) BOOL preciseTrackingActive;
 @property (copy, nonatomic) NSString *deviceId;
 @property (strong, nonatomic) NSDate *lastFirestoreLog;
+@property (strong, nonatomic) NSMutableDictionary *registeredBuildings; // name → {lat, lon, radius}
+@property (strong, nonatomic) NSMutableSet *notifiedBuildings;          // buildings already notified (avoid spam)
+@property (strong, nonatomic) NSDate *lastNotificationReset;            // reset notified set periodically
 @end
 
 static BackgroundLocationPlugin *_instance = nil;
@@ -27,6 +30,9 @@ static BackgroundLocationPlugin *_instance = nil;
     self.gameObjectName = goName;
     self.preciseTrackingActive = YES;
     self.deviceId = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
+    self.registeredBuildings = [NSMutableDictionary dictionary];
+    self.notifiedBuildings = [NSMutableSet set];
+    self.lastNotificationReset = [NSDate date];
 
     self.locationManager = [[CLLocationManager alloc] init];
     self.locationManager.delegate = self;
@@ -102,6 +108,13 @@ static BackgroundLocationPlugin *_instance = nil;
 
     [self.locationManager startMonitoringForRegion:region];
     NSLog(@"[BackgroundLocation] Geofence registered: %@ (%.6f, %.6f, %.0fm)", identifier, lat, lon, clampedRadius);
+
+    // Store building location for proximity checks in didUpdateLocations
+    self.registeredBuildings[identifier] = @{
+        @"latitude": @(lat),
+        @"longitude": @(lon),
+        @"radius": @(radius)  // use the original requested radius for proximity (not the clamped geofence radius)
+    };
 }
 
 - (void)logToFirestore:(NSString *)eventType latitude:(double)lat longitude:(double)lon accuracy:(double)acc extra:(NSString *)extra {
@@ -166,6 +179,30 @@ static BackgroundLocationPlugin *_instance = nil;
         [self logToFirestore:@"location_update" latitude:loc.coordinate.latitude longitude:loc.coordinate.longitude accuracy:loc.horizontalAccuracy extra:@""];
     }
 
+    // Reset notified buildings every 10 minutes so they can re-trigger
+    if (!self.lastNotificationReset || [now timeIntervalSinceDate:self.lastNotificationReset] >= 600.0) {
+        [self.notifiedBuildings removeAllObjects];
+        self.lastNotificationReset = now;
+        NSLog(@"[BackgroundLocation] Notification cooldowns reset");
+    }
+
+    // Check proximity to each registered building
+    [self.registeredBuildings enumerateKeysAndObjectsUsingBlock:^(NSString *name, NSDictionary *info, BOOL *stop) {
+        double bLat = [info[@"latitude"] doubleValue];
+        double bLon = [info[@"longitude"] doubleValue];
+        double bRadius = [info[@"radius"] doubleValue];
+
+        CLLocation *buildingLoc = [[CLLocation alloc] initWithLatitude:bLat longitude:bLon];
+        CLLocationDistance distance = [loc distanceFromLocation:buildingLoc];
+
+        if (distance <= bRadius && ![self.notifiedBuildings containsObject:name]) {
+            [self.notifiedBuildings addObject:name];
+            [self sendLocalNotification:name];
+            [self logToFirestore:@"proximity_notification" latitude:loc.coordinate.latitude longitude:loc.coordinate.longitude accuracy:loc.horizontalAccuracy extra:name];
+            NSLog(@"[BackgroundLocation] Proximity notification fired for %@ (%.0fm away)", name, distance);
+        }
+    }];
+
     UnitySendMessage([self.gameObjectName UTF8String], "OnNativeLocationUpdate", [msg UTF8String]);
 }
 
@@ -178,6 +215,9 @@ static BackgroundLocationPlugin *_instance = nil;
 
     // Fire local notification (works even after app kill)
     [self sendLocalNotification:region.identifier];
+
+    // Mark as notified so didUpdateLocations doesn't double-notify
+    [self.notifiedBuildings addObject:region.identifier];
 
     // Notify Unity
     UnitySendMessage([self.gameObjectName UTF8String], "OnGeofenceEntered", [region.identifier UTF8String]);
