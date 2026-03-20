@@ -515,7 +515,7 @@ namespace RamRoutes.Services
             {
                 // Only attempt notifications if we're in the game scene
                 var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-                if (currentScene != "LevelRPG")
+                if (currentScene != "DCRPG")
                 {
                     return;
                 }
@@ -559,7 +559,7 @@ namespace RamRoutes.Services
             {
                 // Only attempt notifications if we're in the game scene
                 var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-                if (currentScene != "LevelRPG")
+                if (currentScene != "DCRPG")
                 {
                     return;
                 }
@@ -601,7 +601,7 @@ namespace RamRoutes.Services
             {
                 // Only attempt notifications if we're in the game scene
                 var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-                if (currentScene != "LevelRPG")
+                if (currentScene != "DCRPG")
                 {
                     return;
                 }

@@ -152,11 +152,6 @@ public class SkinManager : MonoBehaviour
         {
             // Ensure we're in the correct scene for player updates
             var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-            if (currentScene != "LevelRPG")
-            {
-                Debug.Log($"SkinManager: Skipping skin change in scene: {currentScene}");
-                return;
-            }
 
             Debug.Log($"SkinManager: Updating player skin to: {newSkin}");
             
@@ -199,11 +194,6 @@ public class SkinManager : MonoBehaviour
         {
             // Ensure we're in the correct scene for player updates
             var currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
-            if (currentScene != "LevelRPG")
-            {
-                Debug.Log($"SkinManager: Skipping accessory change in scene: {currentScene}");
-                return;
-            }
 
             Debug.Log($"SkinManager: Updating player accessory to: {newAccessory}");
             

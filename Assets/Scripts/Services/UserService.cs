@@ -57,6 +57,7 @@ namespace RamRoutes.Services
                     int coins = data.ContainsKey("coins") ? Convert.ToInt32(data["coins"]) : 0;
                     int knowledgePoints = data.ContainsKey("knowledgePoints") ? Convert.ToInt32(data["knowledgePoints"]) : 0;
                     string currentBuilding = data.ContainsKey("currentBuilding") && data["currentBuilding"] != null ? data["currentBuilding"].ToString() : "";
+                    string currentPhysicalBuilding = data.ContainsKey("currentPhysicalBuilding") && data["currentPhysicalBuilding"] != null ? data["currentPhysicalBuilding"].ToString() : "";
                     string residenceHall = data.ContainsKey("residenceHall") && data["residenceHall"] != null ? data["residenceHall"].ToString() : "Not specified";
                     string bio = data.ContainsKey("bio") && data["bio"] != null ? data["bio"].ToString() : "";
                     
@@ -81,6 +82,7 @@ namespace RamRoutes.Services
                     user.coins = coins;
                     user.knowledgePoints = knowledgePoints;
                     user.currentBuilding = currentBuilding;
+                    user.currentPhysicalBuilding = currentPhysicalBuilding;
                     user.residenceHall = residenceHall;
                     user.bio = bio;
                     user.friends = friends;

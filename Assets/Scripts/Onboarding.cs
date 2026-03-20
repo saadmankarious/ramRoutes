@@ -373,7 +373,7 @@ public class OnboardingManager : MonoBehaviour
     public void StartGame()
     {
         Time.timeScale = 1f;
-        SceneManager.LoadScene("LevelRPG");
+        SceneManager.LoadScene("DCRPG");
     }
 
     private AudioClip GetMusicForStage(Stage stage)

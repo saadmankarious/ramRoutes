@@ -837,6 +837,67 @@ public class UIManager : MonoBehaviour
         
         // Reset the fade overlay if it exists
         ResetFadeOverlay();
+
+        // Move player to their current physical building (from Firestore)
+        yield return StartCoroutine(MovePlayerToCurrentPhysicalBuilding());
+    }
+
+    /// <summary>
+    /// Fetches the user's currentPhysicalBuilding from Firestore and smoothly moves the player there.
+    /// </summary>
+    private IEnumerator MovePlayerToCurrentPhysicalBuilding()
+    {
+        var firebaseUser = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser;
+        if (firebaseUser == null)
+        {
+            Debug.Log("[UIManager] No Firebase user logged in — skipping move to physical building");
+            yield break;
+        }
+
+        var userService = new UserService();
+        var task = userService.RetrieveUserById(firebaseUser.UserId);
+        yield return new WaitUntil(() => task.IsCompleted);
+
+        if (task.IsFaulted || task.Result == null)
+        {
+            Debug.LogWarning("[UIManager] Could not retrieve user for physical building move");
+            yield break;
+        }
+
+        string physicalBuilding = task.Result.currentPhysicalBuilding;
+        if (string.IsNullOrEmpty(physicalBuilding))
+        {
+            Debug.Log("[UIManager] No currentPhysicalBuilding set — player stays at default position");
+            yield break;
+        }
+
+        // Find the matching BuildingInteraction in the scene
+        BuildingInteraction targetBuilding = null;
+        if (buildingGatePairs != null)
+        {
+            foreach (var pair in buildingGatePairs)
+            {
+                if (pair?.buildings == null) continue;
+                foreach (var building in pair.buildings)
+                {
+                    if (building != null && string.Equals(building.buildingName, physicalBuilding, System.StringComparison.OrdinalIgnoreCase))
+                    {
+                        targetBuilding = building;
+                        break;
+                    }
+                }
+                if (targetBuilding != null) break;
+            }
+        }
+
+        if (targetBuilding == null)
+        {
+            Debug.LogWarning($"[UIManager] BuildingInteraction not found for '{physicalBuilding}' — player stays at default position");
+            yield break;
+        }
+
+        Debug.Log($"[UIManager] Moving player to currentPhysicalBuilding: {physicalBuilding}");
+        yield return StartCoroutine(targetBuilding.MovePlayerToBuildingSmooth());
     }
 
     /// <summary>

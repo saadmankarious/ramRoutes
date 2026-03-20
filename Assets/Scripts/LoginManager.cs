@@ -1809,12 +1809,12 @@ public class LoginManager : MonoBehaviour
         try
         {
             await FirestoreUtility.SaveGameAttempt(playerName);
-            SceneManager.LoadScene("LevelRPG");
+            SceneManager.LoadScene("DCRPG");
         }
         catch (System.Exception e)
         {
             Debug.LogError($"Failed to save attempt: {e.Message}");
-            SceneManager.LoadScene("LevelRPG");
+            SceneManager.LoadScene("DCRPG");
         }
     }
 
