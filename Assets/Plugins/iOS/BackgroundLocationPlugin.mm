@@ -55,6 +55,7 @@ static BackgroundLocationPlugin *_instance = nil;
                      loc.coordinate.longitude,
                      loc.horizontalAccuracy];
 
+    NSLog(@"[BackgroundLocation] Update: %@", msg);
     UnitySendMessage([self.gameObjectName UTF8String], "OnNativeLocationUpdate", [msg UTF8String]);
 }
 
