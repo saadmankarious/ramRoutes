@@ -105,7 +105,19 @@ public class BuildingProximityDetector : MonoBehaviour
         {
             BackgroundLocationService.Instance.StartTracking(5f);
             BackgroundLocationService.Instance.OnLocationUpdated += OnBackgroundLocationUpdate;
-            Debug.Log("[BuildingProximity] Subscribed to iOS background location");
+
+            // Register each building as a geofence (survives app kill, max 20)
+            foreach (var building in buildings)
+            {
+                BackgroundLocationService.Instance.RegisterBuildingGeofence(
+                    building.name,
+                    building.entranceGPS.x,
+                    building.entranceGPS.y,
+                    building.detectionRadius
+                );
+            }
+
+            Debug.Log("[BuildingProximity] Subscribed to iOS background location + geofences registered");
         }
 #endif
     }
