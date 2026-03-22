@@ -248,7 +248,7 @@ static BackgroundLocationPlugin *_instance = nil;
     NSDate *now = [NSDate date];
     if (!self.lastFirestoreLog || [now timeIntervalSinceDate:self.lastFirestoreLog] >= 30.0) {
         self.lastFirestoreLog = now;
-        [self logToFirestore:@"location_update" latitude:loc.coordinate.latitude longitude:loc.coordinate.longitude accuracy:loc.horizontalAccuracy extra:@""];
+        // [self logToFirestore:@"location_update" latitude:loc.coordinate.latitude longitude:loc.coordinate.longitude accuracy:loc.horizontalAccuracy extra:@""];
     }
 
     // Reset notified buildings every 10 minutes so they can re-trigger
@@ -270,7 +270,7 @@ static BackgroundLocationPlugin *_instance = nil;
         if (distance <= bRadius && ![self.notifiedBuildings containsObject:name]) {
             [self.notifiedBuildings addObject:name];
             [self sendLocalNotification:name];
-            [self logToFirestore:@"proximity_notification" latitude:loc.coordinate.latitude longitude:loc.coordinate.longitude accuracy:loc.horizontalAccuracy extra:name];
+            // [self logToFirestore:@"proximity_notification" latitude:loc.coordinate.latitude longitude:loc.coordinate.longitude accuracy:loc.horizontalAccuracy extra:name];
             NSLog(@"[BackgroundLocation] Proximity notification fired for %@ (%.0fm away)", name, distance);
         }
     }];
