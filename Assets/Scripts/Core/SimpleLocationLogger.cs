@@ -116,7 +116,7 @@ public class BuildingProximityDetector : MonoBehaviour
                     building.name,
                     building.entranceGPS.x,
                     building.entranceGPS.y,
-                    150.0
+                    20.0
                 );
             }
 
