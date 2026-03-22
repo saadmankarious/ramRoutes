@@ -158,6 +158,12 @@ public class BuildingInteraction : MonoBehaviour
         {
             BackgroundLocationService.Instance.OnPhysicalBuildingChanged += OnPhysicalBuildingChanged;
         }
+
+        // Show RAMs inside building by default on game start
+        if (ramsManager != null)
+        {
+            ramsManager.OnBuildingActivated();
+        }
     }
 
 
