@@ -40,19 +40,23 @@ public class SegmentedJoystick : MonoBehaviour, IDragHandler, IPointerDownHandle
 
         if (direction.magnitude > deadZone)
         {
-            // Clamp handle to radius
-            handle.anchoredPosition = direction * radius;
-
             // Determine 4-way direction (no diagonals)
             Direction newDir;
+            Vector2 snappedDirection;
+
             if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
             {
                 newDir = direction.x > 0 ? Direction.Right : Direction.Left;
+                snappedDirection = new Vector2(Mathf.Sign(direction.x), 0f);
             }
             else
             {
                 newDir = direction.y > 0 ? Direction.Up : Direction.Down;
+                snappedDirection = new Vector2(0f, Mathf.Sign(direction.y));
             }
+
+            // Snap handle to cardinal direction only
+            handle.anchoredPosition = snappedDirection * radius;
 
             if (newDir != currentDirection)
             {
