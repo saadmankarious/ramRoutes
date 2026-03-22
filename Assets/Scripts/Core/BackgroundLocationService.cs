@@ -73,7 +73,7 @@ public class BackgroundLocationService : MonoBehaviour
     }
 
     /// <summary>Register a geofence around a building. Survives app kill. Max 20 regions on iOS.</summary>
-    public void RegisterBuildingGeofence(string buildingName, double latitude, double longitude, double radiusMeters = 100.0)
+    public void RegisterBuildingGeofence(string buildingName, double latitude, double longitude, double radiusMeters = 20.0)
     {
 #if UNITY_IOS && !UNITY_EDITOR
         _RegisterGeofence(buildingName, latitude, longitude, radiusMeters);

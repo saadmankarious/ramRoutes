@@ -246,10 +246,10 @@ static BackgroundLocationPlugin *_instance = nil;
 
     // Throttle Firestore logging to once every 30 seconds
     NSDate *now = [NSDate date];
-    // if (!self.lastFirestoreLog || [now timeIntervalSinceDate:self.lastFirestoreLog] >= 30.0) {
-    //     self.lastFirestoreLog = now;
-    //     [self logToFirestore:@"location_update" latitude:loc.coordinate.latitude longitude:loc.coordinate.longitude accuracy:loc.horizontalAccuracy extra:@""];
-    // }
+    if (!self.lastFirestoreLog || [now timeIntervalSinceDate:self.lastFirestoreLog] >= 30.0) {
+        self.lastFirestoreLog = now;
+        // [self logToFirestore:@"location_update" latitude:loc.coordinate.latitude longitude:loc.coordinate.longitude accuracy:loc.horizontalAccuracy extra:@""];
+    }
 
     // Reset notified buildings every 10 minutes so they can re-trigger
     if (!self.lastNotificationReset || [now timeIntervalSinceDate:self.lastNotificationReset] >= 600.0) {
