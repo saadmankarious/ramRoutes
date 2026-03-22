@@ -16,7 +16,6 @@ public class UIManager : MonoBehaviour
     [Header("Audio Clips")]
     public AudioClip collectableSound;
 
-    // Stage-specific time limits (seconds)
     private Dictionary<Stage, int> stageTimeLimits = new Dictionary<Stage, int>
     {
         { Stage.TC, 0 },
@@ -29,31 +28,31 @@ public class UIManager : MonoBehaviour
 
     [Header("UI References")]
     public Text coinsText;
-    public Text usernameAndHallText; // New text field for username and hall
+    public Text usernameAndHallText;
 
-    public Text knowledgePointsText; // New text field for knowledge points
+    public Text knowledgePointsText;
     public ParticleSystem teleportEffect;
     public ParticleSystem celebrationEffect1;
     public ParticleSystem celebrationEffect2;
     public float padding = 2f;
     
     [Header("Building UI")]
-    public Text buildingTitle;      // Moved from BuildingInteraction
-    public Text buildingDescription; // Moved from BuildingInteraction
-    public Text buildingUnlockedMessage; // Moved from BuildingInteraction
-    public Image npcImage;          // NPC image in building unlocked dialog
-    public Text npcTitle;           // NPC title in building unlocked dialog
-    public Text coinsGained;           // NPC title in building unlocked dialog
-    public Text kbGained;           // NPC title in building unlocked dialog
-    public Text coinsGainedBuildingStats;           // NPC title in building unlocked dialog
-    public Text kbGainedBuildingStats;           // NPC title in building unlocked dialog
+    public Text buildingTitle;
+    public Text buildingDescription;
+    public Text buildingUnlockedMessage;
+    public Image npcImage;
+    public Text npcTitle;
+    public Text coinsGained;
+    public Text kbGained;
+    public Text coinsGainedBuildingStats;
+    public Text kbGainedBuildingStats;
     
     [Header("User Avatar")]
-    public Image userAvatarImage;   // Reference to the user avatar image component
-    public Sprite defaultAvatarSprite; // Default avatar sprite (rank 0 or undefined)
-    public Sprite rank1AvatarSprite; // Rank 1 avatar sprite (0-999 combined points)
-    public Sprite rank2AvatarSprite; // Rank 2 avatar sprite (1000-1999 combined points)
-    public Sprite rank3AvatarSprite; // Rank 3 avatar sprite (2000+ combined points)
+    public Image userAvatarImage;
+    public Sprite defaultAvatarSprite;
+    public Sprite rank1AvatarSprite;
+    public Sprite rank2AvatarSprite;
+    public Sprite rank3AvatarSprite;
 
     [Header("Current Users Display")]
     public GameObject currentUsersPanel;
@@ -67,8 +66,8 @@ public class UIManager : MonoBehaviour
     public Button rankUpCloseButton;
 
     [Header("Celebration Settings")]
-    [SerializeField] private float celebrationPlaybackSpeed = 1f; // 1f = normal speed, 2f = double speed, 0.5f = half speed
-    [SerializeField] private float celebrationDuration = 2f; // Total duration of celebration in seconds (controls both sound and particles)
+    [SerializeField] private float celebrationPlaybackSpeed = 1f;
+    [SerializeField] private float celebrationDuration = 2f;
 
     [SerializeField] private Text CurrentBuildingName;
     public Text timerText;
@@ -78,8 +77,8 @@ public class UIManager : MonoBehaviour
     public Text quickUpdateText;
     public GameObject buildingStats;
     public Text dialogText;
-    public Button dialogActionButton; // Action button for dialogs
-    public Text dialogActionButtonText; // Text component of the action button
+    public Button dialogActionButton;
+    public Text dialogActionButtonText;
     public GameObject timeUpMenu;
     public GameObject trialCompleteMenu;
     public GameObject gamePauseMenu;
@@ -97,24 +96,22 @@ public class UIManager : MonoBehaviour
     public AudioClip timeExpiredSound;
     
     [Header("Background Music Settings")]
-    [SerializeField] private AudioClip tcStageMusic;        // Town Center music
-    [SerializeField] private AudioClip easternCampusMusic; // Eastern Campus music
-    [SerializeField] private AudioClip firstStreetMusic;   // First Street music
-    [SerializeField] private AudioClip pedmallMusic;       // Pedmall music
-    [SerializeField] private AudioClip terminalMusic;      // Terminal stage music
-    [SerializeField] private float backgroundMusicVolume = 0.3f; // Lower volume to avoid dramatic pulses
-    [SerializeField] private float musicFadeInDuration = 2f; // Smooth fade in to avoid harsh starts
+    [SerializeField] private AudioClip tcStageMusic;
+    [SerializeField] private AudioClip easternCampusMusic;
+    [SerializeField] private AudioClip firstStreetMusic;
+    [SerializeField] private AudioClip pedmallMusic;
+    [SerializeField] private AudioClip terminalMusic;
+    [SerializeField] private float backgroundMusicVolume = 0.3f;
+    [SerializeField] private float musicFadeInDuration = 2f;
     
     private AudioSource backgroundMusicSource;
 
     [Header("Typing Sound Settings")]
     [SerializeField] private float typingSoundInterval = 0.15f;
     
-    // Static cache for current users per building
     private static Dictionary<string, List<User>> cachedCurrentUsersPerBuilding = new Dictionary<string, List<User>>();
     private static Dictionary<string, bool> currentUsersLoadedPerBuilding = new Dictionary<string, bool>();
     
-    // Dictionary to track active popup animations to prevent conflicts
     private Dictionary<GameObject, Coroutine> activePopupAnimations = new Dictionary<GameObject, Coroutine>();
     private Coroutine autoScrollCoroutine;
     
@@ -127,18 +124,16 @@ public class UIManager : MonoBehaviour
     public UnityEvent<BuildingInteraction> OnBuildingUnlocked = new UnityEvent<BuildingInteraction>();
 
     [Header("Mobile NPC Interaction")]
-    public Button mobileInteractButton; // Mobile button for NPC interactions
+    public Button mobileInteractButton;
     
     [Header("Progress Bar")]
-    public GameObject[] progressBarImages; // Array of progress bar images to activate sequentially
-    public Text currentStageText; // Text to display current game stage (e.g., TC, CC, SC)
+    public GameObject[] progressBarImages;
+    public Text currentStageText;
     
     [Header("Building Gates")]
     [Tooltip("Set pairs of BuildingInteraction and its connected Gate. UIManager will unlock the mapped gate when that building is unlocked.")]
-    public BuildingGatePair[] buildingGatePairs;
 
     [Header("Debug / Startup")]
-    [Tooltip("If enabled, clears the saved game stage from PlayerPrefs on startup before initialization.")]
     [SerializeField] private bool clearStageOnStart = false;
     
     [Header("Scene Transition Settings")]
@@ -151,43 +146,32 @@ public class UIManager : MonoBehaviour
     [Tooltip("Duration of the fade effect before scene transition.")]
     [SerializeField] private float fadeEffectDuration = 2f;
 
-    [System.Serializable]
-    public class BuildingGatePair
-    {
-        public BuildingInteraction[] buildings; // Multiple buildings required to unlock this gate
-        public Gate gate;
-    }
+    [SerializeField] private BuildingInteraction[] buildings;
 
     private Dictionary<BuildingInteraction, Gate> buildingGateMap;
 
     private Coroutine typingCoroutine;
     private Coroutine objectiveRepeatCoroutine;
     private Coroutine timerCoroutine;
-    public GameObject aros; // Reference to AROS prefab (static display)
-    private int buildingsUnlockedCount = 0; // Track number of buildings unlocked
-    private Coroutine dialogCoroutine; // Track the entire dialog sequence
-    private bool isDialogActive = false; // Flag to prevent overlapping dialogs
-    private System.Action currentDialogAction; // Store current dialog action
-    private bool keepArosVisible = false; // Flag to keep AROS visible during unlock sequences
+    public GameObject aros;
+    private int buildingsUnlockedCount = 0;
+    private Coroutine dialogCoroutine;
+    private bool isDialogActive = false;
+    private System.Action currentDialogAction;
+    private bool keepArosVisible = false;
     
-    // Mobile NPC interaction state
-    private NpcAutoMovement currentInteractingNPC; // Currently registered NPC for mobile interaction
+    private NpcAutoMovement currentInteractingNPC;
     
     private bool isPaused = false;
 
-    // New: defer scene change until building unlock flow completes
     private bool pendingSceneAfterUnlock = false;
-    // New: scene change should only occur after progress bar reveal AND unlock panel is closed
     private bool readyToLeaveAfterPanelClose = false;
 
-    // Viewing mode state (prevents scene changes while inspecting a building)
     private bool isInBuildingViewingMode = false;
     private string currentViewedBuilding = null;
     
-    // Deferred stage change system
     private Coroutine sceneTransitionDelayCoroutine;
 
-    // Call this to toggle pause menu
     public void TogglePauseMenu()
     {
         if (isPaused)
@@ -208,32 +192,28 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    // Pauses the game and shows the menu
     public void PauseGame()
     {
-        Time.timeScale = 0f; // Stop the game
+        Time.timeScale = 0f;
         gamePauseMenu.SetActive(true);
         isPaused = true;
     }
 
-    // Resumes the game and hides the menu
     public void ResumeGame()
     {
-        Time.timeScale = 1f; // Resume the game
+        Time.timeScale = 1f;
         gamePauseMenu.SetActive(false);
         isPaused = false;
     }
 
-    // Hides the pause menu, resumes game if needed
     public void hidePauseMenu()
     {
         ResumeGame();
     }
 
-    // Exits to the landing scene, also resumes time
     public void exitPlay()
     {
-        Time.timeScale = 1f; // Just in case it was paused
+        Time.timeScale = 1f;
         SceneManager.LoadScene("Landing");
     }
 
@@ -254,30 +234,24 @@ public class UIManager : MonoBehaviour
             audioSource = gameObject.AddComponent<AudioSource>();
         }
         
-        // Initialize background music source separately
         if (backgroundMusicSource == null)
         {
             GameObject musicObject = new GameObject("BackgroundMusic");
             musicObject.transform.SetParent(transform);
             backgroundMusicSource = musicObject.AddComponent<AudioSource>();
             backgroundMusicSource.loop = true;
-            backgroundMusicSource.volume = 0f; // Start at 0 for smooth fade-in
+            backgroundMusicSource.volume = 0f;
             backgroundMusicSource.playOnAwake = false;
         }
         
-        // Clean up any conflicting audio settings from other scripts
         CleanupConflictingAudioSettings();
         
-        // Load building data from JSON
         BuildingDataManager.LoadBuildingData();
         
-        // Initialize AROS as static element
         if (aros != null)
         {
-            // Set default scale
             aros.transform.localScale = new Vector3(1f, 1f, 1f);
             
-            // Make sure color is fully opaque
             Image image = aros.GetComponent<Image>();
             if (image != null)
             {
@@ -286,11 +260,9 @@ public class UIManager : MonoBehaviour
                 image.color = color;
             }
             
-            // Make sure it's hidden initially
             aros.SetActive(false);
         }
 
-        // Initialize progress bar - all images inactive at start
         if (progressBarImages != null)
         {
             foreach (GameObject progressImage in progressBarImages)
@@ -302,56 +274,39 @@ public class UIManager : MonoBehaviour
             }
         }
 
-        // Clear saved stage locally if requested
         if (clearStageOnStart)
         {
             GameStageService.ClearStageFromPrefs();
             if (currentStageText != null)
             {
-                currentStageText.text = ""; // clear label; will be set during initialization
+                currentStageText.text = "";
             }
         }
 
-        // Initialize progress bar based on unlocked buildings
-        // _ = InitializeProgressBar();
         
-        // Initialize game stage to TC if not already set
         _ = InitializeGameStage();
         
-        // Reset fade overlay to be transparent and inactive at start
         ResetFadeOverlay();
     }
 
-    /// <summary>
-    /// Called when a scene is loaded - reinitialize components if this UIManager persisted from another scene
-    /// </summary>
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        // Only reinitialize if this is an additive load or if we're loading a new scene
         if (mode == LoadSceneMode.Single)
         {
             Debug.Log($"UIManager: Scene '{scene.name}' loaded, checking for component reinitialization");
             
-            // Find and reconnect UI components that might have been lost during scene transition
             RefreshUIReferences();
         }
     }
 
-    /// <summary>
-    /// Public method to manually refresh UI connections - can be called from Inspector or other scripts
-    /// </summary>
     public void RefreshAllUIConnections()
     {
         RefreshUIReferences();
         Debug.Log("UIManager: Manually refreshed all UI connections");
     }
 
-    /// <summary>
-    /// Refreshes UI component references in case they were lost during scene transitions
-    /// </summary>
     private void RefreshUIReferences()
     {
-        // Try to find the pause menu button if it's not connected
         if (gamePauseMenu == null)
         {
             GameObject pauseMenuGO = GameObject.Find("GamePauseMenu");
@@ -362,18 +317,15 @@ public class UIManager : MonoBehaviour
             }
         }
         
-        // Look for pause button and reconnect the TogglePauseMenu method if needed
         Button[] allButtons = FindObjectsOfType<Button>();
         foreach (Button button in allButtons)
         {
-            // Check if this looks like a pause button (by name or parent name)
             string buttonName = button.gameObject.name.ToLower();
             string parentName = button.transform.parent?.name?.ToLower() ?? "";
             
             if (buttonName.Contains("pause") || parentName.Contains("pause") || 
                 buttonName.Contains("menu") || buttonName.Contains("settings"))
             {
-                // Check if the button has any listeners for TogglePauseMenu
                 bool hasToggleListener = false;
                 for (int i = 0; i < button.onClick.GetPersistentEventCount(); i++)
                 {
@@ -384,12 +336,9 @@ public class UIManager : MonoBehaviour
                     }
                 }
                 
-                // If no TogglePauseMenu listener found, add it programmatically
                 if (!hasToggleListener)
                 {
-                    // Remove any existing runtime listeners for this method first to avoid duplicates
                     button.onClick.RemoveListener(TogglePauseMenu);
-                    // Add the listener
                     button.onClick.AddListener(TogglePauseMenu);
                     Debug.Log($"UIManager: Added TogglePauseMenu listener to button '{button.gameObject.name}'");
                 }
@@ -397,12 +346,8 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Cleanup when UIManager is destroyed
-    /// </summary>
     private void OnDestroy()
     {
-        // Stop all active popup animations to prevent coroutine errors
         if (activePopupAnimations != null)
         {
             foreach (var animationPair in activePopupAnimations)
@@ -428,7 +373,6 @@ public class UIManager : MonoBehaviour
                 await GameStageService.SetStage(toSet);
                 Debug.Log("UIManager: Initialized game stage to TC");
                 
-                // Set background music for initial TC stage
                 SetBackgroundMusicForStage(toSet.area);
             }
             else
@@ -436,7 +380,6 @@ public class UIManager : MonoBehaviour
                 SetCurrentStageText(existing);
                 Debug.Log($"UIManager: Game stage already set to {existing.area}");
                 
-                // Set background music for existing stage
                 SetBackgroundMusicForStage(existing.area);
             }
         }
@@ -461,21 +404,18 @@ public class UIManager : MonoBehaviour
         
         if (stageMusic != null)
         {
-            // If music is already playing and it's the same clip, don't restart
             if (backgroundMusicSource.clip == stageMusic && backgroundMusicSource.isPlaying)
             {
                 Debug.Log($"Stage music for {stage} is already playing");
                 return;
             }
             
-            // Stop current music if playing
             if (backgroundMusicSource.isPlaying)
             {
                 StartCoroutine(CrossfadeToNewMusic(stageMusic));
             }
             else
             {
-                // No music currently playing, start fresh with fade-in
                 backgroundMusicSource.clip = stageMusic;
                 backgroundMusicSource.Play();
                 StartCoroutine(FadeInMusic());
@@ -485,7 +425,6 @@ public class UIManager : MonoBehaviour
         }
         else
         {
-            // No music assigned for this stage, fade out current music if playing
             if (backgroundMusicSource.isPlaying)
             {
                 StartCoroutine(FadeOutMusic());
@@ -542,7 +481,6 @@ public class UIManager : MonoBehaviour
 
     private IEnumerator CrossfadeToNewMusic(AudioClip newMusic)
     {
-        // Fade out current music
         float elapsedTime = 0f;
         float startVolume = backgroundMusicSource.volume;
         float halfFadeDuration = musicFadeInDuration * 0.5f;
@@ -555,11 +493,9 @@ public class UIManager : MonoBehaviour
             yield return null;
         }
         
-        // Switch to new music
         backgroundMusicSource.clip = newMusic;
         backgroundMusicSource.Play();
         
-        // Fade in new music
         elapsedTime = 0f;
         while (elapsedTime < halfFadeDuration)
         {
@@ -574,36 +510,31 @@ public class UIManager : MonoBehaviour
 
     private void CleanupConflictingAudioSettings()
     {
-        // Find all AudioSources in the scene that might interfere with background music
         AudioSource[] allAudioSources = FindObjectsOfType<AudioSource>();
         
         foreach (AudioSource audioSrc in allAudioSources)
         {
-            // Skip our own AudioSources
             if (audioSrc == audioSource || audioSrc == backgroundMusicSource)
                 continue;
                 
-            // Disable playOnAwake for all other AudioSources to prevent auto-playing background music
             if (audioSrc.playOnAwake && audioSrc.clip != null)
             {
-                // Check if this looks like background music (long clips that loop)
                 bool likelyBackgroundMusic = audioSrc.clip.length > 30f || audioSrc.loop;
                 
                 if (likelyBackgroundMusic)
                 {
                     Debug.Log($"UIManager: Disabled auto-play for potentially conflicting audio source on {audioSrc.gameObject.name}");
                     audioSrc.playOnAwake = false;
-                    audioSrc.Stop(); // Stop if currently playing
+                    audioSrc.Stop();
                 }
             }
             
-            // Lower volume of any AudioSources that might be playing background-like audio
             if (audioSrc.isPlaying && audioSrc.clip != null && audioSrc.clip.length > 30f)
             {
                 float originalVolume = audioSrc.volume;
                 if (originalVolume > backgroundMusicVolume)
                 {
-                    audioSrc.volume = backgroundMusicVolume * 0.5f; // Make it quieter than our background music
+                    audioSrc.volume = backgroundMusicVolume * 0.5f;
                     Debug.Log($"UIManager: Lowered volume of background-like audio on {audioSrc.gameObject.name} from {originalVolume} to {audioSrc.volume}");
                 }
             }
@@ -612,20 +543,14 @@ public class UIManager : MonoBehaviour
         Debug.Log("UIManager: Cleaned up conflicting audio settings");
     }
 
-    /// <summary>
-    /// Updates the user's avatar sprite based on their rank.
-    /// </summary>
-    /// <param name="rank">The user's current rank</param>
     public void UpdateUserAvatar(int rank)
     {
-        // Verify we have a user avatar image component
         if (userAvatarImage == null)
         {
             Debug.LogWarning("User avatar image component not assigned in UIManager");
             return;
         }
 
-        // Select the appropriate sprite based on rank
         Sprite selectedSprite;
 
         switch (rank)
@@ -637,7 +562,7 @@ public class UIManager : MonoBehaviour
                 selectedSprite = rank2AvatarSprite;
                 break;
             case 3:
-                selectedSprite = rank3AvatarSprite ?? rank2AvatarSprite; // Use rank2 sprite if rank3 isn't defined
+                selectedSprite = rank3AvatarSprite ?? rank2AvatarSprite;
                 break;
             case 0:
             default:
@@ -645,14 +570,12 @@ public class UIManager : MonoBehaviour
                 break;
         }
 
-        // If the selected sprite is null, use the default sprite
         if (selectedSprite == null)
         {
             Debug.LogWarning($"Avatar sprite for rank {rank} is not assigned. Using default sprite.");
             selectedSprite = defaultAvatarSprite;
         }
 
-        // Update the avatar image
         userAvatarImage.sprite = selectedSprite;
 
         Debug.Log($"Updated user avatar to rank {rank} sprite");
@@ -662,7 +585,6 @@ public class UIManager : MonoBehaviour
     {
         if (usernameAndHallText != null)
         {
-            // Simple implementation using PlayerPrefs
             string userName = PlayerPrefs.GetString("UserName", "Anonymous User");
             string hall = PlayerPrefs.GetString("ResidenceHall", "No Hall");
 
@@ -673,10 +595,6 @@ public class UIManager : MonoBehaviour
 
     }
     
-    /// <summary>
-    /// Public method to check for rank increases after user gains points.
-    /// This should be called whenever the user's points are updated in the game.
-    /// </summary>
     public async Task CheckAndUpdateUserRank()
     {
         try 
@@ -693,27 +611,21 @@ public class UIManager : MonoBehaviour
             int knowledgePoints = await userService.GetUserKnowledgePoints(userId);
             int totalPoints = coins + knowledgePoints;
             
-            // Update UI with current points
             UpdateCoins(coins);
             UpdateKnowledgePoints(knowledgePoints);
             
-            // Get previously saved rank for comparison
             int previousRank = PlayerPrefs.GetInt("UserRank", 1);
 
-            // Calculate current rank and update avatar (this also persists the new rank)
             GetUserAvatarBasedOnPoints(coins, knowledgePoints, true);
 
-            // Get the newly saved rank
             int currentRank = userService.CalculateUserRank(coins, knowledgePoints);
 
-            // Check if rank has increased and show rank up panel if so
             if (currentRank > previousRank)
             {
                 ShowRankUpPanel(currentRank);
                 Debug.Log($"Rank increased from {previousRank} to {currentRank}! (Total points: {totalPoints})");
             }
             
-            // Update the username display which includes the avatar
             UpdateUsernameAndHall();
         }
         catch (System.Exception ex)
@@ -722,32 +634,6 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    // private async Task GetUserPoints()
-    // {
-    //     try 
-    //     {
-    //         string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
-    //         if (!string.IsNullOrEmpty(userId))
-    //         {
-    //             var userService = new RamRoutes.Services.UserService();
-    //             int coins = await userService.GetUserCoins(userId);
-    //             int knowledgePoints = await userService.GetUserKnowledgePoints(userId);
-                
-    //             UpdateCoins(coins);
-    //             UpdateKnowledgePoints(knowledgePoints);
-                
-    //             Debug.Log($"Retrieved user coins: {coins}, knowledge points: {knowledgePoints}");
-    //         }
-    //     }
-    //     catch (System.Exception ex)
-    //     {
-    //         Debug.LogError($"Failed to get user points: {ex.Message}");
-    //     }
-    // }
-
-    /// <summary>
-    /// Gets user points from Firebase, updates UI, persists current rank, and checks for rank increases
-    /// </summary>
     private async Task InitializeUserRankSystem()
     {
         try 
@@ -764,23 +650,18 @@ public class UIManager : MonoBehaviour
             int knowledgePoints = await userService.GetUserKnowledgePoints(userId);
             int totalPoints = coins + knowledgePoints;
             
-            // Update UI
             UpdateCoins(coins);
             UpdateKnowledgePoints(knowledgePoints);
             
-            // Get previously saved rank for comparison
             int previousRank = PlayerPrefs.GetInt("UserRank", 1);
 
-            // Calculate current rank and update avatar (this also persists the new rank)
             if(userAvatarImage != null)
             {
-                userAvatarImage.sprite = GetUserAvatarBasedOnPoints(coins, knowledgePoints, true); // reset to default while loading
+                userAvatarImage.sprite = GetUserAvatarBasedOnPoints(coins, knowledgePoints, true);
             }
 
-            // Get the newly saved rank
             int currentRank = userService.CalculateUserRank(coins, knowledgePoints);
 
-            // Check if rank has increased and show rank up panel if so
             if (currentRank > previousRank)
             {
                 ShowRankUpPanel(currentRank);
@@ -804,47 +685,33 @@ public class UIManager : MonoBehaviour
             yield return null;
         }
 
-        // Check if in Terminal stage and hide tagged UI elements
         HideTerminalStageElements();
 
         OnTrialComplete.AddListener(() => StartCoroutine(CompleteTrial()));
         OnTimeExpired.AddListener(TimeUp);
 
-        // Initialize user rank system (gets Firebase data, updates UI, persists rank, checks for increases)
         _ = InitializeUserRankSystem();
         
-        // Update username and hall display
         UpdateUsernameAndHall();
 
-        // Start countdown if current stage has a time limit > 0
         var currentStage = GameStageService.LoadStageFromPrefs();
         if (currentStage != null && stageTimeLimits.TryGetValue(currentStage.area, out int stageLimit) && stageLimit > 0)
         {
             StartCountdown(timerText, stageLimit);
         }
 
-        // Initialize progress bar based on unlocked buildings
-        // _ = InitializeProgressBar();
 
-        // Setup background music for current stage
         if (currentStage != null)
         {
             SetBackgroundMusicForStage(currentStage.area);
         }
 
-        // Initialize building-gate mapping
-        InitializeBuildingGateMapping();
         
-        // Reset the fade overlay if it exists
         ResetFadeOverlay();
 
-        // Move player to their current physical building (from Firestore)
         yield return StartCoroutine(MovePlayerToCurrentPhysicalBuilding());
     }
 
-    /// <summary>
-    /// Fetches the user's currentPhysicalBuilding from Firestore and smoothly moves the player there.
-    /// </summary>
     private IEnumerator MovePlayerToCurrentPhysicalBuilding()
     {
         var firebaseUser = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser;
@@ -871,25 +738,21 @@ public class UIManager : MonoBehaviour
             yield break;
         }
 
-        // Find the matching BuildingInteraction in the scene
         BuildingInteraction targetBuilding = null;
-        if (buildingGatePairs != null)
+        if (buildings != null)
         {
-            foreach (var pair in buildingGatePairs)
+            foreach (var building in buildings)
             {
-                if (pair?.buildings == null) continue;
-                foreach (var building in pair.buildings)
-                {
-                    if (building != null && string.Equals(building.buildingName, physicalBuilding, System.StringComparison.OrdinalIgnoreCase))
+                if (building != null && string.Equals(building.buildingName, physicalBuilding, System.StringComparison.OrdinalIgnoreCase))
                     {
                         targetBuilding = building;
                         break;
                     }
-                }
+                
                 if (targetBuilding != null) break;
             }
+        
         }
-
         if (targetBuilding == null)
         {
             Debug.LogWarning($"[UIManager] BuildingInteraction not found for '{physicalBuilding}' — player stays at default position");
@@ -900,23 +763,17 @@ public class UIManager : MonoBehaviour
         yield return StartCoroutine(targetBuilding.MovePlayerToBuildingSmooth());
     }
 
-    /// <summary>
-    /// Hides all GameObjects tagged with "GoneOnTerminalStage" when in Terminal stage
-    /// </summary>
     private void HideTerminalStageElements()
     {
         try
         {
-            // Check if we're in Terminal stage
             var currentStage = GameStageService.LoadStageFromPrefs();
             if (currentStage != null && currentStage.area == Stage.Terminal)
             {
-                // Find all GameObjects with the "GoneOnTerminalStage" tag
                 GameObject[] taggedObjects = GameObject.FindGameObjectsWithTag("GoneOnTerminalStage");
                 
                 Debug.Log($"UIManager: Found {taggedObjects.Length} objects with 'GoneOnTerminalStage' tag");
                 
-                // Hide all found objects
                 foreach (GameObject obj in taggedObjects)
                 {
                     if (obj != null)
@@ -936,38 +793,6 @@ public class UIManager : MonoBehaviour
         catch (System.Exception ex)
         {
             Debug.LogError($"UIManager: Error hiding Terminal stage elements: {ex.Message}");
-        }
-    }
-
-    /// <summary>
-    /// Initializes the building-gate mapping dictionary from the configured pairs
-    /// </summary>
-    private void InitializeBuildingGateMapping()
-    {
-        if (buildingGatePairs != null && buildingGatePairs.Length > 0)
-        {
-            buildingGateMap = new Dictionary<BuildingInteraction, Gate>();
-            foreach (var pair in buildingGatePairs)
-            {
-                if (pair != null && pair.buildings != null && pair.gate != null)
-                {
-                    // Map each building in the array to the same gate
-                    foreach (var building in pair.buildings)
-                    {
-                        if (building != null && !buildingGateMap.ContainsKey(building))
-                        {
-                            buildingGateMap.Add(building, pair.gate);
-                            Debug.Log($"UIManager: Mapped building '{building.buildingName}' to gate '{pair.gate.gameObject.name}'");
-                        }
-                    }
-                }
-            }
-            Debug.Log($"UIManager: Initialized building-gate mapping with {buildingGateMap.Count} pairs");
-        }
-        else
-        {
-            buildingGateMap = new Dictionary<BuildingInteraction, Gate>();
-            Debug.Log("UIManager: No building-gate pairs configured");
         }
     }
 
@@ -1043,53 +868,38 @@ private void HideObjectsWithTag(string tag)
         }
     }
     
-    /// <summary>
-    /// Starts a countdown timer with a specified text component and duration
-    /// </summary>
-    /// <param name="textComponent">The Text component to display the countdown</param>
-    /// <param name="seconds">The number of seconds to count down from</param>
     public void StartCountdown(Text textComponent, int seconds)
     {
         if (textComponent == null) return;
         
-        // Ensure the timer text component is visible
         if (!textComponent.gameObject.activeInHierarchy)
         {
             textComponent.gameObject.SetActive(true);
         }
         
-        // Stop any existing countdown
         if (timerCoroutine != null)
         {
             StopCoroutine(timerCoroutine);
         }
         
-        // Use the existing CountdownTimer logic but with new parameters
         timerRunning = true;
         currentTime = 0;
         
-        // Store the original timerText reference
         Text originalTimerText = timerText;
         
-        // Temporarily set timerText to the provided text component
         timerText = textComponent;
         
-        // Set the time limit to the provided seconds
         GameManager.Instance.currentTrial.timeLimit = seconds;
         
-        // Start the timer
         timerCoroutine = StartCoroutine(CountdownTimer());
         
-        // Reset the timerText reference after the timer completes
         StartCoroutine(ResetTimerAfterCountdown(originalTimerText));
     }
     
     private IEnumerator ResetTimerAfterCountdown(Text originalTimerText)
     {
-        // Wait until the timer is no longer running
         yield return new WaitUntil(() => !timerRunning);
         
-        // Reset the timer text reference
         timerText = originalTimerText;
     }
 
@@ -1097,7 +907,6 @@ private void HideObjectsWithTag(string tag)
     {
         if (timerText != null)
         {
-            // Ensure timer text is visible when updating
             if (!timerText.gameObject.activeInHierarchy)
             {
                 timerText.gameObject.SetActive(true);
@@ -1124,7 +933,6 @@ private void HideObjectsWithTag(string tag)
             StopAllCoroutines();
             timeUpMenu.SetActive(true);
             
-            // Ensure timer text is visible when showing final time
             if (timerText != null)
             {
                 if (!timerText.gameObject.activeInHierarchy)
@@ -1142,7 +950,6 @@ private void HideObjectsWithTag(string tag)
 
     public IEnumerator CompleteTrial()
     {
-        // Start the Firebase save but don't await it here
         var saveTask = SaveProgressToFirebase();
         
         yield return new WaitForSeconds(2f);
@@ -1159,7 +966,6 @@ private void HideObjectsWithTag(string tag)
         PlaySound(trialCompleteSound);
         yield return new WaitForSeconds(2f);
 
-        // Optional: Wait for the save to complete if needed
         while (!saveTask.IsCompleted)
             yield return null;
             
@@ -1172,7 +978,6 @@ private void HideObjectsWithTag(string tag)
         Time.timeScale = 0f;
     }
 
-    // Separate async Task method for Firebase
    private async Task SaveProgressToFirebase()
 {
     try 
@@ -1240,7 +1045,6 @@ private void HideObjectsWithTag(string tag)
         typingCoroutine = null;
     }
 
-    // Basic dialog - shows message and hides after specified time
     public void ShowDialog(string message, float activeFor = 5f, bool narration = false, bool showBuildingStats = false, string buildingName = null)
     {
         ShowDialog(message, activeFor, null, null, narration, showBuildingStats, buildingName);
@@ -1251,7 +1055,6 @@ private void HideObjectsWithTag(string tag)
         StartCoroutine(ShowQuickUpdateSequence(message));
     }
     
-    // Dialog with action button - shows message with button, no auto-hide unless activeFor > 0
     public void ShowDialog(string message, float activeFor, string actionButtonText, System.Action onActionButtonClick, bool narration = false, bool showStats = false, string buildingName = null)
     {
         if (showStats && buildingStats != null && !string.IsNullOrEmpty(buildingName))
@@ -1259,7 +1062,6 @@ private void HideObjectsWithTag(string tag)
             var buildingInfo = BuildingDataManager.GetBuildingInfo(buildingName);
             if (buildingInfo != null)
             {
-                // Update coins and knowledge points in building stats
                 if (coinsGainedBuildingStats != null)
                 {
                     coinsGainedBuildingStats.text = "+" + buildingInfo.coinsGained.ToString();
@@ -1278,7 +1080,6 @@ private void HideObjectsWithTag(string tag)
 
         if (dialogPanel != null && dialogText != null)
         {
-            // If dialog is already active, stop the current one
             if (isDialogActive && dialogCoroutine != null)
             {
                 StopCoroutine(dialogCoroutine);
@@ -1296,13 +1097,11 @@ private void HideObjectsWithTag(string tag)
         quickUpdateText.text = message;
         quickUpdatePanel.SetActive(true);
 
-        // Play collectable sound
         if (collectableSound != null && audioSource != null)
         {
             audioSource.PlayOneShot(collectableSound);
         }
 
-        // Animate popup effect
         yield return StartCoroutine(AnimatePanelPopup(quickUpdatePanel));
 
         yield return new WaitForSeconds(2f);
@@ -1314,8 +1113,6 @@ private void HideObjectsWithTag(string tag)
         isDialogActive = true;
         currentDialogAction = onActionButtonClick;
 
-        // Reset the keep AROS visible flag for new dialog sequences
-        // Unless this is part of an unlock sequence (action button present)
         if (onActionButtonClick == null)
         {
             keepArosVisible = false;
@@ -1325,18 +1122,13 @@ private void HideObjectsWithTag(string tag)
         {
             dialogPanel.SetActive(true);
 
-            // Setup action button if provided
             SetupActionButton(actionButtonText, onActionButtonClick);
 
-            // Show AROS without animation if not already visible
             if (aros != null)
             {
                 aros.SetActive(true);
             }
 
-            // Use narration parameter to control whether dialog is narrated
-            // When narration is false, skip narration features
-            // This is a placeholder - implement actual narration control here
 
             typingCoroutine = StartCoroutine(TypeText(message, activeFor, narration));
             yield return typingCoroutine;
@@ -1351,27 +1143,23 @@ private void HideObjectsWithTag(string tag)
     {
         if (dialogActionButton != null)
         {
-            if (onButtonClick != null) // Show button if action is provided, text can be empty for icon-only buttons
+            if (onButtonClick != null)
             {
-                // Show and setup the action button
                 dialogActionButton.gameObject.SetActive(true);
                 
-                // Set button text (can be empty)
                 if (dialogActionButtonText != null)
                 {
                     dialogActionButtonText.text = buttonText ?? "";
                 }
                 
-                // Clear any existing listeners and add the new one
                 dialogActionButton.onClick.RemoveAllListeners();
                 dialogActionButton.onClick.AddListener(() => {
                     onButtonClick?.Invoke();
-                    HideDialog(); // Hide dialog after action
+                    HideDialog();
                 });
             }
             else
             {
-                // Hide the action button if no action is provided
                 dialogActionButton.gameObject.SetActive(false);
             }
         }
@@ -1383,7 +1171,6 @@ private void HideObjectsWithTag(string tag)
         dialogCoroutine = null;
         currentDialogAction = null;
         
-        // Hide action button and clear listeners
         if (dialogActionButton != null)
         {
             dialogActionButton.gameObject.SetActive(false);
@@ -1395,13 +1182,11 @@ private void HideObjectsWithTag(string tag)
     {
         dialogPanel?.SetActive(false);
         
-        // Only hide AROS if we're not in an unlock sequence
         if (!keepArosVisible && aros != null)
         {
             aros.SetActive(false);
         }
         
-        // Clean up dialog state
         CleanupDialog();
     }
     
@@ -1415,7 +1200,6 @@ private void HideObjectsWithTag(string tag)
         while (true)
         {
             yield return new WaitForSeconds(objectiveRepeatTime);
-            //ShowObjective();
         }
     }
 
@@ -1434,45 +1218,35 @@ private void HideObjectsWithTag(string tag)
             return;
         }
 
-        // Use the unified celebration duration parameter
         float audioDuration = celebrationDuration;
 
-        // Create a parent object to organize all particle effects
         GameObject effectsContainer = new GameObject("CelebrationEffects");
         Transform effectsParent = effectsContainer.transform;
         
-        // Auto-cleanup when celebration finishes (add small buffer for particle fadeout)
         Destroy(effectsContainer, audioDuration + 0.5f);
         
-        // Create 3 random points around the screen for celebration effects
         Vector3[] celebrationPoints = new Vector3[3];
         
         for (int point = 0; point < 3; point++)
         {
-            // Generate random screen positions (viewport coordinates)
-            float randomX = Random.Range(0.2f, 0.8f); // Avoid edges
-            float randomY = Random.Range(0.2f, 0.8f); // Avoid edges
+            float randomX = Random.Range(0.2f, 0.8f);
+            float randomY = Random.Range(0.2f, 0.8f);
             celebrationPoints[point] = Camera.main.ViewportToWorldPoint(new Vector3(randomX, randomY, Camera.main.nearClipPlane + 5f));
         }
         
-        // Create array of available effects
         ParticleSystem[] effects = { teleportEffect, celebrationEffect1, celebrationEffect2 };
         
-        // Distribute effects across the 3 celebration points
         for (int i = 0; i < 3; i++)
         {
-            // Use different effect for each celebration point
             ParticleSystem currentEffect = effects[i % effects.Length];
             if (currentEffect == null) continue;
             
             Vector3 basePosition = celebrationPoints[i];
             
-            // Spawn multiple instances of each effect around each point
-            int effectsPerPoint = i == 0 ? 5 : 4; // 5 + 4 + 4 = 13 total effects
+            int effectsPerPoint = i == 0 ? 5 : 4;
             
             for (int j = 0; j < effectsPerPoint; j++)
             {
-                // Add random offset around the celebration point
                 Vector3 spawnPos = basePosition + new Vector3(
                     Random.Range(-1f, 1f),
                     Random.Range(-1f, 1f),
@@ -1481,11 +1255,9 @@ private void HideObjectsWithTag(string tag)
                 
                 GameObject effect = Instantiate(currentEffect.gameObject, spawnPos, Quaternion.identity, effectsParent);
                 
-                // Set the particle system to a higher sorting layer to appear above grid/UI
                 ParticleSystem ps = effect.GetComponent<ParticleSystem>();
                 if (ps != null)
                 {
-                    // Stop the particle system first before modifying settings
                     ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
                     
                     var renderer = ps.GetComponent<ParticleSystemRenderer>();
@@ -1495,13 +1267,11 @@ private void HideObjectsWithTag(string tag)
                         renderer.sortingOrder = 4;
                     }
                     
-                    // Adjust particle system duration to match audio length
                     var main = ps.main;
                     main.duration = audioDuration;
                     main.loop = false;
-                    main.simulationSpeed = celebrationPlaybackSpeed; // Control playback speed
+                    main.simulationSpeed = celebrationPlaybackSpeed;
                     
-                    // Start the particle system after configuring it
                     ps.Play();
                 }
                 
@@ -1537,7 +1307,6 @@ private void HideObjectsWithTag(string tag)
             kbGained.text = "+" + buildingInfo.kbGained.ToString();
                 }
 
-        // Get NPC spawner in another way
         var npcSpawner = FindObjectOfType<NPCSpawner>();
         if (npcSpawner != null)
         {
@@ -1583,13 +1352,10 @@ private void HideObjectsWithTag(string tag)
             Debug.LogWarning("No celebration effects are set in UIManager!");
         }
         
-        // Play celebration sound with controlled duration
         if (trialCompleteSound != null && audioSource != null)
         {
-            // Stop any previous sound
             audioSource.Stop();
             
-            // Play the sound and stop it after celebrationDuration
             audioSource.PlayOneShot(trialCompleteSound);
             StartCoroutine(StopAudioAfterDuration(celebrationDuration));
         }
@@ -1606,7 +1372,6 @@ private void HideObjectsWithTag(string tag)
     
     public float GetCelebrationDuration()
     {
-        // Return the unified celebration duration
         return celebrationDuration;
     }
 
@@ -1639,7 +1404,6 @@ private void HideObjectsWithTag(string tag)
     {
         UpdateProgressBar();
 
-        // Refresh points display when progress bar is updated
         var userService = new UserService();
         string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
         if (!string.IsNullOrEmpty(userId))
@@ -1650,29 +1414,24 @@ private void HideObjectsWithTag(string tag)
             UpdateKnowledgePoints(knowledgePoints);
         }
 
-        // If the last building was just unlocked, move to Terminal stage
         bool isFinalUnlock = buildingsUnlockedCount >= 7 || (progressBarImages != null && buildingsUnlockedCount >= progressBarImages.Length);
         if (isFinalUnlock)
         {
             var current = GameStageService.LoadStageFromPrefs();
             var target = GameStage.FromArea(Stage.Terminal);
 
-            // Update UI and persist stage to Terminal
             SetCurrentStageText(target);
             GameStageService.SaveStageToPrefs(target);
             _ = GameStageService.SaveStageToFirestore(target);
 
-            // Update background music for Terminal stage
             SetBackgroundMusicForStage(Stage.Terminal);
 
-            // Schedule scene change to Onboarding after unlock panel closes
             pendingSceneAfterUnlock = true;
             readyToLeaveAfterPanelClose = true;
             Debug.Log($"UIManager: Final building unlocked (count={buildingsUnlockedCount}). Stage set to {target.area}. Will load Onboarding after panel closes.");
             return;
         }
 
-        // If a stage change was requested earlier (e.g., via gate mapping), mark ready but wait until unlock panel is closed
         if (pendingSceneAfterUnlock)
         {
             readyToLeaveAfterPanelClose = true;
@@ -1680,25 +1439,19 @@ private void HideObjectsWithTag(string tag)
         }
     }
 
-    // Call this when the building unlock panel is closed by the user
     public void OnUnlockPanelClosed()
     {
-        // Start the delay timer for scene transition
         StartSceneTransitionDelay();
 
-        // If conditions are not yet met, keep flags; we'll try again when they are
-        // Avoid resetting readiness here to prevent losing intent
     }
 
     private void StartSceneTransitionDelay()
     {
-        // Cancel any existing delay coroutine
         if (sceneTransitionDelayCoroutine != null)
         {
             StopCoroutine(sceneTransitionDelayCoroutine);
         }
         
-        // Start new delay coroutine
         sceneTransitionDelayCoroutine = StartCoroutine(SceneTransitionDelayCoroutine());
     }
     
@@ -1707,10 +1460,8 @@ private void HideObjectsWithTag(string tag)
         Debug.Log($"UIManager: Starting {sceneTransitionDelay} second delay before scene transition");
         yield return new WaitForSeconds(sceneTransitionDelay);
         
-        // After delay, try to proceed with pending scene change
         TryProceedPendingScene();
         
-        // Clear the coroutine reference
         sceneTransitionDelayCoroutine = null;
     }
 
@@ -1719,7 +1470,6 @@ private void HideObjectsWithTag(string tag)
     {
         if (panel == null) yield break;
 
-        // Stop any existing animation for this specific panel
         if (activePopupAnimations.ContainsKey(panel))
         {
             if (activePopupAnimations[panel] != null)
@@ -1729,12 +1479,10 @@ private void HideObjectsWithTag(string tag)
             activePopupAnimations.Remove(panel);
         }
         
-        // Track this animation
         activePopupAnimations[panel] = StartCoroutine(AnimatePanelPopupInternal(panel));
         
         yield return activePopupAnimations[panel];
         
-        // Clean up tracking when animation completes
         if (activePopupAnimations.ContainsKey(panel))
         {
             activePopupAnimations.Remove(panel);
@@ -1745,28 +1493,22 @@ private void HideObjectsWithTag(string tag)
     {
         if (panel == null) yield break;
 
-        // Always use (1,1,1) as the target scale to prevent accumulating scale issues
         Vector3 targetScale = Vector3.one;
         
-        // Start with zero scale
         panel.transform.localScale = Vector3.zero;
         
-        // Animate to full size with a slight overshoot
         float duration = 0.4f;
         float elapsed = 0f;
         
-        // First phase - grow quickly to slightly larger than target
         while (elapsed < duration * 0.8f)
         {
             elapsed += Time.deltaTime;
             float progress = elapsed / (duration * 0.8f);
-            // Use easeOutBack-like effect for a bouncy feel
             float overshoot = Mathf.Lerp(0, 1.1f, progress);
             panel.transform.localScale = Vector3.Lerp(Vector3.zero, targetScale * overshoot, progress);
             yield return null;
         }
         
-        // Second phase - settle back to target size
         float secondPhaseDuration = duration * 0.2f;
         elapsed = 0f;
         Vector3 overshotScale = panel.transform.localScale;
@@ -1779,19 +1521,13 @@ private void HideObjectsWithTag(string tag)
             yield return null;
         }
         
-        // Ensure we end at exactly the target scale
         panel.transform.localScale = targetScale;
     }
 
-    /// <summary>
-    /// Resets a panel's scale to (1,1,1) - useful for fixing scale issues
-    /// </summary>
-    /// <param name="panel">The panel to reset</param>
     public void ResetPanelScale(GameObject panel)
     {
         if (panel != null)
         {
-            // Stop any active animation for this panel first
             if (activePopupAnimations.ContainsKey(panel))
             {
                 if (activePopupAnimations[panel] != null)
@@ -1801,13 +1537,11 @@ private void HideObjectsWithTag(string tag)
                 activePopupAnimations.Remove(panel);
             }
             
-            // Reset to normal scale
             panel.transform.localScale = Vector3.one;
             Debug.Log($"Reset scale for panel: {panel.name}");
         }
     }
 
-    // Simple method to hide AROS without animation
     public void HideAros()
     {
         if (aros != null)
@@ -1816,7 +1550,6 @@ private void HideObjectsWithTag(string tag)
         }
     }
     
-    // Method to reset AROS visibility control and optionally hide it
     public void ResetArosVisibility(bool hideAros = true)
     {
         keepArosVisible = false;
@@ -1826,7 +1559,6 @@ private void HideObjectsWithTag(string tag)
         }
     }
     
-    // Method to play AROS animation using Animator
     private void PlayArosAnimation(string animationName)
     {
         if (aros != null)
@@ -1834,8 +1566,6 @@ private void HideObjectsWithTag(string tag)
             Animator animator = aros.GetComponent<Animator>();
             if (animator != null && !string.IsNullOrEmpty(animationName))
             {
-                // Play animation directly by state name
-                // animator.Play(animationName, 0, 0f);
                 animator.SetTrigger("jumping-happy");
                 Debug.Log($"Playing AROS animation: {animationName}");
             }
@@ -1850,15 +1580,12 @@ private void HideObjectsWithTag(string tag)
     {
         if (teleportEffect != null)
         {
-            // Position the teleport effect at the specified world position
             teleportEffect.transform.position = worldPosition;
             
-            // Play the teleport effect
             teleportEffect.Play();
             
             Debug.Log($"Playing teleport effect at position: {worldPosition}");
             
-            // Wait for a short duration to let the effect play
             yield return new WaitForSeconds(2f);
         }
         else
@@ -1867,7 +1594,6 @@ private void HideObjectsWithTag(string tag)
         }
     }
     
-    // Mobile NPC Interaction Methods
     public void RegisterNPCForMobileInteraction(NpcAutoMovement npc)
     {
         if (npc == null)
@@ -1876,16 +1602,12 @@ private void HideObjectsWithTag(string tag)
             return;
         }
         
-        // Store reference to the current NPC
         currentInteractingNPC = npc;
         
-        // Setup mobile button listener if button exists
         if (mobileInteractButton != null)
         {
-            // Clear any existing listeners to prevent multiple calls
             mobileInteractButton.onClick.RemoveAllListeners();
             
-            // Add listener that sets the mobile interaction flag on the NPC
             mobileInteractButton.onClick.AddListener(() => {
                 if (currentInteractingNPC != null)
                 {
@@ -1910,13 +1632,10 @@ private void HideObjectsWithTag(string tag)
     {
         if (currentInteractingNPC == npc)
         {
-            // Clear the NPC reference
             currentInteractingNPC = null;
             
-            // Hide the button
             HideMobileInteractButton();
             
-            // Clear button listeners
             if (mobileInteractButton != null)
             if (mobileInteractButton != null)
             {
@@ -1949,36 +1668,26 @@ private void HideObjectsWithTag(string tag)
         }
     }
 
-    // Allows gameplay to announce entering/leaving a building viewing state.
-    // While active, pending onboarding scene transitions are deferred.
     public void SetBuildingViewingMode(bool active, string buildingName = null)
     {
         isInBuildingViewingMode = active;
         currentViewedBuilding = active ? buildingName : null;
         
-        // Hide/Show objects tagged "StatsToHide" based on building viewing mode
-       ToggleStatsToHideObjects(!active); // Hide when in building view mode (active = true)
+       ToggleStatsToHideObjects(!active);
         
         if (!active)
         {
-            // Hide current users panel when leaving building view
             HideCurrentUsersPanel();
             
-            // Reattempt any pending transition when viewing ends (but only if delay has passed)
-            if (sceneTransitionDelayCoroutine == null) // Delay has completed
+            if (sceneTransitionDelayCoroutine == null)
             {
                 TryProceedPendingScene();
             }
         }
     }
 
-    /// <summary>
-    /// Toggle visibility of objects tagged "HideOnBuildingView"
-    /// </summary>
-    /// <param name="show">True to show objects, false to hide them</param>
     private void ToggleStatsToHideObjects(bool show)
     {
-        // Use Resources.FindObjectsOfTypeAll to find both active and inactive GameObjects
         GameObject[] allObjects = Resources.FindObjectsOfTypeAll<GameObject>();
         List<GameObject> statsObjects = new List<GameObject>();
         
@@ -2001,7 +1710,6 @@ private void HideObjectsWithTag(string tag)
         Debug.Log($"UIManager: {(show ? "Showing" : "Hiding")} {statsObjects.Count} objects tagged 'HideOnBuildingView'");
     }
 
-    // Centralized gate for onboarding transition conditions
     private void TryProceedPendingScene()
     {
         if (pendingSceneAfterUnlock && readyToLeaveAfterPanelClose && !isInBuildingViewingMode)
@@ -2009,7 +1717,6 @@ private void HideObjectsWithTag(string tag)
             pendingSceneAfterUnlock = false;
             readyToLeaveAfterPanelClose = false;
             
-            // Play fade transition effect before changing scene
             StartCoroutine(PlaySceneTransitionEffect());
         }
     }
@@ -2018,16 +1725,13 @@ private void HideObjectsWithTag(string tag)
     {
         Debug.Log("UIManager: Starting scene transition effect");
         
-        // Fade in overlay if assigned
         if (fadeOverlay != null)
         {
-            // Make sure overlay is active and starts transparent
             fadeOverlay.gameObject.SetActive(true);
             Color startColor = fadeOverlay.color;
             startColor.a = 0f;
             fadeOverlay.color = startColor;
             
-            // Fade to opaque
             float elapsedTime = 0f;
             while (elapsedTime < fadeEffectDuration)
             {
@@ -2041,14 +1745,12 @@ private void HideObjectsWithTag(string tag)
                 yield return null;
             }
             
-            // Ensure fully opaque
             Color finalColor = fadeOverlay.color;
             finalColor.a = 1f;
             fadeOverlay.color = finalColor;
         }
         else
         {
-            // If no fade overlay, just wait for the effect duration
             yield return new WaitForSeconds(fadeEffectDuration);
         }
         
@@ -2060,7 +1762,6 @@ private void HideObjectsWithTag(string tag)
     {
         if (fadeOverlay != null)
         {
-            // Make overlay transparent and inactive
             Color color = fadeOverlay.color;
             color.a = 0f;
             fadeOverlay.color = color;
@@ -2069,17 +1770,14 @@ private void HideObjectsWithTag(string tag)
         }
     }
 
-    // Public method to be called from BuildingInteraction
     public async void DisplayCurrentUsersForBuilding(string buildingName)
     {
-        // Only display if we're in building viewing mode for this building
         if (!isInBuildingViewingMode || currentViewedBuilding != buildingName)
         {
             Debug.Log($"Not displaying current users: viewing mode={isInBuildingViewingMode}, current building={currentViewedBuilding}, requested building={buildingName}");
             return;
         }
 
-        // Fetch and display live data from Firebase
         await DisplayCurrentUsersUI(buildingName);
     }
 
@@ -2091,13 +1789,11 @@ private void HideObjectsWithTag(string tag)
             return;
         }
 
-        // Clear previous entries
         foreach (Transform child in currentUsersContentParent)
         {
             Destroy(child.gameObject);
         }
 
-        // Get live user data from Firebase
         List<User> buildingUsers = null;
         try
         {
@@ -2114,7 +1810,6 @@ private void HideObjectsWithTag(string tag)
         if (buildingUsers != null && buildingUsers.Count > 0 && currentUsersPanel != null)
         {
             currentUsersPanel.SetActive(true);
-            // Animate the panel appearing
             StartCoroutine(AnimatePanelPopup(currentUsersPanel));
 
             foreach (var user in buildingUsers)
@@ -2126,7 +1821,6 @@ private void HideObjectsWithTag(string tag)
             {
                 rsvpButtonHandler.Initialize("data", () => ChatWithFriend(user));
             }
-                // Get the single text component for user name
                 Text nameText = userGO.GetComponentInChildren<Text>();
 
                 if (nameText != null)
@@ -2149,7 +1843,6 @@ private void HideObjectsWithTag(string tag)
                     Debug.LogError("UIManager: No Text component found in current user prefab!");
                 }
 
-                // Display rank frame on the Image component within the "profile" object
                 Transform profileTransform = userGO.transform.Find("profile");
                 if (profileTransform != null)
                 {
@@ -2170,10 +1863,8 @@ private void HideObjectsWithTag(string tag)
                 }
             }
             
-            // Start auto-scroll after all users have been instantiated
             if (buildingUsers.Count > 0)
             {
-                // Stop any existing auto-scroll first
                 if (autoScrollCoroutine != null)
                 {
                     StopCoroutine(autoScrollCoroutine);
@@ -2190,7 +1881,6 @@ private void HideObjectsWithTag(string tag)
     
     private void ChatWithFriend(User friend)
     {
-        // Assuming there's a ChatManager in the scene that handles chat
         ChatManager chatManager = FindObjectOfType<ChatManager>();
         if (chatManager != null)
         {
@@ -2199,14 +1889,10 @@ private void HideObjectsWithTag(string tag)
        
     }
 
-    /// <summary>
-    /// Auto-scrolls through the current users list
-    /// </summary>
     private IEnumerator AutoScrollCurrentUsers()
     {
         if (currentUsersScrollRect == null)
         {
-            // Try to find ScrollRect component if not assigned
             if (currentUsersPanel != null)
             {
                 currentUsersScrollRect = currentUsersPanel.GetComponentInChildren<ScrollRect>();
@@ -2219,33 +1905,26 @@ private void HideObjectsWithTag(string tag)
             yield break;
         }
 
-        // Wait a frame for UI to settle
         yield return null;
         yield return null;
 
-        // Auto-scroll parameters
-        float scrollSpeed = 0.5f; // Speed of scrolling (0.5 = moderate speed)
-        float scrollInterval = 2f; // Time between scroll movements in seconds
-        float scrollAmount = 0.2f; // How much to scroll each time (0.2 = 20% of content)
+        float scrollSpeed = 0.5f;
+        float scrollInterval = 2f;
+        float scrollAmount = 0.2f;
 
         while (currentUsersPanel != null && currentUsersPanel.activeInHierarchy)
         {
-            // Check if there's content to scroll
             if (currentUsersContentParent != null && currentUsersContentParent.childCount > 0)
             {
-                // Get current scroll position
                 float currentPos = currentUsersScrollRect.verticalNormalizedPosition;
 
-                // Calculate target position
                 float targetPos = currentPos - scrollAmount;
 
-                // If we've reached the bottom, scroll back to top
                 if (targetPos <= 0f)
                 {
-                    targetPos = 1f; // Top of the scroll
+                    targetPos = 1f;
                 }
 
-                // Smoothly scroll to target position
                 float elapsedTime = 0f;
                 float startPos = currentPos;
 
@@ -2254,21 +1933,18 @@ private void HideObjectsWithTag(string tag)
                     elapsedTime += Time.deltaTime;
                     float progress = elapsedTime / scrollSpeed;
 
-                    // Use smooth lerping for natural scrolling feel
                     float newPos = Mathf.SmoothStep(startPos, targetPos, progress);
                     currentUsersScrollRect.verticalNormalizedPosition = newPos;
 
                     yield return null;
                 }
 
-                // Ensure we reach the exact target position
                 if (currentUsersScrollRect != null)
                 {
                     currentUsersScrollRect.verticalNormalizedPosition = targetPos;
                 }
             }
 
-            // Wait before next scroll
             yield return new WaitForSeconds(scrollInterval);
         }
     }
@@ -2279,7 +1955,6 @@ private void HideObjectsWithTag(string tag)
         {
             currentUsersPanel.SetActive(false);
             
-            // Stop any ongoing auto-scroll coroutines when hiding the panel
             if (autoScrollCoroutine != null)
             {
                 StopCoroutine(autoScrollCoroutine);
@@ -2288,20 +1963,12 @@ private void HideObjectsWithTag(string tag)
         }
     }
 
-    /// <summary>
-    /// Gets the appropriate avatar sprite based on user's points.
-    /// </summary>
-    /// <param name="points">The user's total points (coins + knowledge points)</param>
-    /// <param name="oneself">If true, saves the current rank for rank increase detection</param>
-    /// <returns>The appropriate sprite for the user's point level</returns>
     public Sprite GetUserAvatarBasedOnPoints(int coins, int knowledgePoints, bool oneself = false)
     {
-        // Determine rank based on points
         var userService = new UserService();
         int rank = userService.CalculateUserRank(coins, knowledgePoints);
 
         
-        // If this is for the current user, save the rank for future comparison
         if (oneself)
         {
             int previousRank = PlayerPrefs.GetInt("UserRank", 1);
@@ -2311,7 +1978,6 @@ private void HideObjectsWithTag(string tag)
             Debug.Log($"Updated user rank: {previousRank} -> {rank} (points: {coins}, knowledge: {knowledgePoints})");
         }
         
-        // Select the appropriate sprite based on rank
         Sprite selectedSprite;
         
         switch (rank)
@@ -2323,7 +1989,7 @@ private void HideObjectsWithTag(string tag)
                 selectedSprite = rank2AvatarSprite;
                 break;
             case 3:
-                selectedSprite = rank3AvatarSprite ?? rank2AvatarSprite; // Use rank2 sprite if rank3 isn't defined
+                selectedSprite = rank3AvatarSprite ?? rank2AvatarSprite;
                 break;
             case 0:
             default:
@@ -2331,7 +1997,6 @@ private void HideObjectsWithTag(string tag)
                 break;
         }
         
-        // If the selected sprite is null, use the default sprite
         if (selectedSprite == null)
         {
             Debug.LogWarning($"Avatar sprite for rank {rank} (points: {coins}, knowledge: {knowledgePoints}) is not assigned. Using default sprite.");
@@ -2342,10 +2007,6 @@ private void HideObjectsWithTag(string tag)
     }
     
 
-    /// <summary>
-    /// Shows the rank up panel with the new rank information
-    /// </summary>
-    /// <param name="newRank">The new rank achieved</param>
     private void ShowRankUpPanel(int newRank)
     {
         if (rankUpPanel == null)
@@ -2354,35 +2015,27 @@ private void HideObjectsWithTag(string tag)
             return;
         }
         
-        // Map rank numbers to names (matching the Firebase function)
         string[] rankNames = { "Beginner", "Gold", "Silver", "Platinum" };
         string rankName = rankNames[Mathf.Clamp(newRank, 0, rankNames.Length - 1)];
         
-        // Set the rank up text
         if (rankUpText != null)
         {
             rankUpText.text = rankName;
         }
         
-        // Setup close button
         if (rankUpCloseButton != null)
         {
             rankUpCloseButton.onClick.RemoveAllListeners();
             rankUpCloseButton.onClick.AddListener(HideRankUpPanel);
         }
         
-        // Show the panel
         rankUpPanel.SetActive(true);
         
-        // Animate the panel appearing
         StartCoroutine(AnimatePanelPopup(rankUpPanel));
         
         Debug.Log($"Showing rank up panel for {rankName} rank (rank {newRank})");
     }
     
-    /// <summary>
-    /// Hides the rank up panel
-    /// </summary>
     public void HideRankUpPanel()
     {
         if (rankUpPanel != null)
@@ -2391,14 +2044,10 @@ private void HideObjectsWithTag(string tag)
         }
     }
     
-    /// <summary>
-    /// Clears all static cache data in UIManager upon logout
-    /// </summary>
     public static void ClearStaticCache()
     {
         try
         {
-            // Clear static cache for current users per building
             cachedCurrentUsersPerBuilding.Clear();
             currentUsersLoadedPerBuilding.Clear();
             
