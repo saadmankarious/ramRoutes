@@ -119,7 +119,7 @@ public class BackgroundLocationService : MonoBehaviour
     {
         Debug.Log($"[BackgroundLocation] Physical building changed: {buildingName}");
         OnPhysicalBuildingChanged?.Invoke(buildingName);
-        UIManager.Instance.SetCurrentBuildingName(buildingName);
+        // UIManager.Instance.SetCurrentBuildingName(buildingName);
     }
 
     void OnDestroy()

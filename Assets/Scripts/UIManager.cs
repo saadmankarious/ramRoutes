@@ -69,7 +69,6 @@ public class UIManager : MonoBehaviour
     [SerializeField] private float celebrationPlaybackSpeed = 1f;
     [SerializeField] private float celebrationDuration = 2f;
 
-    [SerializeField] private Text CurrentBuildingName;
     public Text timerText;
     public Text heldItem;
     public GameObject dialogPanel;
@@ -181,14 +180,6 @@ public class UIManager : MonoBehaviour
         else
         {
             PauseGame();
-        }
-    }
-
-    public void SetCurrentBuildingName(string name)
-    {
-        if (CurrentBuildingName != null)
-        {
-            CurrentBuildingName.text = name;
         }
     }
 
