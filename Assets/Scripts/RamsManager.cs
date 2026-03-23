@@ -45,6 +45,8 @@ public class RamsManager : MonoBehaviour
     
     [Header("Player Count Display")]
     [SerializeField] private GameObject playerCountCanvasPrefab;
+        [SerializeField] private GameObject footprintPrefab;
+
     [SerializeField] private Transform playerCountSpawnPoint;
     
     private User currentChatUser;
@@ -1346,7 +1348,7 @@ public class RamsManager : MonoBehaviour
         var addBtn = canvasInstance.GetComponentsInChildren<Button>(true)
             .FirstOrDefault(b => b.name == "add-footprint");
         var input = canvasInstance.GetComponentsInChildren<InputField>(true)
-            .FirstOrDefault(f => f.name == "footprint");
+            .FirstOrDefault(f => f.name == "Input");
 
         if (addBtn == null || input == null)
         {
@@ -1363,17 +1365,78 @@ public class RamsManager : MonoBehaviour
             bool isOpen = input.gameObject.activeSelf;
             if (!isOpen)
             {
-                // Open the field
                 input.gameObject.SetActive(true);
                 input.text = "";
                 input.ActivateInputField();
             }
             else
             {
-                // Submit
-                _ = PublishFootprintAsync(input);
+                _ = PublishFootprintAsync(input, canvasInstance);
             }
         });
+
+        // Load existing footprints for this building on startup
+        _ = LoadBuildingFootprintsAsync(canvasInstance);
+    }
+
+    private async Task LoadBuildingFootprintsAsync(GameObject canvasInstance)
+    {
+        if (footprintPrefab == null)
+        {
+            Debug.LogWarning("[RamsManager] footprintPrefab is not assigned.");
+            return;
+        }
+
+        // Find the "footprints" parent with VerticalLayoutGroup
+        Transform container = FindChildByName(canvasInstance.transform, "footprints");
+        if (container == null)
+        {
+            Debug.LogWarning("[RamsManager] Could not find 'footprints' container in canvas.");
+            return;
+        }
+
+        // Clear existing items
+        foreach (Transform child in container)
+            Destroy(child.gameObject);
+
+        string buildingId = building != null ? building.buildingName : "unknown";
+
+        try
+        {
+            var svc = new FootprintService();
+            var all = await svc.GetByBuildingAsync(buildingId);
+
+            // Sort by createdAt descending, take 2 most recent
+            var recent = all
+                .OrderByDescending(f => f.createdAt)
+                .Take(2)
+                .ToList();
+
+            foreach (var fp in recent)
+            {
+                var item = Instantiate(footprintPrefab, container);
+                var txt = item.GetComponentsInChildren<Text>(true)
+                    .FirstOrDefault(t => t.name == "text");
+                if (txt != null)
+                    txt.text = fp.text;
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"[RamsManager] LoadBuildingFootprintsAsync failed: {ex.Message}");
+        }
+    }
+
+    // Recursively find a child Transform by name
+    private Transform FindChildByName(Transform parent, string childName)
+    {
+        foreach (Transform child in parent)
+        {
+            if (child.name == childName) return child;
+            var found = FindChildByName(child, childName);
+            if (found != null) return found;
+        }
+        return null;
     }
 
     private bool ValidateFootprintText(string text)
@@ -1381,7 +1444,7 @@ public class RamsManager : MonoBehaviour
         return text != null && text.Length >= 10 && text.Length <= 60;
     }
 
-    private async Task PublishFootprintAsync(InputField input)
+    private async Task PublishFootprintAsync(InputField input, GameObject canvasInstance)
     {
         string text = input.text?.Trim();
 
@@ -1411,6 +1474,9 @@ public class RamsManager : MonoBehaviour
 
             UIManager.Instance.ShowQuickUpdate("footprint submitted");
             Debug.Log($"[RamsManager] Footprint published for building '{buildingId}'.");
+
+            // Refresh the displayed footprints
+            await LoadBuildingFootprintsAsync(canvasInstance);
         }
         catch (System.Exception ex)
         {
