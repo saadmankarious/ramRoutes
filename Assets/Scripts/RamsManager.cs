@@ -1,10 +1,12 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Collections;
 using System.Linq;
 using RamRoutes.Services;
 using RamRoutes.Model;
+using Firebase.Auth;
 
 [System.Serializable]
 public struct UserBuildingEntry
@@ -103,6 +105,7 @@ public class RamsManager : MonoBehaviour
             playerCountCanvasInstance.transform.position = worldPos;
             playerCountCanvasInstance.transform.rotation = Quaternion.identity;
             playerCountCanvasInstance.SetActive(true);
+            WireFootprintButton(playerCountCanvasInstance);
         }
 
         
@@ -1150,6 +1153,7 @@ public class RamsManager : MonoBehaviour
                         : transform.position + Vector3.up * 1f;
                     playerCountCanvasInstance.transform.position = worldPos;
                     playerCountCanvasInstance.transform.rotation = Quaternion.identity;
+                    WireFootprintButton(playerCountCanvasInstance);
                 }
                 
                 UpdatePlayerCountDisplay(count);
@@ -1178,7 +1182,9 @@ public class RamsManager : MonoBehaviour
         
         if (countText == null)
         {
-            var tmpText = playerCountCanvasInstance.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+            // access text field by its name
+            var tmpText = playerCountCanvasInstance.transform.Find("PlayerCount")?.GetComponent<TMPro.TextMeshProUGUI>();
+            // var tmpText = playerCountCanvasInstance.GetComponentInChildren<TMPro.TextMeshProUGUI>();
             if (tmpText != null)
             {
                 tmpText.text = count.ToString();
@@ -1331,5 +1337,51 @@ public class RamsManager : MonoBehaviour
         
         pendingBuildingEntries.Clear();
         batchProcessingCoroutine = null;
+    }
+
+    // ── Footprint ────────────────────────────────────────────────────────────
+
+    private void WireFootprintButton(GameObject canvasInstance)
+    {
+        var btn = canvasInstance.GetComponentsInChildren<Button>(true)
+            .FirstOrDefault(b => b.name == "add-footprint");
+        var input = canvasInstance.GetComponentsInChildren<InputField>(true)
+            .FirstOrDefault(f => f.name == "footprint");
+
+        if (btn == null || input == null)
+        {
+            Debug.LogWarning("[RamsManager] WireFootprintButton: could not find 'add-footprint' button or 'footprint' input field on canvas.");
+            return;
+        }
+
+        btn.onClick.RemoveAllListeners();
+        btn.onClick.AddListener(() => _ = PublishFootprintAsync(input));
+    }
+
+    private async Task PublishFootprintAsync(InputField input)
+    {
+        string text = input.text?.Trim();
+        if (string.IsNullOrEmpty(text)) return;
+
+        string userId = FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+        if (string.IsNullOrEmpty(userId))
+        {
+            Debug.LogWarning("[RamsManager] PublishFootprint: no authenticated user.");
+            return;
+        }
+
+        string buildingId = building != null ? building.buildingName : "unknown";
+
+        try
+        {
+            var svc = new FootprintService();
+            await svc.CreateAsync(new Footprint(text, userId, buildingId));
+            input.text = "";
+            Debug.Log($"[RamsManager] Footprint published for building '{buildingId}'.");
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"[RamsManager] Failed to publish footprint: {ex.Message}");
+        }
     }
 }
