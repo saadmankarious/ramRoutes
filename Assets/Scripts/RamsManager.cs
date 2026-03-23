@@ -88,7 +88,23 @@ public class RamsManager : MonoBehaviour
         
         InitializePlayerCountDisplay();
         
-        
+        // Instantiate player count canvas at scene root (NOT as child of building).
+        // Parenting a world-space canvas to the building causes it to be culled/clipped
+        // when the camera is close. Unparented, it always renders correctly.
+        if (playerCountCanvasInstance == null && playerCountCanvasPrefab != null)
+        {
+            playerCountCanvasInstance = Instantiate(playerCountCanvasPrefab);  // no parent — scene root
+            playerCountCanvasInstance.transform.localScale = Vector3.one * 0.01f; // 1 world-unit = 100px
+            
+            // Position it at the spawn point's world position
+            Vector3 worldPos = playerCountSpawnPoint != null
+                ? playerCountSpawnPoint.position
+                : transform.position + Vector3.up * 1f;
+            playerCountCanvasInstance.transform.position = worldPos;
+            playerCountCanvasInstance.transform.rotation = Quaternion.identity;
+            playerCountCanvasInstance.SetActive(true);
+        }
+
         
         ValidateSpawnPoints();
         
@@ -1095,16 +1111,7 @@ public class RamsManager : MonoBehaviour
     
     private IEnumerator DisplayPlayerCountCoroutine()
     {
-        if (requireTerminalStage)
-        {
-            var currentStage = GameStageService.LoadStageFromPrefs();
-            if (currentStage == null || currentStage.area != Stage.Terminal)
-            {
-                StartCoroutine(HidePlayerCountCanvas());
-                yield break;
-            }
-        }
-        
+        // NOTE: simplified - always show static player count (don't hide based on stage)
         var getUsersTask = userService.GetUsersInBuilding(building.buildingName);
         
         yield return new WaitUntil(() => getUsersTask.IsCompleted);
@@ -1124,10 +1131,7 @@ public class RamsManager : MonoBehaviour
     
     private IEnumerator HidePlayerCountCanvas()
     {
-        if (playerCountCanvasInstance != null)
-        {
-            playerCountCanvasInstance.SetActive(false);
-        }
+        // Intentionally left empty to keep player count canvas always visible and static
         yield return null;
     }
     
@@ -1139,8 +1143,13 @@ public class RamsManager : MonoBehaviour
             {
                 if (playerCountCanvasInstance == null && playerCountCanvasPrefab != null)
                 {
-                    Transform spawnParentTransform = playerCountSpawnPoint != null ? playerCountSpawnPoint : transform;
-                    playerCountCanvasInstance = Instantiate(playerCountCanvasPrefab, spawnParentTransform);
+                    playerCountCanvasInstance = Instantiate(playerCountCanvasPrefab); // scene root, not a child
+                    playerCountCanvasInstance.transform.localScale = Vector3.one * 0.01f;
+                    Vector3 worldPos = playerCountSpawnPoint != null
+                        ? playerCountSpawnPoint.position
+                        : transform.position + Vector3.up * 1f;
+                    playerCountCanvasInstance.transform.position = worldPos;
+                    playerCountCanvasInstance.transform.rotation = Quaternion.identity;
                 }
                 
                 UpdatePlayerCountDisplay(count);
@@ -1180,28 +1189,38 @@ public class RamsManager : MonoBehaviour
             return;
         }
         
+        // Static update: set text, ensure visible, keep scale fixed (no animation)
         countText.text = count.ToString();
         playerCountCanvasInstance.SetActive(true);
-        
-        StartCoroutine(BeatingAnimation());
+        playerCountCanvasInstance.transform.localScale = Vector3.one;
         
     }
     
     private IEnumerator BeatingAnimation()
     {
-        if (playerCountCanvasInstance == null) yield break;
-        while (playerCountCanvasInstance.activeInHierarchy)
-        {
-            playerCountCanvasInstance.transform.localScale = Vector3.one * 1.2f;
-            yield return new WaitForSeconds(1.5f);
-            playerCountCanvasInstance.transform.localScale = Vector3.one;
-            yield return new WaitForSeconds(1.5f);
-        }
+        // Disabled: keep player count canvas static
+        yield break;
     }
     
     void Update()
     {
-        
+        // Keep the unparented player count canvas locked to the spawn point world position
+        if (playerCountCanvasInstance != null && playerCountCanvasInstance.activeSelf)
+        {
+            Vector3 worldPos = playerCountSpawnPoint != null
+                ? playerCountSpawnPoint.position
+                : transform.position + Vector3.up * 1f;
+            playerCountCanvasInstance.transform.position = worldPos;
+        }
+    }
+
+    void LateUpdate()
+    {
+        // Billboard: make the canvas always face the main camera
+        if (playerCountCanvasInstance != null && playerCountCanvasInstance.activeSelf && Camera.main != null)
+        {
+            playerCountCanvasInstance.transform.rotation = Camera.main.transform.rotation;
+        }
     }
     
     public static void ResetBuildingActivityNotification()
