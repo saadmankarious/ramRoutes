@@ -1415,10 +1415,40 @@ public class RamsManager : MonoBehaviour
             foreach (var fp in recent)
             {
                 var item = Instantiate(footprintPrefab, container);
+
+                // Capture the prefab's original scale before zeroing it
+                Vector3 originalScale = item.transform.localScale;
+                item.transform.localScale = Vector3.zero;
+
                 var txt = item.GetComponentsInChildren<Text>(true)
                     .FirstOrDefault(t => t.name == "text");
                 if (txt != null)
                     txt.text = fp.text;
+
+                var posterName = item.GetComponentsInChildren<Text>(true)
+                    .FirstOrDefault(t => t.name == "poster-username");
+                if (posterName != null)
+                {
+                    try
+                    {
+                        var user = await userService.GetUserProfileCachedOrRemoteAsync(fp.makerId);
+                        posterName.text = user != null ? user.name : fp.makerId;
+                    }
+                    catch
+                    {
+                        posterName.text = fp.makerId;
+                    }
+                }
+
+                var timeText = item.GetComponentsInChildren<Text>(true)
+                    .FirstOrDefault(t => t.name == "post-time");
+                if (timeText != null)
+                    timeText.text = FormatRelativeTime(fp.createdAt);
+
+                StartCoroutine(PopInFootprintItem(item, originalScale));
+
+                // Stagger each item
+                await Task.Delay(150);
             }
         }
         catch (System.Exception ex)
@@ -1437,6 +1467,44 @@ public class RamsManager : MonoBehaviour
             if (found != null) return found;
         }
         return null;
+    }
+
+    private string FormatRelativeTime(long createdAtMs)
+    {
+        if (createdAtMs <= 0) return "";
+        long nowMs = System.DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        long deltaMs = nowMs - createdAtMs;
+        if (deltaMs < 0) return "now";
+
+        long deltaSec = deltaMs / 1000;
+        if (deltaSec < 10)  return "now";
+        if (deltaSec < 60)  return $"{deltaSec}s ago";
+        long deltaMin = deltaSec / 60;
+        if (deltaMin < 60)  return $"{deltaMin}m ago";
+        long deltaHr = deltaMin / 60;
+        return $"{deltaHr}h ago";
+    }
+
+    private IEnumerator PopInFootprintItem(GameObject item, Vector3 originalScale)
+    {
+        if (item == null) yield break;
+
+        float duration = 0.25f;
+        float elapsed  = 0f;
+        Vector3 overshoot = originalScale * 1.1f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / duration);
+            float scale = t < 0.8f
+                ? t / 0.8f              // 0 → 1 (normalised) during first 80%
+                : 1f + (1f - (t - 0.8f) / 0.2f) * 0.1f; // 1.1 → 1.0 during last 20%
+            item.transform.localScale = originalScale * scale;
+            yield return null;
+        }
+
+        item.transform.localScale = originalScale;
     }
 
     private bool ValidateFootprintText(string text)
