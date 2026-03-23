@@ -25,7 +25,8 @@ namespace RamRoutes.Services
                 {
                     { "text",       footprint.text },
                     { "makerId",    footprint.makerId },
-                    { "buildingId", footprint.buildingId }
+                    { "buildingId", footprint.buildingId },
+                    { "createdAt",  footprint.createdAt }
                 };
                 var docRef = await db.Collection(Collection).AddAsync(data);
                 return docRef.Id;
@@ -126,7 +127,8 @@ namespace RamRoutes.Services
                 id         = doc.Id,
                 text       = d.ContainsKey("text")       ? d["text"].ToString()       : "",
                 makerId    = d.ContainsKey("makerId")    ? d["makerId"].ToString()    : "",
-                buildingId = d.ContainsKey("buildingId") ? d["buildingId"].ToString() : ""
+                buildingId = d.ContainsKey("buildingId") ? d["buildingId"].ToString() : "",
+                createdAt  = d.ContainsKey("createdAt")  ? Convert.ToInt64(d["createdAt"]) : 0
             };
         }
     }

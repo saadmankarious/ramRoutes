@@ -1343,25 +1343,53 @@ public class RamsManager : MonoBehaviour
 
     private void WireFootprintButton(GameObject canvasInstance)
     {
-        var btn = canvasInstance.GetComponentsInChildren<Button>(true)
+        var addBtn = canvasInstance.GetComponentsInChildren<Button>(true)
             .FirstOrDefault(b => b.name == "add-footprint");
         var input = canvasInstance.GetComponentsInChildren<InputField>(true)
             .FirstOrDefault(f => f.name == "footprint");
 
-        if (btn == null || input == null)
+        if (addBtn == null || input == null)
         {
             Debug.LogWarning("[RamsManager] WireFootprintButton: could not find 'add-footprint' button or 'footprint' input field on canvas.");
             return;
         }
 
-        btn.onClick.RemoveAllListeners();
-        btn.onClick.AddListener(() => _ = PublishFootprintAsync(input));
+        // Hide the input field until the button is clicked
+        input.gameObject.SetActive(false);
+
+        addBtn.onClick.RemoveAllListeners();
+        addBtn.onClick.AddListener(() =>
+        {
+            bool isOpen = input.gameObject.activeSelf;
+            if (!isOpen)
+            {
+                // Open the field
+                input.gameObject.SetActive(true);
+                input.text = "";
+                input.ActivateInputField();
+            }
+            else
+            {
+                // Submit
+                _ = PublishFootprintAsync(input);
+            }
+        });
+    }
+
+    private bool ValidateFootprintText(string text)
+    {
+        return text != null && text.Length >= 10 && text.Length <= 60;
     }
 
     private async Task PublishFootprintAsync(InputField input)
     {
         string text = input.text?.Trim();
-        if (string.IsNullOrEmpty(text)) return;
+
+        if (!ValidateFootprintText(text))
+        {
+            Debug.LogWarning("[RamsManager] Footprint must be between 10 and 60 characters.");
+            return;
+        }
 
         string userId = FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
         if (string.IsNullOrEmpty(userId))
@@ -1376,7 +1404,12 @@ public class RamsManager : MonoBehaviour
         {
             var svc = new FootprintService();
             await svc.CreateAsync(new Footprint(text, userId, buildingId));
+
+            // Hide input field after successful submission
             input.text = "";
+            input.gameObject.SetActive(false);
+
+            UIManager.Instance.ShowQuickUpdate("footprint submitted");
             Debug.Log($"[RamsManager] Footprint published for building '{buildingId}'.");
         }
         catch (System.Exception ex)

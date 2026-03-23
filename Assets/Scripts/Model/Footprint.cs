@@ -9,6 +9,7 @@ namespace RamRoutes.Model
         public string text;
         public string makerId;
         public string buildingId;
+        public long createdAt;
 
         public Footprint() { }
 
@@ -17,6 +18,7 @@ namespace RamRoutes.Model
             this.text = text;
             this.makerId = makerId;
             this.buildingId = buildingId;
+            this.createdAt = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         }
     }
 }
