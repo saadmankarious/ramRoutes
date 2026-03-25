@@ -10,7 +10,8 @@ namespace RamRoutes.Model
         Default,
         Rainbow,
         Summer,
-        Winter
+        Winter,
+        Cat
     }
 
     [Serializable]

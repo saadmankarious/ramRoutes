@@ -1185,8 +1185,11 @@ public class RamsManager : MonoBehaviour
         if (countText == null)
         {
             // access text field by its name
-            var tmpText = playerCountCanvasInstance.transform.Find("PlayerCount")?.GetComponent<TMPro.TextMeshProUGUI>();
+            // var tmpText = playerCountCanvasInstance.transform.Find("PlayerCount")?.GetComponent<TMPro.TextMeshProUGUI>();
             // var tmpText = playerCountCanvasInstance.GetComponentInChildren<TMPro.TextMeshProUGUI>();
+            // this reads the wrong text, let's ensure we find exact Text not TMPro, and by name to avoid accidentally grabbing the "Enter Footprint" text
+            var tmpText = playerCountCanvasInstance.GetComponentsInChildren<TMPro.TextMeshProUGUI>()
+                .FirstOrDefault(t => t.gameObject.name == "PlayerCount");
             if (tmpText != null)
             {
                 tmpText.text = count.ToString();

@@ -458,6 +458,10 @@ namespace RamRoutes.Services
             {
                 return EquippedSkin.Winter;
             }
+                else if (lowerItemName.Contains("cat") || lowerItemName.Contains("cat-skin") || lowerItemName.Contains("cold"))
+            {
+                return EquippedSkin.Cat;
+            }
             else
             {
                 return EquippedSkin.Default;

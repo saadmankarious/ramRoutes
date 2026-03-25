@@ -13,7 +13,8 @@ public class SkinManager : MonoBehaviour
     public RuntimeAnimatorController rainbowSkinAnimator;
     public RuntimeAnimatorController summerSkinAnimator;
     public RuntimeAnimatorController winterSkinAnimator;
-    
+    public RuntimeAnimatorController catSkinAnimator;
+
     [Header("Accessory Prefabs")]
     [SerializeField] private Light2D torchLightPrefab;
     [SerializeField] private Light2D hornsLightPrefab;
@@ -248,6 +249,8 @@ public class SkinManager : MonoBehaviour
             EquippedSkin.Rainbow => rainbowSkinAnimator ?? defaultSkinAnimator,
             EquippedSkin.Summer => summerSkinAnimator ?? defaultSkinAnimator,
             EquippedSkin.Winter => winterSkinAnimator ?? defaultSkinAnimator,
+            EquippedSkin.Cat => catSkinAnimator ?? defaultSkinAnimator,
+
             EquippedSkin.Default => defaultSkinAnimator,
             _ => defaultSkinAnimator
         };
