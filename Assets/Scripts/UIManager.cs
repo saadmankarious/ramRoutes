@@ -28,8 +28,8 @@ public class UIManager : MonoBehaviour
 
     [Header("UI References")]
     public Text coinsText;
-    public Text usernameAndHallText;
-
+    public Text usernameText;
+    public Text statusText;
     public Text knowledgePointsText;
     public ParticleSystem teleportEffect;
     public ParticleSystem celebrationEffect1;
@@ -574,16 +574,26 @@ public class UIManager : MonoBehaviour
 
     private void UpdateUsernameAndHall()
     {
-        if (usernameAndHallText != null)
+        if (usernameText != null)
         {
             string userName = PlayerPrefs.GetString("UserName", "Anonymous User");
-            string hall = PlayerPrefs.GetString("ResidenceHall", "No Hall");
-
-            usernameAndHallText.text = $"@{userName} - {hall}";
+            usernameText.text = $"@{userName}";
+        }
+        if (statusText != null)        {
+            string status = PlayerPrefs.GetString("UserStatus", "--");
+            statusText.text = status;
         }
         var userRank = PlayerPrefs.GetInt("UserRank", 0);
         UpdateUserAvatar(userRank);
 
+    }
+
+    public void RefreshStatusText()
+    {
+        if (statusText != null)
+        {
+            statusText.text = PlayerPrefs.GetString("UserStatus", "--");
+        }
     }
     
     public async Task CheckAndUpdateUserRank()

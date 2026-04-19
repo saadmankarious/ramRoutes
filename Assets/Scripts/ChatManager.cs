@@ -597,6 +597,9 @@ public class ChatManager : MonoBehaviour
                     {
                         UserStatus selected = (UserStatus)index;
                         user.status = selected; // keep local object in sync
+                        PlayerPrefs.SetString("UserStatus", selected.ToString());
+                        PlayerPrefs.Save();
+                        UIManager.Instance?.RefreshStatusText();
                         string uid = FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
                         if (!string.IsNullOrEmpty(uid))
                         {

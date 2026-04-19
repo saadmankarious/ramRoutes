@@ -2149,7 +2149,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1332630204}
   m_HandleRect: {fileID: 1332630203}
   m_Direction: 2
-  m_Value: 0
+  m_Value: 1
   m_Size: 1
   m_NumberOfSteps: 0
   m_OnValueChanged:
@@ -24415,6 +24415,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1503913375}
   m_CullTransparentMesh: 1
+--- !u!114 &1506956969 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6795069014526560291, guid: 076901cc71040d7dd9c87fefbb68bd86,
+    type: 3}
+  m_PrefabInstance: {fileID: 2080568962}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1517704276
 GameObject:
   m_ObjectHideFlags: 0
@@ -26194,8 +26206,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1619296244}
   m_HandleRect: {fileID: 1619296243}
   m_Direction: 2
-  m_Value: 1
-  m_Size: 0.60789096
+  m_Value: 0.99999976
+  m_Size: 0.60789084
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -391992,7 +392004,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   collectableSound: {fileID: 8300000, guid: bf527d825758e5b4ca7b69f5a02d9a56, type: 3}
   coinsText: {fileID: 283564074}
-  usernameAndHallText: {fileID: 2080568965}
+  usernameText: {fileID: 2080568965}
+  statusText: {fileID: 1506956969}
   knowledgePointsText: {fileID: 808927969}
   teleportEffect: {fileID: 3425026211840218638, guid: 40a08865e12e93d4a8954444c54c525a,
     type: 3}

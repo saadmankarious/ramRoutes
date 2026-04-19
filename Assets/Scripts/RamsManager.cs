@@ -49,6 +49,7 @@ public class RamsManager : MonoBehaviour
 
     [SerializeField] private Transform playerCountSpawnPoint;
     
+    
     private User currentChatUser;
     private float lastClickTime = 0f;
     private const float CLICK_DEBOUNCE_TIME = 0.5f;
@@ -1194,6 +1195,8 @@ public class RamsManager : MonoBehaviour
             {
                 tmpText.text = count.ToString();
                 playerCountCanvasInstance.SetActive(true);
+                // change the image sprite big > small with animation (two seconds big two seconds small)
+
                 return;
             }
             

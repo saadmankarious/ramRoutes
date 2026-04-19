@@ -593,6 +593,7 @@ public class LoginManager : MonoBehaviour
             // Store user info in PlayerPrefs for easy access
             PlayerPrefs.SetString("UserName", username);
             PlayerPrefs.SetString("ResidenceHall", residenceHall);
+            PlayerPrefs.SetString("UserStatus", "Studying");
             
             // Mark this as a new user for onboarding
             PlayerPrefs.SetInt($"FirstTime_{userId}", 1);
@@ -832,8 +833,9 @@ public class LoginManager : MonoBehaviour
                 // Store user name and residence hall in PlayerPrefs for easy access
                 PlayerPrefs.SetString("UserName", !string.IsNullOrEmpty(user.name) ? user.name : playerName);
                 PlayerPrefs.SetString("ResidenceHall", !string.IsNullOrEmpty(user.residenceHall) ? user.residenceHall : "No Hall");
+                PlayerPrefs.SetString("UserStatus", user.GetStatusAsString());
                 PlayerPrefs.Save();
-                Debug.Log($"Stored user profile in PlayerPrefs: {user.name}, {user.residenceHall}");
+                Debug.Log($"Stored user profile in PlayerPrefs: {user.name}, {user.residenceHall}, status={user.GetStatusAsString()}");
             }
         }
         catch (System.Exception e)
