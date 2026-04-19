@@ -7,6 +7,7 @@ public class RamClickHandler : MonoBehaviour, IPointerClickHandler
     private User user;
     private RamsManager ramsManager;
     private bool isInitialized = false;
+    private bool clickHandledThisFrame = false;
 
     void Awake()
     {
@@ -66,22 +67,28 @@ public class RamClickHandler : MonoBehaviour, IPointerClickHandler
         Debug.Log($"RamClickHandler: Initialized {gameObject.name} for user {user.name}");
     }
 
-    void OnMouseDown()
+    void LateUpdate()
     {
-        // Handle direct mouse clicks on the ram sprite
-        if (user != null && ramsManager != null)
-        {
-            ramsManager.HandleRamClick(user, gameObject);
-        }
+        clickHandledThisFrame = false;
     }
 
-    // Handle UI clicks (this is the one that was working)
+    private void HandleClick()
+    {
+        if (clickHandledThisFrame) return;
+        if (user == null || ramsManager == null) return;
+        clickHandledThisFrame = true;
+        ramsManager.HandleRamClick(user, gameObject);
+    }
+
+    void OnMouseDown()
+    {
+        HandleClick();
+    }
+
+    // Handle UI clicks via Physics2DRaycaster
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (user != null && ramsManager != null)
-        {
-            ramsManager.HandleRamClick(user, gameObject);
-        }
+        HandleClick();
     }
 
     // Handle collision detection for chat initiation

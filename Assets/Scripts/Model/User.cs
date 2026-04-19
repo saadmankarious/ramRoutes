@@ -22,6 +22,14 @@ namespace RamRoutes.Model
         Horns
     }
 
+    // user status
+    [Serializable]
+    public enum UserStatus
+    {
+        Studying,
+        DownToHang,
+    }
+
     [Serializable]
     public class User
     {
@@ -38,6 +46,7 @@ namespace RamRoutes.Model
         public string bio { set; get; } = "";
         public EquippedSkin equippedSkin { set; get; } = EquippedSkin.Default;
         public EquippedAccessory equippedAccessory { set; get; } = EquippedAccessory.None;
+        public UserStatus status { set; get; } = UserStatus.Studying;
         public List<string> friends { set; get; } = new List<string>();
         public string GetEquippedSkinAsString()
         {
@@ -71,6 +80,19 @@ namespace RamRoutes.Model
             }
         }
 
+        public string GetStatusAsString()
+        {
+            return status.ToString();
+        }
+        public void SetStatusFromString(string statusName)
+        {
+            if (Enum.TryParse<UserStatus>(statusName, out var parsedStatus))
+            {                status = parsedStatus;
+            }
+            else            {
+                status = UserStatus.Studying; // Fallback to Studying if parsing fails
+            }   
+        }   
         public User(string userId, string notificationToken, string name, string email)
         {
             this.userId = userId;

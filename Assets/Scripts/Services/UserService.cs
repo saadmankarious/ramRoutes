@@ -86,6 +86,10 @@ namespace RamRoutes.Services
                     user.residenceHall = residenceHall;
                     user.bio = bio;
                     user.friends = friends;
+
+                    string statusStr = data.ContainsKey("status") && data["status"] != null ? data["status"].ToString() : "Studying";
+                    user.SetStatusFromString(statusStr);
+
                     return user;
                 }
                 else
@@ -145,6 +149,10 @@ namespace RamRoutes.Services
                     user.residenceHall = residenceHall;
                     user.bio = bio;
                     user.friends = friends;
+
+                    string statusStr = data.ContainsKey("status") && data["status"] != null ? data["status"].ToString() : "Studying";
+                    user.SetStatusFromString(statusStr);
+
                     return user;
                 }
                 else
@@ -374,6 +382,10 @@ namespace RamRoutes.Services
                     user.residenceHall = residenceHall;
                     user.bio = bio;
                     user.SetEquippedSkinFromString(equippedSkin);
+
+                    string statusStr = data.ContainsKey("status") && data["status"] != null ? data["status"].ToString() : "Studying";
+                    user.SetStatusFromString(statusStr);
+
                     users.Add(user);
                 }
 
@@ -672,6 +684,25 @@ namespace RamRoutes.Services
             catch (Exception ex)
             {
                 Debug.LogError($"Failed to update bio for user {userId}: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task UpdateUserStatus(string userId, UserStatus newStatus)
+        {
+            try
+            {
+                var userDoc = db.Collection("users").Document(userId);
+                await userDoc.UpdateAsync(new Dictionary<string, object>
+                {
+                    { "status", newStatus.ToString() }
+                });
+
+                Debug.Log($"Updated status for user {userId} to {newStatus}");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Failed to update status for user {userId}: {ex.Message}");
                 throw;
             }
         }

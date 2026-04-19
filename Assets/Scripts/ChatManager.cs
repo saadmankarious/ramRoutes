@@ -508,15 +508,7 @@ public class ChatManager : MonoBehaviour
     public async void OpenChatWithUser(User user)
     {
         if (user == null) return;
-        
-        // Check if we're switching to a different user
-        bool isDifferentUser = currentChatTargetUser == null || currentChatTargetUser.userId != user.userId;
-        
-        currentChatTargetUser = user;
-        currentChatTargetId = user.userId;
-        currentChatTargetName = user.name;
-        
-        // Update profile display
+              // Update profile display
         UpdateProfileDisplay(user);
         
         if (chatPanel != null)
@@ -537,19 +529,118 @@ public class ChatManager : MonoBehaviour
             // Add a fallback to ensure panel shows after a reasonable time
             StartCoroutine(EnsurePanelShowsFallback());
         }
-        
-        // If switching to a different user, clear existing conversation UI
-        if (isDifferentUser)
+
+        bool isSelf = FirebaseAuth.DefaultInstance.CurrentUser != null && user.userId == FirebaseAuth.DefaultInstance.CurrentUser.UserId;
+        // if chatting with self
+        if (isSelf)
         {
-            ClearConversationDisplay();
+            Debug.LogWarning("Cannot open chat with yourself");
+            // hide chat pannels
+            if (chatPanel != null)
+            {
+                chatPanel.SetActive(false);
+            }
+            // hide add friend and sendshoutout buttons
+          Transform addFriendTransform = FindChildByName(chatPanel.transform, "add-friend");
+            Button addFriendButton = addFriendTransform?.GetComponent<Button>();
+            if (addFriendButton != null)
+            {
+                addFriendButton.gameObject.SetActive(false);
+            }
+
+            Transform shoutoutTransform = FindChildByName(chatPanel.transform, "shoutout");
+            Button shoutoutButton = shoutoutTransform?.GetComponent<Button>();
+            if (shoutoutButton != null)
+            {
+                shoutoutButton.gameObject.SetActive(false);
+            }
+
+              Transform chatHistoryTransform = FindChildByName(chatPanel.transform, "chat-history");
+            if (chatHistoryTransform != null)
+            {
+                chatHistoryTransform.gameObject.SetActive(false);
+            }
+
+              Transform emoticonsTransform = FindChildByName(chatPanel.transform, "emoticons");
+            if (emoticonsTransform != null)
+            {
+                emoticonsTransform.gameObject.SetActive(false);
+            }
+
+            // Wire up the status dropdown to update user status
+            Transform dropdownTransform = FindChildByName(chatPanel.transform, "status-dropdown");
+            if (dropdownTransform != null)
+            {
+                var dropdown = dropdownTransform.GetComponent<Dropdown>();
+                if (dropdown != null)
+                {
+                    // Remove listeners FIRST so setting value doesn't trigger an update
+                    dropdown.onValueChanged.RemoveAllListeners();
+
+                    // Populate options from UserStatus enum
+                    dropdown.ClearOptions();
+                    var options = new List<string>();
+                    foreach (UserStatus s in Enum.GetValues(typeof(UserStatus)))
+                    {
+                        options.Add(s.ToString());
+                    }
+                    dropdown.AddOptions(options);
+
+                    // Set current value BEFORE adding listener so it doesn't fire
+                    dropdown.SetValueWithoutNotify((int)user.status);
+
+                    // Now add the listener — only user-initiated changes will trigger it
+                    dropdown.onValueChanged.AddListener((index) =>
+                    {
+                        UserStatus selected = (UserStatus)index;
+                        user.status = selected; // keep local object in sync
+                        string uid = FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+                        if (!string.IsNullOrEmpty(uid))
+                        {
+                            _ = userService.UpdateUserStatus(uid, selected);
+                            UIManager.Instance?.ShowQuickUpdate($"Status: {selected}");
+                        }
+                    });
+                }
+            }
+
+
+
         }
-        
-        // Load conversation
-        await LoadConversation();
-        
-        // Start auto-refresh for both chat messages and whisper buttons
-        StartChatRefresh();
-        StartWhisperRefresh();
+        else
+        {
+
+            //hide status
+                  Transform statusTransform = FindChildByName(chatPanel.transform, "self-status");
+            if (statusTransform != null)
+            {
+                statusTransform.gameObject.SetActive(false);
+            }
+
+            bool isDifferentUser = currentChatTargetUser == null || currentChatTargetUser.userId != user.userId;
+            
+            currentChatTargetUser = user;
+            currentChatTargetId = user.userId;
+            currentChatTargetName = user.name;
+            
+    
+            
+            // If switching to a different user, clear existing conversation UI
+            if (isDifferentUser)
+            {
+                ClearConversationDisplay();
+            }
+            
+            // Load conversation
+            await LoadConversation();
+            
+            // Start auto-refresh for both chat messages and whisper buttons
+            StartChatRefresh();
+            StartWhisperRefresh();
+        }
+
+
+      
     }
     
     /// <summary>

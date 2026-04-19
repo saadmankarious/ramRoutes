@@ -4,6 +4,8 @@ using static Platformer.Core.Simulation;
 using Platformer.Model;
 using System.Collections;
 using UnityEngine.Tilemaps;
+using RamRoutes.Services;
+using RamRoutes.Model;
 
 namespace Platformer.Mechanics
 {
@@ -96,6 +98,13 @@ namespace Platformer.Mechanics
 
         void Awake()
         {
+
+            // Setup click handler — deferred to coroutine so User data can load
+                if (GetComponent<RamClickHandler>() == null)
+                {
+                    gameObject.AddComponent<RamClickHandler>();
+                    StartCoroutine(InitializePlayerClickHandler());
+                }
             // Removed Box.OnBoxOpened subscription (legacy box feature)
             if (Instance == null)
             {
@@ -112,6 +121,39 @@ namespace Platformer.Mechanics
             collider2d = GetComponent<Collider2D>();
             spriteRenderer = GetComponent<SpriteRenderer>();
             animator = GetComponent<Animator>();
+        }
+
+        private IEnumerator InitializePlayerClickHandler()
+        {
+            // Wait for Firebase auth and a RamsManager to be available
+            yield return new WaitForSeconds(2f);
+
+            var handler = GetComponent<RamClickHandler>();
+            if (handler == null) yield break;
+
+            var ramsManager = FindObjectOfType<RamsManager>();
+            if (ramsManager == null)
+            {
+                Debug.LogWarning("PlayerController: No RamsManager found — click handler not initialized.");
+                yield break;
+            }
+
+            string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+            if (string.IsNullOrEmpty(userId))
+            {
+                Debug.LogWarning("PlayerController: No authenticated user — click handler not initialized.");
+                yield break;
+            }
+
+            var userService = new UserService();
+            var task = userService.RetrieveUserById(userId);
+            while (!task.IsCompleted) yield return null;
+
+            User user = task.Result;
+            if (user != null)
+            {
+                handler.Initialize(user, ramsManager);
+            }
         }
 
         void Update()
