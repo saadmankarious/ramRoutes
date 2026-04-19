@@ -964,45 +964,46 @@ public class RamsManager : MonoBehaviour
     
     private void ApplyUniqueColorToRamText(GameObject ramInstance, User user)
     {
-        Color userColor = GetUniqueColorForUser(user.userId);
+        // Color userColor = GetUniqueColorForUser(user.userId);
         
-        var allTexts = ramInstance.GetComponentsInChildren<UnityEngine.UI.Text>();
-        var nameText = allTexts.FirstOrDefault(t => t.gameObject.name.ToLower().Contains("name"));
-        var coinsText = allTexts.FirstOrDefault(t => t.gameObject.name.ToLower().Contains("coins"));
+        // var allTexts = ramInstance.GetComponentsInChildren<UnityEngine.UI.Text>();
+        // var nameText = allTexts.FirstOrDefault(t => t.gameObject.name.ToLower().Contains("name"));
+        // var coinsText = allTexts.FirstOrDefault(t => t.gameObject.name.ToLower().Contains("coins"));
         
-        if (nameText != null)
-        {
-            nameText.color = userColor;
-        }
+        // if (nameText != null)
+        // {
+        //     nameText.color = userColor;
+        // }
         
-        if (coinsText != null)
-        {
-            coinsText.color = userColor;
-        }
+        // if (coinsText != null)
+        // {
+        //     coinsText.color = userColor;
+        // }
         
-        if (nameText == null || coinsText == null)
-        {
-            var tmpTexts = ramInstance.GetComponentsInChildren<TMPro.TextMeshProUGUI>();
+        // if (nameText == null || coinsText == null)
+        // {
+        //     var tmpTexts = ramInstance.GetComponentsInChildren<TMPro.TextMeshProUGUI>();
             
             
-            if (coinsText == null)
-            {
-                var tmpCoinsText = tmpTexts.FirstOrDefault(t => t.gameObject.name.ToLower().Contains("coins"));
-                if (tmpCoinsText != null)
-                {
-                    tmpCoinsText.color = userColor;
-                }
-            }
+        //     if (coinsText == null)
+        //     {
+        //         var tmpCoinsText = tmpTexts.FirstOrDefault(t => t.gameObject.name.ToLower().Contains("coins"));
+        //         if (tmpCoinsText != null)
+        //         {
+        //             tmpCoinsText.color = userColor;
+        //         }
+        //     }
             
-            if (nameText == null && coinsText == null)
-            {
-                Debug.LogWarning($"No name or knowledge points text components found to apply color to RAM for user {user.name}");
-            }
-        }
+        //     if (nameText == null && coinsText == null)
+        //     {
+        //         Debug.LogWarning($"No name or knowledge points text components found to apply color to RAM for user {user.name}");
+        //     }
+        // }
     }
     
     private float CalculateRamScaleByRank(User user)
     {
+        return 1f;
         int userRank = userService.CalculateUserRank(user.coins, user.knowledgePoints);
         
         const float smallScale = 1f;
@@ -1022,17 +1023,7 @@ public class RamsManager : MonoBehaviour
         }
     }
     
-    private float CalculateRamScale(int knowledgePoints)
-    {
-        const int minKnowledgePoints = 0;
-        const int maxKnowledgePoints = 1500;
-        const float minScale = 0.5f;
-        const float maxScale = 2.0f;
-        
-        int clampedKP = Mathf.Clamp(knowledgePoints, minKnowledgePoints, maxKnowledgePoints);
-        float normalizedKP = (float)(clampedKP - minKnowledgePoints) / (maxKnowledgePoints - minKnowledgePoints);
-        return Mathf.Lerp(minScale, maxScale, normalizedKP);
-    }
+    
     
     private Vector3 CalculateSpawnPosition(int index)
     {

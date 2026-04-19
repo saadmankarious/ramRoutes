@@ -160,3 +160,213 @@ private IEnumerator TypeText(string message, float activeFor)
      }
  }
 ```
+
+
+Let me explore the project thoroughly first. 
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts)
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts/Model)
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts/Services)
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts/Gameplay)
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts/View)
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts/Model/User.cs#1-1), lines 1 to 80
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts/Model/Chat.cs#1-1), lines 1 to 50
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts/Model/ShoutOut.cs)
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts/Model/BuildingEvent.cs#1-1), lines 1 to 50
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts/Model/FriendRequest.cs#1-1), lines 1 to 50
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts/Model/AttendanceRecord.cs#1-1), lines 1 to 50
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts/ChatManager.cs#1-1), lines 1 to 100
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts/FriendsManager.cs#1-1), lines 1 to 80
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts/Gameplay/BuildingInteraction.cs#1-1), lines 1 to 100
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts/NpcAutoMovement.cs#1-1), lines 1 to 80
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts/DailyEvents.cs#1-1), lines 1 to 60
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts/Onboarding.cs#1-1), lines 1 to 60
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts/StoreManager.cs#1-1), lines 1 to 100
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts/GameManager.cs#1-1), lines 1 to 100
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts/Model/GameStage.cs#1-1), lines 1 to 40
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts/Model/InventoryItem.cs)
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts/NotificationManager.cs#1-1), lines 1 to 50
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts/LoginManager.cs#1-1), lines 1 to 50
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/README.md#1-1), lines 1 to 60
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts/onboarding-story.md)
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Assets/Scripts/Model/Points.cs)
+
+Searched text for `class.*Leaderboard|class.*Rank|GetLeaderboard|GetTopPlayers` (`**/Assets/Scripts/**`), no results
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Admin/src)
+
+Read [](file:///home/oem/code/ramroutes/ramroutes/Admin/src/components)
+
+I now have a comprehensive picture. Here's my report:
+
+---
+
+# RamRoutes (Trials of Venus) — Project Report & MVP Strategy
+
+## What This Is
+
+A **2D RPG mobile game** built in Unity, set on a real college campus (Cornell). Players control a **Ram** character navigating a pixel-art version of campus. The world is mapped to **real campus buildings** tied to GPS coordinates. The narrative frames the journey through Greek mythology — the Ram searching for scattered pieces of Aros' soul across campus locations.
+
+**Backend:** Firebase (Auth, Firestore, Cloud Messaging)  
+**Admin Panel:** React web app for managing schools, buildings, events, store items  
+**Platforms:** iOS (with native background location plugin), likely Android
+
+---
+
+## Current Feature Inventory
+
+### ✅ Core Identity & Navigation
+| Feature | Status | Notes |
+|---|---|---|
+| Firebase Auth (email/password) | Complete | Login, signup, password reset |
+| Campus map as 2D RPG world | Complete | 5 stages: EasternCampus, FirstStreet, Pedmall, TC, Terminal |
+| Building interaction (enter/view) | Complete | Per-building events, player counts, NPC spawning |
+| GPS geofencing + background location | Complete | iOS native plugin, local notifications on building proximity |
+| Player teleports to physical building on launch | Complete | Maps real GPS to in-game position |
+| Stage progression with gates | Complete | Onboarding narrative per stage |
+| Mobile joystick (4-direction) | Complete | RPG-style cardinal movement |
+
+### ✅ Student-to-Student Interaction (YOUR CORE)
+| Feature | Status | Depth |
+|---|---|---|
+| **See who's in a building** | Complete | Real-time player count + RAMs (avatars) shown at buildings |
+| **Whispers** (preset emoji-like messages) | Complete | Send Greeting, Heart, HaveANiceLift, etc. to other players |
+| **Shout-outs** | Complete | Send shout-out to another player (+10 coins, +10 KB to recipient) |
+| **Friend requests** | Complete | Send/accept/decline, friends list panel |
+| **Footprints** | Complete | Leave a 10-60 char text note on a building, visible to others (newest 3, overlapping cards, pop-in animation) |
+| **Chat (whisper-based)** | Complete | 1-to-1 whisper conversations viewable in chat panel |
+| **Building entry notifications** | Complete | "X entered Y building — go say hi!" push notifications |
+
+### ✅ Progression & Economy
+| Feature | Status |
+|---|---|
+| Coins + Knowledge Points (KB) currencies | Complete |
+| Store (buy skins, whispers, accessories) | Complete |
+| Inventory (equip/unequip/sell) | Complete |
+| Skins (Default, Rainbow, Summer, Winter, Cat) | Complete |
+| Accessories (Torch, Horns) | Complete |
+| NPC interactions (conversation + rewards) | Complete |
+| Event check-in + attendance tracking | Complete |
+| Daily events display | Complete |
+
+### ✅ Admin
+| Feature | Status |
+|---|---|
+| School/Building/Event/StoreItem CRUD | Complete |
+| Admin panel (React) | Complete |
+
+---
+
+## MVP Strategy: Maximum Student-to-Student Engagement
+
+### 🎯 THE NORTH STAR
+> *"I opened the app because my friend is in the library right now."*
+
+Every feature decision should be: **does this make a student check the app because of another student?**
+
+---
+
+### 🟢 DOUBLE DOWN (Build more here — these are your engagement engines)
+
+#### 1. **Presence & Awareness** — "Who's where right now?"
+This is your #1 killer feature. No other app shows you which friends are at which campus building in a playful, non-creepy way. **Build obsessively here:**
+- **Live activity indicator on buildings** — pulsing glow / particle count scaled to occupancy
+- **Friend-specific notifications** — "Your friend Alex just entered the Library" (not strangers)
+- **"Join" button** — one tap to navigate your Ram to a friend's building
+- **Building "vibe" status** — auto-generated from occupancy: "empty", "a few people", "packed 🔥"
+
+#### 2. **Footprints → Campus Conversation Wall**
+Footprints are your **Twitter for physical spaces**. This is gold. Expand it:
+- **React to footprints** — single-tap emoji react (🔥 ❤️ 😂) so it's zero-friction interaction
+- **"Hot" footprints** — show most-reacted footprint at top, creates competition for wit
+- **Anonymous option** — let students post anonymously to lower inhibition barrier
+- **Building-specific prompts** — "What's the vibe at the library tonight?" rotating prompts to seed content
+
+#### 3. **Shout-outs → Public Micro-Appreciation**
+Shout-outs are social proof. They make people feel seen. Expand:
+- **Public shout-out feed** — visible on the building where it was sent ("Alex shouted out Jordan at the Library")
+- **Streak system** — "You and Alex have a 5-day shout-out streak 🔥"
+- **"Most loved" leaderboard per building** — who got the most shout-outs this week at Stoner House?
+
+#### 4. **Lightweight Coordination** — "Who wants to..."
+The missing piece between "seeing who's where" and actually meeting up:
+- **Quick status / intention** — "Studying until 5pm" / "Looking for lunch buddy" / "Down to hang" — one-tap status on your Ram visible to nearby players
+- **Building ping** — "I'm heading to the Library" broadcast to friends, they can tap "me too"
+
+---
+
+### 🟡 KEEP BUT DON'T EXPAND (Good enough for MVP)
+
+| Feature | Why keep as-is |
+|---|---|
+| **Whisper chat** | It works, but don't compete with iMessage/Instagram DMs. Keep it playful preset-only — that's the charm. Don't add free-text chat. |
+| **Skins & Store** | Gives a reason to earn coins. Current 5 skins + 2 accessories is plenty for MVP. |
+| **NPC conversations** | Fun flavour. Keep the ones you have, don't add more. |
+| **Onboarding narrative** | Beautiful writing. Ship what you have. |
+| **Event check-ins** | Keep it. One-tap check-in at events is lightweight enough. |
+| **Friend system** | Works. Don't add groups/circles complexity yet. |
+
+---
+
+### 🔴 DEPRIORITIZE / EXCLUDE FROM MVP
+
+| Feature | Why cut |
+|---|---|
+| **Trials/Quests (GameManager trials)** | Single-player PvE content. Doesn't drive student-to-student interaction. Cool for v2 when retention matters, but not for viral adoption. |
+| **Complex economy balancing** | Don't agonize over coin/KB rates. Generous > balanced. You want students active, not grinding. |
+| **Admin panel polish** | It works. Ship ugly admin. Students never see it. |
+| **More stages/maps** | Don't build more map before you've validated engagement on current map. |
+| **Accessories/skin variety** | 5 skins is enough. Don't art-pipeline more until you have 500+ DAU. |
+| **Leaderboards (global)** | Can feel discouraging for new users. Building-specific micro-leaderboards (shout-out counts) are better. |
+| **Free-text chat** | Opens moderation hellscape. Whispers + footprints give enough expression with natural content limits. |
+| **Background location logging to Firestore** | You already commented most of it out. Good instinct. Only geofence triggers matter. |
+
+---
+
+### 📐 Engagement Architecture (Priority Order for Next Sprint)
+
+| # | Feature | Effort | Impact | Why |
+|---|---|---|---|---|
+| 1 | **Friend presence alerts** ("Alex is at Library") | Medium | 🔥🔥🔥 | THE reason to open the app. Turns passive into active. |
+| 2 | **Quick status on Ram** ("studying" / "down to hang") | Small | 🔥🔥🔥 | Lowers coordination friction from "I see you're there" to "let's meet up" |
+| 3 | **Footprint reactions** (emoji react) | Small | 🔥🔥 | Turns read-only content into interaction. 1-tap = lowest friction social action |
+| 4 | **"Join" / "Heading there"** button on friend's building | Small | 🔥🔥 | Closes the loop: see → decide → go |
+| 5 | **Public shout-out feed per building** | Small | 🔥🔥 | Social proof, makes buildings feel alive |
+| 6 | **Building vibe indicator** (occupancy-based) | Small | 🔥 | Visual pull — "the Library is packed" makes you curious |
+
+---
+
+### 🧠 The Engagement Loop You're Building
+
+```
+See friend is somewhere → Read footprints/vibe → Set status "heading there" →
+Friend gets notified → You arrive, GPS triggers → You're both in-game at the building →
+Send shout-out → Leave footprint → Others see the activity → Loop restarts
+```
+
+**The physical-to-digital bridge is your moat.** No other college app makes "being at the same building" feel like a *shared experience*. Lean all the way into that.
