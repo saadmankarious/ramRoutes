@@ -64,6 +64,7 @@ public class BuildingInteraction : MonoBehaviour
         await Task.Delay(1000);
         if (buildingTitleUnlcoked != null)
         {
+            buildingTitleUnlcoked.gameObject.SetActive(true);
             var buildingInfo = BuildingDataManager.GetBuildingInfo(buildingName);
             buildingTitleUnlcoked.text = buildingInfo.displayName;
         }
@@ -86,7 +87,7 @@ public class BuildingInteraction : MonoBehaviour
         {
             if (eventsLoaded)
             {
-                DisplayBuildingEvents();
+                //DisplayBuildingEvents();
             }
             else
             {
@@ -116,7 +117,7 @@ public class BuildingInteraction : MonoBehaviour
         {
             yield return null;
         }
-        DisplayBuildingEvents();
+        //DisplayBuildingEvents();
     }
 
     void Awake()
@@ -222,6 +223,7 @@ public class BuildingInteraction : MonoBehaviour
         {
             bool isCurrentlyActive = buildingEventsPanel.activeSelf;
             buildingEventsPanel.SetActive(!isCurrentlyActive);
+            buildingTitleUnlcoked.gameObject.SetActive(!isCurrentlyActive);
         }
     }
 
