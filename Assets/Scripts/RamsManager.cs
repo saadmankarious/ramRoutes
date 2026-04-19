@@ -1353,14 +1353,17 @@ public class RamsManager : MonoBehaviour
         var input = canvasInstance.GetComponentsInChildren<InputField>(true)
             .FirstOrDefault(f => f.name == "Input");
 
-        if (addBtn == null || input == null)
+        var typeDropdown = canvasInstance.GetComponentsInChildren<Dropdown>(true)
+            .FirstOrDefault(d => d.name == "TypeDropdown");
+        if (addBtn == null || input == null || typeDropdown == null)
         {
-            Debug.LogWarning("[RamsManager] WireFootprintButton: could not find 'add-footprint' button or 'footprint' input field on canvas.");
+            Debug.LogWarning("[RamsManager] WireFootprintButton: could not find 'add-footprint' button, 'footprint' input field, or 'TypeDropdown' on canvas.");
             return;
         }
 
         // Hide the input field until the button is clicked
         input.gameObject.SetActive(false);
+        typeDropdown.gameObject.SetActive(false);
 
         addBtn.onClick.RemoveAllListeners();
         addBtn.onClick.AddListener(() =>
@@ -1369,12 +1372,13 @@ public class RamsManager : MonoBehaviour
             if (!isOpen)
             {
                 input.gameObject.SetActive(true);
+                typeDropdown.gameObject.SetActive(true);
                 input.text = "";
                 input.ActivateInputField();
             }
             else
             {
-                _ = PublishFootprintAsync(input, canvasInstance);
+                _ = PublishFootprintAsync(input, canvasInstance, typeDropdown);
             }
         });
 
@@ -1515,9 +1519,10 @@ public class RamsManager : MonoBehaviour
         return text != null && text.Length >= 10 && text.Length <= 60;
     }
 
-    private async Task PublishFootprintAsync(InputField input, GameObject canvasInstance)
+    private async Task PublishFootprintAsync(InputField input, GameObject canvasInstance, Dropdown typeDropdown)
     {
         string text = input.text?.Trim();
+        FootprintType type = (FootprintType)typeDropdown.value;
 
         if (!ValidateFootprintText(text))
         {
@@ -1537,7 +1542,7 @@ public class RamsManager : MonoBehaviour
         try
         {
             var svc = new FootprintService();
-            await svc.CreateAsync(new Footprint(text, userId, buildingId));
+            await svc.CreateAsync(new Footprint(text, userId, buildingId, type));
 
             // Hide input field after successful submission
             input.text = "";

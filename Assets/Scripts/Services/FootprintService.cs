@@ -26,7 +26,8 @@ namespace RamRoutes.Services
                     { "text",       footprint.text },
                     { "makerId",    footprint.makerId },
                     { "buildingId", footprint.buildingId },
-                    { "createdAt",  footprint.createdAt }
+                    { "createdAt",  footprint.createdAt },
+                    { "type",       footprint.type.ToString() },
                 };
                 var docRef = await db.Collection(Collection).AddAsync(data);
                 return docRef.Id;
