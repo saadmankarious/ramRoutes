@@ -541,19 +541,18 @@ public class ChatManager : MonoBehaviour
                 chatPanel.SetActive(false);
             }
             // hide add friend and sendshoutout buttons
-          Transform addFriendTransform = FindChildByName(chatPanel.transform, "add-friend");
-            Button addFriendButton = addFriendTransform?.GetComponent<Button>();
-            if (addFriendButton != null)
+          Transform addFriendTransform = FindChildByName(chatPanel.transform, "connect-buttons");
+            if (addFriendTransform != null)
             {
-                addFriendButton.gameObject.SetActive(false);
+                addFriendTransform.gameObject.SetActive(false);
             }
 
-            Transform shoutoutTransform = FindChildByName(chatPanel.transform, "shoutout");
-            Button shoutoutButton = shoutoutTransform?.GetComponent<Button>();
-            if (shoutoutButton != null)
-            {
-                shoutoutButton.gameObject.SetActive(false);
-            }
+            // Transform shoutoutTransform = FindChildByName(chatPanel.transform, "shoutout");
+            // Button shoutoutButton = shoutoutTransform?.GetComponent<Button>();
+            // if (shoutoutButton != null)
+            // {
+            //     shoutoutButton.gameObject.SetActive(false);
+            // }
 
               Transform chatHistoryTransform = FindChildByName(chatPanel.transform, "chat-history");
             if (chatHistoryTransform != null)
@@ -569,8 +568,12 @@ public class ChatManager : MonoBehaviour
 
             // Wire up the status dropdown to update user status
             Transform dropdownTransform = FindChildByName(chatPanel.transform, "status-dropdown");
-            if (dropdownTransform != null)
+            Transform selfStatusTransform = FindChildByName(chatPanel.transform, "self-status");
+
+            if (dropdownTransform != null && selfStatusTransform != null)
             {
+                selfStatusTransform.gameObject.SetActive(true);
+                dropdownTransform.gameObject.SetActive(true);
                 var dropdown = dropdownTransform.GetComponent<Dropdown>();
                 if (dropdown != null)
                 {
@@ -609,6 +612,24 @@ public class ChatManager : MonoBehaviour
         }
         else
         {
+              Transform addFriendTransform = FindChildByName(chatPanel.transform, "connect-buttons");
+              if (addFriendTransform != null)
+              {
+                  addFriendTransform.gameObject.SetActive(true);
+              }
+            Button addFriendButton = addFriendTransform?.GetComponent<Button>();
+            if (addFriendButton != null )
+            {
+                addFriendTransform.gameObject.SetActive(true);
+                addFriendButton.gameObject.SetActive(true);
+            }
+
+            // Transform shoutoutTransform = FindChildByName(chatPanel.transform, "shoutout");
+            // Button shoutoutButton = shoutoutTransform?.GetComponent<Button>();
+            // if (shoutoutButton != null)
+            // {
+            //     shoutoutButton.gameObject.SetActive(true);
+            // }
 
             //hide status
                   Transform statusTransform = FindChildByName(chatPanel.transform, "self-status");
