@@ -1,5 +1,8 @@
 using UnityEngine;
 using UnityEngine.Android;
+using UnityEngine.UI;
+using RamRoutes.Services;
+using Firebase.Auth;
 
 public class BuildingProximityDetector : MonoBehaviour
 {
@@ -13,17 +16,60 @@ public class BuildingProximityDetector : MonoBehaviour
         public Color debugColor = Color.cyan;
     }
 
-    [SerializeField] private Building[] buildings = new Building[2];
-    [SerializeField] private float updateInterval = 1f;
+    [Header("Debug Settings")]
     [SerializeField] private bool showDebugInfo = true;
+    [SerializeField] private bool clearCacheOnStart = false;
+    [Tooltip("Simulates GPS being enabled even if it's not")]
+    [SerializeField] private bool simulateGpsEnabled = false;
+
+    [Header("Location Settings")]
+    public Building[] buildings = new Building[2]; // Make public for BuildingInteraction access
+    [SerializeField] private float updateInterval = 1f;
+    [SerializeField] private Canvas locationDisabledCanvas;
+    
+    [Header("Building Approach UI")]
+    [SerializeField] private GameObject buildingApproachPanel;
+    [SerializeField] private Text buildingNameText;
+    // Panel now stays on screen - no duration needed
+    // [SerializeField] private float panelDisplayDuration = 3f;
+    // [SerializeField] private bool simulateBuildingEntry = false;
+//change me later
 
     private LocationServiceStatus locationStatus;
     private string currentStatus = "Initializing...";
     private Building closestBuilding;
     private float distanceToBuilding;
+    private float nextUpdateTime = 0f;
+    private float secondsRemaining = 0f;
+    // Removed tracking variables since panel stays visible
+
+    public delegate void BuildingEvent(Building building);
+    public static event BuildingEvent OnApproachBuilding;
+    public static event BuildingEvent OnEnterBuilding;
+
+    private void ClearCachedDataIfNeeded()
+    {
+        // Clear local PlayerPrefs cache
+        PlayerPrefs.DeleteKey("unlocked_buildings_cache");
+        PlayerPrefs.Save();
+        Debug.Log("Cleared unlocked buildings cache");
+    }
 
     void Start()
     {
+        // Initialize building approach panel as visible
+        if (buildingApproachPanel != null)
+        {
+            buildingApproachPanel.SetActive(true);
+            UpdateBuildingStatusPanel(); // Set initial status
+        }
+        
+        // Clear cache if enabled
+        if (clearCacheOnStart)
+        {
+            ClearCachedDataIfNeeded();
+        }
+        
         if (buildings.Length == 0)
         {
             buildings = new Building[2] {
@@ -51,8 +97,91 @@ public class BuildingProximityDetector : MonoBehaviour
         }
         #endif
 
+        nextUpdateTime = Time.time + updateInterval;
         StartCoroutine(LocationUpdateRoutine());
+
+#if UNITY_IOS && !UNITY_EDITOR
+        // Start iOS background location tracking
+        if (BackgroundLocationService.Instance != null)
+        {
+            BackgroundLocationService.Instance.StartTracking(5f);
+            BackgroundLocationService.Instance.OnLocationUpdated += OnBackgroundLocationUpdate;
+
+            // Register each building as a geofence (survives app kill, max 20)
+            // Use 150m radius for geofence wake-up — iOS is unreliable below 100m
+            // Precise detection still uses building.detectionRadius once GPS is active
+            foreach (var building in buildings)
+            {
+                BackgroundLocationService.Instance.RegisterBuildingGeofence(
+                    building.name,
+                    building.entranceGPS.x,
+                    building.entranceGPS.y,
+                    20.0
+                );
+            }
+
+            Debug.Log("[BuildingProximity] Subscribed to iOS background location + geofences registered");
+
+            // Pass the userId to native plugin so it can update currentPhysicalBuilding via Firestore REST
+            string userId = FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+            if (!string.IsNullOrEmpty(userId))
+            {
+                BackgroundLocationService.Instance.SetUserId(userId);
+            }
+
+            // When native plugin resolves a new physical building, also update via UserService (in-app cache sync)
+            BackgroundLocationService.Instance.OnPhysicalBuildingChanged += OnNativePhysicalBuildingChanged;
+        }
+#endif
     }
+
+#if UNITY_IOS && !UNITY_EDITOR
+    private void OnBackgroundLocationUpdate(double lat, double lon, float accuracy)
+    {
+        // Create a LocationInfo-like check using background data
+        var location = Input.location.lastData;
+        // Override with background data by calling proximity check directly
+        CheckBuildingProximityFromBackground((float)lat, (float)lon);
+    }
+
+    void CheckBuildingProximityFromBackground(float lat, float lon)
+    {
+        closestBuilding = null;
+        float minDistance = float.MaxValue;
+
+        foreach (var building in buildings)
+        {
+            float distance = CalculatePreciseDistance(lat, lon, building.entranceGPS.x, building.entranceGPS.y);
+
+            if (distance < minDistance)
+            {
+                minDistance = distance;
+                closestBuilding = building;
+            }
+
+            if (distance <= building.closeProximityRadius)
+            {
+                OnBuildingEntered(building);
+            }
+            else if (distance <= building.detectionRadius)
+            {
+                OnBuildingApproached(building);
+            }
+        }
+
+        distanceToBuilding = minDistance;
+    }
+
+    private async void OnNativePhysicalBuildingChanged(string buildingName)
+    {
+        string userId = FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
+        if (string.IsNullOrEmpty(userId)) return;
+
+        var userService = new UserService();
+        await userService.UpdateCurrentPhysicalBuilding(userId, buildingName);
+        Debug.Log($"[BuildingProximity] UserService.UpdateCurrentPhysicalBuilding → {buildingName}");
+    }
+#endif
 
     System.Collections.IEnumerator LocationUpdateRoutine()
     {
@@ -88,6 +217,7 @@ public class BuildingProximityDetector : MonoBehaviour
         while (true)
         {
             CheckBuildingProximity(Input.location.lastData);
+            nextUpdateTime = Time.time + updateInterval;
             yield return new WaitForSeconds(updateInterval);
         }
     }
@@ -124,9 +254,10 @@ public class BuildingProximityDetector : MonoBehaviour
 
         distanceToBuilding = minDistance;
         UpdateStatusText();
+        UpdateBuildingStatusPanel(); // Update the persistent panel
     }
 
-    float CalculatePreciseDistance(float lat1, float lon1, float lat2, float lon2)
+    public float CalculatePreciseDistance(float lat1, float lon1, float lat2, float lon2)
     {
         // Vincenty formula implementation for higher accuracy
         const float a = 6378137f; // WGS-84 semi-major axis
@@ -187,12 +318,14 @@ public class BuildingProximityDetector : MonoBehaviour
     void OnBuildingEntered(Building building)
     {
         Debug.Log($"ENTERED BUILDING: {building.name} (Distance: {distanceToBuilding:F2}m)");
+        OnEnterBuilding?.Invoke(building);
         // Trigger your building entry logic here
     }
 
     void OnBuildingApproached(Building building)
     {
         Debug.Log($"APPROACHING BUILDING: {building.name} (Distance: {distanceToBuilding:F2}m)");
+        OnApproachBuilding?.Invoke(building);
         // Trigger your approach logic here
     }
 
@@ -221,22 +354,82 @@ public class BuildingProximityDetector : MonoBehaviour
     void OnDestroy()
     {
         if (Input.location.isEnabledByUser)
-        Input.location.Stop();
+            Input.location.Stop();
+
+#if UNITY_IOS && !UNITY_EDITOR
+        if (BackgroundLocationService.Instance != null)
+        {
+            BackgroundLocationService.Instance.OnLocationUpdated -= OnBackgroundLocationUpdate;
+        }
+#endif
     }
 
     void OnGUI()
     {
         if (!showDebugInfo) return;
-        
         GUI.skin.label.fontSize = 30;
-        GUI.Label(new Rect(10, 10, 1000, 100), $"STATUS: {currentStatus}");
-        
+        // Status label
+        GUI.Label(new Rect(10, 10, 1000, 40), $"STATUS: {currentStatus}");
+        // GPS label
         if (Input.location.status == LocationServiceStatus.Running)
         {
             var loc = Input.location.lastData;
-            GUI.Label(new Rect(10, 50, 1000, 100), 
-                $"GPS: {loc.latitude:F6}, {loc.longitude:F6}\n" +
-                $"Accuracy: {loc.horizontalAccuracy:F1}m");
+            GUI.Label(new Rect(10, 55, 1000, 40), 
+                $"GPS: {loc.latitude:F6}, {loc.longitude:F6}    Accuracy: {loc.horizontalAccuracy:F1}m");
+        }
+        // Countdown label (move down to avoid overlap)
+        GUI.Label(new Rect(10, 100, 1000, 40), $"Next location update in: {secondsRemaining:F1} seconds");
+    }
+
+    void Update()
+    {
+        bool locationEnabled = (Input.location.isEnabledByUser || simulateGpsEnabled) && Input.location.status != LocationServiceStatus.Failed;
+        if (locationDisabledCanvas != null)
+        {
+            locationDisabledCanvas.gameObject.SetActive(!locationEnabled);
+            if (!locationEnabled)
+            {
+                if (Time.timeScale != 0) Time.timeScale = 0; // Pause game
+            }
+            else
+            {
+                if (Time.timeScale != 1) Time.timeScale = 1; // Resume game
+                if (locationEnabled && !Input.location.isEnabledByUser)
+                {
+                    Input.location.Start(5f, 5f);
+                }
+            }
+        }
+
+        // Countdown logic for next location update
+        secondsRemaining = Mathf.Max(0f, nextUpdateTime - Time.time);
+
+        // if (simulateBuildingEntry && buildings[3]!= null)
+        // {
+        //     OnBuildingEntered(buildings[3]);
+        //     simulateBuildingEntry = false;
+        // }
+    }
+
+    private void UpdateBuildingStatusPanel()
+    {
+        if (buildingNameText == null) return;
+
+        if (closestBuilding != null && distanceToBuilding <= closestBuilding.closeProximityRadius)
+        {
+            buildingNameText.text = $"Inside Building: {closestBuilding.name}";
+        }
+        else if (closestBuilding != null && distanceToBuilding <= closestBuilding.detectionRadius)
+        {
+            buildingNameText.text = $"Approaching Building: {closestBuilding.name}";
+        }
+        else if (closestBuilding != null)
+        {
+            buildingNameText.text = $"Closest building: {closestBuilding.name}";
+        }
+        else
+        {
+            buildingNameText.text = "No buildings nearby";
         }
     }
 }

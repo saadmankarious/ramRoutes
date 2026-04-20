@@ -112,5 +112,30 @@ public static async Task<List<GameAttempt>> GetGameAttempts()
 {
     return await GetCollectionData<GameAttempt>("game-attempts");
 }
+
+public static async Task<bool> RecordEventAttendance(string eventId, string playerId, string eventName, string buildingName)
+{
+    try 
+    {
+        string docId = $"{eventId}_{playerId}";
+        var attendanceData = new Dictionary<string, object>
+        {
+            { "eventId", eventId },
+            { "playerId", playerId },
+            { "eventName", eventName },
+            { "buildingName", buildingName },
+            { "checkInTime", FieldValue.ServerTimestamp },
+            { "deviceId", SystemInfo.deviceUniqueIdentifier }
+        };
+        
+        await db.Collection("event-attendees").Document(docId).SetAsync(attendanceData);
+        return true;
+    }
+    catch (System.Exception ex) 
+    { 
+        Debug.LogError($"Failed to record event attendance: {ex.Message}");
+        return false;
+    }
+}
 }
 

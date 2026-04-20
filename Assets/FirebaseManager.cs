@@ -3,23 +3,34 @@ using Firebase;
 using Firebase.Messaging;
 using Firebase.Firestore;
 using System.Threading.Tasks;
-using Unity.Notifications.Android;
+using System.Collections.Generic;
 
+#if UNITY_ANDROID && !UNITY_EDITOR
+using UnityEngine.Android;
+#endif
+
+#if UNITY_ANDROID && UNITY_NOTIFICATIONS_ANDROID
+using Unity.Notifications.Android;
+#endif
+#if UNITY_IOS && UNITY_NOTIFICATIONS_IOS
+using Unity.Notifications.iOS;
+#endif
 public class FirebaseMessagingManager : MonoBehaviour
 {
     private string _deviceToken;
     private bool _firebaseInitialized = false;
-private string _cachedDeviceId;
+    private string _cachedDeviceId;
+    private bool _topicsSubscribed = false;
 
     async void Start()
     {
-            _cachedDeviceId = SystemInfo.deviceUniqueIdentifier;
+        _cachedDeviceId = SystemInfo.deviceUniqueIdentifier;
 
         await InitializeFirebase();
         if (_firebaseInitialized)
         {
             SetupMessaging();
-            await SubscribeToTopics();
+            // ...existing code...
         }
     }
 
@@ -49,23 +60,148 @@ private string _cachedDeviceId;
         FirebaseMessaging.TokenReceived += OnTokenReceived;
         FirebaseMessaging.MessageReceived += OnMessageReceived;
 
-        // Request token explicitly (works even if automatic retrieval fails)
+#if UNITY_IOS
+        // iOS: request permission first to ensure APNS token, then request FCM token
+        FirebaseMessaging.RequestPermissionAsync().ContinueWith(task =>
+        {
+            Debug.Log("Notification permission requested (iOS)");
+            RequestToken();
+        });
+#elif UNITY_ANDROID && !UNITY_EDITOR
+        // Android: Check and request notification permissions first
+        RequestAndroidNotificationPermissions().ContinueWith(task =>
+        {
+            RequestToken();
+            FirebaseMessaging.RequestPermissionAsync().ContinueWith(permissionTask =>
+            {
+                Debug.Log("Firebase notification permission requested (Android)");
+            });
+        });
+#else
+        // Other platforms or Editor: request token immediately
         RequestToken();
-
-        // Configure notification settings
         FirebaseMessaging.RequestPermissionAsync().ContinueWith(task =>
         {
             Debug.Log("Notification permission requested");
         });
+#endif
+    }
+
+    private async Task RequestAndroidNotificationPermissions()
+    {
+#if UNITY_ANDROID && !UNITY_EDITOR
+        try
+        {
+            // For Android 13 (API level 33) and above, we need explicit permission
+            string notificationPermission = "android.permission.POST_NOTIFICATIONS";
+            
+            if (!Permission.HasUserAuthorizedPermission(notificationPermission))
+            {
+                Debug.Log("Requesting notification permission for Android 13+");
+                
+                Permission.RequestUserPermission(notificationPermission);
+                
+                // Wait for user response (up to 10 seconds)
+                int attempts = 0;
+                while (!Permission.HasUserAuthorizedPermission(notificationPermission) && attempts < 100)
+                {
+                    await Task.Delay(100);
+                    attempts++;
+                }
+                
+                if (Permission.HasUserAuthorizedPermission(notificationPermission))
+                {
+                    Debug.Log("Android notification permission granted");
+                }
+                else
+                {
+                    Debug.LogWarning("Android notification permission denied. Notifications may not work properly.");
+                }
+            }
+            else
+            {
+                Debug.Log("Android notification permission already granted");
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Error requesting Android notification permissions: {e.Message}");
+        }
+#else
+        await Task.CompletedTask;
+        Debug.Log("Not on Android platform, notification permissions handled automatically");
+#endif
+    }
+
+    public bool AreNotificationsEnabled()
+    {
+#if UNITY_ANDROID && !UNITY_EDITOR
+        string notificationPermission = "android.permission.POST_NOTIFICATIONS";
+        return Permission.HasUserAuthorizedPermission(notificationPermission);
+#else
+        return true; // On other platforms, assume notifications work
+#endif
+    }
+
+    public void OpenNotificationSettings()
+    {
+#if UNITY_ANDROID && !UNITY_EDITOR
+        try
+        {
+            // Open the app's notification settings
+            using (var unityClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
+            using (var currentActivity = unityClass.GetStatic<AndroidJavaObject>("currentActivity"))
+            {
+                var intent = new AndroidJavaObject("android.content.Intent");
+                intent.Call<AndroidJavaObject>("setAction", "android.settings.APP_NOTIFICATION_SETTINGS");
+                intent.Call<AndroidJavaObject>("putExtra", "android.provider.extra.APP_PACKAGE", 
+                    currentActivity.Call<string>("getPackageName"));
+                
+                currentActivity.Call("startActivity", intent);
+            }
+            Debug.Log("Opened notification settings");
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Failed to open notification settings: {e.Message}");
+            
+            // Fallback: Open general app settings
+            try
+            {
+                using (var unityClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
+                using (var currentActivity = unityClass.GetStatic<AndroidJavaObject>("currentActivity"))
+                using (var uriClass = new AndroidJavaClass("android.net.Uri"))
+                {
+                    var intent = new AndroidJavaObject("android.content.Intent");
+                    intent.Call<AndroidJavaObject>("setAction", "android.settings.APPLICATION_DETAILS_SETTINGS");
+                    
+                    string packageName = currentActivity.Call<string>("getPackageName");
+                    var uri = uriClass.CallStatic<AndroidJavaObject>("parse", "package:" + packageName);
+                    intent.Call<AndroidJavaObject>("setData", uri);
+                    
+                    currentActivity.Call("startActivity", intent);
+                }
+                Debug.Log("Opened app settings as fallback");
+            }
+            catch (System.Exception fallbackError)
+            {
+                Debug.LogError($"Failed to open app settings: {fallbackError.Message}");
+            }
+        }
+#else
+        Debug.Log("Notification settings only available on Android");
+#endif
     }
 
     private async Task SubscribeToTopics()
     {
+        if (_topicsSubscribed) return;
         try
         {
-            await FirebaseMessaging.SubscribeAsync("/topics/global");
+            await FirebaseMessaging.SubscribeAsync("/topics/general");  // Changed from "global" to "general"
             await FirebaseMessaging.SubscribeAsync("/topics/updates");
-            Debug.Log("Subscribed to default topics");
+            _topicsSubscribed = true;
+            Debug.Log("Subscribed to notification topics: general, updates");
         }
         catch (System.Exception e)
         {
@@ -81,6 +217,16 @@ private string _cachedDeviceId;
                 _deviceToken = task.Result;
                 Debug.Log($"FCM Token (manual): {_deviceToken}");
                 SendTokenToServer(_deviceToken);
+                // Subscribe once we have a token
+                _ = SubscribeToTopics();
+            }
+            else if (task.IsFaulted)
+            {
+                Debug.LogError($"Failed to get FCM token: {task.Exception}");
+            }
+            else
+            {
+                Debug.LogWarning("FCM token request completed but no token received");
             }
         });
     }
@@ -90,36 +236,41 @@ private string _cachedDeviceId;
         _deviceToken = token.Token;
         Debug.Log($"FCM Token (auto): {_deviceToken}");
         SendTokenToServer(_deviceToken);
+        // Subscribe once we have a token (idempotent via _topicsSubscribed)
+        if (!_topicsSubscribed)
+        {
+            _ = SubscribeToTopics();
+        }
     }
 
-private void OnMessageReceived(object sender, MessageReceivedEventArgs e)
-{
-    Debug.Log($"Received message from: {e.Message.From}");
-    
-    // Handle notification data
-    if (e.Message.Notification != null)
+    private void OnMessageReceived(object sender, MessageReceivedEventArgs e)
     {
-        Debug.Log($"Title: {e.Message.Notification.Title}");
-        Debug.Log($"Body: {e.Message.Notification.Body}");
+        Debug.Log($"Received message from: {e.Message.From}");
+        
+        // Handle notification data
+        if (e.Message.Notification != null)
+        {
+            Debug.Log($"Title: {e.Message.Notification.Title}");
+            Debug.Log($"Body: {e.Message.Notification.Body}");
 
-        // Show notification in system tray (works in background/foreground)
-        ShowSystemNotification(
-            e.Message.Notification.Title, 
-            e.Message.Notification.Body
-        );
+            // Show notification in system tray (works in background/foreground)
+            // In-game notifications are now handled by NotificationManager directly
+            ShowSystemNotification(
+                e.Message.Notification.Title, 
+                e.Message.Notification.Body
+            );
+        }
+        
+        // Handle custom data payload
+        foreach (var pair in e.Message.Data)
+        {
+            Debug.Log($"{pair.Key}: {pair.Value}");
+        }
     }
-    
-    // Handle custom data payload
-    foreach (var pair in e.Message.Data)
-    {
-        Debug.Log($"{pair.Key}: {pair.Value}");
-    }
-}
-
     // Helper method to display notifications
     private void ShowSystemNotification(string title, string message)
     {
-#if UNITY_ANDROID
+#if UNITY_ANDROID && UNITY_NOTIFICATIONS_ANDROID
         // Android Notification (New API)
         var androidNotification = new AndroidNotification
         {
@@ -132,55 +283,109 @@ private void OnMessageReceived(object sender, MessageReceivedEventArgs e)
 
         AndroidNotificationCenter.SendNotification(androidNotification, "default_channel");
 
-#elif UNITY_IOS
-    // iOS Notification (New API)
-    var iosNotification = new iOSNotification
-    {
-        Title = title,
-        Body = message,
-        ShowInForeground = true,    // Display even if app is open
-        Trigger = new iOSNotificationTimeIntervalTrigger
+#elif UNITY_IOS && UNITY_NOTIFICATIONS_IOS
+        // iOS Notification (New API)
+        var iosNotification = new iOSNotification
         {
-            TimeInterval = TimeSpan.FromSeconds(1),
-            Repeats = false
-        }
-    };
-    
-    iOSNotificationCenter.ScheduleNotification(iosNotification);
+            Title = title,
+            Body = message,
+            ShowInForeground = true,    // Display even if app is open
+            Trigger = new iOSNotificationTimeIntervalTrigger
+            {
+                TimeInterval = System.TimeSpan.FromSeconds(1),
+                Repeats = false
+            }
+        };
+        
+        iOSNotificationCenter.ScheduleNotification(iosNotification);
+#else
+        // Fallback for editor or unsupported platforms
+        Debug.Log($"Local Notification: {title} - {message}");
 #endif
     }
 
- private async void SendTokenToServer(string token)
-{
-    if (string.IsNullOrEmpty(_cachedDeviceId)) 
+    private async void SendTokenToServer(string token)
     {
-        Debug.LogError("Device ID not cached");
-        return;
+        if (string.IsNullOrEmpty(_cachedDeviceId)) 
+        {
+            Debug.LogError("Device ID not cached");
+            return;
+        }
+
+        if (FirebaseFirestore.DefaultInstance != null)
+        {
+            try
+            {
+                // Save to devices collection (keep existing functionality)
+                DocumentReference deviceDocRef = FirebaseFirestore.DefaultInstance
+                    .Collection("devices")
+                    .Document(_cachedDeviceId);
+
+                await deviceDocRef.SetAsync(new
+                {
+                    token = token,
+                    lastUpdated = FieldValue.ServerTimestamp,
+                    platform = Application.platform.ToString()
+                });
+
+                Debug.Log("Device token saved to Firestore devices collection");
+
+                // Also update user profile if user is logged in
+                await UpdateUserProfileToken(token);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"Failed to save token: {e.Message}");
+            }
+        }
     }
 
-    if (FirebaseFirestore.DefaultInstance != null)
+    private async Task UpdateUserProfileToken(string token)
     {
         try
         {
-            DocumentReference docRef = FirebaseFirestore.DefaultInstance
-                .Collection("devices")
-                .Document(_cachedDeviceId);  // Use the cached version here
-
-            await docRef.SetAsync(new
+            // Check if user is logged in via Firebase Auth
+            if (Firebase.Auth.FirebaseAuth.DefaultInstance?.CurrentUser != null)
             {
-                token = token,
-                lastUpdated = FieldValue.ServerTimestamp,
-                platform = Application.platform.ToString()
-            });
+                string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser.UserId;
+                
+                DocumentReference userDocRef = FirebaseFirestore.DefaultInstance
+                    .Collection("users")
+                    .Document(userId);
 
-            Debug.Log("Device token saved to Firestore");
+                // Update the user's FCM token
+                await userDocRef.UpdateAsync(new Dictionary<string, object>
+                {
+                    { "notificationToken", token },
+                    { "tokenLastUpdated", FieldValue.ServerTimestamp },
+                    { "platform", Application.platform.ToString() }
+                });
+
+                Debug.Log($"FCM token updated in user profile for userId: {userId}");
+            }
+            else
+            {
+                Debug.Log("User not logged in, skipping user profile token update");
+            }
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"Failed to save token: {e.Message}");
+            Debug.LogError($"Failed to update user profile token: {e.Message}");
         }
     }
-}
+
+    // Public method to be called from LoginManager when user logs in
+    public async void UpdateCurrentUserToken()
+    {
+        if (!string.IsNullOrEmpty(_deviceToken))
+        {
+            await UpdateUserProfileToken(_deviceToken);
+        }
+        else
+        {
+            Debug.Log("No FCM token available yet, will update when token is received");
+        }
+    }
 
     void OnEnable()
     {

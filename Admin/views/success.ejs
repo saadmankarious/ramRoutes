@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Created Successfully</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; }
+        .info { background: #f0f0f0; padding: 15px; margin-bottom: 20px; }
+        .password { font-weight: bold; color: #d32f2f; }
+    </style>
+</head>
+<body>
+    <h1>User Created Successfully!</h1>
+    
+    <div class="info">
+        <p><strong>Email:</strong> <%= email %></p>
+        <p><strong>Name:</strong> <%= name %></p>
+        <p><strong>Residence Hall:</strong> <%= residenceHall %></p>
+        <p><strong>Temporary Password:</strong> <span class="password"><%= password %></span></p>
+    </div>
+    
+    <p>Please provide this password to the user. They should change it after first login.</p>
+    <a href="/">Create another user</a>
+</body>
+</html>

@@ -1,0 +1,57 @@
+using System;
+
+namespace RamRoutes.Model
+{
+    public enum WhisperType
+    {
+        Greeting = 0,
+        HaveANiceLift = 1,
+        Heart = 2,
+        ArosHi = 3,
+        ArosNiceDay = 4,
+        BeatCoe = 5,
+     
+    }
+
+    [Serializable]
+    public class Chat
+    {
+        public string fromId;
+        public string toId;
+        public string imageUrl; // Will store whisper type as string representation
+        public DateTime timestamp;
+        
+        public Chat()
+        {
+            timestamp = DateTime.UtcNow;
+        }
+        
+        public Chat(string fromId, string toId, string chatEmojies)
+        {
+            this.fromId = fromId;
+            this.toId = toId;
+            this.imageUrl = chatEmojies;
+            this.timestamp = DateTime.UtcNow;
+        }
+        
+        /// <summary>
+        /// Get the whisper type from the chatEmojies field
+        /// </summary>
+        public WhisperType GetWhisperType()
+        {
+            if (System.Enum.TryParse<WhisperType>(imageUrl, out WhisperType result))
+            {
+                return result;
+            }
+            return WhisperType.Greeting; // Default fallback
+        }
+        
+        /// <summary>
+        /// Set the whisper type in the chatEmojies field
+        /// </summary>
+        public void SetWhisperType(WhisperType whisperType)
+        {
+            imageUrl = whisperType.ToString();
+        }
+    }
+}

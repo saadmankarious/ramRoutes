@@ -1,11 +1,22 @@
 # This .gitignore file should be placed at the root of your Unity project 
 directory
 #
+/Assets/GeneratedLocalRepo/
 .DS_Store
 # Get latest from 
 https://github.com/github/gitignore/blob/main/Unity.gitignore
 .vscode
 #
+/Assets/Firebase/
+# /Assets/Plugins/
+/Assets/ExternalDependencyManager/
+/Assets/Editor\ Default\ Resources/Firebase/
+/Assets/Plugins/iOS/Firebase/
+/Assets/Plugins/tvOS/Firebase/
+/Assets/Plugins/Android/mainTemplate.gradle
+/ProjectSettings/AndroidResolverDependencies.xml
+/ProjectSettings/GvhProjectSettings.xml
+
 /[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
@@ -13,10 +24,20 @@ https://github.com/github/gitignore/blob/main/Unity.gitignore
 /[Bb]uilds/
 /[Ll]ogs/
 /[Uu]ser[Ss]ettings/
-
+/ios-build/
+/ios-builds/
 *.icloud
 /build/*
 /Assets/Firebase/*
+/Assets/Editor\ Default\ Resources/Firebase/
+/Assets/ExternalDependencyManager/
+/Assets/Plugins/iOS/Firebase/
+/Assets/Plugins/tvOS/
+
+/Assets/Plugins/tvOS/Firebase/
+/Assets/Plugins/Android/mainTemplate.gradle
+/ProjectSettings/AndroidResolverDependencies.xml
+/ProjectSettings/GvhProjectSettings.xml
 
 # MemoryCaptures can get excessive in size.
 # They also could contain extremely sensitive data
