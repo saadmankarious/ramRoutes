@@ -116,6 +116,8 @@ public class BuildingInteraction : MonoBehaviour
         {
             originalMaterial = sr.material;
         }
+
+        buildingsLayerMask = LayerMask.GetMask("Buildings");
     }
 
     void Start()
@@ -211,12 +213,12 @@ public class BuildingInteraction : MonoBehaviour
     }
 
 
+    private int buildingsLayerMask;
+
     private void DebugRaycastClick()
     {
-        if (Camera.main == null) return;
-
         Vector2 worldPoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Collider2D hit = Physics2D.OverlapPoint(worldPoint);
+        Collider2D hit = Physics2D.OverlapPoint(worldPoint, buildingsLayerMask);
 
         if (hit == null)
         {
@@ -237,11 +239,11 @@ public class BuildingInteraction : MonoBehaviour
 
     private void HandleBuildingClicked()
     {
-        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
-        {
-            Debug.Log($"BuildingInteraction: Click on '{buildingName}' ignored - pointer is over a UI element");
-            return;
-        }
+        // if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+        // {
+        //     Debug.Log($"BuildingInteraction: Click on '{buildingName}' ignored - pointer is over a UI element");
+        //     return;
+        // }
 
         Debug.Log($"BuildingInteraction: Building '{buildingName}' clicked, eventsLoaded={eventsLoaded}");
         StartCoroutine(ShowEventsOnClick());
