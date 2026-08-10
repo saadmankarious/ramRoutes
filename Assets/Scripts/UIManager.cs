@@ -23,22 +23,7 @@ public class UIManager : MonoBehaviour
     public Text usernameText;
     public Text statusText;
     public Text knowledgePointsText;
-    public ParticleSystem teleportEffect;
-    public ParticleSystem celebrationEffect1;
-    public ParticleSystem celebrationEffect2;
-    public float padding = 2f;
-    
-    [Header("Building UI")]
-    public Text buildingTitle;
-    public Text buildingDescription;
-    public Text buildingUnlockedMessage;
-    public Image npcImage;
-    public Text npcTitle;
-    public Text coinsGained;
-    public Text kbGained;
-    public Text coinsGainedBuildingStats;
-    public Text kbGainedBuildingStats;
-    
+
     [Header("User Avatar")]
     public Image userAvatarImage;
     public Sprite defaultAvatarSprite;
@@ -57,27 +42,9 @@ public class UIManager : MonoBehaviour
     public Text rankUpText;
     public Button rankUpCloseButton;
 
-    [Header("Celebration Settings")]
-    [SerializeField] private float celebrationPlaybackSpeed = 1f;
-    [SerializeField] private float celebrationDuration = 2f;
-
-    public Text timerText;
-    public GameObject dialogPanel;
     public GameObject quickUpdatePanel;
     public Text quickUpdateText;
-    public GameObject buildingStats;
-    public Text dialogText;
-    public Button dialogActionButton;
-    public Text dialogActionButtonText;
-    public GameObject timeUpMenu;
-    public GameObject trialCompleteMenu;
     public GameObject gamePauseMenu;
-
-    [Header("Timing Settings")]
-    [SerializeField] private float typingSpeed = 0.3f;
-    [SerializeField] private float objectiveRepeatTime = 60;
-    private float currentTime;
-    private bool timerRunning;
 
     [Header("Audio Settings")]
     public AudioSource audioSource;
@@ -85,33 +52,16 @@ public class UIManager : MonoBehaviour
     public AudioClip typingTickSound;
     public AudioClip timeExpiredSound;
     
-    [Header("Background Music Settings")]
-    [SerializeField] private AudioClip tcStageMusic;
-    [SerializeField] private AudioClip easternCampusMusic;
-    [SerializeField] private AudioClip firstStreetMusic;
-    [SerializeField] private AudioClip pedmallMusic;
-    [SerializeField] private AudioClip terminalMusic;
     [SerializeField] private float backgroundMusicVolume = 0.3f;
     [SerializeField] private float musicFadeInDuration = 2f;
     
     private AudioSource backgroundMusicSource;
 
-    [Header("Typing Sound Settings")]
-    [SerializeField] private float typingSoundInterval = 0.15f;
-    
     private static Dictionary<string, List<User>> cachedCurrentUsersPerBuilding = new Dictionary<string, List<User>>();
     private static Dictionary<string, bool> currentUsersLoadedPerBuilding = new Dictionary<string, bool>();
     
     private Dictionary<GameObject, Coroutine> activePopupAnimations = new Dictionary<GameObject, Coroutine>();
     private Coroutine autoScrollCoroutine;
-    
-    private float lastTypingSoundTime;
-    [SerializeField] private float typingSoundVolume = 0.3f;
-
-    [Header("Events")]
-    public UnityEvent OnTrialComplete = new UnityEvent();
-    public UnityEvent OnTimeExpired = new UnityEvent();
-    public UnityEvent<BuildingInteraction> OnBuildingUnlocked = new UnityEvent<BuildingInteraction>();
 
     [Header("Progress Bar")]
     public GameObject[] progressBarImages;
@@ -128,26 +78,9 @@ public class UIManager : MonoBehaviour
     [Tooltip("UI Image component to use as fade overlay during scene transitions.")]
     [SerializeField] private Image fadeOverlay;
     [Tooltip("Duration of the fade effect before scene transition.")]
-    [SerializeField] private float fadeEffectDuration = 2f;
-
-    [SerializeField] private BuildingInteraction[] buildings;
-
     public GameObject aros;
-    private int buildingsUnlockedCount = 0;
-    private Coroutine dialogCoroutine;
-    private bool isDialogActive = false;
-    private System.Action currentDialogAction;
-    private bool keepArosVisible = false;
 
     private bool isPaused = false;
-
-    private bool pendingSceneAfterUnlock = false;
-    private bool readyToLeaveAfterPanelClose = false;
-
-    private bool isInBuildingViewingMode = false;
-    private string currentViewedBuilding = null;
-    
-    private Coroutine sceneTransitionDelayCoroutine;
 
     public void TogglePauseMenu()
     {
@@ -173,17 +106,6 @@ public class UIManager : MonoBehaviour
         Time.timeScale = 1f;
         gamePauseMenu.SetActive(false);
         isPaused = false;
-    }
-
-    public void hidePauseMenu()
-    {
-        ResumeGame();
-    }
-
-    public void exitPlay()
-    {
-        Time.timeScale = 1f;
-        SceneManager.LoadScene("Landing");
     }
 
     private void Awake()
@@ -250,11 +172,7 @@ public class UIManager : MonoBehaviour
                 currentStageText.text = "";
             }
         }
-
         
-        // _ = InitializeGameStage();
-        
-        ResetFadeOverlay();
     }
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -329,103 +247,6 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    // private async Task InitializeGameStage()
-    // {
-    //     try
-    //     {
-    //         var existing = GameStageService.LoadStageFromPrefs();
-    //         if (existing == null)
-    //         {
-    //             var toSet = GameStage.FromArea(Stage.TC);
-    //             SetCurrentStageText(toSet);
-    //             await GameStageService.SetStage(toSet);
-    //             Debug.Log("UIManager: Initialized game stage to TC");
-                
-    //             SetBackgroundMusicForStage(toSet.area);
-    //         }
-    //         else
-    //         {
-    //             SetCurrentStageText(existing);
-    //             Debug.Log($"UIManager: Game stage already set to {existing.area}");
-                
-    //             SetBackgroundMusicForStage(existing.area);
-    //         }
-    //     }
-    //     catch (System.Exception ex)
-    //     {
-    //         Debug.LogError($"UIManager: Failed to initialize game stage: {ex.Message}");
-    //     }
-    // }
-
-    // private void SetCurrentStageText(GameStage stage)
-    // {
-    //     if (currentStageText == null || stage == null) return;
-    //     var label = stage.stageDisplayName ?? GameStage.GetDefaultDisplayName(stage.area);
-    //     currentStageText.text = label;
-    // }
-
-
-    private IEnumerator FadeInMusic()
-    {
-        float elapsedTime = 0f;
-        float startVolume = 0f;
-        
-        while (elapsedTime < musicFadeInDuration)
-        {
-            elapsedTime += Time.deltaTime;
-            float progress = elapsedTime / musicFadeInDuration;
-            backgroundMusicSource.volume = Mathf.Lerp(startVolume, backgroundMusicVolume, progress);
-            yield return null;
-        }
-        
-        backgroundMusicSource.volume = backgroundMusicVolume;
-    }
-
-    private IEnumerator FadeOutMusic()
-    {
-        float elapsedTime = 0f;
-        float startVolume = backgroundMusicSource.volume;
-        
-        while (elapsedTime < musicFadeInDuration)
-        {
-            elapsedTime += Time.deltaTime;
-            float progress = elapsedTime / musicFadeInDuration;
-            backgroundMusicSource.volume = Mathf.Lerp(startVolume, 0f, progress);
-            yield return null;
-        }
-        
-        backgroundMusicSource.volume = 0f;
-        backgroundMusicSource.Stop();
-    }
-
-    private IEnumerator CrossfadeToNewMusic(AudioClip newMusic)
-    {
-        float elapsedTime = 0f;
-        float startVolume = backgroundMusicSource.volume;
-        float halfFadeDuration = musicFadeInDuration * 0.5f;
-        
-        while (elapsedTime < halfFadeDuration)
-        {
-            elapsedTime += Time.deltaTime;
-            float progress = elapsedTime / halfFadeDuration;
-            backgroundMusicSource.volume = Mathf.Lerp(startVolume, 0f, progress);
-            yield return null;
-        }
-        
-        backgroundMusicSource.clip = newMusic;
-        backgroundMusicSource.Play();
-        
-        elapsedTime = 0f;
-        while (elapsedTime < halfFadeDuration)
-        {
-            elapsedTime += Time.deltaTime;
-            float progress = elapsedTime / halfFadeDuration;
-            backgroundMusicSource.volume = Mathf.Lerp(0f, backgroundMusicVolume, progress);
-            yield return null;
-        }
-        
-        backgroundMusicSource.volume = backgroundMusicVolume;
-    }
 
     private void CleanupConflictingAudioSettings()
     {
@@ -516,53 +337,6 @@ public class UIManager : MonoBehaviour
 
     }
 
-    public void RefreshStatusText()
-    {
-        if (statusText != null)
-        {
-            statusText.text = PlayerPrefs.GetString("UserStatus", "--");
-        }
-    }
-    
-    public async Task CheckAndUpdateUserRank()
-    {
-        try 
-        {
-            string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
-            if (string.IsNullOrEmpty(userId))
-            {
-                Debug.LogWarning("UIManager: Cannot check rank - no user ID");
-                return;
-            }
-
-            var userService = new RamRoutes.Services.UserService();
-            int coins = await userService.GetUserCoins(userId);
-            int knowledgePoints = await userService.GetUserKnowledgePoints(userId);
-            int totalPoints = coins + knowledgePoints;
-            
-            UpdateCoins(coins);
-            UpdateKnowledgePoints(knowledgePoints);
-            
-            int previousRank = PlayerPrefs.GetInt("UserRank", 1);
-
-            GetUserAvatarBasedOnPoints(coins, knowledgePoints, true);
-
-            int currentRank = userService.CalculateUserRank(coins, knowledgePoints);
-
-            if (currentRank > previousRank)
-            {
-                ShowRankUpPanel(currentRank);
-                Debug.Log($"Rank increased from {previousRank} to {currentRank}! (Total points: {totalPoints})");
-            }
-            
-            UpdateUsernameAndHall();
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError($"Failed to check and update user rank: {ex.Message}");
-        }
-    }
-
     private async Task InitializeUserRankSystem()
     {
         try 
@@ -588,18 +362,6 @@ public class UIManager : MonoBehaviour
             {
                 userAvatarImage.sprite = GetUserAvatarBasedOnPoints(coins, knowledgePoints, true);
             }
-
-            int currentRank = userService.CalculateUserRank(coins, knowledgePoints);
-
-            if (currentRank > previousRank)
-            {
-                ShowRankUpPanel(currentRank);
-                Debug.Log($"Rank increased from {previousRank} to {currentRank}! (Total points: {totalPoints})");
-            }
-            else
-            {
-                Debug.Log($"Rank initialized: {currentRank} (Previous: {previousRank}, Total points: {totalPoints})");
-            }
         }
         catch (System.Exception ex)
         {
@@ -612,39 +374,6 @@ public class UIManager : MonoBehaviour
         _ = InitializeUserRankSystem();
         
         UpdateUsernameAndHall();
-        
-        ResetFadeOverlay();
-
-    }
-
-
-    private void ShowObjectsWithTag(string tag)
-{
-    GameObject[] objs = Resources.FindObjectsOfTypeAll<GameObject>()
-        .Where(go => go.CompareTag(tag) && go.hideFlags == HideFlags.None && go.scene.IsValid()).ToArray();
-
-    foreach (GameObject obj in objs)
-    {
-        obj.SetActive(true);
-    }
-}
-
-private void HideObjectsWithTag(string tag)
-{
-    GameObject[] objs = Resources.FindObjectsOfTypeAll<GameObject>()
-        .Where(go => go.CompareTag(tag) && go.hideFlags == HideFlags.None && go.scene.IsValid()).ToArray();
-
-    foreach (GameObject obj in objs)
-    {
-        obj.SetActive(false);
-    }
-}
-
-    private string FormatTime(float time)
-    {
-        int minutes = Mathf.FloorToInt(time / 60f);
-        int seconds = Mathf.FloorToInt(time % 60f);
-        return $"{minutes:00}:{seconds:00}";
     }
 
 
@@ -722,92 +451,6 @@ private void HideObjectsWithTag(string tag)
         
         panel.transform.localScale = targetScale;
     }
-    
-    private void ResetFadeOverlay()
-    {
-        if (fadeOverlay != null)
-        {
-            Color color = fadeOverlay.color;
-            color.a = 0f;
-            fadeOverlay.color = color;
-            fadeOverlay.gameObject.SetActive(false);
-            Debug.Log("UIManager: Reset fade overlay to transparent and inactive");
-        }
-    }
-
-    private IEnumerator AutoScrollCurrentUsers()
-    {
-        if (currentUsersScrollRect == null)
-        {
-            if (currentUsersPanel != null)
-            {
-                currentUsersScrollRect = currentUsersPanel.GetComponentInChildren<ScrollRect>();
-            }
-        }
-
-        if (currentUsersScrollRect == null)
-        {
-            Debug.LogWarning("UIManager: No ScrollRect found for auto-scroll functionality");
-            yield break;
-        }
-
-        yield return null;
-        yield return null;
-
-        float scrollSpeed = 0.5f;
-        float scrollInterval = 2f;
-        float scrollAmount = 0.2f;
-
-        while (currentUsersPanel != null && currentUsersPanel.activeInHierarchy)
-        {
-            if (currentUsersContentParent != null && currentUsersContentParent.childCount > 0)
-            {
-                float currentPos = currentUsersScrollRect.verticalNormalizedPosition;
-
-                float targetPos = currentPos - scrollAmount;
-
-                if (targetPos <= 0f)
-                {
-                    targetPos = 1f;
-                }
-
-                float elapsedTime = 0f;
-                float startPos = currentPos;
-
-                while (elapsedTime < scrollSpeed && currentUsersPanel != null && currentUsersPanel.activeInHierarchy)
-                {
-                    elapsedTime += Time.deltaTime;
-                    float progress = elapsedTime / scrollSpeed;
-
-                    float newPos = Mathf.SmoothStep(startPos, targetPos, progress);
-                    currentUsersScrollRect.verticalNormalizedPosition = newPos;
-
-                    yield return null;
-                }
-
-                if (currentUsersScrollRect != null)
-                {
-                    currentUsersScrollRect.verticalNormalizedPosition = targetPos;
-                }
-            }
-
-            yield return new WaitForSeconds(scrollInterval);
-        }
-    }
-
-    public void HideCurrentUsersPanel()
-    {
-        if (currentUsersPanel != null)
-        {
-            currentUsersPanel.SetActive(false);
-            
-            if (autoScrollCoroutine != null)
-            {
-                StopCoroutine(autoScrollCoroutine);
-                autoScrollCoroutine = null;
-            }
-        }
-    }
 
     public Sprite GetUserAvatarBasedOnPoints(int coins, int knowledgePoints, bool oneself = false)
     {
@@ -852,35 +495,6 @@ private void HideObjectsWithTag(string tag)
         return selectedSprite;
     }
     
-
-    private void ShowRankUpPanel(int newRank)
-    {
-        if (rankUpPanel == null)
-        {
-            Debug.LogWarning("UIManager: Rank up panel not assigned!");
-            return;
-        }
-        
-        string[] rankNames = { "Beginner", "Gold", "Silver", "Platinum" };
-        string rankName = rankNames[Mathf.Clamp(newRank, 0, rankNames.Length - 1)];
-        
-        if (rankUpText != null)
-        {
-            rankUpText.text = rankName;
-        }
-        
-        if (rankUpCloseButton != null)
-        {
-            rankUpCloseButton.onClick.RemoveAllListeners();
-            rankUpCloseButton.onClick.AddListener(HideRankUpPanel);
-        }
-        
-        rankUpPanel.SetActive(true);
-        
-        StartCoroutine(AnimatePanelPopup(rankUpPanel));
-        
-        Debug.Log($"Showing rank up panel for {rankName} rank (rank {newRank})");
-    }
     
     public void HideRankUpPanel()
     {
@@ -911,18 +525,5 @@ private void HideObjectsWithTag(string tag)
 
         quickUpdatePanel.SetActive(false);
     }
-    public static void ClearStaticCache()
-    {
-        try
-        {
-            cachedCurrentUsersPerBuilding.Clear();
-            currentUsersLoadedPerBuilding.Clear();
-            
-            Debug.Log("UIManager: Cleared static cache data");
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError($"UIManager: Failed to clear static cache: {ex.Message}");
-        }
-    }
+
 }

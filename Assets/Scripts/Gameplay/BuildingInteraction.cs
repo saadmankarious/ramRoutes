@@ -32,21 +32,15 @@ public class BuildingInteraction : MonoBehaviour
     [Header("GPS Integration")]
     [SerializeField] public bool bypassGpsCheck = false;
 
-    [Header("Player Movement")]
-    [SerializeField] public GameObject playerTargetPoint;
 
     public bool isPlayerInRange = false;
 
     private AudioSource audioSource;
     public string buildingName;
-    private GameObject inactiveInstance;
     private Material originalMaterial;
     private SpriteRenderer sr;
     private bool lastGpsProximityState = false;
-
-
     public GameObject rsvpUserPrefab;
-
     private List<BuildingEvent> cachedBuildingEvents;
     private bool eventsLoaded = false;
     private UIManager uiManager;
@@ -168,7 +162,11 @@ public class BuildingInteraction : MonoBehaviour
 
     void Update()
     {
-    
+        if (Input.GetMouseButtonDown(0))
+        {
+            DebugRaycastClick();
+        }
+
         if (eventsScrollView != null && !isEventsScrollingPaused && eventsContentParent.childCount > 0 && buildingEventsPanel != null && buildingEventsPanel.activeInHierarchy)
         {
             float contentHeight = 0;
@@ -213,6 +211,52 @@ public class BuildingInteraction : MonoBehaviour
     }
 
 
+    private void DebugRaycastClick()
+    {
+        if (Camera.main == null) return;
+
+        Vector2 worldPoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Collider2D hit = Physics2D.OverlapPoint(worldPoint);
+
+        if (hit == null)
+        {
+            Debug.Log($"BuildingInteraction ('{buildingName}'): click at world {worldPoint} hit nothing.");
+            return;
+        }
+
+        if (hit.gameObject == gameObject)
+        {
+            Debug.Log($"BuildingInteraction ('{buildingName}'): click at world {worldPoint} hit THIS building's collider.");
+            HandleBuildingClicked();
+        }
+        else
+        {
+            Debug.Log($"BuildingInteraction ('{buildingName}'): click at world {worldPoint} hit a different object: '{hit.gameObject.name}' (layer '{LayerMask.LayerToName(hit.gameObject.layer)}').");
+        }
+    }
+
+    private void HandleBuildingClicked()
+    {
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+        {
+            Debug.Log($"BuildingInteraction: Click on '{buildingName}' ignored - pointer is over a UI element");
+            return;
+        }
+
+        Debug.Log($"BuildingInteraction: Building '{buildingName}' clicked, eventsLoaded={eventsLoaded}");
+        StartCoroutine(ShowEventsOnClick());
+    }
+
+    private IEnumerator ShowEventsOnClick()
+    {
+        while (!eventsLoaded)
+        {
+            yield return null;
+        }
+
+        DisplayBuildingEvents();
+    }
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Player") || other.CompareTag("Spaceship"))
@@ -254,68 +298,13 @@ public class BuildingInteraction : MonoBehaviour
         }
     }
 
-    private void HandleApproachBuilding(BuildingProximityDetector.Building building)
-    {
-        Debug.Log("Building Interaction:: Approaching building " + building.name);
-    }
-
-
-    private bool IsPlayerCloseToBuilding()
-    {
-        if (bypassGpsCheck)
-        {
-            return true;
-        }
-        
-        if (proximityDetector == null)
-        {
-            Debug.LogWarning("BuildingProximityDetector not found in scene. Cannot check GPS proximity.");
-            return false;
-        }
-        
-        if (!Input.location.isEnabledByUser || Input.location.status != LocationServiceStatus.Running)
-        {
-            return false;
-        }
-        
-        BuildingProximityDetector.Building targetBuilding = null;
-        foreach (var building in proximityDetector.buildings)
-        {
-            if (building.name == buildingName)
-            {
-                targetBuilding = building;
-                break;
-            }
-        }
-        
-        if (targetBuilding == null)
-        {
-            Debug.LogWarning($"Building '{buildingName}' not found in BuildingProximityDetector's building list.");
-            return false;
-        }
-        
-        LocationInfo currentLocation = Input.location.lastData;
-        
-        float distance = proximityDetector.CalculatePreciseDistance(
-            currentLocation.latitude,
-            currentLocation.longitude,
-            targetBuilding.entranceGPS.x,
-            targetBuilding.entranceGPS.y
-        );
-        
-        Debug.Log($"GPS Distance to {buildingName}: {distance:F1}m (threshold: {targetBuilding.detectionRadius}m)");
-        
-        return distance <= targetBuilding.detectionRadius;
-    }
-
-
     private async Task FetchBuildingEvents()
     {
         if (eventsLoaded) return;
         var eventService = new BuildingEventService();
         var allEvents = await eventService.GetBuildingEventsAsync(forceRefresh: true);
         cachedBuildingEvents = allEvents.FindAll(e => e.buildingName == buildingName);
-        Debug.Log("fetching events for building " + buildingName + cachedBuildingEvents.Count);
+        // Debug.Log("fetching events for building " + buildingName + cachedBuildingEvents.Count);
 
         eventsLoaded = true;
     }

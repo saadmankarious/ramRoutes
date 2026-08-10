@@ -64,9 +64,13 @@ public class RamsManager : MonoBehaviour
     private List<Color> availableColors = new List<Color>();
     private int colorIndex = 0;
     
-    void Start()
+    void Awake()
     {
         building = GetComponent<BuildingInteraction>();
+    }
+
+    void Start()
+    {
         userService = new UserService();
         
         notificationManager = FindObjectOfType<NotificationManager>();

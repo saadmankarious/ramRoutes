@@ -86,7 +86,6 @@ GameObject:
   - component: {fileID: 5613899113245113986}
   - component: {fileID: 574109846354824124}
   - component: {fileID: 572681085016228603}
-  - component: {fileID: 2122115355050277620}
   - component: {fileID: 4468995605056063772}
   m_Layer: 0
   m_Name: Ram
@@ -188,29 +187,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &2122115355050277620
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3470250536520970455}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 67da6f85da53d410f81c4e9f5d1a127c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moveSpeed: 1
-  moveRadius: 1
-  waitTime: 2
-  directionChangeInterval: 3
-  speedRange: {x: 0.5, y: 2}
-  waitTimeRange: {x: 3, y: 8}
-  obstacleLayerMask:
-    serializedVersion: 2
-    m_Bits: 264
-  collisionCheckDistance: 0.5
-  avoidanceRadius: 0.3
 --- !u!61 &4468995605056063772
 BoxCollider2D:
   m_ObjectHideFlags: 0

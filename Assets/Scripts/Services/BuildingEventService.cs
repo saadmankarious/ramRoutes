@@ -63,7 +63,7 @@ namespace RamRoutes.Services
                 PlayerPrefs.SetString(CACHE_KEY, json);
                 PlayerPrefs.Save();
                 cachedEvents = events;
-                Debug.Log($"Saved {events.Count} building events to cache");
+                // Debug.Log($"Saved {events.Count} building events to cache");
             }
             catch (Exception ex)
             {

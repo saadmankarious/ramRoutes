@@ -321,7 +321,7 @@ public class NotificationManager : MonoBehaviour
         try
         {
             FirebaseMessaging.MessageReceived -= OnFirebaseMessageReceived;
-            Debug.Log("NotificationManager: Firebase listeners cleaned up");
+            // Debug.Log("NotificationManager: Firebase listeners cleaned up");
         }
         catch (System.Exception ex)
         {
