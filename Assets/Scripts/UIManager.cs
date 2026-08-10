@@ -421,8 +421,15 @@ public class UIManager : MonoBehaviour
     {
         if (panel == null) yield break;
 
-        Vector3 targetScale = Vector3.one;
-        
+        // Preserve whatever scale the panel was authored/set at instead of
+        // forcing it to Vector3.one, which shrinks panels designed at a
+        // different scale (e.g. via RectTransform or a scaled prefab).
+        Vector3 targetScale = panel.transform.localScale;
+        if (targetScale == Vector3.zero)
+        {
+            targetScale = Vector3.one;
+        }
+
         panel.transform.localScale = Vector3.zero;
         
         float duration = 0.4f;
