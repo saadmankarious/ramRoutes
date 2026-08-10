@@ -141,16 +141,16 @@ public class DailyEvents : MonoBehaviour
         if (eventPrefab == null || eventListContent == null) return;
 
         // Only show events with status "Terminal"
-        var gameStage = GameStageService.LoadStageFromPrefs();
+        // var gameStage = GameStageService.LoadStageFromPrefs();
 
-        if (gameStage != null && gameStage.area != Stage.Terminal)
-        {
-            containerPanel.SetActive(false);
-              return;
-        } else
-        {
-            containerPanel.SetActive(true);
-        }  
+        // if (gameStage != null && gameStage.area != Stage.Terminal)
+        // {
+        //     containerPanel.SetActive(false);
+        //       return;
+        // } else
+        // {
+        //     containerPanel.SetActive(true);
+        // }  
         
          // if (gameStage != null && gameStage.area != Stage.Terminal) return; --- IGNORE --- 
 

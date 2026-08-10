@@ -20,10 +20,7 @@ public struct UserBuildingEntry
 public class RamsManager : MonoBehaviour
 {
      private BuildingInteraction building;
-    
-    [Header("Stage Control")]
-    [SerializeField] private bool requireTerminalStage = false;
-    
+        
     [Header("Ram Prefab")]
     [SerializeField] private GameObject ramPrefab;
     
@@ -265,20 +262,10 @@ public class RamsManager : MonoBehaviour
         {
             yield return new WaitForSeconds(3f);
 
-            if (requireTerminalStage)
-            {
-                var currentStage = GameStageService.LoadStageFromPrefs();
-                if (currentStage != null && currentStage.area == Stage.Terminal)
-                {
-                    var task = CheckForNewPlayersInBuildings();
-                    yield return new WaitUntil(() => task.IsCompleted);
-                }
-            }
-            else
-            {
+           
                 var task = CheckForNewPlayersInBuildings();
                 yield return new WaitUntil(() => task.IsCompleted);
-            }
+            
         }
     }
     
@@ -354,16 +341,6 @@ public class RamsManager : MonoBehaviour
         {
             return;
         }
-        
-           
-         if (requireTerminalStage)
-            {
-                var currentStage = GameStageService.LoadStageFromPrefs();
-                if (currentStage == null || currentStage.area != Stage.Terminal)
-                {
-                    return;
-                }
-            }
             
             await SpawnRams();
             
@@ -429,16 +406,7 @@ public class RamsManager : MonoBehaviour
     }
 
     private async Task SpawnRams()
-    {
-        if (requireTerminalStage)
-        {
-            var currentStage = GameStageService.LoadStageFromPrefs();
-            if (currentStage == null || currentStage.area != Stage.Terminal)
-            {
-                return;
-            }
-        }
-        
+    {  
         string buildingName = building.buildingName;
         if (string.IsNullOrEmpty(buildingName))
         {
@@ -491,16 +459,7 @@ public class RamsManager : MonoBehaviour
     }
     
     private async Task CheckForNewPlayers()
-    {
-        if (requireTerminalStage)
-        {
-            var currentStage = GameStageService.LoadStageFromPrefs();
-            if (currentStage == null || currentStage.area != Stage.Terminal)
-            {
-                return;
-            }
-        }
-        
+    {   
         string buildingName = building.buildingName;
         if (string.IsNullOrEmpty(buildingName))
         {

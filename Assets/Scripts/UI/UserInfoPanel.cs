@@ -11,8 +11,6 @@ public class UserInfoPanel : MonoBehaviour
     
     [Header("User Info Panel Components")]
     public Button closeButton;
-    public Button shoutOutButton;
-    public Button friendRequestButton;
     
     [Header("User Info Display")]
     public Text usernameText;
@@ -28,8 +26,7 @@ public class UserInfoPanel : MonoBehaviour
     public Sprite rank3Sprite;
     
     private UserService userService;
-    private ShoutOutService shoutOutService;
-    private FriendRequestService friendRequestService;
+
     private Coroutine autoHideCoroutine;
     private User currentUser;
     
@@ -46,8 +43,8 @@ public class UserInfoPanel : MonoBehaviour
         }
         
         userService = new UserService();
-        shoutOutService = new ShoutOutService();
-        friendRequestService = new FriendRequestService();
+        // shoutOutService = new ShoutOutService();
+        // friendRequestService = new FriendRequestService();
     }
     
     void Start()
@@ -57,16 +54,6 @@ public class UserInfoPanel : MonoBehaviour
             closeButton.onClick.AddListener(HidePanel);
         }
         
-        if (shoutOutButton != null)
-        {
-            shoutOutButton.onClick.AddListener(SendShoutout);
-        }
-        
-        
-        if (friendRequestButton != null)
-        {
-            friendRequestButton.onClick.AddListener(SendFriendRequest);
-        }
     }
     
     public void ShowUserInfo(User user)
@@ -146,53 +133,53 @@ public class UserInfoPanel : MonoBehaviour
         HidePanel();
     }
     
-    private async void SendShoutout()
-    {
-        if (currentUser == null)
-        {
-            return;
-        }
+    // private async void SendShoutout()
+    // {
+    //     if (currentUser == null)
+    //     {
+    //         return;
+    //     }
         
-        bool success = await shoutOutService.SendShoutOut(currentUser.userId);
-        if (success)
-        {
-            if (UIManager.Instance != null)
-            {
-                UIManager.Instance.ShowQuickUpdate("Shoutout sent to " + currentUser.name + "!");
+    //     bool success = await shoutOutService.SendShoutOut(currentUser.userId);
+    //     if (success)
+    //     {
+    //         if (UIManager.Instance != null)
+    //         {
+    //             UIManager.Instance.ShowQuickUpdate("Shoutout sent to " + currentUser.name + "!");
 
-                // Update the UI with new player stats after sending shoutout
-                await UpdatePlayerStatsInUI();
-            }
+    //             // Update the UI with new player stats after sending shoutout
+    //             await UpdatePlayerStatsInUI();
+    //         }
 
-            HidePanel();
-        }
-    }
+    //         HidePanel();
+    //     }
+    // }
     
-    private async void SendFriendRequest()
-    {
-        if (currentUser == null)
-        {
-            return;
-        }
+    // private async void SendFriendRequest()
+    // {
+    //     if (currentUser == null)
+    //     {
+    //         return;
+    //     }
         
-        var friendRequest = await friendRequestService.SendFriendRequest(currentUser.userId);
-        if (friendRequest != null)
-        {
-            if (UIManager.Instance != null)
-            {
-                UIManager.Instance.ShowQuickUpdate($"Friend request sent to {currentUser.name}!");
-            }
+    //     var friendRequest = await friendRequestService.SendFriendRequest(currentUser.userId);
+    //     if (friendRequest != null)
+    //     {
+    //         if (UIManager.Instance != null)
+    //         {
+    //             UIManager.Instance.ShowQuickUpdate($"Friend request sent to {currentUser.name}!");
+    //         }
 
-            HidePanel();
-        }
-        else
-        {
-            if (UIManager.Instance != null)
-            {
-                UIManager.Instance.ShowQuickUpdate("You already sent a request");
-            }
-        }
-    }
+    //         HidePanel();
+    //     }
+    //     else
+    //     {
+    //         if (UIManager.Instance != null)
+    //         {
+    //             UIManager.Instance.ShowQuickUpdate("You already sent a request");
+    //         }
+    //     }
+    // }
     
     /// <summary>
     /// Updates the player stats in the UI Manager after a shoutout is sent
@@ -256,14 +243,14 @@ public class UserInfoPanel : MonoBehaviour
             closeButton.onClick.RemoveListener(HidePanel);
         }
         
-        if (shoutOutButton != null)
-        {
-            shoutOutButton.onClick.RemoveListener(SendShoutout);
-        }
+        // if (shoutOutButton != null)
+        // {
+        //     shoutOutButton.onClick.RemoveListener(SendShoutout);
+        // }
         
-        if (friendRequestButton != null)
-        {
-            friendRequestButton.onClick.RemoveListener(SendFriendRequest);
-        }
+        // if (friendRequestButton != null)
+        // {
+        //     friendRequestButton.onClick.RemoveListener(SendFriendRequest);
+        // }
     }
 }

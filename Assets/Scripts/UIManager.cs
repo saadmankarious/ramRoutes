@@ -16,14 +16,6 @@ public class UIManager : MonoBehaviour
     [Header("Audio Clips")]
     public AudioClip collectableSound;
 
-    private Dictionary<Stage, int> stageTimeLimits = new Dictionary<Stage, int>
-    {
-        { Stage.TC, 0 },
-        { Stage.EasternCampus, 0 },
-        { Stage.FirstStreet, 0 },
-        { Stage.Pedmall, 0 },
-        { Stage.Terminal, 0 }
-    };
     public static UIManager Instance { get; private set; }
 
     [Header("UI References")]
@@ -140,9 +132,6 @@ public class UIManager : MonoBehaviour
 
     [SerializeField] private BuildingInteraction[] buildings;
 
-    private Coroutine typingCoroutine;
-    private Coroutine objectiveRepeatCoroutine;
-    private Coroutine timerCoroutine;
     public GameObject aros;
     private int buildingsUnlockedCount = 0;
     private Coroutine dialogCoroutine;
@@ -256,7 +245,6 @@ public class UIManager : MonoBehaviour
 
         if (clearStageOnStart)
         {
-            GameStageService.ClearStageFromPrefs();
             if (currentStageText != null)
             {
                 currentStageText.text = "";
@@ -264,7 +252,7 @@ public class UIManager : MonoBehaviour
         }
 
         
-        _ = InitializeGameStage();
+        // _ = InitializeGameStage();
         
         ResetFadeOverlay();
     }
@@ -341,90 +329,41 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    private async Task InitializeGameStage()
-    {
-        try
-        {
-            var existing = GameStageService.LoadStageFromPrefs();
-            if (existing == null)
-            {
-                var toSet = GameStage.FromArea(Stage.TC);
-                SetCurrentStageText(toSet);
-                await GameStageService.SetStage(toSet);
-                Debug.Log("UIManager: Initialized game stage to TC");
+    // private async Task InitializeGameStage()
+    // {
+    //     try
+    //     {
+    //         var existing = GameStageService.LoadStageFromPrefs();
+    //         if (existing == null)
+    //         {
+    //             var toSet = GameStage.FromArea(Stage.TC);
+    //             SetCurrentStageText(toSet);
+    //             await GameStageService.SetStage(toSet);
+    //             Debug.Log("UIManager: Initialized game stage to TC");
                 
-                SetBackgroundMusicForStage(toSet.area);
-            }
-            else
-            {
-                SetCurrentStageText(existing);
-                Debug.Log($"UIManager: Game stage already set to {existing.area}");
+    //             SetBackgroundMusicForStage(toSet.area);
+    //         }
+    //         else
+    //         {
+    //             SetCurrentStageText(existing);
+    //             Debug.Log($"UIManager: Game stage already set to {existing.area}");
                 
-                SetBackgroundMusicForStage(existing.area);
-            }
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError($"UIManager: Failed to initialize game stage: {ex.Message}");
-        }
-    }
+    //             SetBackgroundMusicForStage(existing.area);
+    //         }
+    //     }
+    //     catch (System.Exception ex)
+    //     {
+    //         Debug.LogError($"UIManager: Failed to initialize game stage: {ex.Message}");
+    //     }
+    // }
 
-    private void SetCurrentStageText(GameStage stage)
-    {
-        if (currentStageText == null || stage == null) return;
-        var label = stage.stageDisplayName ?? GameStage.GetDefaultDisplayName(stage.area);
-        currentStageText.text = label;
-    }
+    // private void SetCurrentStageText(GameStage stage)
+    // {
+    //     if (currentStageText == null || stage == null) return;
+    //     var label = stage.stageDisplayName ?? GameStage.GetDefaultDisplayName(stage.area);
+    //     currentStageText.text = label;
+    // }
 
-    private void SetBackgroundMusicForStage(Stage stage)
-    {
-        if (backgroundMusicSource == null) return;
-
-        AudioClip stageMusic = GetMusicForStage(stage);
-        
-        if (stageMusic != null)
-        {
-            if (backgroundMusicSource.clip == stageMusic && backgroundMusicSource.isPlaying)
-            {
-                Debug.Log($"Stage music for {stage} is already playing");
-                return;
-            }
-            
-            if (backgroundMusicSource.isPlaying)
-            {
-                StartCoroutine(CrossfadeToNewMusic(stageMusic));
-            }
-            else
-            {
-                backgroundMusicSource.clip = stageMusic;
-                backgroundMusicSource.Play();
-                StartCoroutine(FadeInMusic());
-            }
-            
-            Debug.Log($"Set background music for stage: {stage}");
-        }
-        else
-        {
-            if (backgroundMusicSource.isPlaying)
-            {
-                StartCoroutine(FadeOutMusic());
-            }
-            Debug.Log($"No background music assigned for stage: {stage}");
-        }
-    }
-
-    private AudioClip GetMusicForStage(Stage stage)
-    {
-        return stage switch
-        {
-            Stage.TC => tcStageMusic,
-            Stage.EasternCampus => easternCampusMusic,
-            Stage.FirstStreet => firstStreetMusic,
-            Stage.Pedmall => pedmallMusic,
-            Stage.Terminal => terminalMusic,
-            _ => null
-        };
-    }
 
     private IEnumerator FadeInMusic()
     {
@@ -670,121 +609,16 @@ public class UIManager : MonoBehaviour
 
     private IEnumerator Start()
     {
-        while (GameManager.Instance == null || GameManager.Instance.currentTrial == null)
-        {
-            yield return null;
-        }
-
-        HideTerminalStageElements();
-
-        OnTrialComplete.AddListener(() => StartCoroutine(CompleteTrial()));
         OnTimeExpired.AddListener(TimeUp);
 
         _ = InitializeUserRankSystem();
         
         UpdateUsernameAndHall();
-
-        var currentStage = GameStageService.LoadStageFromPrefs();
-        if (currentStage != null && stageTimeLimits.TryGetValue(currentStage.area, out int stageLimit) && stageLimit > 0)
-        {
-            StartCountdown(timerText, stageLimit);
-        }
-
-
-        if (currentStage != null)
-        {
-            SetBackgroundMusicForStage(currentStage.area);
-        }
-
         
         ResetFadeOverlay();
 
-        yield return StartCoroutine(MovePlayerToCurrentPhysicalBuilding());
     }
 
-    private IEnumerator MovePlayerToCurrentPhysicalBuilding()
-    {
-        var firebaseUser = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser;
-        if (firebaseUser == null)
-        {
-            Debug.Log("[UIManager] No Firebase user logged in — skipping move to physical building");
-            yield break;
-        }
-
-        var userService = new UserService();
-        var task = userService.RetrieveUserById(firebaseUser.UserId);
-        yield return new WaitUntil(() => task.IsCompleted);
-
-        if (task.IsFaulted || task.Result == null)
-        {
-            Debug.LogWarning("[UIManager] Could not retrieve user for physical building move");
-            yield break;
-        }
-
-        string physicalBuilding = task.Result.currentPhysicalBuilding;
-        if (string.IsNullOrEmpty(physicalBuilding))
-        {
-            Debug.Log("[UIManager] No currentPhysicalBuilding set — player stays at default position");
-            yield break;
-        }
-
-        BuildingInteraction targetBuilding = null;
-        if (buildings != null)
-        {
-            foreach (var building in buildings)
-            {
-                if (building != null && string.Equals(building.buildingName, physicalBuilding, System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        targetBuilding = building;
-                        break;
-                    }
-                
-                if (targetBuilding != null) break;
-            }
-        
-        }
-        if (targetBuilding == null)
-        {
-            Debug.LogWarning($"[UIManager] BuildingInteraction not found for '{physicalBuilding}' — player stays at default position");
-            yield break;
-        }
-
-        Debug.Log($"[UIManager] Moving player to currentPhysicalBuilding: {physicalBuilding}");
-        yield return StartCoroutine(targetBuilding.MovePlayerToBuildingSmooth());
-    }
-
-    private void HideTerminalStageElements()
-    {
-        try
-        {
-            var currentStage = GameStageService.LoadStageFromPrefs();
-            if (currentStage != null && currentStage.area == Stage.Terminal)
-            {
-                GameObject[] taggedObjects = GameObject.FindGameObjectsWithTag("GoneOnTerminalStage");
-                
-                Debug.Log($"UIManager: Found {taggedObjects.Length} objects with 'GoneOnTerminalStage' tag");
-                
-                foreach (GameObject obj in taggedObjects)
-                {
-                    if (obj != null)
-                    {
-                        obj.SetActive(false);
-                        Debug.Log($"UIManager: Hidden '{obj.name}' due to Terminal stage");
-                    }
-                }
-                
-                Debug.Log($"UIManager: Hidden {taggedObjects.Length} UI elements for Terminal stage");
-            }
-            else
-            {
-                Debug.Log("UIManager: Not in Terminal stage, keeping all tagged elements visible");
-            }
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError($"UIManager: Error hiding Terminal stage elements: {ex.Message}");
-        }
-    }
 
     private void ShowObjectsWithTag(string tag)
 {
@@ -867,22 +701,13 @@ private void HideObjectsWithTag(string tag)
             textComponent.gameObject.SetActive(true);
         }
         
-        if (timerCoroutine != null)
-        {
-            StopCoroutine(timerCoroutine);
-        }
-        
         timerRunning = true;
         currentTime = 0;
         
         Text originalTimerText = timerText;
         
         timerText = textComponent;
-        
-        GameManager.Instance.currentTrial.timeLimit = seconds;
-        
-        timerCoroutine = StartCoroutine(CountdownTimer());
-        
+                       
         StartCoroutine(ResetTimerAfterCountdown(originalTimerText));
     }
     
@@ -937,59 +762,6 @@ private void HideObjectsWithTag(string tag)
         }
     }
 
-
-    public IEnumerator CompleteTrial()
-    {
-        var saveTask = SaveProgressToFirebase();
-        
-        yield return new WaitForSeconds(2f);
-        
-        if (teleportEffect != null)
-        {
-            GameObject player = GameObject.FindGameObjectWithTag("Player");
-            if (player != null)
-            {
-                CelebrationEffect();
-            }
-        }
-        
-        PlaySound(trialCompleteSound);
-        yield return new WaitForSeconds(2f);
-
-        while (!saveTask.IsCompleted)
-            yield return null;
-            
-        if (saveTask.IsFaulted)
-            Debug.LogError("Save failed: " + saveTask.Exception);
-
-        timerRunning = false;
-        StopAllCoroutines();
-        trialCompleteMenu.SetActive(true);
-        Time.timeScale = 0f;
-    }
-
-   private async Task SaveProgressToFirebase()
-{
-    try 
-    {
-        string playerName = PlayerPrefs.GetString("PlayerName", "");
-        if (string.IsNullOrEmpty(playerName))
-        {
-            playerName = "Player" + Random.Range(1000, 9999);
-            PlayerPrefs.SetString("PlayerName", playerName);
-            PlayerPrefs.Save();
-        }
-
-        int coins = GameManager.Instance.currentTrial.currentCoins;
-        int highestLevel = GameManager.Instance.currentTrial.trialNumber;
-        
-        await FirestoreUtility.SaveTrialCompletion(playerName, coins, highestLevel);
-    }
-    catch (System.Exception e)
-    {
-        Debug.LogError($"Firebase save error: {e.Message}");
-    }
-}
     private void PlaySound(AudioClip clip)
     {
         if (audioSource != null && clip != null)
@@ -997,305 +769,6 @@ private void HideObjectsWithTag(string tag)
             float volume = clip == typingTickSound ? typingSoundVolume : 1f;
             audioSource.PlayOneShot(clip, volume);
         }
-    }
-
-    private IEnumerator TypeText(string message, float activeFor, bool playNarration)
-    {
-        dialogText.text = "";
-        lastTypingSoundTime = 0f;
-
-        if (playNarration)
-        {
-
-
-            foreach (char letter in message.ToCharArray())
-            {
-                dialogText.text += letter;
-
-                if (Time.time - lastTypingSoundTime >= typingSoundInterval)
-                {
-                    PlaySound(typingTickSound);
-                    lastTypingSoundTime = Time.time;
-                }
-
-                yield return new WaitForSeconds(typingSpeed);
-            }
-        }
-        else
-        {
-            dialogText.text = message;
-         }
-
-        if (activeFor > 0)
-            {
-                yield return new WaitForSeconds(activeFor);
-                HideDialog();
-            }
-        
-        typingCoroutine = null;
-    }
-
-    public void ShowDialog(string message, float activeFor = 5f, bool narration = false, bool showBuildingStats = false, string buildingName = null)
-    {
-        ShowDialog(message, activeFor, null, null, narration, showBuildingStats, buildingName);
-    }
-
-    public void ShowQuickUpdate(string message)
-    {
-        StartCoroutine(ShowQuickUpdateSequence(message));
-    }
-    
-    public void ShowDialog(string message, float activeFor, string actionButtonText, System.Action onActionButtonClick, bool narration = false, bool showStats = false, string buildingName = null)
-    {
-        if (showStats && buildingStats != null && !string.IsNullOrEmpty(buildingName))
-        {
-            var buildingInfo = BuildingDataManager.GetBuildingInfo(buildingName);
-            if (buildingInfo != null)
-            {
-                if (coinsGainedBuildingStats != null)
-                {
-                    coinsGainedBuildingStats.text = "+" + buildingInfo.coinsGained.ToString();
-                }
-                if (kbGainedBuildingStats != null)
-                {
-                    kbGainedBuildingStats.text = "+" + buildingInfo.kbGained.ToString();
-                }
-            }
-            buildingStats.SetActive(true);
-        }
-        else if (buildingStats != null)
-        {
-            buildingStats.SetActive(false);
-        }
-
-        if (dialogPanel != null && dialogText != null)
-        {
-            if (isDialogActive && dialogCoroutine != null)
-            {
-                StopCoroutine(dialogCoroutine);
-                CleanupDialog();
-            }
-
-            dialogCoroutine = StartCoroutine(ShowDialogSequence(message, activeFor, actionButtonText, onActionButtonClick, narration));
-        }
-    }
-    
-    private IEnumerator ShowQuickUpdateSequence(string message)
-    {
-        if (quickUpdateText == null) yield break;
-
-        quickUpdateText.text = message;
-        quickUpdatePanel.SetActive(true);
-
-        if (collectableSound != null && audioSource != null)
-        {
-            audioSource.PlayOneShot(collectableSound);
-        }
-
-        yield return StartCoroutine(AnimatePanelPopup(quickUpdatePanel));
-
-        yield return new WaitForSeconds(2f);
-
-        quickUpdatePanel.SetActive(false);
-    }
-    private IEnumerator ShowDialogSequence(string message, float activeFor, string actionButtonText, System.Action onActionButtonClick, bool narration)
-    {
-        isDialogActive = true;
-        currentDialogAction = onActionButtonClick;
-
-        if (onActionButtonClick == null)
-        {
-            keepArosVisible = false;
-        }
-
-        try
-        {
-            dialogPanel.SetActive(true);
-
-            SetupActionButton(actionButtonText, onActionButtonClick);
-
-            if (aros != null)
-            {
-                aros.SetActive(true);
-            }
-
-
-            typingCoroutine = StartCoroutine(TypeText(message, activeFor, narration));
-            yield return typingCoroutine;
-        }
-        finally
-        {
-            CleanupDialog();
-        }
-    }
-    
-    private void SetupActionButton(string buttonText, System.Action onButtonClick)
-    {
-        if (dialogActionButton != null)
-        {
-            if (onButtonClick != null)
-            {
-                dialogActionButton.gameObject.SetActive(true);
-                
-                if (dialogActionButtonText != null)
-                {
-                    dialogActionButtonText.text = buttonText ?? "";
-                }
-                
-                dialogActionButton.onClick.RemoveAllListeners();
-                dialogActionButton.onClick.AddListener(() => {
-                    onButtonClick?.Invoke();
-                    HideDialog();
-                });
-            }
-            else
-            {
-                dialogActionButton.gameObject.SetActive(false);
-            }
-        }
-    }
-    
-    private void CleanupDialog()
-    {
-        isDialogActive = false;
-        dialogCoroutine = null;
-        currentDialogAction = null;
-        
-        if (dialogActionButton != null)
-        {
-            dialogActionButton.gameObject.SetActive(false);
-            dialogActionButton.onClick.RemoveAllListeners();
-        }
-    }
-    
-    public void HideDialog()
-    {
-        dialogPanel?.SetActive(false);
-        
-        if (!keepArosVisible && aros != null)
-        {
-            aros.SetActive(false);
-        }
-        
-        CleanupDialog();
-    }
-    
-    public bool IsDialogActive()
-    {
-        return isDialogActive;
-    }
-
-    private IEnumerator RepeatObjective()
-    {
-        while (true)
-        {
-            yield return new WaitForSeconds(objectiveRepeatTime);
-        }
-    }
-
-    public void ShowObjective()
-    {
-        string objectiveMessage = GameManager.Instance.currentTrial.GetProgressReport();
-        ShowDialog(objectiveMessage, 10f);
-    }
-
-    private void CelebrationEffect()
-    {
-        Debug.Log("Playing celebration effect with multiple particle systems");
-        if (teleportEffect == null)
-        {
-            Debug.LogWarning("Teleport effect not set in UIManager!");
-            return;
-        }
-
-        float audioDuration = celebrationDuration;
-
-        GameObject effectsContainer = new GameObject("CelebrationEffects");
-        Transform effectsParent = effectsContainer.transform;
-        
-        Destroy(effectsContainer, audioDuration + 0.5f);
-        
-        Vector3[] celebrationPoints = new Vector3[3];
-        
-        for (int point = 0; point < 3; point++)
-        {
-            float randomX = Random.Range(0.2f, 0.8f);
-            float randomY = Random.Range(0.2f, 0.8f);
-            celebrationPoints[point] = Camera.main.ViewportToWorldPoint(new Vector3(randomX, randomY, Camera.main.nearClipPlane + 5f));
-        }
-        
-        ParticleSystem[] effects = { teleportEffect, celebrationEffect1, celebrationEffect2 };
-        
-        for (int i = 0; i < 3; i++)
-        {
-            ParticleSystem currentEffect = effects[i % effects.Length];
-            if (currentEffect == null) continue;
-            
-            Vector3 basePosition = celebrationPoints[i];
-            
-            int effectsPerPoint = i == 0 ? 5 : 4;
-            
-            for (int j = 0; j < effectsPerPoint; j++)
-            {
-                Vector3 spawnPos = basePosition + new Vector3(
-                    Random.Range(-1f, 1f),
-                    Random.Range(-1f, 1f),
-                    0f
-                );
-                
-                GameObject effect = Instantiate(currentEffect.gameObject, spawnPos, Quaternion.identity, effectsParent);
-                
-                ParticleSystem ps = effect.GetComponent<ParticleSystem>();
-                if (ps != null)
-                {
-                    ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-                    
-                    var renderer = ps.GetComponent<ParticleSystemRenderer>();
-                    if (renderer != null)
-                    {
-                        renderer.sortingLayerName = "Default";
-                        renderer.sortingOrder = 4;
-                    }
-                    
-                    var main = ps.main;
-                    main.duration = audioDuration;
-                    main.loop = false;
-                    main.simulationSpeed = celebrationPlaybackSpeed;
-                    
-                    ps.Play();
-                }
-                
-                Debug.Log($"Spawned {currentEffect.name} effect at celebration point {i} - position: {spawnPos}");
-            }
-        }
-        
-        Debug.Log($"Celebration effects will play for {audioDuration} seconds to match audio");
-    }
-
-    public void UpdateBuildingUI(string buildingName)
-    {
-        var buildingInfo = BuildingDataManager.GetBuildingInfo(buildingName);
-
-        if (buildingTitle != null)
-        {
-            buildingTitle.text = buildingInfo.displayName;
-        }
-        if (buildingDescription != null)
-        {
-            buildingDescription.text = buildingInfo.description;
-        }
-         if (buildingUnlockedMessage != null)
-        {
-            buildingUnlockedMessage.text = buildingInfo.unlockedMessage;
-        }
-         if (coinsGained != null)
-                {
-            coinsGained.text = "+" + buildingInfo.coinsGained.ToString();
-                }
-                 if (kbGained != null)
-                {
-            kbGained.text = "+" + buildingInfo.kbGained.ToString();
-                }
     }
 
     public void UpdateCoins(int coins)
@@ -1314,25 +787,6 @@ private void HideObjectsWithTag(string tag)
         }
     }
 
-    public void PlayBuildingUnlockCelebration()
-    {
-        if (teleportEffect != null || celebrationEffect1 != null || celebrationEffect2 != null)
-        {
-            CelebrationEffect();
-        }
-        else
-        {
-            Debug.LogWarning("No celebration effects are set in UIManager!");
-        }
-        
-        if (trialCompleteSound != null && audioSource != null)
-        {
-            audioSource.Stop();
-            
-            audioSource.PlayOneShot(trialCompleteSound);
-            StartCoroutine(StopAudioAfterDuration(celebrationDuration));
-        }
-    }
     
     private IEnumerator StopAudioAfterDuration(float duration)
     {
@@ -1348,15 +802,6 @@ private void HideObjectsWithTag(string tag)
         return celebrationDuration;
     }
 
-    public async Task UnlockBuilding(BuildingInteraction building)
-    {
-        OnBuildingUnlocked.Invoke(building);
-        PlayBuildingUnlockCelebration();
-        
-        float celebrationDuration = GetCelebrationDuration();
-        int delayMs = Mathf.RoundToInt(celebrationDuration * 1000f);
-        await Task.Delay(delayMs);
-    }
     
 
     private void UpdateProgressBar()
@@ -1370,45 +815,6 @@ private void HideObjectsWithTag(string tag)
                 Debug.Log($"Activated progress bar image {buildingsUnlockedCount + 1}");
             }
             buildingsUnlockedCount++;
-        }
-    }
-
-    public async Task UpdateProgressBarOnReveal(string buildingName)
-    {
-        UpdateProgressBar();
-
-        var userService = new UserService();
-        string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
-        if (!string.IsNullOrEmpty(userId))
-        {
-            int coins = await userService.GetUserCoins(userId);
-            int knowledgePoints = await userService.GetUserKnowledgePoints(userId);
-            UpdateCoins(coins);
-            UpdateKnowledgePoints(knowledgePoints);
-        }
-
-        bool isFinalUnlock = buildingsUnlockedCount >= 7 || (progressBarImages != null && buildingsUnlockedCount >= progressBarImages.Length);
-        if (isFinalUnlock)
-        {
-            var current = GameStageService.LoadStageFromPrefs();
-            var target = GameStage.FromArea(Stage.Terminal);
-
-            SetCurrentStageText(target);
-            GameStageService.SaveStageToPrefs(target);
-            _ = GameStageService.SaveStageToFirestore(target);
-
-            SetBackgroundMusicForStage(Stage.Terminal);
-
-            pendingSceneAfterUnlock = true;
-            readyToLeaveAfterPanelClose = true;
-            Debug.Log($"UIManager: Final building unlocked (count={buildingsUnlockedCount}). Stage set to {target.area}. Will load Onboarding after panel closes.");
-            return;
-        }
-
-        if (pendingSceneAfterUnlock)
-        {
-            readyToLeaveAfterPanelClose = true;
-            Debug.Log("UIManager: Progress bar revealed after unlock. Waiting for unlock panel to close before changing scene.");
         }
     }
 

@@ -241,7 +241,6 @@ public class EventCheckin : MonoBehaviour
             if (uiManager != null)
             {
                 HideEventsPanel();
-                uiManager.ShowDialog("Please sign in to check in to events", 3f, false);
             }
             return;
         }
@@ -272,11 +271,7 @@ public class EventCheckin : MonoBehaviour
         {
             if (uiManager != null)
             {
-                HideEventsPanel();
-                string message = evt.eventType == RamRoutes.Model.EventType.Daily ? 
-                    "You've already checked in to this event today!" : 
-                    "You've already checked in to this event!";
-                uiManager.ShowQuickUpdate(message);
+             
             }
             return;
         }

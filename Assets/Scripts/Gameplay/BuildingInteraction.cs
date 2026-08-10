@@ -139,7 +139,7 @@ public class BuildingInteraction : MonoBehaviour
         proximityDetector = FindObjectOfType<BuildingProximityDetector>();
         ramsManager = GetComponent<RamsManager>();
 
-        var service = new UnlockedBuildingService();
+        // var service = new UnlockedBuildingService();
 
         if(buildingEventsToggle != null)
         {
@@ -240,11 +240,7 @@ public class BuildingInteraction : MonoBehaviour
             isPlayerInRange = false;
             lastGpsProximityState = false;
 
-            if (uiManager != null && uiManager.IsDialogActive())
-            {
-                uiManager.HideDialog();
-            }
-
+    
             if (buildingEventsPanel != null)
             {
                 buildingEventsPanel.SetActive(false);
@@ -640,48 +636,6 @@ public class BuildingInteraction : MonoBehaviour
         if (!string.Equals(buildingName, changedBuildingName, StringComparison.OrdinalIgnoreCase)) return;
 
         Debug.Log($"[BuildingInteraction] Physical building changed to {changedBuildingName}, moving player");
-        StartCoroutine(MovePlayerToBuildingSmooth());
-    }
-
-    public IEnumerator MovePlayerToBuildingSmooth()
-    {
-        var lightManager = FindObjectOfType<LightManager>();
-        if (lightManager != null)
-        {
-            lightManager.PerformFlashEffect(1.2f);
-        }
-        
-        GameObject player = GameObject.FindWithTag("Player");
-        
-        if (player != null)
-        {
-            Vector3 targetPosition = playerTargetPoint != null ? playerTargetPoint.transform.position : transform.position;
-            Vector3 startPosition = player.transform.position;
-            float duration = 2.0f;
-            float elapsedTime = 0f;
-            
-            string targetName = playerTargetPoint != null ? playerTargetPoint.name : buildingName;
-            Debug.Log($"Starting smooth movement to target '{targetName}' from {startPosition} to {targetPosition}");
-            
-            while (elapsedTime < duration)
-            {
-                elapsedTime += Time.deltaTime;
-                float progress = elapsedTime / duration;
-                
-                float smoothProgress = Mathf.SmoothStep(0f, 1f, progress);
-                
-                player.transform.position = Vector3.Lerp(startPosition, targetPosition, smoothProgress);
-                
-                yield return null;
-            }
-            
-            player.transform.position = targetPosition;
-            Debug.Log($"Completed smooth movement to target '{targetName}' at position {targetPosition}");
-        }
-        else
-        {
-            Debug.LogWarning("Could not find player object with 'Player' tag to move");
-        }
     }
     
     #region Auto Scroll Methods
