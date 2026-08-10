@@ -607,10 +607,8 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    private IEnumerator Start()
+    private void Start()
     {
-        OnTimeExpired.AddListener(TimeUp);
-
         _ = InitializeUserRankSystem();
         
         UpdateUsernameAndHall();
@@ -642,96 +640,6 @@ private void HideObjectsWithTag(string tag)
     }
 }
 
-
-    private GameObject[] FindObjectsWithTagInactive(string tag)
-    {
-        return Resources.FindObjectsOfTypeAll<GameObject>()
-                       .Where(go => go.CompareTag(tag)).ToArray();
-    }
-
-    private void ResetAllTrialObjects(string exceptTrial)
-    {
-        for (int i = 1; i <= 4; i++)
-        {
-            string tag = "Trial " + i;
-            GameObject[] objects = FindObjectsWithTagInactive(tag);
-            foreach (GameObject o in objects)
-            {
-                if (o.activeSelf)
-                {
-                    if(o.tag != exceptTrial)
-                    {
-                    o.SetActive(false);
-                    }else{
-                        o.SetActive(true);
-                    }
-                }
-            }
-        }
-    }
-
-
-    private IEnumerator CountdownTimer()
-    {
-        while (timerRunning && currentTime < GameManager.Instance.currentTrial.timeLimit)
-        {
-            yield return new WaitForSeconds(1f);
-            currentTime += 1f;
-            UpdateTimerDisplay();
-
-            float timeRemaining = GameManager.Instance.currentTrial.timeLimit - currentTime;
-            if (timeRemaining <= 30f)
-            {
-                timerText.color = Color.red;
-            }
-        }
-
-        if (timerRunning)
-        {
-            OnTimeExpired.Invoke();
-        }
-    }
-    
-    public void StartCountdown(Text textComponent, int seconds)
-    {
-        if (textComponent == null) return;
-        
-        if (!textComponent.gameObject.activeInHierarchy)
-        {
-            textComponent.gameObject.SetActive(true);
-        }
-        
-        timerRunning = true;
-        currentTime = 0;
-        
-        Text originalTimerText = timerText;
-        
-        timerText = textComponent;
-                       
-        StartCoroutine(ResetTimerAfterCountdown(originalTimerText));
-    }
-    
-    private IEnumerator ResetTimerAfterCountdown(Text originalTimerText)
-    {
-        yield return new WaitUntil(() => !timerRunning);
-        
-        timerText = originalTimerText;
-    }
-
-    private void UpdateTimerDisplay()
-    {
-        if (timerText != null)
-        {
-            if (!timerText.gameObject.activeInHierarchy)
-            {
-                timerText.gameObject.SetActive(true);
-            }
-            
-            float timeLeft = GameManager.Instance.currentTrial.timeLimit - currentTime;
-            timerText.text = FormatTime(timeLeft);
-        }
-    }
-
     private string FormatTime(float time)
     {
         int minutes = Mathf.FloorToInt(time / 60f);
@@ -739,37 +647,6 @@ private void HideObjectsWithTag(string tag)
         return $"{minutes:00}:{seconds:00}";
     }
 
-    private void TimeUp()
-    {
-        var stage = GameStageService.LoadStageFromPrefs();
-        if (stage.area == Stage.Pedmall)
-        {
-            timerRunning = false;
-            StopAllCoroutines();
-            timeUpMenu.SetActive(true);
-            
-            if (timerText != null)
-            {
-                if (!timerText.gameObject.activeInHierarchy)
-                {
-                    timerText.gameObject.SetActive(true);
-                }
-                timerText.text = "00:00";
-            }
-            
-            Time.timeScale = 0f;
-            PlaySound(timeExpiredSound); 
-        }
-    }
-
-    private void PlaySound(AudioClip clip)
-    {
-        if (audioSource != null && clip != null)
-        {
-            float volume = clip == typingTickSound ? typingSoundVolume : 1f;
-            audioSource.PlayOneShot(clip, volume);
-        }
-    }
 
     public void UpdateCoins(int coins)
     {
@@ -785,63 +662,6 @@ private void HideObjectsWithTag(string tag)
         {
             knowledgePointsText.text = knowledgePoints.ToString();
         }
-    }
-
-    
-    private IEnumerator StopAudioAfterDuration(float duration)
-    {
-        yield return new WaitForSeconds(duration);
-        if (audioSource != null)
-        {
-            audioSource.Stop();
-        }
-    }
-    
-    public float GetCelebrationDuration()
-    {
-        return celebrationDuration;
-    }
-
-    
-
-    private void UpdateProgressBar()
-    {
-        if (progressBarImages != null && buildingsUnlockedCount < progressBarImages.Length)
-        {
-            GameObject progressImage = progressBarImages[buildingsUnlockedCount];
-            if (progressImage != null)
-            {
-                progressImage.SetActive(true);
-                Debug.Log($"Activated progress bar image {buildingsUnlockedCount + 1}");
-            }
-            buildingsUnlockedCount++;
-        }
-    }
-
-    public void OnUnlockPanelClosed()
-    {
-        StartSceneTransitionDelay();
-
-    }
-
-    private void StartSceneTransitionDelay()
-    {
-        if (sceneTransitionDelayCoroutine != null)
-        {
-            StopCoroutine(sceneTransitionDelayCoroutine);
-        }
-        
-        sceneTransitionDelayCoroutine = StartCoroutine(SceneTransitionDelayCoroutine());
-    }
-    
-    private IEnumerator SceneTransitionDelayCoroutine()
-    {
-        Debug.Log($"UIManager: Starting {sceneTransitionDelay} second delay before scene transition");
-        yield return new WaitForSeconds(sceneTransitionDelay);
-        
-        TryProceedPendingScene();
-        
-        sceneTransitionDelayCoroutine = null;
     }
 
 
@@ -902,166 +722,6 @@ private void HideObjectsWithTag(string tag)
         
         panel.transform.localScale = targetScale;
     }
-
-    public void ResetPanelScale(GameObject panel)
-    {
-        if (panel != null)
-        {
-            if (activePopupAnimations.ContainsKey(panel))
-            {
-                if (activePopupAnimations[panel] != null)
-                {
-                    StopCoroutine(activePopupAnimations[panel]);
-                }
-                activePopupAnimations.Remove(panel);
-            }
-            
-            panel.transform.localScale = Vector3.one;
-            Debug.Log($"Reset scale for panel: {panel.name}");
-        }
-    }
-
-    public void HideAros()
-    {
-        if (aros != null)
-        {
-            aros.SetActive(false);
-        }
-    }
-    
-    public void ResetArosVisibility(bool hideAros = true)
-    {
-        keepArosVisible = false;
-        if (hideAros && aros != null)
-        {
-            aros.SetActive(false);
-        }
-    }
-    
-    private void PlayArosAnimation(string animationName)
-    {
-        if (aros != null)
-        {
-            Animator animator = aros.GetComponent<Animator>();
-            if (animator != null && !string.IsNullOrEmpty(animationName))
-            {
-                animator.SetTrigger("jumping-happy");
-                Debug.Log($"Playing AROS animation: {animationName}");
-            }
-            else
-            {
-                Debug.LogWarning($"AROS Animator component not found or animation name is empty: {animationName}");
-            }
-        }
-    }
-
-    public IEnumerator PlayTeleportEffect(Vector3 worldPosition)
-    {
-        if (teleportEffect != null)
-        {
-            teleportEffect.transform.position = worldPosition;
-            
-            teleportEffect.Play();
-            
-            Debug.Log($"Playing teleport effect at position: {worldPosition}");
-            
-            yield return new WaitForSeconds(2f);
-        }
-        else
-        {
-            Debug.LogWarning("Teleport effect not assigned in UIManager!");
-        }
-    }
-    
-    public void SetBuildingViewingMode(bool active, string buildingName = null)
-    {
-        isInBuildingViewingMode = active;
-        currentViewedBuilding = active ? buildingName : null;
-        
-       ToggleStatsToHideObjects(!active);
-        
-        if (!active)
-        {
-            HideCurrentUsersPanel();
-            
-            if (sceneTransitionDelayCoroutine == null)
-            {
-                TryProceedPendingScene();
-            }
-        }
-    }
-
-    private void ToggleStatsToHideObjects(bool show)
-    {
-        GameObject[] allObjects = Resources.FindObjectsOfTypeAll<GameObject>();
-        List<GameObject> statsObjects = new List<GameObject>();
-        
-        foreach (GameObject obj in allObjects)
-        {
-            if (obj != null && obj.CompareTag("HideOnBuildingView") && obj.scene.IsValid())
-            {
-                statsObjects.Add(obj);
-            }
-        }
-        
-        foreach (GameObject obj in statsObjects)
-        {
-            if (obj != null)
-            {
-                obj.SetActive(show);
-            }
-        }
-        
-        Debug.Log($"UIManager: {(show ? "Showing" : "Hiding")} {statsObjects.Count} objects tagged 'HideOnBuildingView'");
-    }
-
-    private void TryProceedPendingScene()
-    {
-        if (pendingSceneAfterUnlock && readyToLeaveAfterPanelClose && !isInBuildingViewingMode)
-        {
-            pendingSceneAfterUnlock = false;
-            readyToLeaveAfterPanelClose = false;
-            
-            StartCoroutine(PlaySceneTransitionEffect());
-        }
-    }
-    
-    private IEnumerator PlaySceneTransitionEffect()
-    {
-        Debug.Log("UIManager: Starting scene transition effect");
-        
-        if (fadeOverlay != null)
-        {
-            fadeOverlay.gameObject.SetActive(true);
-            Color startColor = fadeOverlay.color;
-            startColor.a = 0f;
-            fadeOverlay.color = startColor;
-            
-            float elapsedTime = 0f;
-            while (elapsedTime < fadeEffectDuration)
-            {
-                elapsedTime += Time.deltaTime;
-                float progress = elapsedTime / fadeEffectDuration;
-                
-                Color currentColor = fadeOverlay.color;
-                currentColor.a = Mathf.Lerp(0f, 1f, progress);
-                fadeOverlay.color = currentColor;
-                
-                yield return null;
-            }
-            
-            Color finalColor = fadeOverlay.color;
-            finalColor.a = 1f;
-            fadeOverlay.color = finalColor;
-        }
-        else
-        {
-            yield return new WaitForSeconds(fadeEffectDuration);
-        }
-        
-        Debug.Log("UIManager: Fade effect complete, loading Onboarding scene");
-        SceneManager.LoadScene("Onboarding");
-    }
     
     private void ResetFadeOverlay()
     {
@@ -1074,109 +734,6 @@ private void HideObjectsWithTag(string tag)
             Debug.Log("UIManager: Reset fade overlay to transparent and inactive");
         }
     }
-
-    public async void DisplayCurrentUsersForBuilding(string buildingName)
-    {
-        if (!isInBuildingViewingMode || currentViewedBuilding != buildingName)
-        {
-            Debug.Log($"Not displaying current users: viewing mode={isInBuildingViewingMode}, current building={currentViewedBuilding}, requested building={buildingName}");
-            return;
-        }
-
-        await DisplayCurrentUsersUI(buildingName);
-    }
-
-    private async Task DisplayCurrentUsersUI(string buildingName)
-    {
-        if (currentUsersContentParent == null || currentUserPrefab == null)
-        {
-            Debug.LogError("UIManager: Current users UI components not set up!");
-            return;
-        }
-
-        foreach (Transform child in currentUsersContentParent)
-        {
-            Destroy(child.gameObject);
-        }
-
-        List<User> buildingUsers = null;
-        try
-        {
-            var userService = new UserService();
-            buildingUsers = await userService.GetUsersInBuildingWithPoints(buildingName);
-            Debug.Log($"UIManager: Fetched {buildingUsers.Count} users live from Firebase for building {buildingName}");
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError($"UIManager: Failed to fetch live users for building {buildingName}: {ex.Message}");
-            buildingUsers = new List<User>();
-        }
-
-        if (buildingUsers != null && buildingUsers.Count > 0 && currentUsersPanel != null)
-        {
-            currentUsersPanel.SetActive(true);
-            StartCoroutine(AnimatePanelPopup(currentUsersPanel));
-
-            foreach (var user in buildingUsers)
-            {
-                GameObject userGO = Instantiate(currentUserPrefab, currentUsersContentParent);
-                Text nameText = userGO.GetComponentInChildren<Text>();
-
-                if (nameText != null)
-                {
-                    string displayName = !string.IsNullOrEmpty(user.name) ? user.name : "Anonymous User";
-                    nameText.text = displayName;
-
-                    if (nameText.supportRichText)
-                    {
-                        nameText.text = $"<b>{displayName}</b>";
-                    }
-                    if (user.userId == FirebaseAuth.DefaultInstance.CurrentUser?.UserId)
-                    {
-                        nameText.text += " (You)";
-                     
-                    }
-                }
-                else
-                {
-                    Debug.LogError("UIManager: No Text component found in current user prefab!");
-                }
-
-                Transform profileTransform = userGO.transform.Find("profile");
-                if (profileTransform != null)
-                {
-                    Image avatarImage = profileTransform.GetComponent<Image>();
-                    if (avatarImage != null)
-                    {
-                        Sprite rankSprite = GetUserAvatarBasedOnPoints(user.coins, user.knowledgePoints);
-                        avatarImage.sprite = rankSprite;
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"No Image component found in 'profile' object of user prefab for rank display");
-                    }
-                }
-                else
-                {
-                    Debug.LogWarning($"No 'profile' object found in user prefab for avatar display");
-                }
-            }
-            
-            if (buildingUsers.Count > 0)
-            {
-                if (autoScrollCoroutine != null)
-                {
-                    StopCoroutine(autoScrollCoroutine);
-                }
-                autoScrollCoroutine = StartCoroutine(AutoScrollCurrentUsers());
-            }
-        }
-        else if (currentUsersPanel != null)
-        {
-            currentUsersPanel.SetActive(false);
-        }
-    }
-
 
     private IEnumerator AutoScrollCurrentUsers()
     {
@@ -1332,7 +889,28 @@ private void HideObjectsWithTag(string tag)
             rankUpPanel.SetActive(false);
         }
     }
-    
+    public void ShowQuickUpdate(string message)
+    {
+        StartCoroutine(ShowQuickUpdateSequence(message));
+    }
+       private IEnumerator ShowQuickUpdateSequence(string message)
+    {
+        if (quickUpdateText == null) yield break;
+
+        quickUpdateText.text = message;
+        quickUpdatePanel.SetActive(true);
+
+        if (collectableSound != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(collectableSound);
+        }
+
+        yield return StartCoroutine(AnimatePanelPopup(quickUpdatePanel));
+
+        yield return new WaitForSeconds(2f);
+
+        quickUpdatePanel.SetActive(false);
+    }
     public static void ClearStaticCache()
     {
         try

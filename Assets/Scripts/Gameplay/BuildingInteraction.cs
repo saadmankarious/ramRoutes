@@ -72,11 +72,6 @@ public class BuildingInteraction : MonoBehaviour
         var buildingData = GetComponent<BuildingInteraction>();
         if (showEventsHappening) OnVirtualBuildingEntered?.Invoke(buildingData);
 
-        if (UIManager.Instance != null)
-        {
-            UIManager.Instance.SetBuildingViewingMode(true, buildingName);
-        }
-
         if (buildingEventsPanel != null)
         {
             if (eventsLoaded)
@@ -89,10 +84,6 @@ public class BuildingInteraction : MonoBehaviour
             }
         }
 
-        if (uiManager != null)
-        {
-            uiManager.DisplayCurrentUsersForBuilding(buildingName);
-        }
         if (ramsManager != null)
         {
             ramsManager.OnBuildingActivated();
@@ -255,10 +246,6 @@ public class BuildingInteraction : MonoBehaviour
             }
             activeUserLocations.Clear();
 
-            if (UIManager.Instance != null)
-            {
-                UIManager.Instance.SetBuildingViewingMode(false);
-            }
             
                if (ramsManager != null)
         {

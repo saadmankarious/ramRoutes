@@ -1365,8 +1365,6 @@ public class LoginManager : MonoBehaviour
         RamRoutes.Services.UserService.ClearUserCache();
         RamRoutes.Services.BuildingEventService.ClearBuildingEventsCache();
         UIManager.ClearStaticCache();
-        RamRoutes.Services.UnlockedBuildingService.ClearUnlockedBuildingsCache();
-        RamRoutes.Services.GameStageService.ClearGameStageCache();
         
         // Clear PlayerPrefs
         PlayerPrefs.DeleteKey("PlayerName");
@@ -1449,12 +1447,7 @@ public class LoginManager : MonoBehaviour
 
             // Clear UIManager static cache
             UIManager.ClearStaticCache();
-
-            RamRoutes.Services.GameStageService.ClearGameStageCache();
-            
-            // Clear game stage cache (optional - you may want to keep this)
-            // RamRoutes.Services.GameStageService.ClearStageFromPrefs();
-        }
+ }
 
         // Reset to login mode
         isSignupMode = false;

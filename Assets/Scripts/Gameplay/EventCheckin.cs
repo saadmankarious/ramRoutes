@@ -467,23 +467,7 @@ public class EventCheckin : MonoBehaviour
             // No events to show, just return
             return;
         }
-        
-        // Check if player is close to the building
-        if (!IsPlayerCloseToBuilding(buildingName, buildingData.bypassGpsCheck))
-        {
-            // Only show proximity message if there are events available
-            if (relevantEvents.Count > 0)
-            {
-                string eventCountText = relevantEvents.Count == 1 ? "1 event" : $"{relevantEvents.Count} events";
-                string messagePrefix = relevantEvents.Count == 1 ? "There is" : "There are";
-                string messageSuffix = relevantEvents.Count == 1 ? "it" : "them";
-                if (uiManager != null)
-                {
-                    uiManager.ShowDialog($"{messagePrefix} {eventCountText} happening NOW at {buildingName}, but you need to be closer in real life to see {messageSuffix}", 3f, false);
-                }
-            }
-            return;
-        }
+               
         
         if (buildingTitleText != null)
         {
