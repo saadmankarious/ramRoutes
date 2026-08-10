@@ -83,28 +83,52 @@ public class SegmentedJoystick : MonoBehaviour, IDragHandler, IPointerDownHandle
     private void PressDirection(Direction dir)
     {
         var player = PlayerController.Instance;
-        if (player == null) return;
+        var camera = FreeCameraController.Instance;
 
         switch (dir)
         {
-            case Direction.Up:    player.OnMobileUpPressed();    break;
-            case Direction.Down:  player.OnMobileDownPressed();  break;
-            case Direction.Left:  player.OnMobileLeftPressed();  break;
-            case Direction.Right: player.OnMobileRightPressed(); break;
+            case Direction.Up:
+                player?.OnMobileUpPressed();
+                camera?.OnMobileUpPressed();
+                break;
+            case Direction.Down:
+                player?.OnMobileDownPressed();
+                camera?.OnMobileDownPressed();
+                break;
+            case Direction.Left:
+                player?.OnMobileLeftPressed();
+                camera?.OnMobileLeftPressed();
+                break;
+            case Direction.Right:
+                player?.OnMobileRightPressed();
+                camera?.OnMobileRightPressed();
+                break;
         }
     }
 
     private void ReleaseCurrentDirection()
     {
         var player = PlayerController.Instance;
-        if (player == null) return;
+        var camera = FreeCameraController.Instance;
 
         switch (currentDirection)
         {
-            case Direction.Up:    player.OnMobileUpReleased();    break;
-            case Direction.Down:  player.OnMobileDownReleased();  break;
-            case Direction.Left:  player.OnMobileLeftReleased();  break;
-            case Direction.Right: player.OnMobileRightReleased(); break;
+            case Direction.Up:
+                player?.OnMobileUpReleased();
+                camera?.OnMobileUpReleased();
+                break;
+            case Direction.Down:
+                player?.OnMobileDownReleased();
+                camera?.OnMobileDownReleased();
+                break;
+            case Direction.Left:
+                player?.OnMobileLeftReleased();
+                camera?.OnMobileLeftReleased();
+                break;
+            case Direction.Right:
+                player?.OnMobileRightReleased();
+                camera?.OnMobileRightReleased();
+                break;
         }
     }
 }
