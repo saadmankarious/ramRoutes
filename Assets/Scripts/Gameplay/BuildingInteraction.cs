@@ -166,7 +166,7 @@ public class BuildingInteraction : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            DebugRaycastClick();
+            OnBuildingClicked();
         }
 
         if (eventsScrollView != null && !isEventsScrollingPaused && eventsContentParent.childCount > 0 && buildingEventsPanel != null && buildingEventsPanel.activeInHierarchy)
@@ -215,37 +215,34 @@ public class BuildingInteraction : MonoBehaviour
 
     private int buildingsLayerMask;
 
-    private void DebugRaycastClick()
+    private void OnBuildingClicked()
     {
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+        {
+            return;
+        }
+
         Vector2 worldPoint = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Collider2D hit = Physics2D.OverlapPoint(worldPoint, buildingsLayerMask);
 
         if (hit == null)
         {
-            Debug.Log($"BuildingInteraction ('{buildingName}'): click at world {worldPoint} hit nothing.");
             return;
         }
 
         if (hit.gameObject == gameObject)
         {
-            Debug.Log($"BuildingInteraction ('{buildingName}'): click at world {worldPoint} hit THIS building's collider.");
             HandleBuildingClicked();
-        }
-        else
-        {
-            Debug.Log($"BuildingInteraction ('{buildingName}'): click at world {worldPoint} hit a different object: '{hit.gameObject.name}' (layer '{LayerMask.LayerToName(hit.gameObject.layer)}').");
         }
     }
 
     private void HandleBuildingClicked()
     {
-        // if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
-        // {
-        //     Debug.Log($"BuildingInteraction: Click on '{buildingName}' ignored - pointer is over a UI element");
-        //     return;
-        // }
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+        {
+            return;
+        }
 
-        Debug.Log($"BuildingInteraction: Building '{buildingName}' clicked, eventsLoaded={eventsLoaded}");
         StartCoroutine(ShowEventsOnClick());
     }
 

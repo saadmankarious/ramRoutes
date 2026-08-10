@@ -383,7 +383,7 @@ public class BuildingProximityDetector : MonoBehaviour
 
     void Update()
     {
-        bool locationEnabled = (Input.location.isEnabledByUser || simulateGpsEnabled) && Input.location.status != LocationServiceStatus.Failed;
+        bool locationEnabled = simulateGpsEnabled || (Input.location.isEnabledByUser && Input.location.status != LocationServiceStatus.Failed);
         if (locationDisabledCanvas != null)
         {
             locationDisabledCanvas.gameObject.SetActive(!locationEnabled);
@@ -394,7 +394,7 @@ public class BuildingProximityDetector : MonoBehaviour
             else
             {
                 if (Time.timeScale != 1) Time.timeScale = 1; // Resume game
-                if (locationEnabled && !Input.location.isEnabledByUser)
+                if (!simulateGpsEnabled && !Input.location.isEnabledByUser)
                 {
                     Input.location.Start(5f, 5f);
                 }
