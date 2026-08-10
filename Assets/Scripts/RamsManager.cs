@@ -39,21 +39,13 @@ public class RamsManager : MonoBehaviour
     
     [Header("User Info Panel")]
     [SerializeField] private UserInfoPanel userInfoPanel;
-    
-    [Header("Chat System")]
-    [SerializeField] private ChatManager chatManager;
-    
+
     [Header("Player Count Display")]
     [SerializeField] private GameObject playerCountCanvasPrefab;
         [SerializeField] private GameObject footprintPrefab;
 
     [SerializeField] private Transform playerCountSpawnPoint;
-    
-    
-    private User currentChatUser;
-    private float lastClickTime = 0f;
-    private const float CLICK_DEBOUNCE_TIME = 0.5f;
-    
+
     private UserService userService;
     private NotificationManager notificationManager;
     private List<GameObject> spawnedRams = new List<GameObject>();
@@ -424,18 +416,7 @@ public class RamsManager : MonoBehaviour
     private IEnumerator HandlePlayerLeavingWithDelay()
     {
         yield return new WaitForSeconds(20f);
-        ChatManager chat = chatManager;
-          if (chat == null)
-        {
-            chat = FindObjectOfType<ChatManager>();
-        }
-        
-        if (chat != null)
-        {
-            chat.CloseChatPanel();
-            currentChatUser = null;
-        }
-        
+
         yield return StartCoroutine(DespawnRamsWithDelay());
         
         string userId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
@@ -756,8 +737,6 @@ public class RamsManager : MonoBehaviour
 
         SetupRamClickHandler(ramInstance, user);
 
-        ApplyUserSkinToRam(ramInstance, user);
-
         PlaySpawnSound();
 
         if (UIManager.Instance != null)
@@ -775,42 +754,6 @@ public class RamsManager : MonoBehaviour
         
     }
 
-    private void OnRamClicked(User user)
-    {
-        float currentTime = Time.time;
-        if (currentTime - lastClickTime < CLICK_DEBOUNCE_TIME)
-        {
-            return;
-        }
-        lastClickTime = currentTime;
-        
-        ChatManager chat = chatManager;
-        if (chat == null)
-        {
-            chat = FindObjectOfType<ChatManager>();
-        }
-        
-        if (chat != null)
-        {
-            if (currentChatUser != null && currentChatUser.userId == user.userId)
-            {
-                chat.CloseChatPanel();
-                currentChatUser = null;
-            }
-            else
-            {
-                chat.StartChatWithUser(user);
-                currentChatUser = user;
-            }
-        }
-      
-    }
-    
-    public void ResetCurrentChatUser()
-    {
-        currentChatUser = null;
-    }
-    
     private void SetupRamClickHandler(GameObject ramInstance, User user)
     {
         string currentUserId = Firebase.Auth.FirebaseAuth.DefaultInstance.CurrentUser?.UserId;
@@ -825,45 +768,11 @@ public class RamsManager : MonoBehaviour
         
     }
     
-    private void ApplyUserSkinToRam(GameObject ramInstance, User user)
-    {
-        try
-        {
-            var ramAnimator = ramInstance.GetComponent<Animator>();
-            if (ramAnimator == null)
-            {
-                return;
-            }
-            
-            var skinManager = FindObjectOfType<SkinManager>();
-            if (skinManager == null)
-            {
-                return;
-            }
-            
-            RuntimeAnimatorController skinAnimator = skinManager.GetAnimatorForSkin(user.equippedSkin);
-            if (skinAnimator != null)
-            {
-                ramAnimator.runtimeAnimatorController = skinAnimator;
-            }
-            else
-            {
-                Debug.LogWarning($"No animator controller found for skin {user.equippedSkin} - RAM will use default appearance");
-            }
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError($"Failed to apply skin to RAM for user {user.name}: {ex.Message}");
-        }
-    }
-    
     public void HandleRamClick(User user, GameObject ramInstance)
     {
         TriggerRamBackflip(ramInstance);
-        
+
         PlayBackflipSound();
-        
-        OnRamClicked(user);
     }
 
     private void TriggerRamBackflip(GameObject ramInstance)

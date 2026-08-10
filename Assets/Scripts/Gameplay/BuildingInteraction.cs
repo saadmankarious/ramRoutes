@@ -77,12 +77,6 @@ public class BuildingInteraction : MonoBehaviour
             UIManager.Instance.SetBuildingViewingMode(true, buildingName);
         }
 
-        var npcSpawner = FindObjectOfType<NPCSpawner>();
-        if (npcSpawner != null)
-        {
-            npcSpawner.SpawnNPCForBuildingOnEnter(buildingName);
-        }
-
         if (buildingEventsPanel != null)
         {
             if (eventsLoaded)
@@ -264,14 +258,6 @@ public class BuildingInteraction : MonoBehaviour
                 Destroy(indicator);
             }
             activeUserLocations.Clear();
-
-            var npcSpawner = FindObjectOfType<NPCSpawner>();
-            if ( npcSpawner != null)
-            {
-                Debug.Log($"BuildingInteraction: Player left activated building '{buildingName}', calling despawn NPCs");
-                npcSpawner.DespawnNPCsForBuilding(buildingName);
-            }
-          
 
             if (UIManager.Instance != null)
             {
@@ -476,12 +462,6 @@ public class BuildingInteraction : MonoBehaviour
             if (user != null)
             {
                 GameObject studentGO = Instantiate(rsvpUserPrefab, studentsContentParent);
-            ButtonHandler rsvpButtonHandler = studentGO.GetComponentInChildren<ButtonHandler>();
-
-            if (rsvpButtonHandler != null)
-            {
-                rsvpButtonHandler.Initialize("data", () => ChatWithFriend(user));
-            }
                 Text userNameText = studentGO.GetComponentInChildren<Text>(true);
                 Image userImage = studentGO.GetComponentInChildren<Image>(true);
                 
@@ -500,19 +480,6 @@ public class BuildingInteraction : MonoBehaviour
         }
     }   
     
-    private void ChatWithFriend(User user)
-    {
-        if (user.userId == FirebaseAuth.DefaultInstance.CurrentUser.UserId)
-        {
-            return;
-        }
-         ChatManager chatManager = FindObjectOfType<ChatManager>();
-        if (chatManager != null)
-        {
-            chatManager.StartChatWithUser(user);
-        }
-    }
-
     private void DisplayBuildingEvents()
     {
         if (eventsContentParent == null || eventPrefab == null)

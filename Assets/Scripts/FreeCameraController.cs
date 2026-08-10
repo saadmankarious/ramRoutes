@@ -109,8 +109,7 @@ public class FreeCameraController : MonoBehaviour
         vcam.m_Lens.OrthographicSize = Mathf.Clamp(newSize, minZoom, maxZoom);
     }
 
-    // Mobile joystick input methods (mirrors PlayerController's Instance so the same
-    // SegmentedJoystick UI can drive either the player or the free camera)
+    // Mobile joystick input methods, driven by SegmentedJoystick's OnMobile*Pressed/Released calls
     public void OnMobileLeftPressed() { mobileLeftPressed = true; }
     public void OnMobileLeftReleased() { mobileLeftPressed = false; }
     public void OnMobileRightPressed() { mobileRightPressed = true; }

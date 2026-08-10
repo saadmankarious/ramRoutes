@@ -162,15 +162,10 @@ public class FriendsPanel : MonoBehaviour
             
             // Instantiate the friend prefab
             GameObject friendEntry = Instantiate(friendPrefab, contentParent);
-            ButtonHandler rsvpButtonHandler = friendEntry.GetComponentInChildren<ButtonHandler>();
 
-            if (rsvpButtonHandler != null)
-            {
-                rsvpButtonHandler.Initialize("data", () => ChatWithFriend(friendUser));
-            }
             // Find and populate the specific GameObjects in the prefab
             PopulateFriendUI(friendEntry, friendUser);
-            
+
             return friendEntry;
         }
         catch (System.Exception e)
@@ -178,18 +173,7 @@ public class FriendsPanel : MonoBehaviour
             return null;
         }
     }
-    
-    
-    private void ChatWithFriend(User friend)
-    {
-        // Assuming there's a ChatManager in the scene that handles chat
-        ChatManager chatManager = FindObjectOfType<ChatManager>();
-        if (chatManager != null)
-        {
-            chatManager.StartChatWithUser(friend);
-        }
-       
-    }
+
     /// <summary>
     /// Populate the friend UI components with user data
     /// </summary>

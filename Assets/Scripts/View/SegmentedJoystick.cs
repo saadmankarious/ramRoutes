@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
-using Platformer.Mechanics;
 
 public class SegmentedJoystick : MonoBehaviour, IDragHandler, IPointerDownHandler, IPointerUpHandler
 {
@@ -82,53 +81,27 @@ public class SegmentedJoystick : MonoBehaviour, IDragHandler, IPointerDownHandle
 
     private void PressDirection(Direction dir)
     {
-        var player = PlayerController.Instance;
         var camera = FreeCameraController.Instance;
 
         switch (dir)
         {
-            case Direction.Up:
-                player?.OnMobileUpPressed();
-                camera?.OnMobileUpPressed();
-                break;
-            case Direction.Down:
-                player?.OnMobileDownPressed();
-                camera?.OnMobileDownPressed();
-                break;
-            case Direction.Left:
-                player?.OnMobileLeftPressed();
-                camera?.OnMobileLeftPressed();
-                break;
-            case Direction.Right:
-                player?.OnMobileRightPressed();
-                camera?.OnMobileRightPressed();
-                break;
+            case Direction.Up:    camera?.OnMobileUpPressed();    break;
+            case Direction.Down:  camera?.OnMobileDownPressed();  break;
+            case Direction.Left:  camera?.OnMobileLeftPressed();  break;
+            case Direction.Right: camera?.OnMobileRightPressed(); break;
         }
     }
 
     private void ReleaseCurrentDirection()
     {
-        var player = PlayerController.Instance;
         var camera = FreeCameraController.Instance;
 
         switch (currentDirection)
         {
-            case Direction.Up:
-                player?.OnMobileUpReleased();
-                camera?.OnMobileUpReleased();
-                break;
-            case Direction.Down:
-                player?.OnMobileDownReleased();
-                camera?.OnMobileDownReleased();
-                break;
-            case Direction.Left:
-                player?.OnMobileLeftReleased();
-                camera?.OnMobileLeftReleased();
-                break;
-            case Direction.Right:
-                player?.OnMobileRightReleased();
-                camera?.OnMobileRightReleased();
-                break;
+            case Direction.Up:    camera?.OnMobileUpReleased();    break;
+            case Direction.Down:  camera?.OnMobileDownReleased();  break;
+            case Direction.Left:  camera?.OnMobileLeftReleased();  break;
+            case Direction.Right: camera?.OnMobileRightReleased(); break;
         }
     }
 }

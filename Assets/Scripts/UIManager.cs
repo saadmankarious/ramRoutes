@@ -70,7 +70,6 @@ public class UIManager : MonoBehaviour
     [SerializeField] private float celebrationDuration = 2f;
 
     public Text timerText;
-    public Text heldItem;
     public GameObject dialogPanel;
     public GameObject quickUpdatePanel;
     public Text quickUpdateText;
@@ -122,15 +121,9 @@ public class UIManager : MonoBehaviour
     public UnityEvent OnTimeExpired = new UnityEvent();
     public UnityEvent<BuildingInteraction> OnBuildingUnlocked = new UnityEvent<BuildingInteraction>();
 
-    [Header("Mobile NPC Interaction")]
-    public Button mobileInteractButton;
-    
     [Header("Progress Bar")]
     public GameObject[] progressBarImages;
     public Text currentStageText;
-    
-    [Header("Building Gates")]
-    [Tooltip("Set pairs of BuildingInteraction and its connected Gate. UIManager will unlock the mapped gate when that building is unlocked.")]
 
     [Header("Debug / Startup")]
     [SerializeField] private bool clearStageOnStart = false;
@@ -147,8 +140,6 @@ public class UIManager : MonoBehaviour
 
     [SerializeField] private BuildingInteraction[] buildings;
 
-    private Dictionary<BuildingInteraction, Gate> buildingGateMap;
-
     private Coroutine typingCoroutine;
     private Coroutine objectiveRepeatCoroutine;
     private Coroutine timerCoroutine;
@@ -158,9 +149,7 @@ public class UIManager : MonoBehaviour
     private bool isDialogActive = false;
     private System.Action currentDialogAction;
     private bool keepArosVisible = false;
-    
-    private NpcAutoMovement currentInteractingNPC;
-    
+
     private bool isPaused = false;
 
     private bool pendingSceneAfterUnlock = false;
@@ -1307,23 +1296,6 @@ private void HideObjectsWithTag(string tag)
                 {
             kbGained.text = "+" + buildingInfo.kbGained.ToString();
                 }
-
-        var npcSpawner = FindObjectOfType<NPCSpawner>();
-        if (npcSpawner != null)
-        {
-            var npcInfo = npcSpawner.GetFirstNPCForBuilding(buildingName);
-            if (npcInfo != null)
-            {
-                if (npcTitle != null)
-                {
-                    npcTitle.text = !string.IsNullOrEmpty(npcInfo.npcName) ? npcInfo.npcName : npcInfo.npcTitle;
-                }
-                if (npcImage != null && npcInfo.npcImage != null)
-                {
-                    npcImage.sprite = npcInfo.npcImage;
-                }
-            }
-        }
     }
 
     public void UpdateCoins(int coins)
@@ -1595,80 +1567,6 @@ private void HideObjectsWithTag(string tag)
         }
     }
     
-    public void RegisterNPCForMobileInteraction(NpcAutoMovement npc)
-    {
-        if (npc == null)
-        {
-            Debug.LogWarning("UIManager: Cannot register null NPC for mobile interaction");
-            return;
-        }
-        
-        currentInteractingNPC = npc;
-        
-        if (mobileInteractButton != null)
-        {
-            mobileInteractButton.onClick.RemoveAllListeners();
-            
-            mobileInteractButton.onClick.AddListener(() => {
-                if (currentInteractingNPC != null)
-                {
-                    currentInteractingNPC.mobileInteractPressed = true;
-                    Debug.Log($"UIManager: Mobile interact pressed for NPC {currentInteractingNPC.gameObject.name}");
-                }
-                else
-                {
-                    Debug.LogWarning("UIManager: Mobile interact pressed but no NPC registered");
-                }
-            });
-            
-            Debug.Log($"UIManager: Registered NPC {npc.gameObject.name} for mobile interaction");
-        }
-        else
-        {
-            Debug.LogWarning("UIManager: Mobile interact button not assigned!");
-        }
-    }
-    
-    public void UnregisterNPCForMobileInteraction(NpcAutoMovement npc)
-    {
-        if (currentInteractingNPC == npc)
-        {
-            currentInteractingNPC = null;
-            
-            HideMobileInteractButton();
-            
-            if (mobileInteractButton != null)
-            if (mobileInteractButton != null)
-            {
-                mobileInteractButton.onClick.RemoveAllListeners();
-            }
-            
-            Debug.Log($"UIManager: Unregistered NPC {npc?.gameObject.name} from mobile interaction");
-        }
-    }
-    
-    public void ShowMobileInteractButton()
-    {
-        if (mobileInteractButton != null)
-        {
-            mobileInteractButton.gameObject.SetActive(true);
-            Debug.Log("UIManager: Showing mobile interact button");
-        }
-        else
-        {
-            Debug.LogWarning("UIManager: Cannot show mobile interact button - not assigned!");
-        }
-    }
-    
-    public void HideMobileInteractButton()
-    {
-        if (mobileInteractButton != null)
-        {
-            mobileInteractButton.gameObject.SetActive(false);
-            Debug.Log("UIManager: Hiding mobile interact button");
-        }
-    }
-
     public void SetBuildingViewingMode(bool active, string buildingName = null)
     {
         isInBuildingViewingMode = active;
@@ -1816,12 +1714,6 @@ private void HideObjectsWithTag(string tag)
             foreach (var user in buildingUsers)
             {
                 GameObject userGO = Instantiate(currentUserPrefab, currentUsersContentParent);
-                   ButtonHandler rsvpButtonHandler = userGO.GetComponentInChildren<ButtonHandler>();
-
-            if (rsvpButtonHandler != null)
-            {
-                rsvpButtonHandler.Initialize("data", () => ChatWithFriend(user));
-            }
                 Text nameText = userGO.GetComponentInChildren<Text>();
 
                 if (nameText != null)
@@ -1879,16 +1771,6 @@ private void HideObjectsWithTag(string tag)
         }
     }
 
-    
-    private void ChatWithFriend(User friend)
-    {
-        ChatManager chatManager = FindObjectOfType<ChatManager>();
-        if (chatManager != null)
-        {
-            chatManager.StartChatWithUser(friend);
-        }
-       
-    }
 
     private IEnumerator AutoScrollCurrentUsers()
     {
