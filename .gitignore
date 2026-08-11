@@ -1,11 +1,13 @@
-# This .gitignore file should be placed at the root of your Unity project 
-directory
-#
+# This .gitignore file should be placed at the root of your Unity project directory
+Admin/scraper/node_modules/*
+
+ProjectSettings/EditorBuildSettings.asset
 /Assets/GeneratedLocalRepo/
 .DS_Store
 # Get latest from 
 https://github.com/github/gitignore/blob/main/Unity.gitignore
 .vscode
+gwu-builds-ios/
 #
 /Assets/Firebase/
 # /Assets/Plugins/
@@ -99,3 +101,6 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# get ignore of sub folders
+*/.gitignore

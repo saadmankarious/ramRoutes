@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GWU Event Scraper</title>
+  <style>
+    body { font-family: monospace; max-width: 960px; margin: 24px auto; padding: 0 16px; }
+    table { border-collapse: collapse; width: 100%; }
+    td, th { border: 1px solid #ccc; padding: 4px 8px; text-align: left; }
+    th { background: #f0f0f0; }
+    details { margin: 6px 0; }
+    summary { cursor: pointer; }
+    .tag-confirmed { color: green; font-weight: bold; }
+    .tag-review    { color: #b36200; }
+    .tag-score     { color: #888; font-size: 0.85em; }
+    #log { color: #555; font-size: 0.85em; min-height: 1.2em; }
+  </style>
+</head>
+<body>
+
+<h2>GWU Event Scraper</h2>
+
+<!-- Step 1 -->
+<h3>1. Scrape Events</h3>
+<button id="scrapeBtn" onclick="startScrape()">Scrape Events</button>
+&nbsp;<span id="log"></span>
+<div id="eventSection" style="display:none; margin-top:12px;">
+  <b id="eventCount"></b>
+  <div id="eventTable"></div>
+</div>
+
+<hr>
+
+<!-- Step 2 -->
+<h3>2. Match to Buildings</h3>
+<button id="matchBtn" disabled onclick="runMatch()">Load Buildings &amp; Match</button>
+<div id="matchSection" style="margin-top:12px;"></div>
+
+<script>
+  let scrapedEvents = [];
+
+  // --- Step 1: Scrape ---
+
+  function startScrape() {
+    const btn = document.getElementById('scrapeBtn');
+    const log = document.getElementById('log');
+    btn.disabled = true;
+    log.textContent = 'Starting scraper...';
+    scrapedEvents = [];
+    document.getElementById('eventSection').style.display = 'none';
+    document.getElementById('matchBtn').disabled = true;
+    document.getElementById('matchSection').innerHTML = '';
+
+    const es = new EventSource('/api/scrape');
+
+    es.onmessage = (e) => {
+      const { type, payload } = JSON.parse(e.data);
+
+      if (type === 'progress') {
+        log.textContent = payload;
+      } else if (type === 'done') {
+        es.close();
+        scrapedEvents = payload;
+        log.textContent = `Done — ${scrapedEvents.length} events found.`;
+        renderEvents(scrapedEvents);
+        btn.disabled = false;
+        document.getElementById('matchBtn').disabled = false;
+      } else if (type === 'error') {
+        es.close();
+        log.textContent = 'Error: ' + payload;
+        btn.disabled = false;
+      }
+    };
+
+    es.onerror = () => {
+      es.close();
+      log.textContent = 'Connection error.';
+      btn.disabled = false;
+    };
+  }
+
+  function renderEvents(events) {
+    document.getElementById('eventCount').textContent =
+      `${events.length} events scraped:`;
+
+    // Summarise unique locations
+    const locations = {};
+    events.forEach(e => {
+      const loc = e.location || '(none)';
+      locations[loc] = (locations[loc] || 0) + 1;
+    });
+
+    let html = '<table><tr><th>#</th><th>Name</th><th>Date</th><th>Location (raw)</th></tr>';
+    events.forEach((e, i) => {
+      html += `<tr>
+        <td>${i + 1}</td>
+        <td>${esc(e.name)}</td>
+        <td>${esc(e.date || '')}</td>
+        <td>${esc(e.location || '(none)')}</td>
+      </tr>`;
+    });
+    html += '</table>';
+
+    // Unique location summary
+    const sortedLocs = Object.entries(locations).sort((a, b) => b[1] - a[1]);
+    html += `<br><b>Unique locations (${sortedLocs.length}):</b><br>`;
+    html += '<table><tr><th>Location</th><th>Events</th></tr>';
+    sortedLocs.forEach(([loc, count]) => {
+      html += `<tr><td>${esc(loc)}</td><td>${count}</td></tr>`;
+    });
+    html += '</table>';
+
+    document.getElementById('eventTable').innerHTML = html;
+    document.getElementById('eventSection').style.display = 'block';
+  }
+
+  // --- Step 2: Match ---
+
+  async function runMatch() {
+    const btn = document.getElementById('matchBtn');
+    const section = document.getElementById('matchSection');
+    btn.disabled = true;
+    section.innerHTML = 'Loading buildings and running match...';
+
+    try {
+      const res = await fetch('/api/match', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ events: scrapedEvents }),
+      });
+      if (!res.ok) {
+        const { error } = await res.json();
+        throw new Error(error);
+      }
+      const data = await res.json();
+      renderMatches(data);
+    } catch (err) {
+      section.innerHTML = 'Error: ' + esc(err.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function renderMatches({ buildings, unmatched }) {
+    let html = '';
+
+    // --- Matched buildings ---
+    const totalMatched = buildings.reduce(
+      (n, b) => n + b.matched.length, 0
+    );
+    html += `<b>Buildings in Firestore: ${data.buildingCount} &nbsp;|&nbsp; Buildings with matches: ${buildings.length} &nbsp;|&nbsp; Events placed: ${totalMatched}</b><br><br>`;
+
+    buildings.forEach(b => {
+      html += `<details open>
+        <summary>
+          <b>${esc(b.buildingName)}</b>
+          &nbsp;<span class="tag-score">[${esc(b.schoolName)}]</span>
+          &nbsp;— ${b.matched.length} event(s)
+        </summary>`;
+
+      html += '<table><tr><th>Name</th><th>Scraped location</th><th>Keyword hit</th></tr>';
+      b.matched.forEach(e => {
+        html += `<tr>
+          <td>${esc(e.name)}</td>
+          <td>${esc(e.location)}</td>
+          <td class="tag-confirmed">${esc(e.matchedKeyword)}</td>
+        </tr>`;
+      });
+      html += '</table>';
+
+      html += '</details>';
+    });
+
+    // --- Unmatched ---
+    html += `<br><b>Unmatched events: ${unmatched.length}</b>`;
+    if (unmatched.length) {
+      html += '<table><tr><th>Name</th><th>Scraped location</th></tr>';
+      unmatched.forEach(e => {
+        html += `<tr>
+          <td>${esc(e.name)}</td>
+          <td>${esc(e.location || '(none)')}</td>
+        </tr>`;
+      });
+      html += '</table>';
+    }
+
+    document.getElementById('matchSection').innerHTML = html;
+  }
+
+  function esc(str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+</script>
+</body>
+</html>
