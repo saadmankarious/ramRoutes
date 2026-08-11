@@ -8,19 +8,80 @@ using RamRoutes.Model;
 
 namespace RamRoutes.Services
 {
+    // JsonUtility (used for the PlayerPrefs cache) doesn't support DateTime at all, even
+    // as a plain field, so the cache uses its own DTO with the date stored as ticks and
+    // converts to/from the real BuildingEvent model.
     [Serializable]
-    public class BuildingEventList
+    internal class BuildingEventCacheEntry
     {
-        public List<BuildingEvent> events;
-        
-        public BuildingEventList()
+        public string buildingId;
+        public string buildingName;
+        public string eventName;
+        public string description;
+        public int gainedCoins;
+        public int gainedKb;
+        public string eventId;
+        public long dateTicks;
+        public int eventType;
+        public string recurrenceData;
+        public List<string> attendees;
+        public List<string> interestedUsers;
+
+        public static BuildingEventCacheEntry FromBuildingEvent(BuildingEvent e)
         {
-            events = new List<BuildingEvent>();
+            return new BuildingEventCacheEntry
+            {
+                buildingId = e.buildingId,
+                buildingName = e.buildingName,
+                eventName = e.eventName,
+                description = e.description,
+                gainedCoins = e.gainedCoins,
+                gainedKb = e.gainedKb,
+                eventId = e.eventId,
+                dateTicks = e.date.Ticks,
+                eventType = (int)e.eventType,
+                recurrenceData = e.recurrenceData,
+                attendees = e.attendees,
+                interestedUsers = e.interestedUsers
+            };
         }
+
+        public BuildingEvent ToBuildingEvent()
+        {
+            return new BuildingEvent(
+                buildingId,
+                buildingName,
+                eventName,
+                new DateTime(dateTicks),
+                (RamRoutes.Model.EventType)eventType,
+                recurrenceData,
+                attendees,
+                eventId,
+                interestedUsers,
+                description,
+                gainedCoins,
+                gainedKb
+            );
+        }
+    }
+
+    [Serializable]
+    internal class BuildingEventCacheList
+    {
+        public List<BuildingEventCacheEntry> events = new List<BuildingEventCacheEntry>();
     }
 
     public class BuildingEventService
     {
+        private static BuildingEventService instance;
+
+        /// <summary>
+        /// Shared instance so building events are only loaded/parsed from cache once per
+        /// session, instead of every building and every popup-open constructing (and
+        /// re-fetching for) their own separate BuildingEventService.
+        /// </summary>
+        public static BuildingEventService Instance => instance ??= new BuildingEventService();
+
         private FirebaseFirestore db;
         private const string CACHE_KEY = "building_events_cache";
         private List<BuildingEvent> cachedEvents;
@@ -38,9 +99,22 @@ namespace RamRoutes.Services
             {
                 if (!string.IsNullOrEmpty(json))
                 {
-                    var wrapper = JsonUtility.FromJson<BuildingEventList>(json);
-                    cachedEvents = wrapper.events;
-                    Debug.Log($"Loaded {cachedEvents.Count} building events from cache");
+                    var wrapper = JsonUtility.FromJson<BuildingEventCacheList>(json);
+                    cachedEvents = wrapper.events.Select(e => e.ToBuildingEvent()).ToList();
+
+                    // Guard against a stale cache written before BuildingEvent's fields were
+                    // serializable (every entry would have a null eventId/buildingName) -
+                    // treat that as empty so callers fall through to a real fetch instead of
+                    // being stuck serving garbage forever.
+                    if (cachedEvents.Count > 0 && cachedEvents.Any(e => string.IsNullOrEmpty(e.eventId) || string.IsNullOrEmpty(e.buildingName)))
+                    {
+                        Debug.LogWarning("BuildingEventService: Discarding stale/invalid cached events");
+                        cachedEvents = new List<BuildingEvent>();
+                    }
+                    else
+                    {
+                        Debug.Log($"Loaded {cachedEvents.Count} building events from cache");
+                    }
                 }
                 else
                 {
@@ -58,7 +132,10 @@ namespace RamRoutes.Services
         {
             try
             {
-                var wrapper = new BuildingEventList { events = events };
+                var wrapper = new BuildingEventCacheList
+                {
+                    events = events.Select(BuildingEventCacheEntry.FromBuildingEvent).ToList()
+                };
                 string json = JsonUtility.ToJson(wrapper);
                 PlayerPrefs.SetString(CACHE_KEY, json);
                 PlayerPrefs.Save();
@@ -73,12 +150,12 @@ namespace RamRoutes.Services
 
         public async Task<List<BuildingEvent>> GetBuildingEventsAsync(bool forceRefresh = false)
         {
-            // Return cached data if available and not forcing refresh
-            // if (!forceRefresh && cachedEvents != null && cachedEvents.Count > 0)
-            // {
-            //     Debug.Log("Returning building events from cache");
-            //     return cachedEvents;
-            // }
+            // Return cached data if available and not forcing refresh - avoids hitting
+            // Firestore on every single call (every building, every popup open, etc).
+            if (!forceRefresh && cachedEvents != null && cachedEvents.Count > 0)
+            {
+                return cachedEvents;
+            }
 
             try
             {
@@ -88,15 +165,15 @@ namespace RamRoutes.Services
                 foreach (DocumentSnapshot doc in querySnapshot.Documents)
                 {
                     var data = doc.ToDictionary();
-                    
+
                     // Get the document ID from Firestore (this is the actual event ID)
                     string documentId = doc.Id;
-                    
+
                     // Parse event type and handle date accordingly
                     RamRoutes.Model.EventType eventType = ParseEventType(data);
                     DateTime eventDate = ParseEventDate(data, eventType);
                     string recurrenceData = data.ContainsKey("recurrenceData") ? data["recurrenceData"]?.ToString() : null;
-                    
+
                     // Get attendees list if available
                     List<string> attendees = new List<string>();
                     if (data.ContainsKey("attendees") && data["attendees"] is IEnumerable<object> attendeesList)
@@ -109,7 +186,21 @@ namespace RamRoutes.Services
                             }
                         }
                     }
-                    
+
+                    // Get interested users too, so callers don't need a second
+                    // per-event Firestore round trip just to show the RSVP list.
+                    List<string> interestedUsers = new List<string>();
+                    if (data.ContainsKey("interestedUsers") && data["interestedUsers"] is IEnumerable<object> interestedList)
+                    {
+                        foreach (var item in interestedList)
+                        {
+                            if (item != null)
+                            {
+                                interestedUsers.Add(item.ToString());
+                            }
+                        }
+                    }
+
                     var buildingEvent = new BuildingEvent(
                         data.ContainsKey("buildingId") ? data["buildingId"].ToString() : string.Empty,
                         data.ContainsKey("buildingName") ? data["buildingName"].ToString() : string.Empty,
@@ -119,7 +210,7 @@ namespace RamRoutes.Services
                         recurrenceData,
                         attendees,
                         documentId,  // Pass the document ID as the event ID
-                        null,  // interested users will be populated separately if needed
+                        interestedUsers,
                         data.ContainsKey("description") ? data["description"].ToString() : string.Empty,
                         data.ContainsKey("gainedCoins") ? Convert.ToInt32(data["gainedCoins"]) : 0,
                         data.ContainsKey("gainedKb") ? Convert.ToInt32(data["gainedKb"]) : 0

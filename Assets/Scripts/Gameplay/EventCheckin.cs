@@ -51,7 +51,7 @@ public class EventCheckin : MonoBehaviour
         // BuildingProximityDetector.OnEnterBuilding += OnBuildingEntered;
         BuildingInteraction.OnVirtualBuildingEntered += OnVirtualBuildingEntered;
         BuildingInteraction.OnVirtualBuildingExited += OnVirtualBuildingExited;
-        eventService = new BuildingEventService();
+        eventService = BuildingEventService.Instance;
         
         proximityDetector = FindObjectOfType<BuildingProximityDetector>();
         uiManager = FindObjectOfType<UIManager>();
@@ -436,7 +436,7 @@ public class EventCheckin : MonoBehaviour
         // Fetch events for the building first to determine if there are any events
         if (eventService == null)
         {
-            eventService = new BuildingEventService();
+            eventService = BuildingEventService.Instance;
         }
         
         var events = await eventService.GetBuildingEventsAsync(true);

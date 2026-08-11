@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using RamRoutes.Model;
 using RamRoutes.Services;
@@ -43,6 +44,10 @@ public class BuildingInteraction : MonoBehaviour
     public GameObject rsvpUserPrefab;
     private List<BuildingEvent> cachedBuildingEvents;
     private bool eventsLoaded = false;
+    // Bumped whenever the events popup is rebuilt, so in-flight async RSVP-list
+    // population from a previous display pass can detect it's stale and bail out
+    // instead of touching destroyed UI.
+    private int eventsGeneration = 0;
     private UIManager uiManager;
     private BuildingProximityDetector proximityDetector;
     private RamsManager ramsManager;
@@ -300,10 +305,10 @@ public class BuildingInteraction : MonoBehaviour
     private async Task FetchBuildingEvents()
     {
         if (eventsLoaded) return;
-        var eventService = new BuildingEventService();
-        var allEvents = await eventService.GetBuildingEventsAsync(forceRefresh: true);
+        // No forceRefresh: the shared instance only needs one building to hit the
+        // network per session - the rest reuse its in-memory cache.
+        var allEvents = await BuildingEventService.Instance.GetBuildingEventsAsync();
         cachedBuildingEvents = allEvents.FindAll(e => e.buildingName == buildingName);
-        // Debug.Log("fetching events for building " + buildingName + cachedBuildingEvents.Count);
 
         eventsLoaded = true;
     }
@@ -311,9 +316,9 @@ public class BuildingInteraction : MonoBehaviour
     private async void RsvpToEvent(string eventId)
     {
         string userId = FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.UserId : "unknown";
-        
-        var eventService = new BuildingEventService();
-        
+
+        var eventService = BuildingEventService.Instance;
+
         bool isAlreadyInterested = await eventService.HasPlayerShownInterest(eventId, userId);
         
         if (isAlreadyInterested)
@@ -343,16 +348,20 @@ public class BuildingInteraction : MonoBehaviour
     
     private async Task LoadEventRsvpList(string eventId)
     {
-        var eventService = new BuildingEventService();
-        var eventData = await eventService.GetBuildingEventByIdAsync(eventId);
-        if (eventData != null)
+        // cachedBuildingEvents holds references to the same BuildingEvent objects the
+        // shared BuildingEventService caches, and RecordInterestAsync/RemoveInterestAsync
+        // already update interestedUsers on those objects directly - so this is already
+        // up to date without a second per-event Firestore round trip.
+        var cachedEvent = cachedBuildingEvents?.FirstOrDefault(e => e.eventId == eventId);
+        if (cachedEvent != null)
         {
-            eventRsvpLists[eventId] = eventData.interestedUsers ?? new List<string>();
+            eventRsvpLists[eventId] = cachedEvent.interestedUsers ?? new List<string>();
+            return;
         }
-        else
-        {
-            eventRsvpLists[eventId] = new List<string>();
-        }
+
+        // Fallback for an event we don't have cached locally.
+        var eventData = await BuildingEventService.Instance.GetBuildingEventByIdAsync(eventId);
+        eventRsvpLists[eventId] = eventData?.interestedUsers ?? new List<string>();
     }
     
     private System.Collections.IEnumerator LoadAndDisplayRsvpList(GameObject eventGO, string eventId)
@@ -378,10 +387,13 @@ public class BuildingInteraction : MonoBehaviour
     
     private async void PopulateEventRsvpList(GameObject eventGO, string eventId)
     {
+        if (eventGO == null) return;
+        int generation = eventsGeneration;
+
         ScrollRect studentsScrollView = null;
         Transform studentsContentParent = null;
         Text emptyStateText = null;
-        
+
         ScrollRect[] scrollRects = eventGO.GetComponentsInChildren<ScrollRect>();
         foreach (var scroll in scrollRects)
         {
@@ -392,7 +404,7 @@ public class BuildingInteraction : MonoBehaviour
                 break;
             }
         }
-        
+
         Text[] texts = eventGO.GetComponentsInChildren<Text>(true);
         foreach (var text in texts)
         {
@@ -402,54 +414,58 @@ public class BuildingInteraction : MonoBehaviour
                 break;
             }
         }
-        
+
         if (studentsScrollView == null || studentsContentParent == null)
         {
             Debug.LogWarning($"Students list not found in event prefab for event {eventId}");
             return;
         }
-        
+
         foreach (Transform child in studentsContentParent)
         {
             Destroy(child.gameObject);
         }
-        
+
         if (!eventRsvpLists.ContainsKey(eventId))
         {
             await LoadEventRsvpList(eventId);
+            if (generation != eventsGeneration || studentsContentParent == null) return;
         }
-        
+
         var rsvpList = eventRsvpLists.ContainsKey(eventId) ? eventRsvpLists[eventId] : new List<string>();
-        
+
         if (emptyStateText != null)
         {
             emptyStateText.gameObject.SetActive(rsvpList.Count == 0);
         }
-        
+
+        // Fetch all RSVP'd users concurrently instead of one at a time - for an event
+        // with N interested users this turns N sequential round trips into one batch.
         var userService = new UserService();
-        foreach (var userId in rsvpList)
+        var users = await Task.WhenAll(rsvpList.Select(userId => userService.RetrieveUserById(userId)));
+        if (generation != eventsGeneration || studentsContentParent == null) return;
+
+        foreach (var user in users)
         {
-            var user = await userService.RetrieveUserById(userId);
-            if (user != null)
+            if (user == null) continue;
+
+            GameObject studentGO = Instantiate(rsvpUserPrefab, studentsContentParent);
+            Text userNameText = studentGO.GetComponentInChildren<Text>(true);
+            Image userImage = studentGO.GetComponentInChildren<Image>(true);
+
+            if (userNameText != null)
             {
-                GameObject studentGO = Instantiate(rsvpUserPrefab, studentsContentParent);
-                Text userNameText = studentGO.GetComponentInChildren<Text>(true);
-                Image userImage = studentGO.GetComponentInChildren<Image>(true);
-                
-                if (userNameText != null)
-                {
-                    userNameText.text = user.name;
-                }
-                
-                if (userImage != null && uiManager != null)
-                {
-                    var userPoints = await userService.GetUserCoins(userId);
-                    var userKnowledgePoints = await userService.GetUserKnowledgePoints(userId);
-                    userImage.sprite = uiManager.GetUserAvatarBasedOnPoints(userPoints, userKnowledgePoints);
-                }
+                userNameText.text = user.name;
+            }
+
+            if (userImage != null && uiManager != null)
+            {
+                // RetrieveUserById already returns coins/knowledgePoints on the User
+                // object - no need for two more per-user round trips to fetch them again.
+                userImage.sprite = uiManager.GetUserAvatarBasedOnPoints(user.coins, user.knowledgePoints);
             }
         }
-    }   
+    }
     
     private void DisplayBuildingEvents()
     {
@@ -458,6 +474,10 @@ public class BuildingInteraction : MonoBehaviour
             Debug.LogError("Events UI components not set up!");
             return;
         }
+
+        // Invalidate any RSVP-list population still in flight from a previous
+        // display pass, so it can't touch UI we're about to destroy below.
+        eventsGeneration++;
 
         foreach (Transform child in eventsContentParent)
         {

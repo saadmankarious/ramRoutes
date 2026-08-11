@@ -35,7 +35,7 @@ public class DailyEvents : MonoBehaviour
             return;
         }
         
-        eventService = new BuildingEventService();
+        eventService = BuildingEventService.Instance;
         allEvents = new List<BuildingEvent>();
     }
     

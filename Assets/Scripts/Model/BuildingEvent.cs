@@ -12,21 +12,24 @@ namespace RamRoutes.Model
         Daily
     }
 
+    // Note: these are plain fields, not auto-properties. Unity's JsonUtility (used to
+    // cache events in PlayerPrefs) only serializes public fields - with properties, the
+    // cache round-trip silently produced objects with every value null/default.
     [Serializable]
     public class BuildingEvent
     {
-        public string buildingId { set; get; }
-        public string buildingName  { set; get; }
-        public string eventName  { set; get; }
-        public string description { set; get; } // Added description property
-        public int gainedCoins { set; get; } // Added gainedCoins property
-        public int gainedKb { set; get; } // Added gainedKb property
-        public string eventId { set; get; }  // Added explicit eventId field
-        public DateTime date  { set; get; }
-        public EventType eventType { set; get; }
-        public string recurrenceData { set; get; } // JSON string for complex recurrence patterns
-        public List<string> attendees { set; get; } // List of player IDs who have checked in
-        public List<string> interestedUsers { set; get; } // List of player IDs who have shown interest/RSVP'd
+        public string buildingId;
+        public string buildingName;
+        public string eventName;
+        public string description; // Added description property
+        public int gainedCoins; // Added gainedCoins property
+        public int gainedKb; // Added gainedKb property
+        public string eventId;  // Added explicit eventId field
+        public DateTime date;
+        public EventType eventType;
+        public string recurrenceData; // JSON string for complex recurrence patterns
+        public List<string> attendees; // List of player IDs who have checked in
+        public List<string> interestedUsers; // List of player IDs who have shown interest/RSVP'd
 
         public BuildingEvent(string buildingId, string buildingName, string eventName, DateTime date, 
                             EventType eventType = EventType.Scheduled, string recurrenceData = null, 
