@@ -86,7 +86,10 @@ namespace RamRoutes.Services
                 data.ContainsKey("description") ? data["description"].ToString() : string.Empty,
                 data.ContainsKey("gainedCoins") ? Convert.ToInt32(data["gainedCoins"]) : 0,
                 data.ContainsKey("gainedKb") ? Convert.ToInt32(data["gainedKb"]) : 0
-            );
+            )
+            {
+                imageUrl = data.ContainsKey("imageUrl") ? data["imageUrl"]?.ToString() : null
+            };
         }
 
         private RamRoutes.Model.EventType ParseEventType(System.Collections.Generic.Dictionary<string, object> data)

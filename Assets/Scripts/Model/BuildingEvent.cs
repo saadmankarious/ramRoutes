@@ -19,6 +19,7 @@ namespace RamRoutes.Model
         public string buildingName;
         public string eventName;
         public string description; // Added description property
+        public string imageUrl; // URL of the event's image, if any
         public int gainedCoins; // Added gainedCoins property
         public int gainedKb; // Added gainedKb property
         public string eventId;  // Added explicit eventId field

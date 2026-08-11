@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -444,15 +445,15 @@ public class BuildingInteraction : MonoBehaviour
                 }
                 eventData.eventId = evt.eventId;
 
-                ButtonHandler rsvpButtonHandler = eventGO.GetComponentInChildren<ButtonHandler>();
+                // ButtonHandler rsvpButtonHandler = eventGO.GetComponentInChildren<ButtonHandler>();
 
-                if (rsvpButtonHandler != null)
-                {
-                    rsvpButtonHandler.Initialize("data", () => RsvpToEvent(evt.eventId));
+                // if (rsvpButtonHandler != null)
+                // {
+                //     rsvpButtonHandler.Initialize("data", () => RsvpToEvent(evt.eventId));
 
-                }
+                // }
 
-                PopulateEventRsvpList(eventGO, evt.eventId);
+                // PopulateEventRsvpList(eventGO, evt.eventId);
 
                 string formattedDate = evt.GetDisplayDate();
 
@@ -467,12 +468,18 @@ public class BuildingInteraction : MonoBehaviour
                 {
                     dateText.text = dateText.supportRichText ? $"<color=#888888>{formattedDate}</color>" : formattedDate;
                 }
-
-                Text descText = eventGO.transform.FindDeepChild("desc")?.GetComponent<Text>();
-                if (descText != null)
+                
+                Image eventImage = eventGO.transform.FindDeepChild("image")?.GetComponent<Image>();
+                if (eventImage != null && !string.IsNullOrEmpty(evt.imageUrl))
                 {
-                    descText.text = evt.description ?? "";
+                    StartCoroutine(LoadEventImage(evt.imageUrl, eventImage, eventsGeneration));
                 }
+
+                // Text descText = eventGO.transform.FindDeepChild("desc")?.GetComponent<Text>();
+                // if (descText != null)
+                // {
+                //     descText.text = evt.description ?? "";
+                // }
 
                 GameObject gainedCoinsObject = eventGO.transform.Find("gained-coins")?.gameObject;
                 if (gainedCoinsObject != null)
@@ -501,7 +508,27 @@ public class BuildingInteraction : MonoBehaviour
             buildingEventsPanel.SetActive(false);
         }
     }
-    
+
+    private IEnumerator LoadEventImage(string url, Image target, int generation)
+    {
+        using (var request = UnityWebRequestTexture.GetTexture(url))
+        {
+            yield return request.SendWebRequest();
+
+            // Bail out if the popup was rebuilt (or the image destroyed) while downloading.
+            if (generation != eventsGeneration || target == null) yield break;
+
+            if (request.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogWarning($"BuildingInteraction: Failed to load event image '{url}': {request.error}");
+                yield break;
+            }
+
+            Texture2D texture = DownloadHandlerTexture.GetContent(request);
+            target.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+        }
+    }
+
     private void OnPhysicalBuildingChanged(string changedBuildingName)
     {
         // Only the BuildingInteraction that matches the building name should move the player

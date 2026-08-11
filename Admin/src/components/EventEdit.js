@@ -9,6 +9,7 @@ function EventEdit({ event, onCancel, onSave }) {
     eventType: event.eventType || (event.date ? 'scheduled' : 'always'), // Use explicit eventType or infer from date
     date: event.date ? formatDateForInput(event.date) : '',
     description: event.description || '',
+    imageUrl: event.imageUrl || '',
     gainedCoins: event.gainedCoins || 0,
     gainedKb: event.gainedKb || 0
   });
@@ -68,7 +69,7 @@ function EventEdit({ event, onCancel, onSave }) {
       console.log('Updating event:', event.id);
       console.log('Form data:', formData);
 
-      const { buildingName, eventName, eventType, date, description, gainedCoins, gainedKb } = formData;
+      const { buildingName, eventName, eventType, date, description, imageUrl, gainedCoins, gainedKb } = formData;
 
       // Create update data - preserve buildingId from original event
       const updateData = {
@@ -76,6 +77,7 @@ function EventEdit({ event, onCancel, onSave }) {
         eventName,
         eventType, // Include the event type in updates
         description: description || '', // Add description field
+        imageUrl: imageUrl || '', // Add imageUrl field
         gainedCoins: parseInt(gainedCoins) || 0, // Add gainedCoins field
         gainedKb: parseInt(gainedKb) || 0, // Add gainedKb field
         updatedAt: serverTimestamp()
@@ -200,6 +202,20 @@ function EventEdit({ event, onCancel, onSave }) {
               className="form-input"
               rows="3"
               style={{ resize: 'vertical', minHeight: '80px' }}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="imageUrl" className="form-label">Image URL (Optional)</label>
+            <input
+              type="url"
+              id="imageUrl"
+              name="imageUrl"
+              value={formData.imageUrl}
+              onChange={handleChange}
+              disabled={loading}
+              placeholder="https://..."
+              className="form-input"
             />
           </div>
 

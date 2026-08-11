@@ -19,6 +19,7 @@ function BuildingEventForm({ user, onEventCreated }) {
     eventType: 'scheduled', // 'scheduled', 'always', 'weekly', 'daily', 'monthly'
     date: '',
     description: '',
+    imageUrl: '',
     gainedCoins: 0,
     gainedKb: 0
   });
@@ -56,7 +57,7 @@ function BuildingEventForm({ user, onEventCreated }) {
 
     try {
       console.log('Starting building event creation...');
-      const { buildingName, eventName, eventType, date, description, gainedCoins, gainedKb } = formData;
+      const { buildingName, eventName, eventType, date, description, imageUrl, gainedCoins, gainedKb } = formData;
 
       // Generate a unique buildingId
       const buildingId = generateBuildingId();
@@ -71,6 +72,7 @@ function BuildingEventForm({ user, onEventCreated }) {
         eventName,
         eventType, // Store the event type explicitly
         description: description || '', // Add description field
+        imageUrl: imageUrl || '', // Add imageUrl field
         gainedCoins: parseInt(gainedCoins) || 0, // Add gainedCoins field
         gainedKb: parseInt(gainedKb) || 0, // Add gainedKb field
         createdBy: user?.uid || 'unknown', // Track who created the event
@@ -109,6 +111,7 @@ function BuildingEventForm({ user, onEventCreated }) {
         eventType: 'scheduled',
         date: '',
         description: '',
+        imageUrl: '',
         gainedCoins: 0,
         gainedKb: 0
       });
@@ -204,6 +207,20 @@ function BuildingEventForm({ user, onEventCreated }) {
               className="form-input"
               rows="3"
               style={{ resize: 'vertical', minHeight: '80px' }}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="imageUrl" className="form-label">Image URL (Optional)</label>
+            <input
+              type="url"
+              id="imageUrl"
+              name="imageUrl"
+              value={formData.imageUrl}
+              onChange={handleChange}
+              disabled={loading}
+              placeholder="https://..."
+              className="form-input"
             />
           </div>
 
