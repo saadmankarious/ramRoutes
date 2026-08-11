@@ -84,8 +84,6 @@ public class LoginManager : MonoBehaviour
     public ScrollRect friendRequestsScrollView;
     public Transform friendRequestsContentParent;
     [Tooltip("Prefab for friend request entry. Expected child objects: MainText (username-hall), accept (Button), delete (Button)")]
-    public GameObject friendRequestPrefab;
-    private Coroutine friendRequestRefreshCoroutine = null;
 
     [Header("Background Music")]
     [SerializeField] private AudioClip backgroundMusic;

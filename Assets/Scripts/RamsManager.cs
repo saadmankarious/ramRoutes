@@ -67,12 +67,11 @@ public class RamsManager : MonoBehaviour
     void Awake()
     {
         building = GetComponent<BuildingInteraction>();
+        userService = new UserService();
     }
 
     void Start()
     {
-        userService = new UserService();
-        
         notificationManager = FindObjectOfType<NotificationManager>();
         if (notificationManager != null)
         {
@@ -92,8 +91,9 @@ public class RamsManager : MonoBehaviour
         if (playerCountCanvasInstance == null && playerCountCanvasPrefab != null)
         {
             playerCountCanvasInstance = Instantiate(playerCountCanvasPrefab);  // no parent — scene root
-            playerCountCanvasInstance.transform.localScale = Vector3.one * 0.01f; // 1 world-unit = 100px
-            
+            // Keep the prefab's authored scale (Instantiate already copies it) rather than
+            // overriding it — a hardcoded scale here made the popup ~8.5x smaller than designed.
+
             // Position it at the spawn point's world position
             Vector3 worldPos = playerCountSpawnPoint != null
                 ? playerCountSpawnPoint.position
@@ -700,8 +700,6 @@ public class RamsManager : MonoBehaviour
 
         SetupRamClickHandler(ramInstance, user);
 
-        PlaySpawnSound();
-
         if (UIManager.Instance != null)
         {
             StartCoroutine(ApplyScaleAfterPopAnimation(ramInstance, user));
@@ -981,15 +979,24 @@ public class RamsManager : MonoBehaviour
     private IEnumerator DisplayPlayerCountCoroutine()
     {
         // NOTE: simplified - always show static player count (don't hide based on stage)
-        var getUsersTask = userService.GetUsersInBuilding(building.buildingName);
-        
+        Task<List<User>> getUsersTask;
+        try
+        {
+            getUsersTask = userService.GetUsersInBuilding(building.buildingName);
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Error starting player count lookup: {ex.Message}");
+            yield break;
+        }
+
         yield return new WaitUntil(() => getUsersTask.IsCompleted);
-        
+
         try
         {
             var playersInBuilding = getUsersTask.Result;
             int playerCount = playersInBuilding?.Count ?? 0;
-            
+
             StartCoroutine(UpdatePlayerCountCoroutine(playerCount));
         }
         catch (System.Exception ex)
@@ -998,91 +1005,58 @@ public class RamsManager : MonoBehaviour
         }
     }
     
-    private IEnumerator HidePlayerCountCanvas()
-    {
-        // Intentionally left empty to keep player count canvas always visible and static
-        yield return null;
-    }
-    
     private IEnumerator UpdatePlayerCountCoroutine(int count)
     {
         try
         {
-            if (count > 0)
+            if (playerCountCanvasInstance == null && playerCountCanvasPrefab != null)
             {
-                if (playerCountCanvasInstance == null && playerCountCanvasPrefab != null)
-                {
-                    playerCountCanvasInstance = Instantiate(playerCountCanvasPrefab); // scene root, not a child
-                    playerCountCanvasInstance.transform.localScale = Vector3.one * 0.01f;
-                    Vector3 worldPos = playerCountSpawnPoint != null
-                        ? playerCountSpawnPoint.position
-                        : transform.position + Vector3.up * 1f;
-                    playerCountCanvasInstance.transform.position = worldPos;
-                    playerCountCanvasInstance.transform.rotation = Quaternion.identity;
-                    WireFootprintButton(playerCountCanvasInstance);
-                }
-                
-                UpdatePlayerCountDisplay(count);
+                playerCountCanvasInstance = Instantiate(playerCountCanvasPrefab); // scene root, not a child
+                // Keep the prefab's authored scale rather than overriding it.
+                Vector3 worldPos = playerCountSpawnPoint != null
+                    ? playerCountSpawnPoint.position
+                    : transform.position + Vector3.up * 1f;
+                playerCountCanvasInstance.transform.position = worldPos;
+                playerCountCanvasInstance.transform.rotation = Quaternion.identity;
+                WireFootprintButton(playerCountCanvasInstance);
             }
-            else
-            {
-                if (playerCountCanvasInstance != null)
-                {
-                    playerCountCanvasInstance.SetActive(false);
-                }
-            }
+
+            // Always visible, for every building, regardless of count or whether a player is present.
+            playerCountCanvasInstance.SetActive(true);
+            UpdatePlayerCountDisplay(count);
         }
         catch (System.Exception ex)
         {
             Debug.LogError($"Error updating player count display in coroutine: {ex.Message}");
         }
-        
+
         yield return null;
     }
-    
+
     private void UpdatePlayerCountDisplay(int count)
     {
         if (playerCountCanvasInstance == null) return;
-        
-        var countText = playerCountCanvasInstance.GetComponentInChildren<UnityEngine.UI.Text>();
-        
-        if (countText == null)
-        {
-            // access text field by its name
-            // var tmpText = playerCountCanvasInstance.transform.Find("PlayerCount")?.GetComponent<TMPro.TextMeshProUGUI>();
-            // var tmpText = playerCountCanvasInstance.GetComponentInChildren<TMPro.TextMeshProUGUI>();
-            // this reads the wrong text, let's ensure we find exact Text not TMPro, and by name to avoid accidentally grabbing the "Enter Footprint" text
-            var tmpText = playerCountCanvasInstance.GetComponentsInChildren<TMPro.TextMeshProUGUI>()
-                .FirstOrDefault(t => t.gameObject.name == "PlayerCount");
-            if (tmpText != null)
-            {
-                tmpText.text = count.ToString();
-                playerCountCanvasInstance.SetActive(true);
-                // change the image sprite big > small with animation (two seconds big two seconds small)
 
-                return;
-            }
-            
+        var countText = playerCountCanvasInstance.GetComponentInChildren<UnityEngine.UI.Text>();
+        if (countText != null)
+        {
+            countText.text = count.ToString();
             return;
         }
-        
-        // Static update: set text, ensure visible, keep scale fixed (no animation)
-        countText.text = count.ToString();
-        playerCountCanvasInstance.SetActive(true);
-        playerCountCanvasInstance.transform.localScale = Vector3.one;
-        
+
+        // Find by name to avoid accidentally grabbing an unrelated TMP text (e.g. "Add Footprint").
+        var tmpText = playerCountCanvasInstance.GetComponentsInChildren<TMPro.TextMeshProUGUI>()
+            .FirstOrDefault(t => t.gameObject.name == "PlayerCount");
+        if (tmpText != null)
+        {
+            tmpText.text = count.ToString();
+        }
     }
-    
-    private IEnumerator BeatingAnimation()
-    {
-        // Disabled: keep player count canvas static
-        yield break;
-    }
-    
+
     void Update()
     {
         // Keep the unparented player count canvas locked to the spawn point world position
-        if (playerCountCanvasInstance != null && playerCountCanvasInstance.activeSelf)
+        if (playerCountCanvasInstance != null)
         {
             Vector3 worldPos = playerCountSpawnPoint != null
                 ? playerCountSpawnPoint.position
@@ -1094,12 +1068,12 @@ public class RamsManager : MonoBehaviour
     void LateUpdate()
     {
         // Billboard: make the canvas always face the main camera
-        if (playerCountCanvasInstance != null && playerCountCanvasInstance.activeSelf && Camera.main != null)
+        if (playerCountCanvasInstance != null && Camera.main != null)
         {
             playerCountCanvasInstance.transform.rotation = Camera.main.transform.rotation;
         }
     }
-    
+
     public static void ResetBuildingActivityNotification()
     {
         hasNotifiedBuildingActivity = false;

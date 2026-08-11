@@ -283,59 +283,6 @@ public class UIManager : MonoBehaviour
         Debug.Log("UIManager: Cleaned up conflicting audio settings");
     }
 
-    public void UpdateUserAvatar(int rank)
-    {
-        if (userAvatarImage == null)
-        {
-            Debug.LogWarning("User avatar image component not assigned in UIManager");
-            return;
-        }
-
-        Sprite selectedSprite;
-
-        switch (rank)
-        {
-            case 1:
-                selectedSprite = rank1AvatarSprite;
-                break;
-            case 2:
-                selectedSprite = rank2AvatarSprite;
-                break;
-            case 3:
-                selectedSprite = rank3AvatarSprite ?? rank2AvatarSprite;
-                break;
-            case 0:
-            default:
-                selectedSprite = defaultAvatarSprite;
-                break;
-        }
-
-        if (selectedSprite == null)
-        {
-            Debug.LogWarning($"Avatar sprite for rank {rank} is not assigned. Using default sprite.");
-            selectedSprite = defaultAvatarSprite;
-        }
-
-        userAvatarImage.sprite = selectedSprite;
-
-        Debug.Log($"Updated user avatar to rank {rank} sprite");
-    }
-
-    private void UpdateUsernameAndHall()
-    {
-        if (usernameText != null)
-        {
-            string userName = PlayerPrefs.GetString("UserName", "Anonymous User");
-            usernameText.text = $"@{userName}";
-        }
-        if (statusText != null)        {
-            string status = PlayerPrefs.GetString("UserStatus", "--");
-            statusText.text = status;
-        }
-        var userRank = PlayerPrefs.GetInt("UserRank", 0);
-        UpdateUserAvatar(userRank);
-
-    }
 
     private async Task InitializeUserRankSystem()
     {
@@ -372,9 +319,7 @@ public class UIManager : MonoBehaviour
     private void Start()
     {
         _ = InitializeUserRankSystem();
-        
-        UpdateUsernameAndHall();
-    }
+            }
 
 
     public void UpdateCoins(int coins)
