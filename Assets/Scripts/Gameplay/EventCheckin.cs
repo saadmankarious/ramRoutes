@@ -439,7 +439,7 @@ public class EventCheckin : MonoBehaviour
             eventService = BuildingEventService.Instance;
         }
         
-        var events = await eventService.GetBuildingEventsAsync(true);
+        var events = await eventService.GetBuildingEventsForBuildingAsync(buildingName);
         var now = DateTime.Now;
         var earliestTime = now.AddMinutes(-15);
         var latestTime = now.AddMinutes(60);

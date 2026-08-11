@@ -42,8 +42,6 @@ public class BuildingInteraction : MonoBehaviour
     private SpriteRenderer sr;
     private bool lastGpsProximityState = false;
     public GameObject rsvpUserPrefab;
-    private List<BuildingEvent> cachedBuildingEvents;
-    private bool eventsLoaded = false;
     // Bumped whenever the events popup is rebuilt, so in-flight async RSVP-list
     // population from a previous display pass can detect it's stale and bail out
     // instead of touching destroyed UI.
@@ -51,9 +49,7 @@ public class BuildingInteraction : MonoBehaviour
     private UIManager uiManager;
     private BuildingProximityDetector proximityDetector;
     private RamsManager ramsManager;
-    
-    private Dictionary<string, List<string>> eventRsvpLists = new Dictionary<string, List<string>>();
-    
+
     public delegate void VirtualBuildingEntryEvent(BuildingInteraction buildingData);
     public static event VirtualBuildingEntryEvent OnVirtualBuildingEntered;
     public static event VirtualBuildingEntryEvent OnVirtualBuildingExited;
@@ -61,47 +57,32 @@ public class BuildingInteraction : MonoBehaviour
     private async void EnterBuildingViewingMode(bool showEventsHappening = true)
     {
         await Task.Delay(1000);
+
         if (buildingTitleUnlcoked != null)
         {
-            buildingTitleUnlcoked.gameObject.SetActive(true);
-            var buildingInfo = BuildingDataManager.GetBuildingInfo(buildingName);
-            buildingTitleUnlcoked.text = buildingInfo.displayName;
+            string displayName = await BuildingDataManager.GetBuildingDisplayNameAsync(buildingName);
+            if (displayName != null)
+            {
+                buildingTitleUnlcoked.gameObject.SetActive(true);
+                buildingTitleUnlcoked.text = displayName;
+            }
         }
 
-        var buildingData = GetComponent<BuildingInteraction>();
-        if (showEventsHappening) OnVirtualBuildingEntered?.Invoke(buildingData);
+        if (showEventsHappening) OnVirtualBuildingEntered?.Invoke(this);
 
         if (buildingEventsPanel != null)
         {
-            if (eventsLoaded)
-            {
-                DisplayBuildingEvents();
-            }
-            else
-            {
-                StartCoroutine(ShowEventsWhenReady());
-            }
+            await DisplayBuildingEventsAsync();
         }
 
         if (ramsManager != null)
         {
             ramsManager.OnBuildingActivated();
         }
-                string userId = FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.UserId : "unknown";
 
-                var userService = new UserService();
-
-                    await userService.UpdateCurrentBuilding(userId, buildingName);
-
-    }
-
-    private IEnumerator ShowEventsWhenReady()
-    {
-        while (!eventsLoaded)
-        {
-            yield return null;
-        }
-        //DisplayBuildingEvents();
+        string userId = FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.UserId : "unknown";
+        var userService = new UserService();
+        await userService.UpdateCurrentBuilding(userId, buildingName);
     }
 
     void Awake()
@@ -137,8 +118,6 @@ public class BuildingInteraction : MonoBehaviour
         {
             buildingEventsToggle.onClick.AddListener(ToggleEventsVisibility);
         }
-
-        _ = FetchBuildingEvents();
 
         // Subscribe to physical building changes from background location
         if (BackgroundLocationService.Instance != null)
@@ -248,16 +227,6 @@ public class BuildingInteraction : MonoBehaviour
             return;
         }
 
-        StartCoroutine(ShowEventsOnClick());
-    }
-
-    private IEnumerator ShowEventsOnClick()
-    {
-        while (!eventsLoaded)
-        {
-            yield return null;
-        }
-
         EnterBuildingViewingMode();
     }
 
@@ -302,17 +271,6 @@ public class BuildingInteraction : MonoBehaviour
         }
     }
 
-    private async Task FetchBuildingEvents()
-    {
-        if (eventsLoaded) return;
-        // No forceRefresh: the shared instance only needs one building to hit the
-        // network per session - the rest reuse its in-memory cache.
-        var allEvents = await BuildingEventService.Instance.GetBuildingEventsAsync();
-        cachedBuildingEvents = allEvents.FindAll(e => e.buildingName == buildingName);
-
-        eventsLoaded = true;
-    }
-
     private async void RsvpToEvent(string eventId)
     {
         string userId = FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.UserId : "unknown";
@@ -341,37 +299,9 @@ public class BuildingInteraction : MonoBehaviour
             }
         }
         
-        await LoadEventRsvpList(eventId);
-        
         UpdateEventRsvpDisplay(eventId);
     }
-    
-    private async Task LoadEventRsvpList(string eventId)
-    {
-        // cachedBuildingEvents holds references to the same BuildingEvent objects the
-        // shared BuildingEventService caches, and RecordInterestAsync/RemoveInterestAsync
-        // already update interestedUsers on those objects directly - so this is already
-        // up to date without a second per-event Firestore round trip.
-        var cachedEvent = cachedBuildingEvents?.FirstOrDefault(e => e.eventId == eventId);
-        if (cachedEvent != null)
-        {
-            eventRsvpLists[eventId] = cachedEvent.interestedUsers ?? new List<string>();
-            return;
-        }
 
-        // Fallback for an event we don't have cached locally.
-        var eventData = await BuildingEventService.Instance.GetBuildingEventByIdAsync(eventId);
-        eventRsvpLists[eventId] = eventData?.interestedUsers ?? new List<string>();
-    }
-    
-    private System.Collections.IEnumerator LoadAndDisplayRsvpList(GameObject eventGO, string eventId)
-    {
-        var loadTask = LoadEventRsvpList(eventId);
-        yield return new WaitUntil(() => loadTask.IsCompleted);
-        
-        PopulateEventRsvpList(eventGO, eventId);
-    }
-    
     private void UpdateEventRsvpDisplay(string eventId)
     {
         foreach (Transform child in eventsContentParent)
@@ -426,13 +356,10 @@ public class BuildingInteraction : MonoBehaviour
             Destroy(child.gameObject);
         }
 
-        if (!eventRsvpLists.ContainsKey(eventId))
-        {
-            await LoadEventRsvpList(eventId);
-            if (generation != eventsGeneration || studentsContentParent == null) return;
-        }
+        var eventData = await BuildingEventService.Instance.GetBuildingEventByIdAsync(eventId);
+        if (generation != eventsGeneration || studentsContentParent == null) return;
 
-        var rsvpList = eventRsvpLists.ContainsKey(eventId) ? eventRsvpLists[eventId] : new List<string>();
+        var rsvpList = eventData?.interestedUsers ?? new List<string>();
 
         if (emptyStateText != null)
         {
@@ -467,11 +394,22 @@ public class BuildingInteraction : MonoBehaviour
         }
     }
     
-    private void DisplayBuildingEvents()
+    private async Task DisplayBuildingEventsAsync()
     {
         if (eventsContentParent == null || eventPrefab == null)
         {
             Debug.LogError("Events UI components not set up!");
+            return;
+        }
+
+        List<BuildingEvent> events;
+        try
+        {
+            events = await BuildingEventService.Instance.GetBuildingEventsForBuildingAsync(buildingName);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"BuildingInteraction: Failed to load events for '{buildingName}': {ex.Message}");
             return;
         }
 
@@ -483,14 +421,14 @@ public class BuildingInteraction : MonoBehaviour
         {
             Destroy(child.gameObject);
         }
-        if (cachedBuildingEvents != null && cachedBuildingEvents.Count > 0 && buildingEventsPanel != null)
+        if (events.Count > 0 && buildingEventsPanel != null)
         {
             buildingEventsPanel.SetActive(true);
 
             SetupEventsScrollAutoScrollTriggers();
 
             StartCoroutine(uiManager.AnimatePanelPopup(buildingEventsPanel));
-            var sortedEvents = new List<BuildingEvent>(cachedBuildingEvents);
+            var sortedEvents = new List<BuildingEvent>(events);
             sortedEvents.Sort((a, b) =>
             {
                 return b.date.CompareTo(a.date);
@@ -514,87 +452,26 @@ public class BuildingInteraction : MonoBehaviour
 
                 }
 
-                StartCoroutine(LoadAndDisplayRsvpList(eventGO, evt.eventId));
-
-                Text[] textComponents = eventGO.GetComponentsInChildren<Text>();
-                Text titleText = null;
-                Text dateText = null;
-
-                foreach (var text in textComponents)
-                {
-                    if (text.gameObject.CompareTag("MainText"))
-                    {
-                        titleText = text;
-                    }
-                    else if (text.gameObject.CompareTag("SubText"))
-                    {
-                        dateText = text;
-                    }
-                }
-
-                if (titleText == null || dateText == null)
-                {
-                    foreach (var text in textComponents)
-                    {
-                        if (titleText == null && (text.gameObject.name.Contains("Title") || text.gameObject.name.Contains("Event")))
-                        {
-                            titleText = text;
-                        }
-                        else if (dateText == null && (text.gameObject.name.Contains("Date") || text.gameObject.name.Contains("Time")))
-                        {
-                            dateText = text;
-                        }
-                    }
-
-                    if ((titleText == null || dateText == null) && textComponents.Length >= 2)
-                    {
-                        if (titleText == null) titleText = textComponents[0];
-                        if (dateText == null) dateText = textComponents[1];
-                    }
-                    else if (textComponents.Length == 1)
-                    {
-                        titleText = textComponents[0];
-                    }
-                }
+                PopulateEventRsvpList(eventGO, evt.eventId);
 
                 string formattedDate = evt.GetDisplayDate();
 
+                Text titleText = eventGO.transform.FindDeepChild("title")?.GetComponent<Text>();
                 if (titleText != null)
                 {
-                    titleText.text = evt.eventName;
-
-                    if (titleText.supportRichText)
-                    {
-                        titleText.text = $"<b>{evt.eventName}</b>";
-                    }
+                    titleText.text = titleText.supportRichText ? $"<b>{evt.eventName}</b>" : evt.eventName;
                 }
 
+                Text dateText = eventGO.transform.FindDeepChild("date")?.GetComponent<Text>();
                 if (dateText != null)
                 {
-                    dateText.text = formattedDate;
-
-                    if (dateText.supportRichText)
-                    {
-                        dateText.text = $"<color=#888888>{formattedDate}</color>";
-                    }
-                }
-                else if (titleText != null && dateText == null)
-                {
-                    titleText.text += $"\n{formattedDate}";
+                    dateText.text = dateText.supportRichText ? $"<color=#888888>{formattedDate}</color>" : formattedDate;
                 }
 
-                GameObject descObject = eventGO.transform.Find("desc")?.gameObject;
-                if (descObject != null)
+                Text descText = eventGO.transform.FindDeepChild("desc")?.GetComponent<Text>();
+                if (descText != null)
                 {
-                    Text descText = descObject.GetComponent<Text>();
-                    if (descText != null && !string.IsNullOrEmpty(evt.description))
-                    {
-                        descText.text = evt.description;
-                    }
-                    else if (descText != null)
-                    {
-                        descText.text = "";
-                    }
+                    descText.text = evt.description ?? "";
                 }
 
                 GameObject gainedCoinsObject = eventGO.transform.Find("gained-coins")?.gameObject;

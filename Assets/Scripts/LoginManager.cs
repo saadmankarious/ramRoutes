@@ -583,8 +583,7 @@ public class LoginManager : MonoBehaviour
             
             // Clear all existing cache data to ensure fresh start for new user
             RamRoutes.Services.UserService.ClearUserCache();
-            RamRoutes.Services.BuildingEventService.ClearBuildingEventsCache();
-   
+
             // Store user info in PlayerPrefs for easy access
             PlayerPrefs.SetString("UserName", username);
             PlayerPrefs.SetString("ResidenceHall", residenceHall);
@@ -1358,8 +1357,7 @@ public class LoginManager : MonoBehaviour
     {
         // Clear all user-related cache data
         RamRoutes.Services.UserService.ClearUserCache();
-        RamRoutes.Services.BuildingEventService.ClearBuildingEventsCache();
-        
+
         // Clear PlayerPrefs
         PlayerPrefs.DeleteKey("PlayerName");
         PlayerPrefs.DeleteKey("UserName");
@@ -1435,9 +1433,6 @@ public class LoginManager : MonoBehaviour
 
             // Clear all user-related cache data
             RamRoutes.Services.UserService.ClearUserCache();
-
-            // Clear building events cache
-            RamRoutes.Services.BuildingEventService.ClearBuildingEventsCache();
 
  }
 

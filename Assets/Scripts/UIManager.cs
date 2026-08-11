@@ -136,9 +136,7 @@ public class UIManager : MonoBehaviour
         }
         
         CleanupConflictingAudioSettings();
-        
-        BuildingDataManager.LoadBuildingData();
-        
+
         if (aros != null)
         {
             aros.transform.localScale = new Vector3(1f, 1f, 1f);

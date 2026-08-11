@@ -12,9 +12,6 @@ namespace RamRoutes.Model
         Daily
     }
 
-    // Note: these are plain fields, not auto-properties. Unity's JsonUtility (used to
-    // cache events in PlayerPrefs) only serializes public fields - with properties, the
-    // cache round-trip silently produced objects with every value null/default.
     [Serializable]
     public class BuildingEvent
     {
