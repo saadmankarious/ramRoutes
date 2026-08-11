@@ -70,7 +70,7 @@ public class BuildingInteraction : MonoBehaviour
         {
             if (eventsLoaded)
             {
-                //DisplayBuildingEvents();
+                DisplayBuildingEvents();
             }
             else
             {
@@ -253,7 +253,7 @@ public class BuildingInteraction : MonoBehaviour
             yield return null;
         }
 
-        DisplayBuildingEvents();
+        EnterBuildingViewingMode();
     }
 
     private void OnTriggerEnter2D(Collider2D other)

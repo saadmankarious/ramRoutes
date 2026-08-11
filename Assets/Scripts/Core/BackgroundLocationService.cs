@@ -23,7 +23,6 @@ public class BackgroundLocationService : MonoBehaviour
     public float Accuracy { get; private set; }
     public bool IsRunning { get; private set; }
     [SerializeField] private string[] geofenceBuildingNames;
-    [SerializeField] private double geofenceRadiusMeters = 100.0;
 
 #if UNITY_IOS && !UNITY_EDITOR
     [DllImport("__Internal")]
