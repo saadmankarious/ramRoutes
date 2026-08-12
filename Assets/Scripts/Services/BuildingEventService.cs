@@ -73,6 +73,12 @@ namespace RamRoutes.Services
                 interestedUsers = interestedList.Select(x => x?.ToString()).Where(x => !string.IsNullOrEmpty(x)).ToList();
             }
 
+            List<string> tags = new List<string>();
+            if (data.ContainsKey("tags") && data["tags"] is IEnumerable<object> tagsList)
+            {
+                tags = tagsList.Select(x => x?.ToString()).Where(x => !string.IsNullOrEmpty(x)).ToList();
+            }
+
             return new BuildingEvent(
                 data.ContainsKey("buildingId") ? data["buildingId"].ToString() : string.Empty,
                 data.ContainsKey("buildingName") ? data["buildingName"].ToString() : string.Empty,
@@ -88,7 +94,8 @@ namespace RamRoutes.Services
                 data.ContainsKey("gainedKb") ? Convert.ToInt32(data["gainedKb"]) : 0
             )
             {
-                imageUrl = data.ContainsKey("imageUrl") ? data["imageUrl"]?.ToString() : null
+                imageUrl = data.ContainsKey("imageUrl") ? data["imageUrl"]?.ToString() : null,
+                tags = tags
             };
         }
 

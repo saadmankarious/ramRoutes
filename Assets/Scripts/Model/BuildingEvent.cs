@@ -20,6 +20,7 @@ namespace RamRoutes.Model
         public string eventName;
         public string description; // Added description property
         public string imageUrl; // URL of the event's image, if any
+        public List<string> tags = new List<string>(); // Category tags computed by the scraper (e.g. "academic", "social")
         public int gainedCoins; // Added gainedCoins property
         public int gainedKb; // Added gainedKb property
         public string eventId;  // Added explicit eventId field

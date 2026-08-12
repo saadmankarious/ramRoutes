@@ -397,12 +397,20 @@ public class BuildingInteraction : MonoBehaviour
         }
     }
     
+    private GameObject activeEventInfoGO;
+
     private void ShowEventInfo(BuildingEvent evt)
     {
         if (eventInfoPrefab == null) return;
 
+        if (activeEventInfoGO != null)
+        {
+            Destroy(activeEventInfoGO);
+        }
+
         Transform parent = eventInfoParent != null ? eventInfoParent : transform.root;
         GameObject infoGO = Instantiate(eventInfoPrefab, parent);
+        activeEventInfoGO = infoGO;
 
         EventInfoPanel infoPanel = infoGO.GetComponent<EventInfoPanel>();
         if (infoPanel != null)

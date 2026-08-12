@@ -4,8 +4,12 @@ using RamRoutes.Model;
 
 public class EventInfoPanel : MonoBehaviour
 {
+    [SerializeField] private GameObject tagPrefab;
+    [SerializeField] private Transform tagsContainer;
+
     private Text titleText;
     private Text descText;
+    private Text dateText;
     private Button closeButton;
     private Button dismissButton;
 
@@ -13,6 +17,7 @@ public class EventInfoPanel : MonoBehaviour
     {
         titleText = transform.FindDeepChild("title")?.GetComponent<Text>();
         descText = transform.FindDeepChild("desc")?.GetComponent<Text>();
+        dateText = transform.FindDeepChild("date")?.GetComponent<Text>();
         closeButton = transform.FindDeepChild("close")?.GetComponent<Button>();
 
         if (closeButton != null)
@@ -47,9 +52,38 @@ public class EventInfoPanel : MonoBehaviour
             descText.text = evt.description;
         }
 
+        if (dateText != null)
+        {
+            dateText.text = evt.GetDisplayDate();
+        }
+
+        PopulateTags(evt.tags);
+
         if (UIManager.Instance != null)
         {
             StartCoroutine(UIManager.Instance.AnimatePanelPopup(gameObject));
+        }
+    }
+
+    private void PopulateTags(System.Collections.Generic.List<string> tags)
+    {
+        if (tagsContainer == null) return;
+
+        foreach (Transform child in tagsContainer)
+        {
+            Destroy(child.gameObject);
+        }
+
+        if (tagPrefab == null || tags == null) return;
+
+        foreach (string tag in tags)
+        {
+            GameObject tagGO = Instantiate(tagPrefab, tagsContainer);
+            Text tagText = tagGO.GetComponentInChildren<Text>();
+            if (tagText != null)
+            {
+                tagText.text = tag;
+            }
         }
     }
 
