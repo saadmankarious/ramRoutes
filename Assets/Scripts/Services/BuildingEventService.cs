@@ -56,7 +56,7 @@ namespace RamRoutes.Services
             var data = doc.ToDictionary();
 
             RamRoutes.Model.EventType eventType = ParseEventType(data);
-            DateTime eventDate = ParseEventDate(data, eventType);
+            string eventDate = data.ContainsKey("date") ? data["date"]?.ToString() : string.Empty;
             string recurrenceData = data.ContainsKey("recurrenceData") ? data["recurrenceData"]?.ToString() : null;
 
             List<string> attendees = new List<string>();
@@ -123,38 +123,6 @@ namespace RamRoutes.Services
             }
 
             return RamRoutes.Model.EventType.Scheduled;
-        }
-
-        private DateTime ParseEventDate(System.Collections.Generic.Dictionary<string, object> data, RamRoutes.Model.EventType eventType)
-        {
-            switch (eventType)
-            {
-                case RamRoutes.Model.EventType.Always:
-                    return DateTime.MaxValue;
-
-                case RamRoutes.Model.EventType.Weekly:
-                case RamRoutes.Model.EventType.Daily:
-                case RamRoutes.Model.EventType.Monthly:
-                    // For recurring events, use the base date/time pattern
-                    if (data.ContainsKey("date") && data["date"] != null)
-                    {
-                        // Convert UTC to local time
-                        DateTime utcDateTime = ((Timestamp)data["date"]).ToDateTime();
-                        return utcDateTime.ToLocalTime();
-                    }
-                    // No date set for a recurring event - default to noon today
-                    return DateTime.Today.AddHours(12);
-
-                case RamRoutes.Model.EventType.Scheduled:
-                default:
-                    if (data.ContainsKey("date") && data["date"] != null)
-                    {
-                        // Convert UTC to local time
-                        DateTime utcDateTime = ((Timestamp)data["date"]).ToDateTime();
-                        return utcDateTime.ToLocalTime();
-                    }
-                    return DateTime.MaxValue; // Treat as always-happening if no date
-            }
         }
 
         public async Task<bool> RecordAttendanceAsync(string eventId, string playerId)
@@ -261,26 +229,14 @@ namespace RamRoutes.Services
         }
 
         /// <summary>
-        /// Get events happening today (includes always happening events and today's scheduled events)
+        /// Get all building events. Date is a raw display string now, so there's no
+        /// way to filter to "today" client-side - callers get everything.
         /// </summary>
         public async Task<List<BuildingEvent>> GetDailyEvents()
         {
             var allEvents = await GetBuildingEventsAsync();
-
-            DateTime today = DateTime.Today;
-            DateTime tomorrow = today.AddDays(1);
-
-            var dailyEvents = allEvents.FindAll(e =>
-            {
-                if (e.eventType == RamRoutes.Model.EventType.Always) return true;
-                if (e.eventType == RamRoutes.Model.EventType.Daily) return true;
-
-                DateTime eventDate = e.date.Date;
-                return eventDate >= today && eventDate < tomorrow;
-            });
-
-            Debug.Log($"BuildingEventService: Found {dailyEvents.Count} daily events out of {allEvents.Count} total events");
-            return dailyEvents;
+            Debug.Log($"BuildingEventService: Found {allEvents.Count} events");
+            return allEvents;
         }
     }
 }

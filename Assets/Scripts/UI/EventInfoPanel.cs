@@ -54,7 +54,7 @@ public class EventInfoPanel : MonoBehaviour
 
         if (dateText != null)
         {
-            dateText.text = evt.GetDisplayDate();
+            dateText.text = evt.date;
         }
 
         PopulateTags(evt.tags);

@@ -167,18 +167,16 @@ public class DailyEvents : MonoBehaviour
             Text nameText = nameObject.GetComponent<Text>();
             if (nameText != null)
             {
-                // Create comprehensive event name with status and location
-        string status = evt.GetDisplayDate();
+                // Create comprehensive event name with location
                 string eventName = evt.eventName;
-                
+
                 if (!string.IsNullOrEmpty(evt.buildingName))
                 {
                     eventName += $" @ {evt.buildingName}";
                 }
-                
+
                 nameText.text = $"[ {eventName}";
-                // nameText.color = GetStatusColor(status);
-                
+
                 Debug.Log($"Set event name: {nameText.text}");
             }
         }
@@ -195,7 +193,7 @@ public class DailyEvents : MonoBehaviour
                 }
                 else
                 {
-                    coinsText.text = evt.date.ToString("MMM dd");
+                    coinsText.text = evt.date;
                 }
                 
                 Debug.Log($"Set coins: {coinsText.text}");
@@ -221,7 +219,7 @@ public class DailyEvents : MonoBehaviour
                 }
                 else
                 {
-                    kbText.text = evt.date.ToString("HH:mm");
+                    kbText.text = evt.date;
                 }
                 
                 Debug.Log($"Set KB: {kbText.text}");

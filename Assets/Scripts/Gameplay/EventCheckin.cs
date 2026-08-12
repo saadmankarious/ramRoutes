@@ -149,7 +149,7 @@ public class EventCheckin : MonoBehaviour
                 
                 if (eventDateText != null)
                 {
-                    eventDateText.text = evt.GetDisplayDate();
+                    eventDateText.text = evt.date;
                 }
                 ButtonHandler checkInButton = eventItem.GetComponentInChildren<ButtonHandler>();
                 if (checkInButton != null)
@@ -440,13 +440,10 @@ public class EventCheckin : MonoBehaviour
         }
         
         var events = await eventService.GetBuildingEventsForBuildingAsync(buildingName);
-        var now = DateTime.Now;
-        var earliestTime = now.AddMinutes(-15);
-        var latestTime = now.AddMinutes(60);
 
         // Get the current authenticated user ID for filtering events
         string userId = "unknown";
-        if (FirebaseAuth.DefaultInstance?.CurrentUser != null) 
+        if (FirebaseAuth.DefaultInstance?.CurrentUser != null)
         {
             userId = FirebaseAuth.DefaultInstance.CurrentUser.UserId;
         }
@@ -455,7 +452,7 @@ public class EventCheckin : MonoBehaviour
         List<BuildingEvent> relevantEvents = new List<BuildingEvent>();
         foreach (var evt in events)
         {
-            if (await IsEventEligibleForCheckInRightNow(evt, buildingName, userId, now, earliestTime, latestTime))
+            if (await IsEventEligibleForCheckInRightNow(evt, buildingName, userId))
             {
                 relevantEvents.Add(evt);
             }
@@ -493,27 +490,14 @@ public class EventCheckin : MonoBehaviour
         HideEventsPanel();
     }
 
-    private bool IsEventWithinTimeWindow(BuildingEvent evt, DateTime now)
-    {
-        // Always happening events are always within the time window
-        if (evt.IsAlwaysHappening)
-            return true;
-
-        // Get the event's time of day
-        TimeSpan eventTimeOfDay = evt.date.TimeOfDay;
-        TimeSpan currentTimeOfDay = now.TimeOfDay;
-        
-        // Calculate time difference (positive if current time is after event time)
-        TimeSpan timeDifference = currentTimeOfDay - eventTimeOfDay;
-        
-        // Allow 15 minutes before event and 60 minutes after event
-        return timeDifference >= TimeSpan.FromMinutes(-15) && timeDifference <= TimeSpan.FromMinutes(60);
-    }
-
-    private async Task<bool> IsEventEligibleForCheckInRightNow(BuildingEvent evt, string buildingName, string userId, DateTime now, DateTime earliestTime, DateTime latestTime)
+    private async Task<bool> IsEventEligibleForCheckInRightNow(BuildingEvent evt, string buildingName, string userId)
     {
         // Event MUST be in the correct building
-        if (evt.buildingName != buildingName) 
+        if (evt.buildingName != buildingName)
+            return false;
+
+        // Always-happening events are excluded from the proximity check-in list
+        if (evt.IsAlwaysHappening)
             return false;
 
         // Player cannot check in for same event twice a day regardless of type
@@ -529,32 +513,6 @@ public class EventCheckin : MonoBehaviour
             return false;
         }
 
-        // Check if event is within time window based on event type
-        if (evt.eventType == RamRoutes.Model.EventType.Scheduled)
-        {
-            // For scheduled events, check if it's the correct date and within time window
-            if (evt.date.Date == now.Date)
-            {
-                return IsEventWithinTimeWindow(evt, now);
-            }
-            return false;
-        }
-        else if (evt.eventType == RamRoutes.Model.EventType.Daily)
-        {
-            // For daily events, always check time window (happens every day)
-            return IsEventWithinTimeWindow(evt, now);
-        }
-        else if (evt.IsRecurring && evt.IsActiveAt(now))
-        {
-            // For recurring events (weekly, monthly), check if active today and within time window
-            return IsEventWithinTimeWindow(evt, now);
-        }
-        else if (evt.IsAlwaysHappening)
-        {
-            // Skip always happening events from check-in display
-            return false;
-        }
-
-        return false;
+        return true;
     }
 }

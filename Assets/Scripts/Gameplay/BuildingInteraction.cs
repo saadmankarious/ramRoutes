@@ -485,7 +485,7 @@ public class BuildingInteraction : MonoBehaviour
 
                 // PopulateEventRsvpList(eventGO, evt.eventId);
 
-                string formattedDate = evt.GetDisplayDate();
+                string formattedDate = evt.date;
 
                 Text titleText = eventGO.transform.FindDeepChild("title")?.GetComponent<Text>();
                 if (titleText != null)
