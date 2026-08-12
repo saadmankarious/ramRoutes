@@ -2,6 +2,8 @@ const express = require("express");
 const path = require("path");
 const { scrapeEvents } = require("./scrape");
 const { matchAll } = require("./matcher");
+const { tagEvent } = require("./tagger");
+const { computeRecommendations } = require("./recommend");
 
 // Firebase Admin — requires Admin/serviceAccountKey.json
 let db = null;
@@ -61,6 +63,7 @@ function reconcileEvent(event, building) {
     eventType: "scheduled",
     date: parsedDate,
     description: event.description || "",
+    tags: tagEvent({ eventName: event.name, description: event.description }),
     gainedCoins: 0,
     gainedKb: 0,
     imageUrl: event.imageUrl || null,
@@ -203,6 +206,7 @@ app.post("/api/upload", async (req, res) => {
           dateRaw: r._raw.dateRaw,
           dateParsed: r.date ? r.date.toISOString() : null,
           description: r.description ? r.description.slice(0, 80) : null,
+          tags: r.tags,
           imageUrl: r.imageUrl,
           eventUrl: r.eventUrl,
           issues: r._issues,
@@ -228,6 +232,7 @@ app.post("/api/upload", async (req, res) => {
         eventType: rec.eventType,
         date: rec.date || null,
         description: rec.description,
+        tags: rec.tags,
         gainedCoins: rec.gainedCoins,
         gainedKb: rec.gainedKb,
         imageUrl: rec.imageUrl,
@@ -250,6 +255,28 @@ app.post("/api/upload", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Run recommendation computation, stream progress via SSE
+app.get("/api/recommend", async (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  const send = (type, payload) => {
+    res.write(`data: ${JSON.stringify({ type, payload })}\n\n`);
+  };
+
+  try {
+    const result = await computeRecommendations({
+      onProgress: (msg) => send("progress", msg),
+    });
+    send("done", result);
+  } catch (err) {
+    send("error", err.message);
+  } finally {
+    res.end();
   }
 });
 

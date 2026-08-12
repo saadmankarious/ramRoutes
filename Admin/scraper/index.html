@@ -43,6 +43,13 @@
 <button id="previewBtn" disabled onclick="runPreview()">Preview Upload</button>
 <div id="previewSection" style="margin-top:12px;"></div>
 
+<hr>
+
+<!-- Step 4 -->
+<h3>4. Compute Recommendations</h3>
+<button id="recommendBtn" onclick="runRecommend()">Run Recommendations</button>
+&nbsp;<span id="recommendLog"></span>
+
 <script>
   let scrapedEvents = [];
   let matchedBuildings = [];
@@ -242,7 +249,7 @@
 
     html += '<table><tr>'
       + '<th>Event</th><th>Building</th><th>Date (raw)</th><th>Date (parsed)</th>'
-      + '<th>Desc</th><th>Image</th><th>Status</th>'
+      + '<th>Tags</th><th>Desc</th><th>Image</th><th>Status</th>'
       + '</tr>';
 
     events.forEach(e => {
@@ -265,6 +272,7 @@
         <td>${esc(e.buildingName)}</td>
         <td>${esc(e.dateRaw || '')}</td>
         <td>${parsedDate}</td>
+        <td>${e.tags && e.tags.length ? esc(e.tags.join(', ')) : '—'}</td>
         <td>${e.description ? '✓' : '—'}</td>
         <td>${e.imageUrl ? '✓' : '—'}</td>
         <td>${status}</td>
@@ -302,6 +310,39 @@
       section.innerHTML = existing;
       alert('Upload error: ' + err.message);
     }
+  }
+
+  // --- Step 4: Recommendations ---
+
+  function runRecommend() {
+    const btn = document.getElementById('recommendBtn');
+    const log = document.getElementById('recommendLog');
+    btn.disabled = true;
+    log.textContent = 'Starting...';
+
+    const es = new EventSource('/api/recommend');
+
+    es.onmessage = (e) => {
+      const { type, payload } = JSON.parse(e.data);
+      if (type === 'progress') {
+        log.textContent = payload;
+      } else if (type === 'done') {
+        es.close();
+        log.textContent = `Done — ${payload.usersUpdated} users updated `
+          + `(${payload.taggedEvents} tagged events, ${payload.usersProcessed} users with interests).`;
+        btn.disabled = false;
+      } else if (type === 'error') {
+        es.close();
+        log.textContent = 'Error: ' + payload;
+        btn.disabled = false;
+      }
+    };
+
+    es.onerror = () => {
+      es.close();
+      log.textContent = 'Connection error.';
+      btn.disabled = false;
+    };
   }
 
   function esc(str) {
