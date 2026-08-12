@@ -36,8 +36,16 @@
 <button id="matchBtn" disabled onclick="runMatch()">Load Buildings &amp; Match</button>
 <div id="matchSection" style="margin-top:12px;"></div>
 
+<hr>
+
+<!-- Step 3 -->
+<h3>3. Reconcile &amp; Upload</h3>
+<button id="previewBtn" disabled onclick="runPreview()">Preview Upload</button>
+<div id="previewSection" style="margin-top:12px;"></div>
+
 <script>
   let scrapedEvents = [];
+  let matchedBuildings = [];
 
   // --- Step 1: Scrape ---
 
@@ -141,14 +149,23 @@
     }
   }
 
-  function renderMatches({ buildings, unmatched }) {
+  function renderMatches({ buildings, unmatched, buildingCount, buildingDebug }) {
     let html = '';
+
+    // --- Debug: raw buildings from Firestore ---
+    html += `<details><summary><b>Firestore buildings (${buildingCount}) — click to inspect IDs</b></summary>`;
+    html += '<table><tr><th>doc id</th><th>buildingName</th><th>keywords found</th></tr>';
+    buildingDebug.forEach(b => {
+      const warn = b.keywordCount === 0 ? ' style="background:#fff0f0"' : '';
+      html += `<tr${warn}><td>${esc(b.id)}</td><td>${esc(b.buildingName)}</td><td>${b.keywordCount === 0 ? '⚠ none' : b.keywordCount}</td></tr>`;
+    });
+    html += '</table></details><br>';
 
     // --- Matched buildings ---
     const totalMatched = buildings.reduce(
       (n, b) => n + b.matched.length, 0
     );
-    html += `<b>Buildings in Firestore: ${data.buildingCount} &nbsp;|&nbsp; Buildings with matches: ${buildings.length} &nbsp;|&nbsp; Events placed: ${totalMatched}</b><br><br>`;
+    html += `<b>Buildings with matches: ${buildings.length} &nbsp;|&nbsp; Events placed: ${totalMatched}</b><br><br>`;
 
     buildings.forEach(b => {
       html += `<details open>
@@ -185,6 +202,106 @@
     }
 
     document.getElementById('matchSection').innerHTML = html;
+    matchedBuildings = buildings;
+    document.getElementById('previewBtn').disabled = false;
+  }
+
+  // --- Step 3: Preview & Upload ---
+
+  async function runPreview() {
+    const btn = document.getElementById('previewBtn');
+    const section = document.getElementById('previewSection');
+    btn.disabled = true;
+    section.innerHTML = 'Reconciling data...';
+
+    try {
+      const res = await fetch('/api/upload?preview=true', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ buildings: matchedBuildings }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      renderPreview(data);
+    } catch (err) {
+      section.innerHTML = 'Error: ' + esc(err.message);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function renderPreview(data) {
+    const { total, ready, duplicates, withIssues, events } = data;
+
+    let html = `<b>${total} events total &nbsp;|&nbsp; `
+      + `<span style="color:green">${ready} ready</span> &nbsp;|&nbsp; `
+      + `<span style="color:#888">${duplicates} duplicate (skip)</span> &nbsp;|&nbsp; `
+      + `<span style="color:#b36200">${withIssues} have issues</span></b>`;
+
+    html += `&nbsp;&nbsp;<button onclick="runUpload()">Upload ${ready + withIssues} events</button><br><br>`;
+
+    html += '<table><tr>'
+      + '<th>Event</th><th>Building</th><th>Date (raw)</th><th>Date (parsed)</th>'
+      + '<th>Desc</th><th>Image</th><th>Status</th>'
+      + '</tr>';
+
+    events.forEach(e => {
+      let status, rowStyle = '';
+      if (e.duplicate) {
+        status = '<span style="color:#888">duplicate</span>';
+        rowStyle = ' style="opacity:0.5"';
+      } else if (e.issues.length === 0) {
+        status = '<span style="color:green">ready</span>';
+      } else {
+        status = `<span style="color:#b36200">${e.issues.join(', ')}</span>`;
+      }
+
+      const parsedDate = e.dateParsed
+        ? new Date(e.dateParsed).toLocaleString()
+        : '<span style="color:red">—</span>';
+
+      html += `<tr${rowStyle}>
+        <td>${esc(e.eventName)}</td>
+        <td>${esc(e.buildingName)}</td>
+        <td>${esc(e.dateRaw || '')}</td>
+        <td>${parsedDate}</td>
+        <td>${e.description ? '✓' : '—'}</td>
+        <td>${e.imageUrl ? '✓' : '—'}</td>
+        <td>${status}</td>
+      </tr>`;
+    });
+
+    html += '</table>';
+    document.getElementById('previewSection').innerHTML = html;
+  }
+
+  async function runUpload() {
+    const section = document.getElementById('previewSection');
+    const existing = section.innerHTML;
+    section.innerHTML = 'Uploading to Firestore...';
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ buildings: matchedBuildings }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      let html = `<b>Upload complete: ${data.uploaded} uploaded, ${data.skipped} skipped (duplicates)</b>`;
+      if (data.errors.length) {
+        html += `<br><span style="color:red">${data.errors.length} errors:</span><ul>`;
+        data.errors.forEach(e => {
+          html += `<li>${esc(e.event)}: ${esc(e.error)}</li>`;
+        });
+        html += '</ul>';
+      }
+      section.innerHTML = html;
+    } catch (err) {
+      section.innerHTML = existing;
+      alert('Upload error: ' + err.message);
+    }
   }
 
   function esc(str) {

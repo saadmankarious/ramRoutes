@@ -6,6 +6,23 @@ const EVENTS_URL =
   "https://gwu.campuslabs.com/engage/events?showpastevents=true";
 const OUTPUT_FILE = path.join(__dirname, "events.json");
 const MAX_LOAD_MORE = 5;
+const DESCRIPTION_CONCURRENCY = 5;
+
+async function fetchDescription(browser, url) {
+  const page = await browser.newPage();
+  try {
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
+    const description = await page.evaluate(() => {
+      const el = document.querySelector(".DescriptionText");
+      return el ? el.innerText.trim() : null;
+    });
+    return description;
+  } catch {
+    return null;
+  } finally {
+    await page.close();
+  }
+}
 
 async function scrapeEvents({ onProgress } = {}) {
   const browser = await chromium.launch({ headless: true });
@@ -27,7 +44,7 @@ async function scrapeEvents({ onProgress } = {}) {
     await page.waitForLoadState("networkidle").catch(() => {});
   }
 
-  onProgress?.("Parsing events...");
+  onProgress?.("Parsing event cards...");
 
   const events = await page.evaluate(() => {
     const cards = document.querySelectorAll('a[href^="/engage/event/"]');
@@ -64,6 +81,21 @@ async function scrapeEvents({ onProgress } = {}) {
 
     return results;
   });
+
+  // Fetch descriptions in parallel batches
+  onProgress?.(`Fetching descriptions for ${events.length} events...`);
+  for (let i = 0; i < events.length; i += DESCRIPTION_CONCURRENCY) {
+    const batch = events.slice(i, i + DESCRIPTION_CONCURRENCY);
+    const descriptions = await Promise.all(
+      batch.map((e) => fetchDescription(browser, e.eventUrl))
+    );
+    descriptions.forEach((desc, j) => {
+      events[i + j].description = desc;
+    });
+    onProgress?.(
+      `Descriptions: ${Math.min(i + DESCRIPTION_CONCURRENCY, events.length)}/${events.length}`
+    );
+  }
 
   await browser.close();
   return events;

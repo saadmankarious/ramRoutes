@@ -1,5 +1,37 @@
-// keywords.json maps buildingName → array of keyword strings
-// A scraped location matches a building if it contains ANY of its keywords (case-insensitive)
+// Ground truth building IDs as they exist in Firestore
+const GROUND_TRUTH_BUILDINGS = [
+  "tompkins",
+  "corcoran",
+  "deques",
+  "gelman",
+  "lerner",
+  "district-house",
+  "himmelfrab",
+  "funger",
+  "seh",
+  "usc",
+  "kogan-plaza",
+  "monroe-hall",
+  "shenkman-hall",
+  "thurston-hall",
+  "munson-hall",
+  "amsterdam-hall",
+  "hand-chapel",
+  "elliott-school",
+  "potomac-house",
+  "somers-hall",
+  "milken-institute",
+  "fsk-hall",
+  "west-hall",
+  "fulbright-hall",
+  "strong-hall",
+  "phillips-hall",
+  "smith-center",
+  "smpa",
+];
+
+// keywords.json maps Firestore document ID → keyword strings
+// A scraped location matches a building if it contains ANY keyword (case-insensitive)
 const keywordsMap = require("./keywords.json");
 
 function matchAll(events, buildings) {
@@ -22,12 +54,17 @@ function matchAll(events, buildings) {
       return;
     }
 
-    // Find the first building whose keywords appear in the scraped location
     let matchedBuilding = null;
     let matchedKeyword = null;
 
     for (const building of buildings) {
-      const keywords = keywordsMap[building.buildingName] || [];
+      // Try id, then buildingName, then lowercase of each
+      const keywords =
+        keywordsMap[building.id] ||
+        keywordsMap[building.buildingName] ||
+        keywordsMap[(building.id || "").toLowerCase()] ||
+        keywordsMap[(building.buildingName || "").toLowerCase()] ||
+        [];
       for (const kw of keywords) {
         if (loc.includes(kw.toLowerCase())) {
           matchedBuilding = building;
@@ -39,10 +76,7 @@ function matchAll(events, buildings) {
     }
 
     if (matchedBuilding) {
-      groups[matchedBuilding.id].matched.push({
-        ...event,
-        matchedKeyword,
-      });
+      groups[matchedBuilding.id].matched.push({ ...event, matchedKeyword });
     } else {
       unmatched.push(event);
     }
@@ -54,4 +88,4 @@ function matchAll(events, buildings) {
   };
 }
 
-module.exports = { matchAll };
+module.exports = { matchAll, GROUND_TRUTH_BUILDINGS };
