@@ -21,6 +21,8 @@ public class BuildingInteraction : MonoBehaviour
     [SerializeField] private Transform eventsContentParent;
     [SerializeField] private GameObject eventPrefab;
         [SerializeField] private Button buildingEventsToggle;
+    [SerializeField] private GameObject eventInfoPrefab;
+    [SerializeField] private Transform eventInfoParent;
 
 
     [Header("User Location Display")]
@@ -395,6 +397,20 @@ public class BuildingInteraction : MonoBehaviour
         }
     }
     
+    private void ShowEventInfo(BuildingEvent evt)
+    {
+        if (eventInfoPrefab == null) return;
+
+        Transform parent = eventInfoParent != null ? eventInfoParent : transform.root;
+        GameObject infoGO = Instantiate(eventInfoPrefab, parent);
+
+        EventInfoPanel infoPanel = infoGO.GetComponent<EventInfoPanel>();
+        if (infoPanel != null)
+        {
+            infoPanel.ShowEventInfo(evt);
+        }
+    }
+
     private async Task DisplayBuildingEventsAsync()
     {
         if (eventsContentParent == null || eventPrefab == null)
@@ -444,6 +460,12 @@ public class BuildingInteraction : MonoBehaviour
                     eventData = eventGO.AddComponent<EventDisplayData>();
                 }
                 eventData.eventId = evt.eventId;
+
+                ButtonHandler cardButtonHandler = eventGO.GetComponentInChildren<ButtonHandler>();
+                if (cardButtonHandler != null)
+                {
+                    cardButtonHandler.Initialize("data", () => ShowEventInfo(evt));
+                }
 
                 // ButtonHandler rsvpButtonHandler = eventGO.GetComponentInChildren<ButtonHandler>();
 
