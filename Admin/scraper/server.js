@@ -1,8 +1,9 @@
 const express = require("express");
 const path = require("path");
-const { scrapeEvents } = require("./scrape");
+const fs = require("fs");
+const { scrapeEvents, timestampedEventsPath } = require("./scrape");
 const { matchAll } = require("./matcher");
-const { tagEvent } = require("./tagger");
+const { tagEvent, TAGS } = require("./tagger");
 const { computeRecommendations } = require("./recommend");
 
 // Firebase Admin — requires Admin/serviceAccountKey.json
@@ -90,6 +91,11 @@ app.get("/api/scrape", async (req, res) => {
     const events = await scrapeEvents({
       onProgress: (msg) => send("progress", msg),
     });
+
+    const outputFile = timestampedEventsPath();
+    fs.writeFileSync(outputFile, JSON.stringify(events, null, 2));
+    send("progress", `Saved ${events.length} events → ${path.basename(outputFile)}`);
+
     send("done", events);
   } catch (err) {
     send("error", err.message);
@@ -257,6 +263,29 @@ app.get("/api/recommend", async (req, res) => {
   } finally {
     res.end();
   }
+});
+
+// --- Manual tagging eval sample (used by annotate.html) ---
+
+const EVAL_SAMPLE_FILE = path.join(__dirname, "eval-sample.json");
+
+app.get("/api/eval-sample", (req, res) => {
+  if (!fs.existsSync(EVAL_SAMPLE_FILE)) {
+    return res.status(404).json({
+      error: "eval-sample.json not found. Run: node build-eval-sample.js",
+    });
+  }
+  const events = JSON.parse(fs.readFileSync(EVAL_SAMPLE_FILE, "utf8"));
+  res.json({ tags: Object.keys(TAGS), events });
+});
+
+app.post("/api/eval-sample", (req, res) => {
+  const { events } = req.body;
+  if (!Array.isArray(events)) {
+    return res.status(400).json({ error: "events must be an array" });
+  }
+  fs.writeFileSync(EVAL_SAMPLE_FILE, JSON.stringify(events, null, 2));
+  res.json({ saved: events.length });
 });
 
 const PORT = 3001;

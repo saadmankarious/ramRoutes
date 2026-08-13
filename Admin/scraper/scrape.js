@@ -4,9 +4,15 @@ const path = require("path");
 
 const EVENTS_URL =
   "https://gwu.campuslabs.com/engage/events?showpastevents=true";
-const OUTPUT_FILE = path.join(__dirname, "events.json");
-const MAX_LOAD_MORE = 5;
+const MAX_LOAD_MORE = 250;
 const DESCRIPTION_CONCURRENCY = 5;
+
+// Each scrape writes its own timestamped file instead of overwriting a fixed
+// events.json, so a stale file never silently masquerades as fresh data.
+function timestampedEventsPath() {
+  const ts = new Date().toISOString().replace(/[:.]/g, "-");
+  return path.join(__dirname, `events-${ts}.json`);
+}
 
 async function fetchDescription(browser, url) {
   const page = await browser.newPage();
@@ -105,8 +111,9 @@ async function scrapeEvents({ onProgress } = {}) {
 if (require.main === module) {
   scrapeEvents({ onProgress: console.log })
     .then((events) => {
-      fs.writeFileSync(OUTPUT_FILE, JSON.stringify(events, null, 2));
-      console.log(`Scraped ${events.length} events → ${OUTPUT_FILE}`);
+      const outputFile = timestampedEventsPath();
+      fs.writeFileSync(outputFile, JSON.stringify(events, null, 2));
+      console.log(`Scraped ${events.length} events → ${outputFile}`);
     })
     .catch((err) => {
       console.error("Scraper failed:", err);
@@ -114,4 +121,4 @@ if (require.main === module) {
     });
 }
 
-module.exports = { scrapeEvents };
+module.exports = { scrapeEvents, timestampedEventsPath };
