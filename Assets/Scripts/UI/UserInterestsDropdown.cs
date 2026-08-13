@@ -16,7 +16,7 @@ public class UserInterestsDropdown : MonoBehaviour
     private static readonly string[] AvailableTags =
     {
         "academic", "sports", "arts", "social", "food",
-        "career", "cultural", "spiritual", "tech", "fitness"
+        "career", "cultural", "spiritual", "tech", "fitness", "mental-health"
     };
 
     [SerializeField] private Dropdown dropdown;

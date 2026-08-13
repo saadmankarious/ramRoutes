@@ -9,6 +9,7 @@ const TAGS = {
   spiritual: ["prayer", "faith", "chapel", "meditation", "spiritual", "mass", "worship", "religious", "interfaith", "dharma"],
   tech:      ["hack", "hackathon", "code", "programming", "software", "ai", "data", "esports", "gaming", "cybersecurity", "robotics", "stem"],
   fitness:   ["workout", "run", "hike", "yoga", "gym", "exercise", "wellness", "cardio", "strength", "fitness", "bootcamp"],
+  "mental-health": ["mental health", "counseling", "counselling", "therapy", "self-care", "self care", "stress relief", "anxiety", "depression", "mindfulness", "meditation", "wellbeing", "well-being", "support group", "crisis support", "resilience"],
 };
 
 // Returns array of matching tag strings for a given event

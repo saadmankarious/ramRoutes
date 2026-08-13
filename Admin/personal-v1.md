@@ -43,6 +43,7 @@ recommendedEvents: ["eventId1", "eventId2", ...]  // written nightly by Cloud Fu
 | `spiritual` | prayer, faith, chapel, meditation, spiritual, mass, worship |
 | `tech` | hack, hackathon, code, programming, software, ai, data, esports, gaming |
 | `fitness` | workout, run, hike, yoga, gym, exercise, wellness, cardio |
+| `mental-health` | mental health, counseling, therapy, self-care, stress relief, anxiety, depression, mindfulness, meditation, wellbeing, support group |
 
 ---
 

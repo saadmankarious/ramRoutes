@@ -127,20 +127,39 @@ function main() {
     console.log(`  ${m.padEnd(10)} pool=${poolSize[m]}  sampled=${target[m]}`);
   }
 
-  const output = sample.map((e, i) => ({
-    id: i + 1,
-    name: e.name,
-    month: parseMonth(e.date),
-    date: e.date,
-    description: e.description,
-    eventUrl: e.eventUrl,
-    heuristicTags: tagEvent({ eventName: e.name, description: e.description }),
-    manualTags: [],
-  }));
-
+  // Carry forward manualTags from the existing eval-sample.json for any event
+  // that gets resampled again, keyed the same way as the dedupe step, so
+  // regenerating the sample doesn't discard already-completed annotation work.
   const outputFile = path.join(__dirname, "eval-sample.json");
+  const previousTags = new Map();
+  if (fs.existsSync(outputFile)) {
+    const previous = JSON.parse(fs.readFileSync(outputFile, "utf8"));
+    for (const e of previous) {
+      if (e.manualTags && e.manualTags.length) {
+        const key = `${(e.name || "").trim()}|||${(e.description || "").trim()}`;
+        previousTags.set(key, e.manualTags);
+      }
+    }
+    console.log(`Found ${previousTags.size} previously-annotated events to carry forward`);
+  }
+
+  const output = sample.map((e, i) => {
+    const key = `${(e.name || "").trim()}|||${(e.description || "").trim()}`;
+    return {
+      id: i + 1,
+      name: e.name,
+      month: parseMonth(e.date),
+      date: e.date,
+      description: e.description,
+      eventUrl: e.eventUrl,
+      heuristicTags: tagEvent({ eventName: e.name, description: e.description }),
+      manualTags: previousTags.get(key) || [],
+    };
+  });
+
+  const carriedOver = output.filter((e) => e.manualTags.length).length;
   fs.writeFileSync(outputFile, JSON.stringify(output, null, 2));
-  console.log(`Wrote ${output.length} events → ${outputFile}`);
+  console.log(`Wrote ${output.length} events → ${outputFile} (${carriedOver} annotations carried forward)`);
 }
 
 main();
