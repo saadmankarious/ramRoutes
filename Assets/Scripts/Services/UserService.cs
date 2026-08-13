@@ -539,7 +539,7 @@ namespace RamRoutes.Services
             }
         }
 
-        public async Task CreateUser(string userId, string username, string email, string residenceHall)
+        public async Task CreateUser(string userId, string username, string email, string residenceHall = null)
         {
             // Defensive checks and normalization
             userId = string.IsNullOrWhiteSpace(userId) ? null : userId.Trim();
