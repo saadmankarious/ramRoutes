@@ -108,6 +108,37 @@ public class UIManager : MonoBehaviour
         isPaused = false;
     }
 
+    private void OnExitToLandingClicked()
+    {
+        // Time.timeScale persists across scene loads - reset it so Landing isn't frozen.
+        Time.timeScale = 1f;
+        isPaused = false;
+        SceneManager.LoadScene("Landing");
+    }
+
+    /// <summary>
+    /// Finds the "keep-playing" and "exit" buttons under gamePauseMenu by name and
+    /// wires them to ResumeGame / OnExitToLandingClicked.
+    /// </summary>
+    private void WirePauseMenuButtons()
+    {
+        if (gamePauseMenu == null) return;
+
+        Button keepPlayingButton = gamePauseMenu.transform.FindDeepChild("keep-playing")?.GetComponent<Button>();
+        if (keepPlayingButton != null)
+        {
+            keepPlayingButton.onClick.RemoveListener(ResumeGame);
+            keepPlayingButton.onClick.AddListener(ResumeGame);
+        }
+
+        Button exitButton = gamePauseMenu.transform.FindDeepChild("exit")?.GetComponent<Button>();
+        if (exitButton != null)
+        {
+            exitButton.onClick.RemoveListener(OnExitToLandingClicked);
+            exitButton.onClick.AddListener(OnExitToLandingClicked);
+        }
+    }
+
     private void Awake()
     {
         if (Instance == null)
@@ -183,13 +214,7 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    public void RefreshAllUIConnections()
-    {
-        RefreshUIReferences();
-        Debug.Log("UIManager: Manually refreshed all UI connections");
-    }
-
-    private void RefreshUIReferences()
+       private void RefreshUIReferences()
     {
         if (gamePauseMenu == null)
         {
@@ -200,7 +225,9 @@ public class UIManager : MonoBehaviour
                 Debug.Log("UIManager: Reconnected gamePauseMenu reference");
             }
         }
-        
+
+        WirePauseMenuButtons();
+
         Button[] allButtons = FindObjectsOfType<Button>();
         foreach (Button button in allButtons)
         {
@@ -317,7 +344,8 @@ public class UIManager : MonoBehaviour
     private void Start()
     {
         _ = InitializeUserRankSystem();
-            }
+        WirePauseMenuButtons();
+    }
 
 
     public void UpdateCoins(int coins)
