@@ -78,6 +78,23 @@ namespace RamRoutes.Services
                         }
                     }
                     
+                    // Handle interests list (tag preferences used for event recommendations)
+                    List<string> interests = new List<string>();
+                    if (data.ContainsKey("interests") && data["interests"] != null)
+                    {
+                        var interestsData = data["interests"];
+                        if (interestsData is List<object> interestsList)
+                        {
+                            foreach (var interest in interestsList)
+                            {
+                                if (interest != null)
+                                {
+                                    interests.Add(interest.ToString());
+                                }
+                            }
+                        }
+                    }
+
                     var user = new User(id, token, name, email);
                     user.coins = coins;
                     user.knowledgePoints = knowledgePoints;
@@ -86,6 +103,7 @@ namespace RamRoutes.Services
                     user.residenceHall = residenceHall;
                     user.bio = bio;
                     user.friends = friends;
+                    user.interests = interests;
 
                     string statusStr = data.ContainsKey("status") && data["status"] != null ? data["status"].ToString() : "Studying";
                     user.SetStatusFromString(statusStr);
@@ -684,6 +702,25 @@ namespace RamRoutes.Services
             catch (Exception ex)
             {
                 Debug.LogError($"Failed to update bio for user {userId}: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task UpdateUserInterests(string userId, List<string> interests)
+        {
+            try
+            {
+                var userDoc = db.Collection("users").Document(userId);
+                await userDoc.UpdateAsync(new Dictionary<string, object>
+                {
+                    { "interests", interests }
+                });
+
+                Debug.Log($"Updated interests for user {userId}");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Failed to update interests for user {userId}: {ex.Message}");
                 throw;
             }
         }

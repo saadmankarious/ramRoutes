@@ -48,6 +48,7 @@ namespace RamRoutes.Model
         public EquippedAccessory equippedAccessory { set; get; } = EquippedAccessory.None;
         public UserStatus status { set; get; } = UserStatus.Studying;
         public List<string> friends { set; get; } = new List<string>();
+        public List<string> interests { set; get; } = new List<string>(); // Tag preferences used for event recommendations
         public string GetEquippedSkinAsString()
         {
             return equippedSkin.ToString();
