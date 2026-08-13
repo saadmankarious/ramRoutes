@@ -32,27 +32,8 @@ function generateBuildingId() {
   return id;
 }
 
-// "Saturday, July 18 at 2:30PM EDT" → Date (infers year)
-function parseEventDate(dateStr) {
-  if (!dateStr) return null;
-  const match = dateStr.match(
-    /([A-Za-z]+)\s+(\d+)\s+at\s+(\d+:\d+(?:AM|PM))\s*([A-Z]+)/i
-  );
-  if (!match) return null;
-  const [, month, day, time, tz] = match;
-  const now = new Date();
-  // Try current year; if it lands >30 days in the future, use last year
-  // (we're scraping past events so they shouldn't be far in the future)
-  let date = new Date(`${month} ${day}, ${now.getFullYear()} ${time} ${tz}`);
-  if (isNaN(date)) return null;
-  if (date.getTime() > now.getTime() + 30 * 24 * 60 * 60 * 1000) {
-    date = new Date(`${month} ${day}, ${now.getFullYear() - 1} ${time} ${tz}`);
-  }
-  return isNaN(date) ? null : date;
-}
 
 function reconcileEvent(event, building) {
-  const parsedDate = parseEventDate(event.date);
   return {
     // Firestore document fields
     buildingId: generateBuildingId(),
@@ -61,7 +42,7 @@ function reconcileEvent(event, building) {
     schoolName: building.schoolName || "",
     eventName: event.name,
     eventType: "scheduled",
-    date: parsedDate,
+    date: event.date || null,
     description: event.description || "",
     tags: tagEvent({ eventName: event.name, description: event.description }),
     gainedCoins: 0,
@@ -79,7 +60,6 @@ function reconcileEvent(event, building) {
       matchedKeyword: event.matchedKeyword,
     },
     _issues: [
-      ...(!parsedDate ? ["unparseable date"] : []),
       ...(!event.description ? ["no description"] : []),
       ...(!event.imageUrl ? ["no image"] : []),
     ],
@@ -203,8 +183,7 @@ app.post("/api/upload", async (req, res) => {
         events: reconciled.map((r) => ({
           eventName: r.eventName,
           buildingName: r.buildingName,
-          dateRaw: r._raw.dateRaw,
-          dateParsed: r.date ? r.date.toISOString() : null,
+          date: r.date,
           description: r.description ? r.description.slice(0, 80) : null,
           tags: r.tags,
           imageUrl: r.imageUrl,

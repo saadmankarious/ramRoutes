@@ -248,7 +248,7 @@
     html += `&nbsp;&nbsp;<button onclick="runUpload()">Upload ${ready + withIssues} events</button><br><br>`;
 
     html += '<table><tr>'
-      + '<th>Event</th><th>Building</th><th>Date (raw)</th><th>Date (parsed)</th>'
+      + '<th>Event</th><th>Building</th><th>Date</th>'
       + '<th>Tags</th><th>Desc</th><th>Image</th><th>Status</th>'
       + '</tr>';
 
@@ -263,15 +263,10 @@
         status = `<span style="color:#b36200">${e.issues.join(', ')}</span>`;
       }
 
-      const parsedDate = e.dateParsed
-        ? new Date(e.dateParsed).toLocaleString()
-        : '<span style="color:red">—</span>';
-
       html += `<tr${rowStyle}>
         <td>${esc(e.eventName)}</td>
         <td>${esc(e.buildingName)}</td>
-        <td>${esc(e.dateRaw || '')}</td>
-        <td>${parsedDate}</td>
+        <td>${esc(e.date || '')}</td>
         <td>${e.tags && e.tags.length ? esc(e.tags.join(', ')) : '—'}</td>
         <td>${e.description ? '✓' : '—'}</td>
         <td>${e.imageUrl ? '✓' : '—'}</td>
