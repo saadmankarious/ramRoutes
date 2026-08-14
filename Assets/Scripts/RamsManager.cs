@@ -347,7 +347,7 @@ public class RamsManager : MonoBehaviour
             return;
         }
             
-            await SpawnRams();
+            // await SpawnRams();
             
             DisplayPlayerCount();
             
@@ -486,7 +486,7 @@ public class RamsManager : MonoBehaviour
                 
                 if (usersToSpawn > 0)
                 {
-                    StartCoroutine(SpawnNewUsersWithDelay(newUsers.Take(usersToSpawn).ToList()));
+                    // StartCoroutine(SpawnNewUsersWithDelay(newUsers.Take(usersToSpawn).ToList()));
                 }
               
             }

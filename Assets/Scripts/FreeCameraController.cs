@@ -29,6 +29,9 @@ public class FreeCameraController : MonoBehaviour
     public float minZoom = 3f;
     public float maxZoom = 15f;
 
+    [Header("Zoom (mobile pinch)")]
+    public float pinchZoomSpeed = 0.01f;
+
     private CinemachineVirtualCamera vcam;
     private Vector2 moveInput;
 
@@ -101,11 +104,37 @@ public class FreeCameraController : MonoBehaviour
 
     private void HandleZoom()
     {
+        if (Input.touchCount == 2)
+        {
+            HandlePinchZoom();
+            return;
+        }
+
         float scroll = Input.GetAxis("Mouse ScrollWheel");
         if (Mathf.Abs(scroll) < 0.0001f) return;
 
         float currentSize = vcam.m_Lens.OrthographicSize;
         float newSize = currentSize - scroll * zoomSpeed;
+        vcam.m_Lens.OrthographicSize = Mathf.Clamp(newSize, minZoom, maxZoom);
+    }
+
+    private void HandlePinchZoom()
+    {
+        Touch touchZero = Input.GetTouch(0);
+        Touch touchOne = Input.GetTouch(1);
+
+        Vector2 touchZeroPrevPos = touchZero.position - touchZero.deltaPosition;
+        Vector2 touchOnePrevPos = touchOne.position - touchOne.deltaPosition;
+
+        float prevMagnitude = (touchZeroPrevPos - touchOnePrevPos).magnitude;
+        float currentMagnitude = (touchZero.position - touchOne.position).magnitude;
+
+        float pinchDelta = currentMagnitude - prevMagnitude;
+        if (Mathf.Abs(pinchDelta) < 0.0001f) return;
+
+        float currentSize = vcam.m_Lens.OrthographicSize;
+        // Fingers spreading apart (positive delta) should zoom in, hence the minus sign.
+        float newSize = currentSize - pinchDelta * pinchZoomSpeed;
         vcam.m_Lens.OrthographicSize = Mathf.Clamp(newSize, minZoom, maxZoom);
     }
 

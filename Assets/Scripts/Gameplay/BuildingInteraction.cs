@@ -47,6 +47,10 @@ public class BuildingInteraction : MonoBehaviour
     private bool isBuildingSelected = false;
     private Vector3 originalSpriteScale;
     private Coroutine popAnimCoroutine;
+    // Set once the events popup has been fetched/built for the current proximity
+    // visit, so re-selecting the same building just toggles visibility instead of
+    // re-fetching and destroying/rebuilding the whole list every click.
+    private bool hasLoadedPopupThisVisit = false;
     // Bumped whenever the events popup is rebuilt, so an in-flight async image
     // load from a previous display pass can detect it's stale and bail out
     // instead of touching destroyed UI.
@@ -259,7 +263,23 @@ public class BuildingInteraction : MonoBehaviour
             ramsManager.SetPopupVisible(true);
         }
 
-        EnterBuildingViewingMode();
+        if (!hasLoadedPopupThisVisit)
+        {
+            hasLoadedPopupThisVisit = true;
+            EnterBuildingViewingMode();
+        }
+        else
+        {
+            // Already fetched/built during this visit - just re-show the cached UI.
+            if (buildingTitleUnlcoked != null)
+            {
+                buildingTitleUnlcoked.gameObject.SetActive(true);
+            }
+            if (buildingEventsPanel != null && eventsContentParent != null && eventsContentParent.childCount > 0)
+            {
+                buildingEventsPanel.SetActive(true);
+            }
+        }
     }
 
     private void DeselectBuilding()
@@ -304,6 +324,7 @@ public class BuildingInteraction : MonoBehaviour
 
             isPlayerInRange = false;
             lastGpsProximityState = false;
+            hasLoadedPopupThisVisit = false;
 
             if (isBuildingSelected)
             {
