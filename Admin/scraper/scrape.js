@@ -4,8 +4,8 @@ const path = require("path");
 
 const EVENTS_URL =
   "https://gwu.campuslabs.com/engage/events?showpastevents=true";
-const MAX_LOAD_MORE = 250;
-const DESCRIPTION_CONCURRENCY = 5;
+const MAX_LOAD_MORE = 5000;
+const DESCRIPTION_CONCURRENCY = 20;
 
 // Each scrape writes its own timestamped file instead of overwriting a fixed
 // events.json, so a stale file never silently masquerades as fresh data.
@@ -30,7 +30,7 @@ async function fetchDescription(browser, url) {
   }
 }
 
-async function scrapeEvents({ onProgress } = {}) {
+async function scrapeEvents({ onProgress, checkpointFile } = {}) {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
 
@@ -101,6 +101,12 @@ async function scrapeEvents({ onProgress } = {}) {
     onProgress?.(
       `Descriptions: ${Math.min(i + DESCRIPTION_CONCURRENCY, events.length)}/${events.length}`
     );
+
+    // Checkpoint after every batch so a crash/timeout partway through a long
+    // scrape leaves real partial data on disk instead of losing the whole run.
+    if (checkpointFile) {
+      fs.writeFileSync(checkpointFile, JSON.stringify(events, null, 2));
+    }
   }
 
   await browser.close();
@@ -109,14 +115,15 @@ async function scrapeEvents({ onProgress } = {}) {
 
 // Standalone mode
 if (require.main === module) {
-  scrapeEvents({ onProgress: console.log })
+  const outputFile = timestampedEventsPath();
+  scrapeEvents({ onProgress: console.log, checkpointFile: outputFile })
     .then((events) => {
-      const outputFile = timestampedEventsPath();
-      fs.writeFileSync(outputFile, JSON.stringify(events, null, 2));
+      // The last description batch's checkpoint already wrote the complete
+      // final data to outputFile - this just confirms completion.
       console.log(`Scraped ${events.length} events → ${outputFile}`);
     })
     .catch((err) => {
-      console.error("Scraper failed:", err);
+      console.error(`Scraper failed (partial data, if any, is in ${outputFile}):`, err);
       process.exit(1);
     });
 }

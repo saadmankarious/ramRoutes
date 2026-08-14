@@ -87,18 +87,20 @@ app.get("/api/scrape", async (req, res) => {
     res.write(`data: ${JSON.stringify({ type, payload })}\n\n`);
   };
 
+  const outputFile = timestampedEventsPath();
   try {
     const events = await scrapeEvents({
       onProgress: (msg) => send("progress", msg),
+      checkpointFile: outputFile,
     });
 
-    const outputFile = timestampedEventsPath();
-    fs.writeFileSync(outputFile, JSON.stringify(events, null, 2));
+    // The last description batch's checkpoint already wrote the complete
+    // final data to outputFile - this just confirms it for the client.
     send("progress", `Saved ${events.length} events → ${path.basename(outputFile)}`);
 
     send("done", events);
   } catch (err) {
-    send("error", err.message);
+    send("error", `${err.message} (partial data, if any, saved to ${path.basename(outputFile)})`);
   } finally {
     res.end();
   }
