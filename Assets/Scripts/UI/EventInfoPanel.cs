@@ -16,14 +16,15 @@ public class EventInfoPanel : MonoBehaviour
     private Text descText;
     private Text dateText;
     private Button closeButton;
-    private Button dismissButton;
 
     private Button rsvpButton;
+    private Text rsvpButtonText;
     private ScrollRect rsvpScrollView;
     private Transform rsvpContentParent;
     private Text rsvpEmptyText;
 
     private string currentEventId;
+    private bool isRsvped;
 
     void Awake()
     {
@@ -33,6 +34,7 @@ public class EventInfoPanel : MonoBehaviour
         closeButton = transform.FindDeepChild("close")?.GetComponent<Button>();
 
         rsvpButton = transform.FindDeepChild("rsvp-button")?.GetComponent<Button>();
+        rsvpButtonText = rsvpButton != null ? rsvpButton.GetComponentInChildren<Text>() : null;
         rsvpScrollView = transform.FindDeepChild("rsvp-list")?.GetComponent<ScrollRect>();
         rsvpContentParent = rsvpScrollView != null ? rsvpScrollView.content : null;
         rsvpEmptyText = transform.FindDeepChild("empty")?.GetComponent<Text>();
@@ -46,15 +48,6 @@ public class EventInfoPanel : MonoBehaviour
         {
             rsvpButton.onClick.AddListener(OnRsvpButtonClicked);
         }
-
-        // No dedicated close button in the prefab yet, so tapping anywhere on the
-        // panel dismisses it. A future "close" child still works alongside this.
-        dismissButton = GetComponent<Button>();
-        if (dismissButton == null)
-        {
-            dismissButton = gameObject.AddComponent<Button>();
-        }
-        dismissButton.onClick.AddListener(Close);
     }
 
     public void ShowEventInfo(BuildingEvent evt)
@@ -83,10 +76,31 @@ public class EventInfoPanel : MonoBehaviour
 
         PopulateTags(evt.tags);
         PopulateRsvpList();
+        RefreshRsvpButtonState();
 
         if (UIManager.Instance != null)
         {
             StartCoroutine(UIManager.Instance.AnimatePanelPopup(gameObject));
+        }
+    }
+
+    private async void RefreshRsvpButtonState()
+    {
+        string eventId = currentEventId;
+        if (string.IsNullOrEmpty(eventId)) return;
+
+        string userId = FirebaseAuth.DefaultInstance.CurrentUser != null ? FirebaseAuth.DefaultInstance.CurrentUser.UserId : "unknown";
+        isRsvped = await BuildingEventService.Instance.HasPlayerShownInterest(eventId, userId);
+        if (this == null || eventId != currentEventId) return;
+
+        UpdateRsvpButtonText();
+    }
+
+    private void UpdateRsvpButtonText()
+    {
+        if (rsvpButtonText != null)
+        {
+            rsvpButtonText.text = isRsvped ? "Unrsvp" : "RSVP";
         }
     }
 
@@ -128,9 +142,12 @@ public class EventInfoPanel : MonoBehaviour
             await eventService.RemoveInterestAsync(eventId, userId);
             if (this == null || eventId != currentEventId) return;
 
+            isRsvped = false;
+            UpdateRsvpButtonText();
+
             if (UIManager.Instance != null)
             {
-                UIManager.Instance.ShowQuickUpdate("Removed from event interest");
+                UIManager.Instance.ShowQuickUpdate("Unrsvp'd from event");
             }
         }
         else
@@ -138,9 +155,12 @@ public class EventInfoPanel : MonoBehaviour
             await eventService.RecordInterestAsync(eventId, userId);
             if (this == null || eventId != currentEventId) return;
 
+            isRsvped = true;
+            UpdateRsvpButtonText();
+
             if (UIManager.Instance != null)
             {
-                UIManager.Instance.ShowQuickUpdate("Added to Interest List!");
+                UIManager.Instance.ShowQuickUpdate("RSVP'd to event!");
             }
         }
 
@@ -180,19 +200,19 @@ public class EventInfoPanel : MonoBehaviour
 
             GameObject studentGO = Instantiate(rsvpUserPrefab, rsvpContentParent);
             Text userNameText = studentGO.GetComponentInChildren<Text>(true);
-            Image userImage = studentGO.GetComponentInChildren<Image>(true);
+            // Image userImage = studentGO.GetComponentInChildren<Image>(true);
 
             if (userNameText != null)
             {
                 userNameText.text = user.name;
             }
 
-            if (userImage != null && UIManager.Instance != null)
-            {
-                // RetrieveUserById already returns coins/knowledgePoints on the User
-                // object - no need for two more per-user round trips to fetch them again.
-                userImage.sprite = UIManager.Instance.GetUserAvatarBasedOnPoints(user.coins, user.knowledgePoints);
-            }
+            // if (userImage != null && UIManager.Instance != null)
+            // {
+            //     // RetrieveUserById already returns coins/knowledgePoints on the User
+            //     // object - no need for two more per-user round trips to fetch them again.
+            //     userImage.sprite = UIManager.Instance.GetUserAvatarBasedOnPoints(user.coins, user.knowledgePoints);
+            // }
         }
     }
 
