@@ -100,7 +100,8 @@ public class RamsManager : MonoBehaviour
                 : transform.position + Vector3.up * 1f;
             playerCountCanvasInstance.transform.position = worldPos;
             playerCountCanvasInstance.transform.rotation = Quaternion.identity;
-            playerCountCanvasInstance.SetActive(true);
+            // Hidden until the building is selected - SetPopupVisible controls this.
+            playerCountCanvasInstance.SetActive(false);
             WireFootprintButton(playerCountCanvasInstance);
         }
 
@@ -1018,11 +1019,12 @@ public class RamsManager : MonoBehaviour
                     : transform.position + Vector3.up * 1f;
                 playerCountCanvasInstance.transform.position = worldPos;
                 playerCountCanvasInstance.transform.rotation = Quaternion.identity;
+                // Hidden until the building is selected - SetPopupVisible controls this.
+                playerCountCanvasInstance.SetActive(false);
                 WireFootprintButton(playerCountCanvasInstance);
             }
 
-            // Always visible, for every building, regardless of count or whether a player is present.
-            playerCountCanvasInstance.SetActive(true);
+            // Visibility follows building select/deselect (see SetPopupVisible) - just refresh the text here.
             UpdatePlayerCountDisplay(count);
         }
         catch (System.Exception ex)
@@ -1037,7 +1039,8 @@ public class RamsManager : MonoBehaviour
     {
         if (playerCountCanvasInstance == null) return;
 
-        var countText = playerCountCanvasInstance.GetComponentInChildren<UnityEngine.UI.Text>();
+        // includeInactive: the popup may be hidden (deselected) when this refreshes.
+        var countText = playerCountCanvasInstance.GetComponentInChildren<UnityEngine.UI.Text>(true);
         if (countText != null)
         {
             countText.text = count.ToString();
@@ -1045,11 +1048,20 @@ public class RamsManager : MonoBehaviour
         }
 
         // Find by name to avoid accidentally grabbing an unrelated TMP text (e.g. "Add Footprint").
-        var tmpText = playerCountCanvasInstance.GetComponentsInChildren<TMPro.TextMeshProUGUI>()
+        var tmpText = playerCountCanvasInstance.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true)
             .FirstOrDefault(t => t.gameObject.name == "PlayerCount");
         if (tmpText != null)
         {
             tmpText.text = count.ToString();
+        }
+    }
+
+    // Shows or hides the RAM popup (player count + footprints) in sync with building select/deselect.
+    public void SetPopupVisible(bool visible)
+    {
+        if (playerCountCanvasInstance != null)
+        {
+            playerCountCanvasInstance.SetActive(visible);
         }
     }
 

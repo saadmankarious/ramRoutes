@@ -26,7 +26,7 @@ async function fetchDescription(browser, url) {
   } catch {
     return null;
   } finally {
-    await page.close();
+    await page.close().catch(() => {});
   }
 }
 
@@ -109,7 +109,7 @@ async function scrapeEvents({ onProgress, checkpointFile } = {}) {
     }
   }
 
-  await browser.close();
+  await browser.close().catch(() => {});
   return events;
 }
 

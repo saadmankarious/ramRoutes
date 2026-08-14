@@ -44,6 +44,9 @@ public class BuildingInteraction : MonoBehaviour
     private Material originalMaterial;
     private SpriteRenderer sr;
     private bool lastGpsProximityState = false;
+    private bool isBuildingSelected = false;
+    private Vector3 originalSpriteScale;
+    private Coroutine popAnimCoroutine;
     // Bumped whenever the events popup is rebuilt, so an in-flight async image
     // load from a previous display pass can detect it's stale and bail out
     // instead of touching destroyed UI.
@@ -56,11 +59,11 @@ public class BuildingInteraction : MonoBehaviour
     public static event VirtualBuildingEntryEvent OnVirtualBuildingEntered;
     public static event VirtualBuildingEntryEvent OnVirtualBuildingExited;
 
-    private async void EnterBuildingViewingMode(bool showEventsHappening = true)
+    private async void EnterBuildingViewingMode(bool showEventsHappening = true, bool showPopup = true)
     {
         await Task.Delay(1000);
 
-        if (buildingTitleUnlcoked != null)
+        if (showPopup && buildingTitleUnlcoked != null)
         {
             string displayName = await BuildingDataManager.GetBuildingDisplayNameAsync(buildingName);
             if (displayName != null)
@@ -72,7 +75,7 @@ public class BuildingInteraction : MonoBehaviour
 
         if (showEventsHappening) OnVirtualBuildingEntered?.Invoke(this);
 
-        if (buildingEventsPanel != null)
+        if (showPopup && buildingEventsPanel != null)
         {
             await DisplayBuildingEventsAsync();
         }
@@ -104,6 +107,8 @@ public class BuildingInteraction : MonoBehaviour
         {
             originalMaterial = sr.material;
         }
+
+        originalSpriteScale = transform.localScale;
 
         buildingsLayerMask = LayerMask.GetMask("Buildings");
     }
@@ -229,7 +234,57 @@ public class BuildingInteraction : MonoBehaviour
             return;
         }
 
+        if (isBuildingSelected)
+        {
+            DeselectBuilding();
+        }
+        else
+        {
+            SelectBuilding();
+        }
+    }
+
+    private void SelectBuilding()
+    {
+        isBuildingSelected = true;
+
+        if (popAnimCoroutine != null)
+        {
+            StopCoroutine(popAnimCoroutine);
+        }
+        popAnimCoroutine = StartCoroutine(PopAnimator.PopIn(transform, originalSpriteScale));
+
+        if (ramsManager != null)
+        {
+            ramsManager.SetPopupVisible(true);
+        }
+
         EnterBuildingViewingMode();
+    }
+
+    private void DeselectBuilding()
+    {
+        isBuildingSelected = false;
+
+        if (popAnimCoroutine != null)
+        {
+            StopCoroutine(popAnimCoroutine);
+        }
+        popAnimCoroutine = StartCoroutine(PopAnimator.PopOut(transform, originalSpriteScale));
+
+        if (ramsManager != null)
+        {
+            ramsManager.SetPopupVisible(false);
+        }
+
+        if (buildingEventsPanel != null)
+        {
+            buildingEventsPanel.SetActive(false);
+        }
+        if (buildingTitleUnlcoked != null)
+        {
+            buildingTitleUnlcoked.gameObject.SetActive(false);
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -237,7 +292,7 @@ public class BuildingInteraction : MonoBehaviour
         if (other.CompareTag("Player") || other.CompareTag("Spaceship"))
         {
             isPlayerInRange = true;
-            EnterBuildingViewingMode();                
+            EnterBuildingViewingMode(showEventsHappening: true, showPopup: false);
         }
     }
 
@@ -250,10 +305,9 @@ public class BuildingInteraction : MonoBehaviour
             isPlayerInRange = false;
             lastGpsProximityState = false;
 
-    
-            if (buildingEventsPanel != null)
+            if (isBuildingSelected)
             {
-                buildingEventsPanel.SetActive(false);
+                DeselectBuilding();
             }
 
             OnVirtualBuildingExited?.Invoke(this);
