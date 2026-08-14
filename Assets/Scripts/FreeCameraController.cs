@@ -32,8 +32,16 @@ public class FreeCameraController : MonoBehaviour
     [Header("Zoom (mobile pinch)")]
     public float pinchZoomSpeed = 0.01f;
 
+    [Header("Zoom (quantized steps)")]
+    // Camera size snaps to multiples of this instead of drifting smoothly, to match
+    // the pixel-art look. Input still accumulates continuously underneath, so a small
+    // scroll/pinch isn't lost - it just doesn't visibly move the camera until it
+    // crosses the next step.
+    public float zoomStep = 1f;
+
     private CinemachineVirtualCamera vcam;
     private Vector2 moveInput;
+    private float targetZoomSize;
 
     // Mobile joystick input variables (driven by SegmentedJoystick's OnMobile*Pressed/Released calls)
     private bool mobileLeftPressed = false;
@@ -49,6 +57,7 @@ public class FreeCameraController : MonoBehaviour
         }
 
         vcam = GetComponent<CinemachineVirtualCamera>();
+        targetZoomSize = vcam.m_Lens.OrthographicSize;
 
         if (vcam.m_Follow != null || vcam.m_LookAt != null)
         {
@@ -113,9 +122,8 @@ public class FreeCameraController : MonoBehaviour
         float scroll = Input.GetAxis("Mouse ScrollWheel");
         if (Mathf.Abs(scroll) < 0.0001f) return;
 
-        float currentSize = vcam.m_Lens.OrthographicSize;
-        float newSize = currentSize - scroll * zoomSpeed;
-        vcam.m_Lens.OrthographicSize = Mathf.Clamp(newSize, minZoom, maxZoom);
+        targetZoomSize = Mathf.Clamp(targetZoomSize - scroll * zoomSpeed, minZoom, maxZoom);
+        ApplyQuantizedZoom();
     }
 
     private void HandlePinchZoom()
@@ -132,10 +140,15 @@ public class FreeCameraController : MonoBehaviour
         float pinchDelta = currentMagnitude - prevMagnitude;
         if (Mathf.Abs(pinchDelta) < 0.0001f) return;
 
-        float currentSize = vcam.m_Lens.OrthographicSize;
         // Fingers spreading apart (positive delta) should zoom in, hence the minus sign.
-        float newSize = currentSize - pinchDelta * pinchZoomSpeed;
-        vcam.m_Lens.OrthographicSize = Mathf.Clamp(newSize, minZoom, maxZoom);
+        targetZoomSize = Mathf.Clamp(targetZoomSize - pinchDelta * pinchZoomSpeed, minZoom, maxZoom);
+        ApplyQuantizedZoom();
+    }
+
+    private void ApplyQuantizedZoom()
+    {
+        float quantized = Mathf.Round(targetZoomSize / zoomStep) * zoomStep;
+        vcam.m_Lens.OrthographicSize = Mathf.Clamp(quantized, minZoom, maxZoom);
     }
 
     // Mobile joystick input methods, driven by SegmentedJoystick's OnMobile*Pressed/Released calls

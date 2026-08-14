@@ -47,10 +47,9 @@ public class BuildingInteraction : MonoBehaviour
     private bool isBuildingSelected = false;
     private Vector3 originalSpriteScale;
     private Coroutine popAnimCoroutine;
-    // Set once the events popup has been fetched/built for the current proximity
-    // visit, so re-selecting the same building just toggles visibility instead of
-    // re-fetching and destroying/rebuilding the whole list every click.
-    private bool hasLoadedPopupThisVisit = false;
+    // Only one building may be selected at a time - selecting a new one fully
+    // deselects whichever building was previously selected.
+    private static BuildingInteraction currentlySelected;
     // Bumped whenever the events popup is rebuilt, so an in-flight async image
     // load from a previous display pass can detect it's stale and bail out
     // instead of touching destroyed UI.
@@ -65,24 +64,31 @@ public class BuildingInteraction : MonoBehaviour
 
     private async void EnterBuildingViewingMode(bool showEventsHappening = true, bool showPopup = true)
     {
-        await Task.Delay(1000);
+        if (showEventsHappening) OnVirtualBuildingEntered?.Invoke(this);
 
-        if (showPopup && buildingTitleUnlcoked != null)
+        // Kick off the display-name fetch and the events fetch/build together instead
+        // of one after the other - they're independent, so awaiting them in sequence
+        // was just adding their latencies up for no reason.
+        Task<string> displayNameTask = showPopup && buildingTitleUnlcoked != null
+            ? BuildingDataManager.GetBuildingDisplayNameAsync(buildingName)
+            : null;
+        Task eventsTask = showPopup && buildingEventsPanel != null
+            ? DisplayBuildingEventsAsync()
+            : Task.CompletedTask;
+
+        if (displayNameTask != null)
         {
-            string displayName = await BuildingDataManager.GetBuildingDisplayNameAsync(buildingName);
-            if (displayName != null)
+            string displayName = await displayNameTask;
+            // Same staleness check as DisplayBuildingEventsAsync - don't reactivate
+            // the title if this building was deselected while the fetch was in flight.
+            if (displayName != null && isBuildingSelected)
             {
                 buildingTitleUnlcoked.gameObject.SetActive(true);
                 buildingTitleUnlcoked.text = displayName;
             }
         }
 
-        if (showEventsHappening) OnVirtualBuildingEntered?.Invoke(this);
-
-        if (showPopup && buildingEventsPanel != null)
-        {
-            await DisplayBuildingEventsAsync();
-        }
+        await eventsTask;
 
         if (ramsManager != null)
         {
@@ -250,6 +256,12 @@ public class BuildingInteraction : MonoBehaviour
 
     private void SelectBuilding()
     {
+        if (currentlySelected != null && currentlySelected != this)
+        {
+            currentlySelected.DeselectBuilding();
+        }
+        currentlySelected = this;
+
         isBuildingSelected = true;
 
         if (popAnimCoroutine != null)
@@ -263,28 +275,21 @@ public class BuildingInteraction : MonoBehaviour
             ramsManager.SetPopupVisible(true);
         }
 
-        if (!hasLoadedPopupThisVisit)
-        {
-            hasLoadedPopupThisVisit = true;
-            EnterBuildingViewingMode();
-        }
-        else
-        {
-            // Already fetched/built during this visit - just re-show the cached UI.
-            if (buildingTitleUnlcoked != null)
-            {
-                buildingTitleUnlcoked.gameObject.SetActive(true);
-            }
-            if (buildingEventsPanel != null && eventsContentParent != null && eventsContentParent.childCount > 0)
-            {
-                buildingEventsPanel.SetActive(true);
-            }
-        }
+        // The events popup is a single UI shared by every building in the scene, so
+        // it must always be rebuilt on select - never skipped as "already loaded",
+        // since whichever building was selected last is the one that actually owns
+        // its current content.
+        EnterBuildingViewingMode();
     }
 
     private void DeselectBuilding()
     {
         isBuildingSelected = false;
+
+        if (currentlySelected == this)
+        {
+            currentlySelected = null;
+        }
 
         if (popAnimCoroutine != null)
         {
@@ -305,6 +310,14 @@ public class BuildingInteraction : MonoBehaviour
         {
             buildingTitleUnlcoked.gameObject.SetActive(false);
         }
+
+        // Close any event-info popup opened from this building's events list too,
+        // so nothing from the old selection lingers on screen.
+        if (activeEventInfoGO != null)
+        {
+            Destroy(activeEventInfoGO);
+            activeEventInfoGO = null;
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D other)
@@ -324,7 +337,6 @@ public class BuildingInteraction : MonoBehaviour
 
             isPlayerInRange = false;
             lastGpsProximityState = false;
-            hasLoadedPopupThisVisit = false;
 
             if (isBuildingSelected)
             {
@@ -381,13 +393,17 @@ public class BuildingInteraction : MonoBehaviour
         List<BuildingEvent> events;
         try
         {
-            events = await BuildingEventService.Instance.GetBuildingEventsForBuildingAsync(buildingName);
+            events = await BuildingEventsCache.GetEventsForBuildingAsync(buildingName);
         }
         catch (Exception ex)
         {
             Debug.LogError($"BuildingInteraction: Failed to load events for '{buildingName}': {ex.Message}");
             return;
         }
+
+        // The player may have deselected this building (or selected a different one)
+        // while this fetch was in flight - don't resurrect a stale popup.
+        if (!isBuildingSelected) return;
 
         // Invalidate any RSVP-list population still in flight from a previous
         // display pass, so it can't touch UI we're about to destroy below.

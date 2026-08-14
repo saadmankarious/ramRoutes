@@ -31,18 +31,6 @@ namespace RamRoutes.Services
             return querySnapshot.Documents.Select(ParseBuildingEvent).ToList();
         }
 
-        /// <summary>
-        /// Queries Firestore directly for just one building's events, instead of fetching
-        /// the whole collection and filtering client-side.
-        /// </summary>
-        public async Task<List<BuildingEvent>> GetBuildingEventsForBuildingAsync(string buildingName)
-        {
-            QuerySnapshot querySnapshot = await db.Collection("building-events")
-                .WhereEqualTo("buildingName", buildingName)
-                .GetSnapshotAsync();
-            return querySnapshot.Documents.Select(ParseBuildingEvent).ToList();
-        }
-
         public async Task<BuildingEvent> GetBuildingEventByIdAsync(string eventId)
         {
             DocumentReference eventRef = db.Collection("building-events").Document(eventId);

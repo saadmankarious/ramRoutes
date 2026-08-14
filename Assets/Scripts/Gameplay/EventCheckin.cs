@@ -433,13 +433,7 @@ public class EventCheckin : MonoBehaviour
             return;
         }
         
-        // Fetch events for the building first to determine if there are any events
-        if (eventService == null)
-        {
-            eventService = BuildingEventService.Instance;
-        }
-        
-        var events = await eventService.GetBuildingEventsForBuildingAsync(buildingName);
+        var events = await BuildingEventsCache.GetEventsForBuildingAsync(buildingName);
 
         // Get the current authenticated user ID for filtering events
         string userId = "unknown";
